@@ -11,6 +11,7 @@ export default function GetNumberClient({service,country,countryName}:Props){
    const d=await r.json();
    if(r.status===401){router.push("/login?next=/get-code/new");return}
    if(r.status===402){router.push("/wallet");return}
+   if(r.status===403&&d.code==="EMAIL_VERIFICATION_REQUIRED"){router.push("/verify-email");return}
    if(!d.ok)throw new Error(d.error||"Something went wrong");
    router.push(`/get-code/${d.order.id}`);
   }catch(e){setError(e instanceof Error?e.message:"Something went wrong")}finally{setLoading(false)}
