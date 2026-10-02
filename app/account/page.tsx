@@ -1,0 +1,7 @@
+import Link from "next/link";
+import {getUser} from "@/lib/auth";
+export default async function AccountPage(){
+ const user=await getUser();
+ if(!user)return <div className="auth-page"><div className="brand-mark">N</div><h1>Welcome to Numelixa</h1><p>Create an account or sign in to buy numbers and manage your wallet.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
+ return <div><header className="topbar"><Link href="/" className="brand-mark">N</Link><div className="top-title">Account</div><div className="top-spacer"/></header><div className="page-intro"><span className="eyebrow">YOUR ACCOUNT</span><h1>{user.name}</h1><p>{user.email}</p><div className="wallet-hero"><span>AVAILABLE COINS</span><strong>{Number(user.coins||0).toLocaleString()}</strong><small>Use your balance to get numbers.</small></div><div className="quick-grid"><Link href="/services" className="quick-card"><span>＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>→</i></Link><Link href="/wallet" className="quick-card"><span>◉</span><div><b>Add coins</b><small>Top up your wallet</small></div><i>→</i></Link></div><form action="/api/auth/logout" method="post"><button className="secondary-btn full" type="submit">Sign out</button></form></div></div>;
+}
