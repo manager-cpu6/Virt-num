@@ -3,12 +3,31 @@ import {Pool,PoolClient} from "pg";
 
 const g=globalThis as unknown as {__numelixaPool?:Pool};
 
-const connectionString=
+const rawConnectionString=
   process.env.DATABASE_POSTGRES_URL||
   process.env.DATABASE_POSTGRES_PRISMA_URL||
   process.env.DATABASE_POSTGRES_URL_NON_POOLING||
   process.env.DATABASE_URL||
   process.env.POSTGRES_URL;
+
+function cleanConnectionString(value?:string){
+  if(!value)return undefined;
+  try{
+    const u=new URL(value);
+    // Let node-postgres use the explicit TLS options below.
+    // Some Vercel-managed URLs contain sslmode/sslrootcert parameters
+    // that can override the Pool ssl object and cause certificate-chain errors.
+    u.searchParams.delete("sslmode");
+    u.searchParams.delete("sslrootcert");
+    u.searchParams.delete("sslcert");
+    u.searchParams.delete("sslkey");
+    return u.toString();
+  }catch{
+    return value;
+  }
+}
+
+const connectionString=cleanConnectionString(rawConnectionString);
 
 export const pool=g.__numelixaPool ?? new Pool({
   connectionString,
