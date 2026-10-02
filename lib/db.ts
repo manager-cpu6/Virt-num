@@ -4,7 +4,7 @@ import {Pool,PoolClient} from "pg";
 const g=globalThis as unknown as {__numelixaPool?:Pool};
 
 export const pool=g.__numelixaPool ?? new Pool({
-  connectionString:process.env.DATABASE_URL,
+  connectionString:process.env.DATABASE_URL||process.env.POSTGRES_URL,
   ssl:process.env.DATABASE_SSL==="false"?false:{rejectUnauthorized:false},
   max:5
 });
@@ -14,7 +14,7 @@ if(process.env.NODE_ENV!=="production")g.__numelixaPool=pool;
 let ready:Promise<void>|null=null;
 
 export async function db<T=any>(text:string,values:any[]=[]):Promise<{rows:T[]}>{
-  if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL is not configured");
+  if(!(process.env.DATABASE_URL||process.env.POSTGRES_URL))throw new Error("Vercel Postgres connection is not configured");
   await ensureSchema();
   const result=await pool.query(text,values);
   return {rows:result.rows as unknown as T[]};
