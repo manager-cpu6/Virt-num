@@ -1,4 +1,4 @@
-import {MongoClient,Db,Collection} from "mongodb";import bcrypt from "bcryptjs";
+import {MongoClient,Db,Collection,Document} from "mongodb";import bcrypt from "bcryptjs";
 
 const g=globalThis as unknown as {__numelixaMongoClient?:MongoClient;__numelixaMongoDb?:Db;__numelixaMongoUri?:string;__numelixaIndexes?:Promise<void>};
 
@@ -27,7 +27,7 @@ export async function getMongoDb(){
   return g.__numelixaMongoDb;
 }
 
-export async function collection<T=any>(name:string):Promise<Collection<T>>{
+export async function collection<T extends Document=Document>(name:string):Promise<Collection<T>>{
   return (await getMongoDb()).collection<T>(name);
 }
 
