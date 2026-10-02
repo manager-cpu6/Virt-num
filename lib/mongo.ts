@@ -27,7 +27,7 @@ export async function getMongoDb(){
   return g.__numelixaMongoDb;
 }
 
-export async function collection<T extends Document=Document>(name:string):Promise<Collection<T>>{
+export async function collection<T extends Document=any>(name:string):Promise<Collection<T>>{
   return (await getMongoDb()).collection<T>(name);
 }
 
