@@ -1,2 +1,1 @@
-import {services} from "@/lib/data";
-export async function GET(){return Response.json({services})}
+import {NextResponse} from "next/server";import {listServices,normalizeList} from "@/lib/smspool";export async function GET(){try{return NextResponse.json({ok:true,services:normalizeList(await listServices(),"services")})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Failed"},{status:502})}}
