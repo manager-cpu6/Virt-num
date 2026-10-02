@@ -1,1 +1,1 @@
-export async function GET(){return Response.json({ok:true,app:"Numelixa",providerMode:process.env.PROVIDER_MODE||"mock",time:new Date().toISOString()})}
+import {providerConfigured} from "@/lib/smspool";export async function GET(){return Response.json({ok:true,app:"Numelixa",providerMode:providerConfigured()?"smspool":"not-configured",payments:!!process.env.CRYPTOMUS_PAYMENT_API_KEY,email:!!process.env.SPACEMAIL_SMTP_USER,time:new Date().toISOString()})}
