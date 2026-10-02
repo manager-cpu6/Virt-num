@@ -1,4 +1,4 @@
-import {MongoClient,Db,Collection} from "mongodb";
+import {MongoClient,Db,Collection} from "mongodb";import bcrypt from "bcryptjs";
 
 const g=globalThis as unknown as {__numelixaMongoClient?:MongoClient;__numelixaMongoDb?:Db;__numelixaMongoUri?:string;__numelixaIndexes?:Promise<void>};
 
