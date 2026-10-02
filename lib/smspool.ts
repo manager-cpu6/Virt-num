@@ -3,13 +3,32 @@ const key=process.env.SMSPOOL_API_KEY;
 async function req(path:string,data:Record<string,string|number>={},method:"POST"|"GET"="POST"){
  if(!key)throw new Error("SMSPool API is not configured");
  const r=await fetch(base+path,{method,headers:{"Content-Type":"application/x-www-form-urlencoded"},body:method==="POST"?new URLSearchParams(Object.entries({key,...data}).map(([k,v])=>[k,String(v)])):undefined,cache:"no-store"});
- const j=await r.json();if(!r.ok)throw new Error(j?.message||`SMSPool HTTP ${r.status}`);return j;
+ const j=await r.json();if(!r.ok)throw new Error(j?.message||`SMSPool HTTP ${r.status}`);if(j?.success===0)throw new Error(j?.message||j?.type||"SMSPool request failed");return j;
 }
 export function providerConfigured(){return !!key}
 export async function listCountries(){return req("/country/retrieve_all",{},"GET")}
 export async function listServices(){return req("/service/retrieve_all",{},"GET")}
-export async function stock(country:string,service:string){return req("/sms/stock",{country,service})}
-export async function purchase(country:string,service:string){return req("/purchase/sms",{country,service,pricing_option:0})}
+let serviceCache:{at:number;items:any[]}|null=null;
+async function providerServices(){
+ if(serviceCache&&Date.now()-serviceCache.at<5*60*1000)return serviceCache.items;
+ const raw=await listServices();const items=Array.isArray(raw)?raw:(raw?.services||raw?.result||raw?.data||[]);
+ serviceCache={at:Date.now(),items:Array.isArray(items)?items:[]};return serviceCache.items;
+}
+const aliases:Record<string,string[]>={
+ whatsapp:["whatsapp"],telegram:["telegram"],google:["google","google voice"],facebook:["facebook"],instagram:["instagram"],tiktok:["tiktok"],snapchat:["snapchat"],x:["x","twitter"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft"],apple:["apple"]
+};
+function norm(v:any){return String(v??"").trim().toLowerCase().replace(/[^a-z0-9]+/g,"")}
+export async function resolveService(service:string){
+ const wanted=norm(service);const candidates=aliases[wanted]||[service];const list=await providerServices();
+ for(const candidate of candidates){
+  const n=norm(candidate);const hit=list.find((x:any)=>[x.id,x.service,x.name,x.short_name,x.code].some((v:any)=>norm(v)===n));
+  if(hit)return String(hit.id??hit.service??hit.name);
+ }
+ const direct=list.find((x:any)=>[x.id,x.service,x.name,x.short_name,x.code].some((v:any)=>norm(v)===wanted));
+ return direct?String(direct.id??direct.service??direct.name):service;
+}
+export async function stock(country:string,service:string){return req("/sms/stock",{country,service:await resolveService(service)})}
+export async function purchase(country:string,service:string){return req("/purchase/sms",{country,service:await resolveService(service),pricing_option:0})}
 export async function check(orderid:string){return req("/sms/check",{orderid})}
 export async function cancel(orderid:string){return req("/sms/cancel",{orderid})}
 export async function balance(){return req("/request/balance")}
