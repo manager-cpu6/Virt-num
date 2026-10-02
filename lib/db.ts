@@ -4,7 +4,7 @@ import {Pool,PoolClient} from "pg";
 const g=globalThis as unknown as {__numelixaPool?:Pool};
 
 export const pool=g.__numelixaPool ?? new Pool({
-  connectionString:process.env.DATABASE_URL||process.env.POSTGRES_URL,
+  connectionString:process.env.DATABASE_POSTGRES_URL||process.env.DATABASE_URL||process.env.POSTGRES_URL,
   ssl:process.env.DATABASE_SSL==="false"?false:{rejectUnauthorized:false},
   max:5
 });
