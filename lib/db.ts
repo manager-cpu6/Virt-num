@@ -1,22 +1,23 @@
 import crypto from "crypto";
 import {Pool,PoolClient} from "pg";
 
-const g=globalThis as unknown as {__numelixaPool?:Pool};
+const g=globalThis as unknown as {__numelixaPool?:Pool;__numelixaConnectionString?:string};
 
-const rawConnectionString=
-  process.env.DATABASE_POSTGRES_URL||
-  process.env.DATABASE_POSTGRES_PRISMA_URL||
-  process.env.DATABASE_POSTGRES_URL_NON_POOLING||
-  process.env.DATABASE_URL||
-  process.env.POSTGRES_URL;
+function getRawConnectionString(){
+  return (
+    process.env.DATABASE_POSTGRES_URL ||
+    process.env.DATABASE_POSTGRES_PRISMA_URL ||
+    process.env.DATABASE_POSTGRES_URL_NON_POOLING ||
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    ""
+  ).trim();
+}
 
-function cleanConnectionString(value?:string){
-  if(!value)return undefined;
+function cleanConnectionString(value:string){
+  if(!value)return "";
   try{
     const u=new URL(value);
-    // Let node-postgres use the explicit TLS options below.
-    // Some Vercel-managed URLs contain sslmode/sslrootcert parameters
-    // that can override the Pool ssl object and cause certificate-chain errors.
     u.searchParams.delete("sslmode");
     u.searchParams.delete("sslrootcert");
     u.searchParams.delete("sslcert");
@@ -27,32 +28,44 @@ function cleanConnectionString(value?:string){
   }
 }
 
-const connectionString=cleanConnectionString(rawConnectionString);
+function getPool(){
+  const raw=getRawConnectionString();
+  if(!raw){
+    throw new Error(
+      "Postgres database connection is not configured. Add DATABASE_POSTGRES_URL to the Vercel Production environment, then redeploy."
+    );
+  }
 
-export const pool=g.__numelixaPool ?? new Pool({
-  connectionString,
-  ssl:process.env.DATABASE_SSL==="false"?false:{rejectUnauthorized:false},
-  max:5
-});
+  const connectionString=cleanConnectionString(raw);
 
-if(process.env.NODE_ENV!=="production")g.__numelixaPool=pool;
+  if(g.__numelixaPool && g.__numelixaConnectionString===connectionString){
+    return g.__numelixaPool;
+  }
 
-let ready:Promise<void>|null=null;
+  const pool=new Pool({
+    connectionString,
+    ssl:process.env.DATABASE_SSL==="false" ? false : {rejectUnauthorized:false},
+    max:5
+  });
 
-function assertDatabaseConfigured(){
-  if(!connectionString)throw new Error("Postgres database connection is not configured. Set DATABASE_POSTGRES_URL in Vercel.");
+  g.__numelixaPool=pool;
+  g.__numelixaConnectionString=connectionString;
+  return pool;
 }
 
+let ready:Promise<void>|null=null;
+let readyPool:Pool|null=null;
+
 export async function db<T=any>(text:string,values:any[]=[]):Promise<{rows:T[]}>{
-  assertDatabaseConfigured();
-  await ensureSchema();
+  const pool=getPool();
+  await ensureSchema(pool);
   const result=await pool.query(text,values);
   return {rows:result.rows as unknown as T[]};
 }
 
 export async function tx<T>(fn:(c:PoolClient)=>Promise<T>):Promise<T>{
-  assertDatabaseConfigured();
-  await ensureSchema();
+  const pool=getPool();
+  await ensureSchema(pool);
   const c=await pool.connect();
   try{
     await c.query("BEGIN");
@@ -67,9 +80,10 @@ export async function tx<T>(fn:(c:PoolClient)=>Promise<T>):Promise<T>{
   }
 }
 
-async function ensureSchema(){
-  if(ready)return ready;
+async function ensureSchema(pool:Pool){
+  if(ready && readyPool===pool)return ready;
 
+  readyPool=pool;
   ready=(async()=>{
     await pool.query(`
 CREATE TABLE IF NOT EXISTS users(id UUID PRIMARY KEY,email TEXT UNIQUE NOT NULL,name TEXT NOT NULL,password_hash TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'user',coins NUMERIC(18,2) NOT NULL DEFAULT 0,verified_at TIMESTAMPTZ,created_at TIMESTAMPTZ NOT NULL DEFAULT NOW());
@@ -93,7 +107,7 @@ CREATE INDEX IF NOT EXISTS coin_tx_user_idx ON coin_transactions(user_id,created
         [crypto.randomUUID(),process.env.ADMIN_EMAIL.toLowerCase(),h]
       );
     }
-  })().catch(e=>{ready=null;throw e});
+  })().catch(e=>{ready=null;readyPool=null;throw e});
 
   return ready;
 }
