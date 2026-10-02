@@ -1,2 +1,1 @@
-import AdminPanel from "@/components/AdminPanel";
-export default function AdminPage(){return <AdminPanel/>}
+import AdminPanel from "@/components/AdminPanel";import {requireAdmin} from "@/lib/auth";export default async function AdminPage(){try{await requireAdmin();return <AdminPanel/>}catch{return <div className="helper-card"><b>Admin access required</b><span>Sign in with an administrator account.</span></div>}}
