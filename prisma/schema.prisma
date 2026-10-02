@@ -1,0 +1,10 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+model User { id String @id @default(cuid()); email String? @unique; username String? @unique; coins Int @default(0); createdAt DateTime @default(now()); updatedAt DateTime @updatedAt; orders Order[]; transactions CoinTransaction[] }
+model Service { id String @id; name String; icon String; enabled Boolean @default(true); createdAt DateTime @default(now()); orders Order[] }
+model Country { id String @id; code String @unique; name String; flag String; enabled Boolean @default(true); orders Order[] }
+model Order { id String @id @default(cuid()); userId String; serviceId String; countryId String; provider String; providerRef String?; phoneNumber String; status String; priceCoins Int; expiresAt DateTime?; createdAt DateTime @default(now()); updatedAt DateTime @updatedAt; user User @relation(fields:[userId],references:[id]); service Service @relation(fields:[serviceId],references:[id]); country Country @relation(fields:[countryId],references:[id]); messages SmsMessage[] }
+model SmsMessage { id String @id @default(cuid()); orderId String; code String?; body String?; receivedAt DateTime @default(now()); order Order @relation(fields:[orderId],references:[id]) }
+model CoinTransaction { id String @id @default(cuid()); userId String; type String; amount Int; reason String; createdAt DateTime @default(now()); user User @relation(fields:[userId],references:[id]) }
+model PricingRule { id String @id @default(cuid()); serviceId String; countryId String; priceCoins Int; enabled Boolean @default(true); createdAt DateTime @default(now()) }
+model AuditLog { id String @id @default(cuid()); actorId String?; action String; metadata String?; createdAt DateTime @default(now()) }
