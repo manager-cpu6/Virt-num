@@ -21,7 +21,7 @@ export async function db<T=any>(text:string,values:any[]=[]):Promise<{rows:T[]}>
 }
 
 export async function tx<T>(fn:(c:PoolClient)=>Promise<T>):Promise<T>{
-  if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL is not configured");
+  if(!(process.env.DATABASE_URL||process.env.POSTGRES_URL))throw new Error("Vercel Postgres connection is not configured");
   await ensureSchema();
   const c=await pool.connect();
   try{
