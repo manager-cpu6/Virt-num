@@ -1,27 +1,22 @@
 {
   "name": "numelixa",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
-  "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start"
-  },
+  "scripts": {"dev":"next dev","build":"next build","start":"next start"},
   "dependencies": {
-    "bcryptjs": "^3.0.2",
-    "nodemailer": "^7.0.6",
-    "jose": "^6.1.0",
-    "next": "16.3.8",
-    "pg": "^8.16.3",
-    "react": "19.2.0",
-    "react-dom": "19.2.0"
+    "bcryptjs":"^3.0.2",
+    "jose":"^6.1.0",
+    "mongodb":"^6.20.0",
+    "next":"16.3.8",
+    "nodemailer":"^7.0.6",
+    "react":"19.2.0",
+    "react-dom":"19.2.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "typescript": "^5.7.0",
-    "@types/nodemailer": "^7.0.2",
-    "@types/pg": "^8.15.5"
+    "@types/node":"^22.0.0",
+    "@types/react":"^19.0.0",
+    "@types/react-dom":"^19.0.0",
+    "@types/nodemailer":"^7.0.2",
+    "typescript":"^5.7.0"
   }
 }
