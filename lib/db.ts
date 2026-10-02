@@ -24,5 +24,5 @@ CREATE TABLE IF NOT EXISTS pricing_rules(id UUID PRIMARY KEY,service TEXT,countr
 CREATE INDEX IF NOT EXISTS orders_user_idx ON orders(user_id,created_at DESC);
 CREATE INDEX IF NOT EXISTS coin_tx_user_idx ON coin_transactions(user_id,created_at DESC);
 `);
-if(process.env.ADMIN_EMAIL&&process.env.ADMIN_PASSWORD){const bcrypt=await import("bcryptjs");const h=await bcrypt.hash(process.env.ADMIN_PASSWORD,12);await pool.query(`INSERT INTO users(id,email,name,password_hash,role,verified_at) VALUES($1,$2,'Administrator',$2,'admin',NOW()) ON CONFLICT(email) DO UPDATE SET role='admin'`,[crypto.randomUUID(),process.env.ADMIN_EMAIL.toLowerCase(),h])}
+if(process.env.ADMIN_EMAIL&&process.env.ADMIN_PASSWORD){const bcrypt=await import("bcryptjs");const h=await bcrypt.hash(process.env.ADMIN_PASSWORD,12);await pool.query(`INSERT INTO users(id,email,name,password_hash,role,verified_at) VALUES($1,$2,'Administrator',$3,'admin',NOW()) ON CONFLICT(email) DO UPDATE SET role='admin'`,[crypto.randomUUID(),process.env.ADMIN_EMAIL.toLowerCase(),h])}
 })().catch(e=>{ready=null;throw e});return ready}
