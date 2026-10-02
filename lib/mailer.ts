@@ -1,57 +1,6 @@
 import nodemailer from "nodemailer";
-
-const DEFAULT_HOST = "mail.spacemail.com";
-const DEFAULT_PORT = 465;
-
-function smtpConfig() {
-  const host = (process.env.SPACEMAIL_SMTP_HOST || DEFAULT_HOST).trim();
-  const port = Number(process.env.SPACEMAIL_SMTP_PORT || DEFAULT_PORT);
-  const user = (process.env.SPACEMAIL_SMTP_USER || "").trim();
-  const pass = process.env.SPACEMAIL_SMTP_PASSWORD || "";
-  const from = (process.env.SPACEMAIL_FROM || user).trim();
-
-  if (!user) throw new Error("Spacemail SMTP username is missing. Check SPACEMAIL_SMTP_USER.");
-  if (!pass) throw new Error("Spacemail SMTP password is missing. Check SPACEMAIL_SMTP_PASSWORD.");
-  if (!Number.isFinite(port) || port <= 0 || port > 65535) {
-    throw new Error("Invalid Spacemail SMTP port. Use 465 for SSL.");
-  }
-
-  return {host, port, user, pass, from};
-}
-
-export async function sendEmail(to: string, subject: string, html: string) {
-  const config = smtpConfig();
-
-  const transporter = nodemailer.createTransport({
-    host: config.host,
-    port: config.port,
-    secure: config.port === 465,
-    auth: {
-      user: config.user,
-      pass: config.pass,
-    },
-  } as any);
-
-  try {
-    await transporter.verify();
-    await transporter.sendMail({
-      from: config.from,
-      to,
-      subject,
-      html,
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const code =
-      error && typeof error === "object" && "code" in error
-        ? String((error as {code?: unknown}).code || "")
-        : "";
-    throw new Error(
-      code ? `Spacemail SMTP error [${code}]: ${message}` : `Spacemail SMTP error: ${message}`
-    );
-  }
-}
-
-export function emailTemplate(title: string, text: string, url?: string) {
-  return `<div style="font-family:Arial;background:#f5f6f8;padding:32px"><div style="max-width:560px;margin:auto;background:#fff;border-radius:20px;padding:30px"><b style="font-size:22px">NUMELIXA</b><h1>${title}</h1><p style="color:#667085;line-height:1.6">${text}</p>${url ? `<a href="${url}" style="display:inline-block;background:#111;color:#fff;padding:13px 18px;border-radius:10px;text-decoration:none">Continue</a>` : ""}</div></div>`;
-}
+const DEFAULT_HOST="mail.spacemail.com",DEFAULT_PORT=465;
+function smtpConfig(){const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim(),port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT),user=(process.env.SPACEMAIL_SMTP_USER||"").trim(),pass=process.env.SPACEMAIL_SMTP_PASSWORD||"",from=(process.env.SPACEMAIL_FROM||user).trim();if(!user)throw new Error("Spacemail SMTP username is missing. Check SPACEMAIL_SMTP_USER.");if(!pass)throw new Error("Spacemail SMTP password is missing. Check SPACEMAIL_SMTP_PASSWORD.");if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port. Use 465 for SSL.");return{host,port,user,pass,from}}
+function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim()}
+export async function sendEmail(to:string,subject:string,html:string){const config=smtpConfig();const transporter=nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,auth:{user:config.user,pass:config.pass}} as any);try{await transporter.verify();await transporter.sendMail({from:config.from,to,subject,text:plain(html),html,headers:{"X-Entity-Ref-ID":`numelixa-${Date.now()}`}})}catch(error){const message=error instanceof Error?error.message:String(error),code=error&&typeof error==="object"&&"code"in error?String((error as {code?:unknown}).code||""):"";throw new Error(code?`Spacemail SMTP error [${code}]: ${message}`:`Spacemail SMTP error: ${message}`)}}
+export function emailTemplate(title:string,text:string,url?:string){return `<!doctype html><html><body style="margin:0;background:#f5f6f8;font-family:Arial,sans-serif;color:#111827"><div style="padding:32px 16px"><div style="max-width:560px;margin:auto;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:30px"><div style="font-size:22px;font-weight:800;letter-spacing:.5px">NUMELIXA</div><h1 style="font-size:24px;margin:24px 0 12px">${title}</h1><p style="color:#4b5563;line-height:1.6;margin:0 0 22px">${text}</p>${url?`<p><a href="${url}" style="display:inline-block;background:#111827;color:#fff;padding:13px 18px;border-radius:10px;text-decoration:none;font-weight:700">Continue to Numelixa</a></p><p style="font-size:12px;color:#98a2b3;line-height:1.5">If you did not request this email, you can ignore it.</p>`:""}<p style="font-size:12px;color:#98a2b3;margin-top:28px">Numelixa account security</p></div></div></body></html>`}
