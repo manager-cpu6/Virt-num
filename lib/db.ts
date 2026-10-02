@@ -5,7 +5,7 @@ if(process.env.NODE_ENV!=="production")g.__numelixaPool=pool;
 let ready:Promise<void>|null=null;
 export async function db<T=any>(text:string,values:any[]=[]):Promise<{rows:T[]}>{
  if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL is not configured");
- await ensureSchema(); return pool.query(text,values) as Promise<{rows:T[]}>;
+ await ensureSchema(); const result = await pool.query(text, values); return { rows: result.rows as T[] };
 }
 export async function tx<T>(fn:(c:PoolClient)=>Promise<T>):Promise<T>{
  if(!process.env.DATABASE_URL)throw new Error("DATABASE_URL is not configured");
