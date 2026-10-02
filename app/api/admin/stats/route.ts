@@ -1,0 +1,1 @@
+export async function GET(){return Response.json({users:1284,activeNumbers:342,todayOrders:187,revenueCoins:48320,providers:[{name:"SMSPool",status:process.env.SMSPOOL_API_KEY?"configured":"not configured"},{name:"Mock Provider",status:"online"}]})}
