@@ -1,0 +1,4 @@
+import Link from "next/link";
+import TopBar from "@/components/TopBar";
+import { demoOrders } from "@/lib/data";
+export default function NumbersPage(){return <div><TopBar title="My numbers"/><div className="balance-banner"><span>ACTIVE NUMBERS</span><strong>{demoOrders.length}</strong><small>Numbers remain visible here after purchase.</small></div><div className="list-card">{demoOrders.map(o=><Link className="number-row" key={o.id} href={`/get-code/${o.id}`}><div className="number-icon">{o.flag}</div><div className="number-main"><b>{o.number}</b><small>{o.service} · {o.country}</small></div><span className={o.status==="active"?"status active":"status"}>{o.status}</span><span className="chevron">›</span></Link>)}</div><Link href="/services" className="primary-btn full">+ Get another number</Link></div>}
