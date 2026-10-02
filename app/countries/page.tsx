@@ -1,0 +1,4 @@
+import Link from "next/link";
+import TopBar from "@/components/TopBar";
+import { countries } from "@/lib/data";
+export default async function CountriesPage({searchParams}:{searchParams:Promise<{service?:string}>}){const p=await searchParams;const service=p.service||"WhatsApp";return <div><TopBar title="Choose country" back/><div className="page-intro"><span className="eyebrow">SERVICE</span><h1>{service}</h1><p>Select a country to continue.</p></div><div className="list-card">{countries.map(c=><Link className="country-row" key={c.code} href={`/get-code/new?service=${encodeURIComponent(service)}&country=${c.code}`}><span className="flag">{c.flag}</span><span className="country-name"><b>{c.name}</b><small>{c.available} numbers available</small></span><span className="country-price">{c.price} <small>coins</small></span><span className="chevron">›</span></Link>)}</div></div>}
