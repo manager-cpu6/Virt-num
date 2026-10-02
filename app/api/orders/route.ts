@@ -1,32 +1,3 @@
-import {NextResponse} from "next/server";
-import crypto from "crypto";
-import {db,tx} from "@/lib/db";
-import {requireUser} from "@/lib/auth";
-import {purchase,cancel} from "@/lib/smspool";
-export async function POST(req:Request){
- let providerOrderId="";
- try{
-  const u=await requireUser();const b=await req.json();
-  const service=String(b.service||"").trim();const country=String(b.countryCode||b.country||"").trim();const countryCode=country;
-  if(!service||!country)return NextResponse.json({ok:false,error:"Service and country are required."},{status:400});
-  const id=crypto.randomUUID();const p=await purchase(country,service);providerOrderId=String(p?.order_id||"");
-  if(!p?.success||!providerOrderId)return NextResponse.json({ok:false,error:p?.type||p?.message||"No number available."},{status:409});
-  const cost=Number(p.cost||0),price=Math.ceil(cost*(1+Number(process.env.PRICE_MARKUP_PERCENT||25)/100)*Number(process.env.COINS_PER_USD||100));
-  try{
-   const order=await tx(async c=>{
-    const bal=await c.query<any>("SELECT coins FROM users WHERE id=$1 FOR UPDATE",[u.id]);
-    if(Number(bal.rows[0]?.coins||0)<price)throw new Error("INSUFFICIENT_COINS");
-    const after=Number(bal.rows[0].coins)-price;
-    await c.query("UPDATE users SET coins=$1 WHERE id=$2",[after,u.id]);
-    await c.query("INSERT INTO coin_transactions(id,user_id,type,amount,balance_after,reference,description) VALUES($1,$2,'debit',$3,$4,$5,$6)",[crypto.randomUUID(),u.id,-price,after,id,"Number purchase: "+service+" / "+country]);
-    await c.query("INSERT INTO orders(id,user_id,provider_order_id,service,country,country_code,phone_number,provider_cost_usd,price_coins,status,expires_at) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,'waiting',to_timestamp($10))",[id,u.id,providerOrderId,service,p.country||country,countryCode,String(p.number||p.phonenumber||""),cost,price,Number(p.expiration||Math.floor(Date.now()/1000)+Number(p.expires_in||1200))]);
-    return{id,number:p.number||p.phonenumber,price,expiresIn:p.expires_in};
-   });return NextResponse.json({ok:true,order});
-  }catch(e){try{await cancel(providerOrderId)}catch{}throw e}
- }catch(e){
-  const m=e instanceof Error?e.message:"Order failed";
-  if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
-  if(m==="INSUFFICIENT_COINS")return NextResponse.json({ok:false,error:"Insufficient coins. Please top up your wallet."},{status:402});
-  return NextResponse.json({ok:false,error:m},{status:500});
- }
-}
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel} from "@/lib/smspool";
+export const runtime="nodejs";export const dynamic="force-dynamic";
+export async function POST(req:Request){let providerOrderId="";try{const u=await requireUser(),fresh=await (await collection<any>("users")).findOne({_id:u.id});if(!fresh?.verifiedAt)return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying a number."},{status:403});const b=await req.json(),service=String(b.service||"").trim(),country=String(b.countryCode||b.country||"").trim();if(!service||!country)return NextResponse.json({ok:false,error:"Service and country are required."},{status:400});const p=await purchase(country,service);providerOrderId=String(p?.order_id||"");if(!p?.success||!providerOrderId)return NextResponse.json({ok:false,error:p?.type||p?.message||"No number available."},{status:409});const cost=Number(p.cost||0),price=Math.ceil(cost*(1+Number(process.env.PRICE_MARKUP_PERCENT||25)/100)*Number(process.env.COINS_PER_USD||100)),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),id=mongoId();const updated=await users.findOneAndUpdate({_id:u.id,coins:{$gte:price}},{$inc:{coins:-price}},{returnDocument:"after"});if(!updated){try{await cancel(providerOrderId)}catch{}return NextResponse.json({ok:false,error:"Insufficient coins. Please top up your wallet."},{status:402})}const after=Number(updated.coins||0);try{await txs.insertOne({_id:mongoId(),userId:u.id,type:"debit",amount:-price,balanceAfter:after,reference:id,description:"Number purchase: "+service+" / "+country,createdAt:new Date()});const expiration=Number(p.expiration||Math.floor(Date.now()/1000)+Number(p.expires_in||1200));await orders.insertOne({_id:id,userId:u.id,providerOrderId,service,country:String(p.country||country),countryCode:country,phoneNumber:String(p.number||p.phonenumber||""),providerCostUsd:cost,priceCoins:price,status:"waiting",code:null,fullSms:null,expiresAt:new Date(expiration*1000),createdAt:new Date()});return NextResponse.json({ok:true,order:{id,number:p.number||p.phonenumber,price,expiresIn:p.expires_in}})}catch(e){await users.updateOne({_id:u.id},{$inc:{coins:price}});try{await cancel(providerOrderId)}catch{}throw e}}catch(e){const m=e instanceof Error?e.message:"Order failed";if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});return NextResponse.json({ok:false,error:m},{status:500})}}
