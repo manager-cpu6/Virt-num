@@ -8,5 +8,5 @@ export async function createInvoice(input:{amount:string;order_id:string;url_ret
  const j=await r.json();if(!r.ok||j?.state!==0)throw new Error(j?.message||"Cryptomus invoice failed");return j.result;
 }
 export function verifyWebhook(data:any){
- if(!apiKey||!data?.sign)return false;const received=String(data.sign);const copy={...data};delete copy.sign;const expected=signature(JSON.stringify(copy));return crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(received));
+ if(!apiKey||!data?.sign)return false;const received=String(data.sign);const copy={...data};delete copy.sign;const expected=signature(JSON.stringify(copy));if(expected.length!==received.length)return false;return crypto.timingSafeEqual(Buffer.from(expected),Buffer.from(received));
 }
