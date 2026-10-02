@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TopBar from "@/components/TopBar";
 import {getUser} from "@/lib/auth";
 export default async function AccountPage(){
  const user=await getUser();
