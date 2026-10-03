@@ -92,3 +92,14 @@
 .auth-switch{font-size:11px;color:#77999b;margin-top:18px}.auth-back{display:block;text-align:center;margin-top:14px;color:#74dcca;font-size:10px;font-weight:800;text-decoration:none}
 .recovery-success{display:flex;gap:10px!important;align-items:flex-start}.recovery-success span{width:27px;height:27px;display:grid;place-items:center;border-radius:50%;background:rgba(75,225,193,.12);color:#66e4cb;font-weight:900}.recovery-success p{margin:4px 0 0!important;font-size:10px;line-height:1.5;color:#80a3a3}
 @media(max-width:430px){.topbar{padding-left:10px!important;padding-right:10px!important}.topbar-brand .coin-pill{min-width:92px}.topbar-brand .coin-pill small{display:none}.auth-modern{padding-left:14px;padding-right:14px}.auth-intro h1{font-size:30px}}
+
+/* Service identity: render exactly one logo or one fallback letter. Keep it out of the OTP center. */
+.get-number-card .service-badge,.order-service-head .service-badge{position:relative;flex:0 0 auto;overflow:hidden;background:rgba(121,246,229,.08);border:1px solid rgba(121,246,229,.12)}
+.get-number-card .service-badge img,.order-service-head .service-badge img{display:block;width:60%;height:60%;object-fit:contain;margin:auto}
+.get-number-card .service-fallback,.order-service-head .service-fallback{position:static;display:grid;place-items:center;width:100%;height:100%;font-weight:950;font-size:20px;color:#79e7d3}
+.order-service-head{position:relative;padding:6px 2px 14px}
+.order-service-head>div:last-child{min-width:0}
+.order-service-head .service-badge{order:2;margin-left:auto;width:42px;height:42px;border-radius:13px}
+.order-service-head .service-badge+.service-copy{order:1}
+.order-service-head b{font-size:15px}
+.order-service-head small{font-size:9px}
