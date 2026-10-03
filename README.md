@@ -5,3 +5,5 @@ Modern virtual-number and SMS verification platform prototype.
 Built with Next.js App Router and designed for Vercel deployment. Provider credentials stay server-side in environment variables.
 
 <!-- Vercel deployment trigger 2026-10-04 -->
+
+<!-- Numelixa deployment trigger 2026-10-04 OTP mobile developer polish -->
