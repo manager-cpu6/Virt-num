@@ -57,7 +57,7 @@ export async function stock(country:string,service:string){return getPrice(count
 export async function purchase(country:string,service:string,maxPrice?:number){
  const v=await call("getNumber",{country,service,...(Number.isFinite(maxPrice)?{maxPrice}: {})});
  const s=String(v);
- const m=s.match(/^ACCESS_NUMBER:(\\d+):(.*)$/);
+ const m=s.match(/^ACCESS_NUMBER:(\d+):(.*)$/);
  if(!m)throw new Error(s);
  return {success:1,order_id:m[1],number:m[2],country,service,expires_in:600};
 }
