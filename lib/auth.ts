@@ -1,6 +1,21 @@
 import {cookies} from "next/headers";import crypto from "crypto";import bcrypt from "bcryptjs";import {collection,mongoId} from "./mongo";
 const COOKIE="numelixa_session";
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
+export async function ensureAdmin(){
+ const email=(process.env.ADMIN_EMAIL||"").trim().toLowerCase();
+ const password=process.env.ADMIN_PASSWORD||"";
+ if(!email||!password||!email.includes("@"))return null;
+ const users=await collection<any>("users");
+ const existing=await users.findOne({email});
+ const password_hash=await bcrypt.hash(password,12);
+ if(!existing){
+  const id=mongoId();
+  await users.insertOne({_id:id,email,name:"Admin",password_hash,role:"admin",coins:0,verifiedAt:new Date(),createdAt:new Date()});
+  return id;
+ }
+ await users.updateOne({_id:existing._id},{$set:{role:"admin",password_hash,name:existing.name||"Admin"}});
+ return String(existing._id);
+}
 export async function createSession(userId:string){
  const raw=crypto.randomBytes(32).toString("hex");
  await (await collection("sessions")).insertOne({tokenHash:hash(raw),userId,expiresAt:new Date(Date.now()+30*24*60*60*1000),createdAt:new Date()});
@@ -15,7 +30,7 @@ export async function getUser(){
  return {id:String(u._id),email:u.email,name:u.name,role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||null};
 }
 export async function requireUser(){const u=await getUser();if(!u)throw new Error("AUTH_REQUIRED");return u}
-export async function requireAdmin(){const u=await requireUser();if(u.role!=="admin")throw new Error("ADMIN_REQUIRED");return u}
+export async function requireAdmin(){await ensureAdmin();const u=await requireUser();if(u.role!=="admin")throw new Error("ADMIN_REQUIRED");return u}
 export async function logout(){const raw=(await cookies()).get(COOKIE)?.value;if(raw)await (await collection("sessions")).deleteOne({tokenHash:hash(raw)});(await cookies()).delete(COOKIE)}
 export async function passwordHash(p:string){return bcrypt.hash(p,12)}
 export async function passwordCheck(p:string,h:string){return bcrypt.compare(p,h)}
