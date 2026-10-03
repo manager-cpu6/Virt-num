@@ -1,4 +1,4 @@
-const base=(process.env.SMSACTIVATE_BASE_URL||"https://api.sms-activate.ae/stubs/handler_api.php").trim();
+const base="https://api.sms-activate.ae/stubs/handler_api.php";
 const key=process.env.SMSACTIVATE_API_KEY?.trim();
 const TTL=5*60*1000;
 let countriesCache:{at:number;items:any[]}|null=null;
