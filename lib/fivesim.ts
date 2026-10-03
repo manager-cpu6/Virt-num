@@ -116,9 +116,10 @@ export async function servicePrices(service:string,countries:any[]=[]){
   if(cached&&Date.now()-cached.at<TTL)return cached.value;
   const raw=await guest("/v1/guest/prices?product="+encodeURIComponent(service));
   const out:Record<string,{cost:number;count:number;rate:number}>={};
-  for(const [country,countryTree] of Object.entries(raw||{})){ 
-    const productTree=(countryTree as any)?.[service]||{};
-    const p=bestOperator(productTree);
+  // 5SIM returns /prices?product=... as: { product: { country: { operator: ... } } }
+  const productTree=(raw as any)?.[service] || {};
+  for(const [country,countryTree] of Object.entries(productTree)){ 
+    const p=bestOperator(countryTree);
     const match=countries.find(c=>String(c.id).toLowerCase()===String(country).toLowerCase());
     const id=String(match?.id||country);
     out[id]=p;
