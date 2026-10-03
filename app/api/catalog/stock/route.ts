@@ -9,7 +9,7 @@ export async function GET(req:Request){
     const u=new URL(req.url),country=u.searchParams.get("country")||"",service=u.searchParams.get("service")||"";
     if(!country||!service)return NextResponse.json({ok:false},{status:400});
     const q=await stock(country,service),settings=await getSettings();
-    return NextResponse.json({ok:true,stock:{...q,providerCost:q.cost,sellCoins:sellCoins(q.cost,settings),currency:"USD",markupPercent:settings.markupPercent}});
+    const coins=sellCoins(q.cost,settings); return NextResponse.json({ok:true,stock:{...q,providerCost:q.cost,sellCoins:coins,usdPrice:coins/settings.coinsPerUsd,currency:"USD",markupPercent:settings.markupPercent,coinsPerUsd:settings.coinsPerUsd}});
   }catch{
     return NextResponse.json({ok:false},{status:502});
   }
