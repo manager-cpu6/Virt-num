@@ -25,6 +25,7 @@ function friendlyError(value:string){
 export default function CodeClient({orderId,phoneNumber,service,country}:Props){
  const[code,setCode]=useState(""),[status,setStatus]=useState("waiting"),[loading,setLoading]=useState(false),[seconds,setSeconds]=useState(600),[error,setError]=useState(""),[copied,setCopied]=useState("");
  const name=serviceName(service),slug=service.toLowerCase();
+ const [logoLoaded,setLogoLoaded]=useState(true);
 
  async function copyText(value:string,label:string){
    if(!value)return;
@@ -57,8 +58,7 @@ export default function CodeClient({orderId,phoneNumber,service,country}:Props){
  return <div className="code-area">
    <div className="order-service-head">
      <span className={"service-badge service-icon-"+slug}>
-       <img src={"https://cdn.simpleicons.org/"+slug} alt="" onError={e=>{e.currentTarget.style.display="none"}}/>
-       <span className="service-fallback">{name.slice(0,1)}</span>
+       {logoLoaded ? <img src={"https://cdn.simpleicons.org/"+slug} alt={name+" logo"} onLoad={()=>setLogoLoaded(true)} onError={()=>setLogoLoaded(false)}/> : <span className="service-fallback">{name.slice(0,1).toUpperCase()}</span>}
      </span>
      <div><b>{name}</b><small>{country}</small></div>
    </div>
