@@ -1,41 +1,282 @@
 import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";
 export const runtime="nodejs";export const dynamic="force-dynamic";
-export async function POST(req:Request){let providerOrderId="",debitWritten=false,service="",country="",userId="";try{
- const u=await requireUser();userId=String(u.id||"");const fresh=await (await collection<any>("users")).findOne({_id:u.id});if(!fresh?.verifiedAt)return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying a number."},{status:403});
- const b=await req.json();service=String(b.service||"").trim();country=String(b.countryCode||b.country||"").trim();if(!service||!country)return NextResponse.json({ok:false,error:"Service and country are required."},{status:400});
- const settings=await getSettings();
- const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
- const quote=await getPrice(country,service,operator);
- if(!quote.count||!quote.cost)return NextResponse.json({ok:false,error:operator==="any"?"This service/country is currently out of stock.":"The selected 5SIM operator is currently out of stock for this service/country."},{status:409});
- const price=sellCoins(quote.cost,settings),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),orders=await collection<any>("orders"),id=mongoId();
- const updated=await users.findOneAndUpdate({_id:u.id,coins:{$gte:price}},{$inc:{coins:-price}},{returnDocument:"after"});if(!updated)return NextResponse.json({ok:false,error:"Insufficient coins. Please top up your wallet."},{status:402});
- try{
-  const p=await purchase(country,service,Number(quote.cost),operator);providerOrderId=String(p.order_id||"");if(!providerOrderId)throw new Error("Provider did not return an activation ID.");
-  const now=new Date(),expiresAt=new Date(now.getTime()+10*60*1000),number=String(p.number||"");await txs.insertOne({_id:mongoId(),userId:u.id,type:"debit",amount:-price,balanceAfter:Number(updated.coins||0),reference:id,description:"Number purchase: "+service+" / "+country,createdAt:now});debitWritten=true;
-  await orders.insertOne({_id:id,userId:u.id,providerOrderId,service,country,countryCode:country,phoneNumber:number,providerCostUsd:Number(p.providerCost||quote.cost),providerOperator:String(p.operator||operator),priceCoins:price,status:"waiting",code:null,fullSms:null,expiresAt,createdAt:now,cancelledAt:null,completedAt:null,refundCoins:0});
-  return NextResponse.json({ok:true,order:{id,number,price,expiresIn:600,stockAfter:Math.max(0,Number(quote.count)-1)}})
- }catch(e){
-  try{if(providerOrderId)await cancel(providerOrderId)}catch{}
-  const refund=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:price}},{returnDocument:"after"});
-  if(debitWritten)try{await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:price,balanceAfter:Number(refund?.coins||0),reference:id,description:"Refund after failed order creation",createdAt:new Date()})}catch{}
-  throw e
- }
- }catch(e){
- const m=e instanceof Error?e.message:"Order failed";
- console.error("[5SIM ORDER]",{message:m,service,country,userId});
- if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
- if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
- if(m==="PROVIDER_BALANCE_TOO_LOW")return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
- if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
- if(/not enough user balance/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
- if(/not enough rating/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
- if(/bad country/i.test(m))return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
- if(/bad operator/i.test(m))return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
- if(/no product/i.test(m))return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
- if(/server offline/i.test(m))return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
- if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
- return NextResponse.json({ok:false,error:"5SIM purchase failed. Please try again."},{status:502})
-}}
+export async function POST(req:Request){
+  let providerOrderId="",service="",country="",userId="",price=0;
+  let walletDebited=false;
+
+  try{
+    const u=await requireUser();
+    userId=String(u.id||"");
+
+    const users=await collection<any>("users");
+    const fresh=await users.findOne({_id:u.id});
+    if(!fresh?.verifiedAt){
+      return NextResponse.json(
+        {ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying a number."},
+        {status:403}
+      );
+    }
+
+    const b=await req.json();
+    service=String(b.service||"").trim();
+    country=String(b.countryCode||b.country||"").trim();
+    if(!service||!country){
+      return NextResponse.json({ok:false,error:"Service and country are required."},{status:400});
+    }
+
+    const settings=await getSettings();
+    const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
+
+    // Always obtain a fresh provider quote immediately before debiting.
+    const quote=await getPrice(country,service,operator);
+    if(!quote.count||!quote.cost){
+      return NextResponse.json(
+        {ok:false,error:operator==="any"
+          ?"This service/country is currently out of stock."
+          :"The selected 5SIM operator is currently out of stock for this service/country."},
+        {status:409}
+      );
+    }
+
+    price=sellCoins(quote.cost,settings);
+
+    const txs=await collection<any>("coinTransactions");
+    const orders=await collection<any>("orders");
+    const id=mongoId();
+
+    // Debit the Numelixa wallet exactly once, before provider purchase.
+    const updated=await users.findOneAndUpdate(
+      {_id:u.id,coins:{$gte:price}},
+      {$inc:{coins:-price}},
+      {returnDocument:"after"}
+    );
+    if(!updated){
+      return NextResponse.json(
+        {ok:false,error:"Insufficient coins. Please top up your wallet."},
+        {status:402}
+      );
+    }
+    walletDebited=true;
+
+    try{
+      // IMPORTANT: purchase() is the only place that talks to 5SIM.
+      // If 5SIM does not return an activation, no order is created.
+      const p=await purchase(country,service,Number(quote.cost),operator);
+      providerOrderId=String(p.order_id||"");
+      const number=String(p.number||"");
+      if(!providerOrderId||!number){
+        throw new Error("Provider did not return a complete activation.");
+      }
+
+      const now=new Date();
+      const expiresAt=p.expires_at
+        ? new Date(p.expires_at)
+        : new Date(now.getTime()+Number(p.expires_in||600)*1000);
+
+      const orderDoc={
+        _id:id,
+        userId:u.id,
+        providerOrderId,
+        service,
+        country,
+        countryCode:country,
+        phoneNumber:number,
+        providerCostUsd:Number(p.providerCost||quote.cost),
+        providerOperator:String(p.operator||operator),
+        priceCoins:price,
+        status:"waiting",
+        code:null,
+        fullSms:null,
+        expiresAt,
+        createdAt:now,
+        cancelledAt:null,
+        completedAt:null,
+        refundCoins:0
+      };
+
+      // Provider purchase succeeded. Persist the actual activation BEFORE
+      // treating the request as successful. Retry transient Mongo failures
+      // and recover an already-inserted order by providerOrderId.
+      let saved=false;
+      let lastDbError:any=null;
+      for(let attempt=1;attempt<=2&&!saved;attempt++){
+        try{
+          await orders.insertOne(orderDoc);
+          saved=true;
+        }catch(e){
+          lastDbError=e;
+          const existing=await orders.findOne({providerOrderId});
+          if(existing){
+            if(String(existing.userId)!==String(u.id)){
+              throw new Error("PROVIDER_ORDER_CONFLICT");
+            }
+            saved=true;
+          }else if(attempt<2){
+            await new Promise(r=>setTimeout(r,250));
+          }
+        }
+      }
+
+      if(!saved){
+        // The activation is real, but Numelixa could not persist it. Do not
+        // silently report a normal purchase failure. Try to cancel; only
+        // refund if cancellation is confirmed.
+        let cancelled=false;
+        try{
+          await cancel(providerOrderId);
+          cancelled=true;
+        }catch{}
+
+        if(cancelled){
+          const refund=await users.findOneAndUpdate(
+            {_id:u.id},
+            {$inc:{coins:price}},
+            {returnDocument:"after"}
+          );
+          try{
+            await txs.insertOne({
+              _id:mongoId(),userId:u.id,type:"refund",amount:price,
+              balanceAfter:Number(refund?.coins||0),reference:id,
+              description:"Refund after order persistence failure",createdAt:new Date()
+            });
+          }catch{}
+          throw new Error("ORDER_SAVE_FAILED_REFUNDED");
+        }
+
+        console.error("[5SIM ORDER ORPHAN]",{
+          providerOrderId,number,service,country,userId,
+          dbError:lastDbError instanceof Error?lastDbError.message:String(lastDbError)
+        });
+        throw new Error("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:"+providerOrderId+":"+number);
+      }
+
+      // The actual order is now durable. Ledger logging is secondary and
+      // must never turn a successful provider purchase into a fake failure.
+      try{
+        await txs.insertOne({
+          _id:mongoId(),
+          userId:u.id,
+          type:"debit",
+          amount:-price,
+          balanceAfter:Number(updated.coins||0),
+          reference:id,
+          description:"Number purchase: "+service+" / "+country,
+          createdAt:now
+        });
+      }catch(e){
+        console.error("[5SIM ORDER LEDGER]",{
+          orderId:id,providerOrderId,userId,
+          message:e instanceof Error?e.message:String(e)
+        });
+      }
+
+      return NextResponse.json({
+        ok:true,
+        order:{
+          id,
+          number,
+          price,
+          providerCost:Number(p.providerCost||quote.cost),
+          operator:String(p.operator||operator),
+          expiresIn:Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000)),
+          stockAfter:Math.max(0,Number(quote.count)-1)
+        }
+      });
+    }catch(e){
+      // If no provider activation was created, refund the wallet debit.
+      // If an activation exists, only refund after a confirmed provider
+      // cancellation; otherwise the activation remains recoverable.
+      if(providerOrderId){
+        const existing=await orders.findOne({providerOrderId});
+        if(existing&&String(existing.userId)===String(u.id)){
+          return NextResponse.json({
+            ok:true,
+            order:{
+              id:String(existing._id),
+              number:String(existing.phoneNumber||""),
+              price:Number(existing.priceCoins||price),
+              providerCost:Number(existing.providerCostUsd||quote.cost),
+              operator:String(existing.providerOperator||operator),
+              expiresIn:Math.max(0,Math.floor((new Date(existing.expiresAt).getTime()-Date.now())/1000)),
+              stockAfter:Math.max(0,Number(quote.count)-1)
+            }
+          });
+        }
+      }
+
+      if(walletDebited){
+        let cancelled=false;
+        if(providerOrderId){
+          try{await cancel(providerOrderId);cancelled=true}catch{}
+        }
+
+        if(cancelled||!providerOrderId){
+          const refund=await users.findOneAndUpdate(
+            {_id:u.id},
+            {$inc:{coins:price}},
+            {returnDocument:"after"}
+          );
+          try{
+            await txs.insertOne({
+              _id:mongoId(),
+              userId:u.id,
+              type:"refund",
+              amount:price,
+              balanceAfter:Number(refund?.coins||0),
+              reference:"failed-"+providerOrderId+"-"+Date.now(),
+              description:"Refund after failed number purchase",
+              createdAt:new Date()
+            });
+          }catch{}
+        }
+      }
+
+      throw e;
+    }
+  }catch(e){
+    const m=e instanceof Error?e.message:"Order failed";
+    console.error("[5SIM ORDER]",{message:m,service,country,userId,providerOrderId});
+
+    if(m==="AUTH_REQUIRED")
+      return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
+    if(m==="EMAIL_VERIFICATION_REQUIRED")
+      return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
+    if(m==="PROVIDER_BALANCE_TOO_LOW")
+      return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
+    if(m==="PRICE_CHANGED")
+      return NextResponse.json({ok:false,error:"5SIM changed the number price before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
+    if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
+    if(/not enough user balance/i.test(m))
+      return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
+    if(/not enough rating/i.test(m))
+      return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
+    if(/bad country/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
+    if(/bad operator/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
+    if(/no product/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
+    if(/server offline/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
+    if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
+      return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
+    if(m==="ORDER_SAVE_FAILED_REFUNDED")
+      return NextResponse.json({ok:false,error:"The number service could not be saved, so your coins were refunded. Please try again."},{status:502});
+    if(m.startsWith("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:")){
+      const parts=m.split(":");
+      return NextResponse.json({
+        ok:false,
+        code:"ACTIVATION_RECOVERY_REQUIRED",
+        error:"5SIM issued a number, but Numelixa could not save the order. Do not buy another number. Contact support with activation ID "+(parts[1]||"unknown")+"."
+      },{status:503});
+    }
+    if(m==="PROVIDER_ORDER_CONFLICT")
+      return NextResponse.json({ok:false,error:"The provider activation could not be safely attached to this account. Please contact support."},{status:409});
+
+    return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
+  }
+}
 export async function DELETE(req:Request){try{
  const u=await requireUser(),b=await req.json(),id=String(b.orderId||""),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),o=await orders.findOne({_id:id,userId:u.id});
  if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
