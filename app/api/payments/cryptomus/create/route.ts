@@ -20,7 +20,6 @@ export async function POST(req:Request){
     if(!pack)return NextResponse.json({ok:false,error:"This coin package is no longer available."},{status:400});
 
     const amount=Number(pack.priceUsd);
-    if(!Number.isFinite(amount)||amount<settings.minTopupUsd||amount>settings.maxTopupUsd)return NextResponse.json({ok:false,error:"This coin package is outside the current payment limits."},{status:400});
 
     const orderId="topup_"+crypto.randomUUID();
     const base=(process.env.NEXT_PUBLIC_APP_URL||"https://numelixa.com").replace(/\/$/,"");
