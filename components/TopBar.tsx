@@ -1,9 +1,25 @@
 "use client";
 import Link from "next/link";
+
 export default function TopBar({title="Numelixa",back=false}:{title?:string;back?:boolean}){
- return <header className="topbar">
-  {back?<Link href="/" className="icon-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M15 18l-6-6 6-6"/></svg></Link>:<Link href="/" className="brand-mark">N</Link>}
-  <div className="top-title">{title}</div>
-  {!back?<Link href="/account" className="icon-btn" aria-label="Account"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9"><circle cx="12" cy="8" r="3.2"/><path d="M5.5 19c.9-3.1 3-4.7 6.5-4.7s5.6 1.6 6.5 4.7"/></svg></Link>:<div className="top-spacer"/>}
+ return <header className={"topbar "+(back?"topbar-detail":"topbar-brand")}>
+  {back ? (
+    <Link href="/services" className="icon-btn" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1"><path d="M15 18l-6-6 6-6"/></svg>
+    </Link>
+  ) : (
+    <Link href="/" className="brand-lockup" aria-label="Numelixa home">
+      <span className="brand-logo">N</span>
+      <span className="brand-copy"><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span>
+    </Link>
+  )}
+  <div className="top-title">{back?title:""}</div>
+  {back ? (
+    <button className="icon-btn" type="button" aria-label="Filters">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 7h10M18 7h2M4 12h2M10 12h10M4 17h10M18 17h2"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="12" r="2"/><circle cx="16" cy="17" r="2"/></svg>
+    </button>
+  ) : (
+    <button className="menu-btn" type="button" aria-label="Menu"><span></span><span></span><span></span></button>
+  )}
  </header>;
 }
