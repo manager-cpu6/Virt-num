@@ -1,4 +1,56 @@
-import {NextResponse} from "next/server";import {listCountries,providerConfigured} from "@/lib/smspool";
-export const runtime="nodejs";export const dynamic="force-dynamic";
-function flag(id:string,name:string){const raw=name.toLowerCase();const aliases:Record<string,string>={ethiopia:"ET",somalia:"SO",kenya:"KE",nigeria:"NG",canada:"CA",burundi:"BI",cambodia:"KH",cameroon:"CM",china:"CN",chile:"CL",turkey:"TR","united states":"US","united kingdom":"GB",south africa:"ZA",tanzania:"TZ",uganda:"UG",ghana:"GH",rwanda:"RW"};const code=aliases[raw]||"";return code?String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0))):"🌐"}
-export async function GET(){try{if(!providerConfigured())return NextResponse.json({ok:false,error:"SMS-Activate API is not configured."},{status:503});const countries=(await listCountries()).map((c:any)=>({...c,flag:flag(String(c.id),String(c.name))}));return NextResponse.json({ok:true,countries})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Unable to load countries"},{status:502})}}
+import {NextResponse} from "next/server";
+import {listCountries,providerConfigured} from "@/lib/smspool";
+
+export const runtime="nodejs";
+export const dynamic="force-dynamic";
+
+function flag(id:string,name:string){
+  const raw=name.toLowerCase().trim();
+  const aliases:Record<string,string>={
+    ethiopia:"ET",
+    somalia:"SO",
+    kenya:"KE",
+    nigeria:"NG",
+    canada:"CA",
+    burundi:"BI",
+    cambodia:"KH",
+    cameroon:"CM",
+    china:"CN",
+    chile:"CL",
+    turkey:"TR",
+    "united states":"US",
+    "united kingdom":"GB",
+    "south africa":"ZA",
+    tanzania:"TZ",
+    uganda:"UG",
+    ghana:"GH",
+    rwanda:"RW"
+  };
+  const code=aliases[raw]||"";
+  return code
+    ? String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0)))
+    : "🌐";
+}
+
+export async function GET(){
+  try{
+    if(!providerConfigured()){
+      return NextResponse.json(
+        {ok:false,error:"SMS-Activate API is not configured."},
+        {status:503}
+      );
+    }
+
+    const countries=(await listCountries()).map((c:any)=>({
+      ...c,
+      flag:flag(String(c.id),String(c.name||c.eng||c.rus||""))
+    }));
+
+    return NextResponse.json({ok:true,countries});
+  }catch(e){
+    return NextResponse.json(
+      {ok:false,error:e instanceof Error?e.message:"Unable to load countries"},
+      {status:502}
+    );
+  }
+}
