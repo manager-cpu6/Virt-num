@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/smspool";import {getSettings,sellCoins} from "@/lib/settings";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){let providerOrderId="",debitWritten=false;try{
  const u=await requireUser(),fresh=await (await collection<any>("users")).findOne({_id:u.id});if(!fresh?.verifiedAt)return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying a number."},{status:403});
@@ -17,11 +17,11 @@ export async function POST(req:Request){let providerOrderId="",debitWritten=fals
   if(debitWritten)try{await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:price,balanceAfter:Number(refund?.coins||0),reference:id,description:"Refund after failed order creation",createdAt:new Date()})}catch{}
   throw e
  }
- }catch(e){const m=e instanceof Error?e.message:"Order failed";if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});return NextResponse.json({ok:false,error:m},{status:500})}}
+ }catch(e){const m=e instanceof Error?e.message:"Order failed";if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});return NextResponse.json({ok:false,error:"Unable to reserve the number right now. Please try again."},{status:500})}}
 export async function DELETE(req:Request){try{
  const u=await requireUser(),b=await req.json(),id=String(b.orderId||""),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),o=await orders.findOne({_id:id,userId:u.id});
  if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
  const age=Date.now()-new Date(o.createdAt).getTime();if(age>5*60*1000)return NextResponse.json({ok:false,error:"Cancel is available only during the first 5 minutes."},{status:409});
  await cancel(String(o.providerOrderId));const changed=await orders.findOneAndUpdate({_id:id,userId:u.id,status:"waiting"},{$set:{status:"cancelled",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},{returnDocument:"after"});if(!changed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
  const refund=Number(o.priceCoins||0),updated=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:refund}},{returnDocument:"after"});await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});return NextResponse.json({ok:true,refundedCoins:refund});
-}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Cancellation failed"},{status:500})}}
+}catch{return NextResponse.json({ok:false,error:"Cancellation failed. Please try again."},{status:500})}}
