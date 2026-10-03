@@ -3,13 +3,16 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){let providerOrderId="",debitWritten=false,service="",country="",userId="";try{
  const u=await requireUser();userId=String(u.id||"");const fresh=await (await collection<any>("users")).findOne({_id:u.id});if(!fresh?.verifiedAt)return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying a number."},{status:403});
  const b=await req.json();service=String(b.service||"").trim();country=String(b.countryCode||b.country||"").trim();if(!service||!country)return NextResponse.json({ok:false,error:"Service and country are required."},{status:400});
- const quote=await getPrice(country,service);if(!quote.count||!quote.cost)return NextResponse.json({ok:false,error:"This service/country is currently out of stock."},{status:409});
- const settings=await getSettings(),price=sellCoins(quote.cost,settings),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),orders=await collection<any>("orders"),id=mongoId();
+ const settings=await getSettings();
+ const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
+ const quote=await getPrice(country,service,operator);
+ if(!quote.count||!quote.cost)return NextResponse.json({ok:false,error:operator==="any"?"This service/country is currently out of stock.":"The selected 5SIM operator is currently out of stock for this service/country."},{status:409});
+ const price=sellCoins(quote.cost,settings),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),orders=await collection<any>("orders"),id=mongoId();
  const updated=await users.findOneAndUpdate({_id:u.id,coins:{$gte:price}},{$inc:{coins:-price}},{returnDocument:"after"});if(!updated)return NextResponse.json({ok:false,error:"Insufficient coins. Please top up your wallet."},{status:402});
  try{
-  const p=await purchase(country,service,Number(quote.cost));providerOrderId=String(p.order_id||"");if(!providerOrderId)throw new Error("Provider did not return an activation ID.");
+  const p=await purchase(country,service,Number(quote.cost),operator);providerOrderId=String(p.order_id||"");if(!providerOrderId)throw new Error("Provider did not return an activation ID.");
   const now=new Date(),expiresAt=new Date(now.getTime()+10*60*1000),number=String(p.number||"");await txs.insertOne({_id:mongoId(),userId:u.id,type:"debit",amount:-price,balanceAfter:Number(updated.coins||0),reference:id,description:"Number purchase: "+service+" / "+country,createdAt:now});debitWritten=true;
-  await orders.insertOne({_id:id,userId:u.id,providerOrderId,service,country,countryCode:country,phoneNumber:number,providerCostUsd:Number(quote.cost),priceCoins:price,status:"waiting",code:null,fullSms:null,expiresAt,createdAt:now,cancelledAt:null,completedAt:null,refundCoins:0});
+  await orders.insertOne({_id:id,userId:u.id,providerOrderId,service,country,countryCode:country,phoneNumber:number,providerCostUsd:Number(p.providerCost||quote.cost),providerOperator:String(p.operator||operator),priceCoins:price,status:"waiting",code:null,fullSms:null,expiresAt,createdAt:now,cancelledAt:null,completedAt:null,refundCoins:0});
   return NextResponse.json({ok:true,order:{id,number,price,expiresIn:600,stockAfter:Math.max(0,Number(quote.count)-1)}})
  }catch(e){
   try{if(providerOrderId)await cancel(providerOrderId)}catch{}
