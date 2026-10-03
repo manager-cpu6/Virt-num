@@ -35,14 +35,14 @@ export default function Developers(){
 
  const active=keys.find(k=>k.active);
 
- return <main style={{maxWidth:1120,margin:"0 auto",padding:"34px 18px 100px",color:"#eafff9"}}>
-  <div style={{marginBottom:28}}>
+ return <main className="developer-shell" style={{color:"#eafff9"}}>
+  <div className="developer-hero" style={{marginBottom:28}}>
    <div style={{fontSize:11,letterSpacing:3,color:"#72dfce",fontWeight:900}}>NUMELIXA DEVELOPERS</div>
    <h1 style={{fontSize:42,letterSpacing:-2.2,margin:"8px 0"}}>Developer API</h1>
    <p style={{color:"#83a5a6",maxWidth:800}}>Build your own app, bot or automation on top of Numelixa. Use your account balance to check live inventory, read current prices, buy numbers and retrieve SMS codes.</p>
   </div>
 
-  <section style={{display:"grid",gridTemplateColumns:"minmax(0,1.45fr) minmax(280px,.55fr)",gap:16,marginBottom:16}}>
+  <section className="developer-main-grid" style={{marginBottom:16}}>
    <div style={{padding:22,borderRadius:24,border:"1px solid rgba(121,246,229,.14)",background:"rgba(5,39,47,.78)"}}>
     <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
      <div><h2 style={{margin:"0 0 5px"}}>Production API key</h2><p style={{margin:0,fontSize:12,color:"#75999a"}}>Automatically created for every account. No manual Create API button.</p></div>
@@ -52,9 +52,9 @@ export default function Developers(){
     {visibleKey?
      <div style={{marginTop:18,padding:16,borderRadius:16,background:"rgba(114,223,206,.07)",border:"1px solid rgba(114,223,206,.2)"}}>
       <div style={{fontSize:11,color:"#72dfce",fontWeight:900,letterSpacing:1}}>NEW PRODUCTION KEY — COPY NOW</div>
-      <div style={{display:"flex",gap:9,alignItems:"stretch",marginTop:10}}>
-       <code style={{flex:1,minWidth:0,wordBreak:"break-all",padding:12,borderRadius:11,background:"rgba(0,0,0,.25)",fontSize:12}}>{visibleKey}</code>
-       <button onClick={copyKey} style={{padding:"0 15px",border:0,borderRadius:11,background:"#72dfce",color:"#03242b",fontWeight:950}}>Copy</button>
+      <div className="developer-key-row" style={{marginTop:10}}>
+       <code className="developer-key-value" style={{padding:12,borderRadius:11,background:"rgba(0,0,0,.25)",fontSize:12}}>{visibleKey}</code>
+       <button className="developer-key-copy" onClick={copyKey}>Copy API key</button>
       </div>
       <p style={{margin:"9px 0 0",fontSize:11,color:"#77999a"}}>The full secret is displayed when a new key is provisioned or replaced. After leaving this page it is hidden and cannot be recovered.</p>
      </div>
@@ -87,9 +87,9 @@ export default function Developers(){
   <section style={{padding:22,borderRadius:24,border:"1px solid rgba(121,246,229,.14)",background:"rgba(5,39,47,.78)",marginBottom:16}}>
    <h2 style={{marginTop:0}}>Key history</h2>
    {loading?"Loading…":keys.map(k=>
-    <div key={k._id} style={{display:"flex",justifyContent:"space-between",gap:15,padding:"15px 0",borderBottom:"1px solid rgba(255,255,255,.06)",alignItems:"center"}}>
+    <div key={k._id} className="developer-history-row">
      <div><b>{k.name}</b><div style={{marginTop:5,fontSize:11,color:"#78999a",fontFamily:"monospace"}}>{k.prefix}••••••••••••</div><div style={{marginTop:4,fontSize:11,color:k.active?"#79e5ae":"#9b8585"}}>{k.active?"Active":"Revoked"} · Created {new Date(k.createdAt).toLocaleString()}{k.revokedAt?" · Revoked "+new Date(k.revokedAt).toLocaleString():""}</div></div>
-     {k.active&&<button onClick={()=>revoke(k._id)} style={{border:"1px solid rgba(255,100,100,.25)",background:"transparent",color:"#ffaaa8",borderRadius:10,padding:"8px 12px",fontWeight:800}}>Revoke & Replace</button>}
+     {k.active&&<button className="developer-revoke" onClick={()=>revoke(k._id)}>Revoke & Replace</button>}
     </div>
    )}
   </section>
