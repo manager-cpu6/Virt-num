@@ -2,117 +2,42 @@ import nodemailer from "nodemailer";
 
 const DEFAULT_HOST="mail.spacemail.com";
 const DEFAULT_PORT=587;
-
 type SmtpConfig={host:string;port:number;user:string;pass:string;from:string};
 
 function smtpConfig():SmtpConfig{
-  const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
-  const port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
-  const user=(process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
-  const pass=process.env.SPACEMAIL_SMTP_PASSWORD||"";
-  const from=(process.env.SPACEMAIL_FROM||user).trim();
-
-  if(!user)throw new Error("Spacemail SMTP username is missing. Check SPACEMAIL_SMTP_USER.");
-  if(!pass)throw new Error("Spacemail SMTP password is missing. Check SPACEMAIL_SMTP_PASSWORD.");
-  if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port. Use 587 for STARTTLS or 465 for SSL.");
-  if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
-
-  return{host,port,user,pass,from};
+ const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
+ const user=(process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const pass=process.env.SPACEMAIL_SMTP_PASSWORD||"";
+ const from=(process.env.SPACEMAIL_FROM||user).trim();
+ if(!user)throw new Error("Spacemail SMTP username is missing.");
+ if(!pass)throw new Error("Spacemail SMTP password is missing.");
+ if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port.");
+ if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
+ return{host,port,user,pass,from};
 }
+function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|h3|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim();}
+function makeTransporter(config:SmtpConfig){return nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,requireTLS:config.port===587,auth:{user:config.user,pass:config.pass},tls:{minVersion:"TLSv1.2",servername:config.host}} as any);}
+async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);await transporter.verify();const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa","Auto-Submitted":"auto-generated","X-Auto-Response-Suppress":"All"}});}
+function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
+export async function sendEmail(to:string,subject:string,html:string){const config=smtpConfig();try{await sendWithConfig(config,to,subject,html);}catch(error){if(config.port===465&&isSocketTlsError(error)){try{await sendWithConfig({...config,port:587},to,subject,html);return;}catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Spacemail SMTP error: "+message);}}const message=error instanceof Error?error.message:String(error);throw new Error("Spacemail SMTP error: "+message);}}
 
-function plain(html:string){
-  return html
-    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"")
-    .replace(/<br\s*\/?>(?=.)/gi,"\n")
-    .replace(/<\/(p|div|h1|h2|li)>/gi,"\n")
-    .replace(/<[^>]+>/g,"")
-    .replace(/&nbsp;/g," ")
-    .replace(/&amp;/g,"&")
-    .replace(/&lt;/g,"<")
-    .replace(/&gt;/g,">")
-    .replace(/\n{3,}/g,"\n\n")
-    .trim();
+const shell=(content:string,preheader:string)=>{
+ const logo='<div style="width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#58e6cf,#0c777a);color:#031d25;font-size:22px;font-weight:900;display:grid;place-items:center;box-shadow:0 10px 28px rgba(39,218,190,.25)">N</div>';
+ return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"></head><body style="margin:0;background:#061d24;font-family:Arial,Helvetica,sans-serif;color:#ecfffb"><div style="display:none;max-height:0;overflow:hidden;opacity:0">'+preheader+'</div><div style="padding:34px 14px;background:radial-gradient(circle at 50% 0,#0b5960 0,#061d24 46%,#04151b 100%);min-height:100vh"><div style="max-width:590px;margin:auto"><div style="padding:4px 8px 18px">'+logo+'<div style="margin-top:10px;font-size:11px;font-weight:800;letter-spacing:3px;color:#78dccc">NUMELIXA</div></div><div style="background:rgba(7,40,48,.96);border:1px solid rgba(116,235,214,.16);border-radius:28px;padding:30px 26px;box-shadow:0 24px 70px rgba(0,0,0,.3)">'+content+'</div><div style="padding:22px 8px;text-align:center;color:#62898c;font-size:11px;line-height:1.6">Numelixa · Global Virtual Numbers<br>Secure account & SMS services</div></div></div></body></html>';
+};
+
+export function verificationEmail(code:string){
+ return shell('<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#62ddca">EMAIL VERIFICATION</div><h1 style="font-size:31px;line-height:1.1;margin:10px 0;color:#f2fffc">Verify your email</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">Use the secure code below to confirm your Numelixa account.</p><div style="margin:26px 0;padding:24px;border-radius:20px;background:#041d25;border:1px solid rgba(100,235,211,.18);text-align:center"><div style="font-size:40px;letter-spacing:10px;font-weight:900;color:#f2fffc">'+code+'</div><div style="margin-top:9px;font-size:11px;color:#6e999a">Expires in 10 minutes</div></div><p style="font-size:11px;color:#709294;line-height:1.6">Never share this code. If you did not request it, you can safely ignore this email.</p>','Your Numelixa email verification code expires in 10 minutes.');
 }
-
-function makeTransporter(config:SmtpConfig){
-  const secure=config.port===465;
-  return nodemailer.createTransport({
-    host:config.host,
-    port:config.port,
-    secure,
-    requireTLS:config.port===587,
-    auth:{user:config.user,pass:config.pass},
-    tls:{
-      minVersion:"TLSv1.2",
-      servername:config.host
-    }
-  } as any);
+export function welcomeEmail(name:string){
+ return shell('<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#62ddca">WELCOME TO NUMELIXA</div><h1 style="font-size:31px;line-height:1.1;margin:10px 0;color:#f2fffc">Welcome, '+escapeHtml(name)+' 👋</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">Your account is ready. You can now manage your wallet, virtual numbers and SMS codes from one clean dashboard.</p><div style="margin:24px 0;padding:18px;border-radius:18px;background:linear-gradient(135deg,rgba(48,187,167,.14),rgba(10,72,79,.35));border:1px solid rgba(100,235,211,.13)"><b style="font-size:14px;color:#dffff8">Your Numelixa journey starts here.</b><p style="font-size:12px;color:#82a8a8;line-height:1.6;margin:7px 0 0">Choose a service → choose a country → get your number → receive your SMS.</p></div>','Welcome to Numelixa — your account is ready.');
 }
-
-async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){
-  const transporter=makeTransporter(config);
-  await transporter.verify();
-
-  const domain=config.from.split("@")[1];
-  const messageId="<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">";
-
-  await transporter.sendMail({
-    from:"Numelixa <"+config.from+">",
-    to,
-    subject,
-    text:plain(html),
-    html,
-    messageId,
-    date:new Date(),
-    headers:{
-      "X-Mailer":"Numelixa",
-      "Auto-Submitted":"auto-generated",
-      "X-Auto-Response-Suppress":"All"
-    }
-  });
+export function passwordResetEmail(name:string,url:string){
+ return shell('<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#62ddca">ACCOUNT SECURITY</div><h1 style="font-size:31px;line-height:1.1;margin:10px 0;color:#f2fffc">Reset your password</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">Hi '+escapeHtml(name||"there")+', we received a request to reset your Numelixa password.</p><p><a href="'+url+'" style="display:inline-block;background:linear-gradient(135deg,#62e5cf,#2bbda9);color:#032027;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:900;font-size:13px">Reset password →</a></p><div style="margin-top:20px;padding:14px;border-radius:14px;background:#041d25;color:#789c9d;font-size:11px;line-height:1.6">This link expires in 30 minutes. If you did not request a password reset, no action is required.</div>','Secure Numelixa password reset link — expires in 30 minutes.');
 }
-
-function isSocketTlsError(error:unknown){
-  const e=error as {code?:unknown;message?:unknown}|null;
-  const code=String(e?.code||"");
-  const message=String(e?.message||"").toLowerCase();
-  return ["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)
-    || message.includes("secure tls")
-    || message.includes("network socket disconnected")
-    || message.includes("socket disconnected");
+export function purchaseSuccessEmail(name:string,service:string,country:string,number:string,price:number,url:string){
+ return shell('<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#62ddca">PURCHASE COMPLETE</div><h1 style="font-size:31px;line-height:1.1;margin:10px 0;color:#f2fffc">Number secured 🎉</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">Hi '+escapeHtml(name||"there")+', congratulations! Your Numelixa number was purchased successfully.</p><div style="margin:24px 0;padding:20px;border-radius:20px;background:#041d25;border:1px solid rgba(100,235,211,.18)"><div style="font-size:10px;color:#679596;letter-spacing:1.5px;font-weight:800">SERVICE</div><div style="font-size:18px;font-weight:900;margin:5px 0 15px;color:#edfffb">'+escapeHtml(service)+'</div><div style="font-size:10px;color:#679596;letter-spacing:1.5px;font-weight:800">NUMBER</div><div style="font-size:24px;font-weight:900;margin-top:5px;color:#62e5cf">'+escapeHtml(number)+'</div><div style="font-size:11px;color:#789c9d;margin-top:10px">'+escapeHtml(country)+' · '+Number(price||0).toLocaleString()+" coins"+'</div></div><p><a href="'+url+'" style="display:inline-block;background:linear-gradient(135deg,#62e5cf,#2bbda9);color:#032027;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:900;font-size:13px">Open SMS & Get Code →</a></p>','Congratulations — your Numelixa number purchase was successful.');
 }
-
-export async function sendEmail(to:string,subject:string,html:string){
-  const config=smtpConfig();
-
-  try{
-    await sendWithConfig(config,to,subject,html);
-  }catch(error){
-    // Spacemail officially supports 587 STARTTLS and 465 SSL.
-    // Vercel/restricted networks can drop direct-SSL connections on 465,
-    // so retry once through STARTTLS when 465 has a socket/TLS failure.
-    if(config.port===465&&isSocketTlsError(error)){
-      try{
-        await sendWithConfig({...config,port:587},to,subject,html);
-        return;
-      }catch(fallbackError){
-        const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
-        const code=fallbackError&&typeof fallbackError==="object"&&"code"in fallbackError
-          ?String((fallbackError as {code?:unknown}).code||""):"";
-        throw new Error(code?"Spacemail SMTP error ["+code+"]: "+message:"Spacemail SMTP error: "+message);
-      }
-    }
-
-    const message=error instanceof Error?error.message:String(error);
-    const code=error&&typeof error==="object"&&"code"in error
-      ?String((error as {code?:unknown}).code||""):"";
-    throw new Error(code?"Spacemail SMTP error ["+code+"]: "+message:"Spacemail SMTP error: "+message);
-  }
-}
-
-export function emailTemplate(title:string,text:string,url?:string,preheader="Numelixa account security"){
-  const button=url
-    ? '<p><a href="'+url+'" style="display:inline-block;background:#111827;color:#fff;padding:13px 18px;border-radius:10px;text-decoration:none;font-weight:700">Continue to Numelixa</a></p><p style="font-size:12px;color:#98a2b3;line-height:1.5">If you did not request this email, you can ignore it.</p>'
-    :"";
-  return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;background:#f5f6f8;font-family:Arial,sans-serif;color:#111827"><div style="display:none;max-height:0;overflow:hidden;opacity:0">'+preheader+'</div><div style="padding:32px 16px"><div style="max-width:560px;margin:auto;background:#fff;border:1px solid #e5e7eb;border-radius:20px;padding:30px"><div style="font-size:22px;font-weight:800;letter-spacing:.5px">NUMELIXA</div><h1 style="font-size:24px;margin:24px 0 12px">'+title+'</h1><p style="color:#4b5563;line-height:1.6;margin:0 0 22px">'+text+'</p>'+button+'<p style="font-size:12px;color:#98a2b3;margin-top:28px">Numelixa account security</p></div></div></body></html>';
-}
+function escapeHtml(value:string){return String(value).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+export function emailTemplate(title:string,text:string,url?:string,preheader="Numelixa account security"){return shell('<h1 style="font-size:27px;color:#f2fffc">'+title+'</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">'+text+'</p>'+(url?'<p><a href="'+url+'" style="display:inline-block;background:linear-gradient(135deg,#62e5cf,#2bbda9);color:#032027;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:900">Continue to Numelixa →</a></p>':'') ,' '+preheader);}
