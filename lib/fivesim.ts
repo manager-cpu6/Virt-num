@@ -32,9 +32,15 @@ async function request(path:string,init:RequestInit={}) {
     const r=await fetch(BASE+path,{...init,headers,cache:"no-store",signal:controller.signal});
     const text=await r.text();
     let body:any=text;
-    try{body=JSON.parse(text)}catch{}
-    if(!r.ok){
-      const detail=typeof body==="string"?body:(body?.message||body?.error||text||"5SIM request failed");
+    let parsed=false;
+    try{body=JSON.parse(text);parsed=true}catch{}
+    // 5SIM can return an HTTP 200 response with a plain-text provider
+    // error such as "no free phones". Never let that fall through to the
+    // activation parser as if it were a successful purchase response.
+    if(!r.ok || !parsed){
+      const detail=typeof body==="string"
+        ? body
+        : (body?.message||body?.error||text||"5SIM request failed");
       throw new FiveSimError(r.status,String(detail));
     }
     return body;
