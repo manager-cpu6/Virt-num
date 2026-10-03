@@ -1,9 +1,10 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
+import LiveVideoFeed from "@/components/LiveVideoFeed";
 export default function HomePage(){
  return <div>
   <TopBar/>
-  <section className="hero-card">
+  <section className="hero-card home-hero-refresh">
    <div className="hero-copy">
     <span className="eyebrow">NUMELIXA • LIVE</span>
     <h1>Numbers, without the noise.</h1>
@@ -12,6 +13,9 @@ export default function HomePage(){
    </div>
    <div className="hero-orb"><span>✦</span></div>
   </section>
+
+  <LiveVideoFeed/>
+
   <div className="quick-grid">
    <Link href="/services" className="quick-card"><span>＋</span><div><b>Get a number</b><small>Choose an app & country</small></div><i>→</i></Link>
    <Link href="/wallet" className="quick-card"><span>◈</span><div><b>Wallet</b><small>Check coins & top up</small></div><i>→</i></Link>
