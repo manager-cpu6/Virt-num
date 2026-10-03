@@ -1,5 +1,6 @@
 "use client";
 import {useState} from "react";
+import type {ReactNode} from "react";
 
 const base="https://numelixa.com/api/v1";
 
@@ -10,7 +11,7 @@ function Code({children}:{children:string}){
   <button onClick={async()=>{try{await navigator.clipboard.writeText(children);setDone(true);setTimeout(()=>setDone(false),1500)}catch{}}} style={{position:"absolute",right:10,top:10,border:"1px solid rgba(121,246,229,.2)",background:"rgba(114,223,206,.08)",color:"#72dfce",borderRadius:9,padding:"7px 9px",fontSize:11,fontWeight:900}}>{done?"Copied":"Copy"}</button>
  </div>
 }
-function Section({id,title,children}:{id:string;title:string;children:React.ReactNode}){return <section id={id} style={{scrollMarginTop:30,marginTop:42}}><h2 style={{fontSize:25,letterSpacing:-.7}}>{title}</h2>{children}</section>}
+function Section({id,title,children}:{id:string;title:string;children:ReactNode}){return <section id={id} style={{scrollMarginTop:30,marginTop:42}}><h2 style={{fontSize:25,letterSpacing:-.7}}>{title}</h2>{children}</section>}
 
 export default function Docs(){
  return <main style={{maxWidth:1120,margin:"0 auto",padding:"34px 18px 120px",color:"#eafff9",lineHeight:1.7}}>
