@@ -104,8 +104,22 @@ function bestOperator(productTree:any){
 
 export async function getPrice(country:string,service:string){
   const raw=await guest("/v1/guest/prices?country="+encodeURIComponent(country)+"&product="+encodeURIComponent(service));
-  const root=raw?.[country]?.[service]||raw?.[service]||raw?.[country]||{};
-  return bestOperator(root);
+
+  // 5SIM's new protocol can return the filtered tree as:
+  // { product: { country: { operator: { cost, count, rate } } } }
+  // or, depending on the endpoint response, { country: { product: { ... } } }.
+  // Never pass the whole product tree to bestOperator: that could select
+  // the cheapest operator from a DIFFERENT country and make maxPrice fail.
+  const byProduct=raw?.[service];
+  const root=
+    byProduct?.[country] ||
+    byProduct?.[String(country).toLowerCase()] ||
+    raw?.[country]?.[service] ||
+    raw?.[String(country).toLowerCase()]?.[service] ||
+    {};
+
+  const quote=bestOperator(root);
+  return quote;
 }
 
 export async function stock(country:string,service:string){return getPrice(country,service)}
