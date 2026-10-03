@@ -168,3 +168,18 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
 .error-box{background:rgba(116,20,40,.25);border-color:rgba(255,107,129,.18);color:#ff9dad}
 .status{background:rgba(255,255,255,.06);color:#9db7b9}.status.active{background:rgba(25,214,169,.12);color:#65e6c7}
 .admin-card h2,.admin-row,.check{color:#eafffb}.admin-row{border-bottom-color:rgba(121,246,229,.09)}
+
+.get-number-wrap{max-width:560px;margin:0 auto}
+.get-number-card{padding:24px}
+.get-number-card h1{text-align:center;margin:5px 0 3px;color:#effffc}
+.get-number-card>p{text-align:center;color:#82a9ac;margin:0 0 20px;font-size:12px}
+.get-number-card .service-badge{width:70px;height:70px;margin-bottom:12px;background:linear-gradient(145deg,rgba(15,219,184,.20),rgba(3,44,53,.85));border-color:rgba(80,240,213,.28);box-shadow:0 15px 40px rgba(0,0,0,.24)}
+.get-number-card .service-badge img{width:38px;height:38px}
+.availability-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:15px;border-radius:21px;background:linear-gradient(135deg,rgba(10,113,111,.48),rgba(3,43,52,.65));border:1px solid rgba(100,240,216,.17);margin-bottom:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}
+.availability-panel>div{padding:5px 8px}.availability-panel>div+div{border-left:1px solid rgba(121,246,229,.13)}
+.availability-panel small{display:block;color:#83aeb0;font-size:9px;margin-bottom:5px}.availability-panel strong{display:block;color:#f0fffd;font-size:23px;letter-spacing:-.04em}.availability-panel em{font-style:normal;color:#51e0c6;font-size:9px;display:block;margin-top:3px}
+.get-number-card .purchase-line{border-bottom-color:rgba(121,246,229,.09)}
+.get-number-card .purchase-line span{color:#81a6a8}.get-number-card .purchase-line b{color:#eafffb}
+.purchase-hints{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:13px;color:#72999c;font-size:9px}
+.get-number-card .primary-btn{min-height:54px;border-radius:18px;font-size:13px}
+@media(max-width:390px){.availability-panel strong{font-size:20px}.get-number-card{padding:18px}}
