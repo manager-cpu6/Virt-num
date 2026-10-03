@@ -8,8 +8,10 @@ export const dynamic="force-dynamic";
 
 const TTL_MS=10*60*1000;
 
-export async function POST(){
+export async function POST(req:Request){
  try{
+  const body=await req.json().catch(()=>({}));
+  const resend=body?.resend===true;
   const u=await requireUser();
   const users=await collection<any>("users");
   const fresh=await users.findOne({_id:u.id});
@@ -21,10 +23,11 @@ export async function POST(){
 
   // The signup flow already sends the first code. Do not replace that code
   // when the verification page opens, otherwise the first email becomes invalid.
-  if(existing){
+  if(existing&&!resend){
    return NextResponse.json({ok:true,expiresAt:new Date(existing.expiresAt).toISOString(),reused:true});
   }
 
+  if(resend)await tokens.deleteMany({userId:u.id,type:"email_verify_code"});
   const code=String(Math.floor(100000+Math.random()*900000));
   const expiresAt=new Date(Date.now()+TTL_MS);
   await tokens.deleteMany({userId:u.id,type:"email_verify_code"});
