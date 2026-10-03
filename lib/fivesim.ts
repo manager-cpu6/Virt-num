@@ -142,7 +142,7 @@ export async function getPrice(country:string,service:string,operator="any"){
   return quote;
 }
 
-export async function stock(country:string,service:string){return getPrice(country,service)}
+export async function stock(country:string,service:string,operator="any"){return getPrice(country,service,operator)}
 
 export async function servicePrices(service:string,countries:any[]=[]){
   const cacheKey=service.toLowerCase();
