@@ -119,3 +119,5 @@
 .admin-cap-grid small{display:block;color:#719395;font-size:8px;line-height:1.5;margin-top:5px;font-weight:600}
 @media(max-width:720px){.admin-grid-wide{grid-template-columns:1fr 1fr}.admin-two-col{grid-template-columns:1fr}.admin-cap-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:430px){.admin-grid-wide{grid-template-columns:1fr 1fr}.admin-cap-grid{grid-template-columns:1fr}.admin-two-col{gap:10px}}
+
+.profile-avatar{display:grid;place-items:center!important;text-align:center;line-height:1!important;font-weight:950;letter-spacing:-.04em;overflow:hidden}
