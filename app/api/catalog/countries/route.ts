@@ -16,11 +16,9 @@ export async function GET(req:Request){
  try{
   if(!providerConfigured())return NextResponse.json({ok:true,live:false,countries:fallback});
   const service=new URL(req.url).searchParams.get("service")||"";
-  const [countries,settings,prices]=await Promise.all([
-   listCountries(),
-   getSettings(),
-   service?servicePrices(service):Promise.resolve({})
-  ]);
+  const countries=await listCountries();
+  const settings=await getSettings();
+  const prices=service?await servicePrices(service,countries):{};
   const result=countries.map((c:any)=>{
    const id=String(c.id);
    const p=(prices as any)[id];
