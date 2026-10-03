@@ -11,6 +11,42 @@ async function call(action:string,params:Record<string,string|number|boolean>={}
  if(!key)throw new Error("SMS-Activate API is not configured. Add SMSACTIVATE_API_KEY in Vercel Production.");
  const qs=new URLSearchParams({api_key:key,action});
  for(const [k,v] of Object.entries(params))qs.set(k,String(v));
+ let r:Response|null=null,lastError:unknown=null;
+ for(let attempt=0;attempt<2;attempt++){
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),12000);
+  try{
+   r=await fetch(base+"?"+qs.toString(),{cache:"no-store",headers:{Accept:"application/json,text/plain","User-Agent":"Numelixa/2.1"},signal:controller.signal});
+   clearTimeout(timer);
+   if(r.ok||r.status<500)break;
+  }catch(e){
+   clearTimeout(timer);
+   lastError=e;
+   if(attempt===0)await new Promise(resolve=>setTimeout(resolve,350));
+  }
+ }
+ if(!r){
+  const msg=lastError instanceof Error?lastError.message:"Network request failed";
+  throw new Error("SMS-Activate connection failed: "+msg);
+ }
+ const text=await r.text();
+ let body:any=text;try{body=JSON.parse(text)}catch{}
+ if(!r.ok)throw new Error(`SMS-Activate HTTP ${r.status}`);
+ if(typeof body==="string"&&(body==="BAD_KEY"||body==="BAD_ACTION"||body.startsWith("NO_")||body.startsWith("ERROR")||body.startsWith("WRONG_")||body.startsWith("EARLY_")||body.startsWith("NO_BALANCE")))throw new Error(body);
+ return expectJson&&typeof body==="string"?JSON.parse(body):body;
+}onst base=(process.env.SMSACTIVATE_BASE_URL||"https://api.sms-activate.ae/stubs/handler_api.php").trim();
+const key=process.env.SMSACTIVATE_API_KEY?.trim();
+const TTL=5*60*1000;
+let countriesCache:{at:number;items:any[]}|null=null;
+let servicesCache:{at:number;items:any[]}|null=null;
+
+function configured(){return !!key}
+export function providerConfigured(){return configured()}
+
+async function call(action:string,params:Record<string,string|number|boolean>={},expectJson=false){
+ if(!key)throw new Error("SMS-Activate API is not configured. Add SMSACTIVATE_API_KEY in Vercel Production.");
+ const qs=new URLSearchParams({api_key:key,action});
+ for(const [k,v] of Object.entries(params))qs.set(k,String(v));
  const r=await fetch(base+"?"+qs.toString(),{cache:"no-store",headers:{Accept:"application/json,text/plain"}});
  const text=await r.text();
  let body:any=text;try{body=JSON.parse(text)}catch{}
