@@ -3,7 +3,7 @@
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
 
-type Activity={id:string;service:string;country:string;phone:string;type:string;time:string};
+type Activity={id:string;service:string;country:string;phone:string;type:string;time:string;code?:string;demo?:boolean};
 type Popular={service:string;country:string;label:string;flag:string;available?:boolean};
 
 const promos=[
@@ -12,11 +12,21 @@ const promos=[
  {tag:"DEVELOPER API",title:"Power your product with Numelixa.",text:"One API for live numbers, orders, balances and verification workflows.",cta:"Open Developer API",href:"/developers"}
 ];
 
-const fallbackNumbers=[
- {country:"US",flag:"🇺🇸",number:"+1 ••• ••• 4821",service:"WhatsApp"},
- {country:"GB",flag:"🇬🇧",number:"+44 •••• 719 204",service:"Telegram"},
- {country:"NG",flag:"🇳🇬",number:"+234 ••• ••• 661",service:"Instagram"}
+const demoActivity:Activity[]=[
+ {id:"demo-us",country:"US",phone:"+1 ••• ••• 4821",service:"WhatsApp",type:"Demo code",time:new Date().toISOString(),code:"742916",demo:true},
+ {id:"demo-gb",country:"GB",phone:"+44 •••• 719 204",service:"Telegram",type:"Demo code",time:new Date().toISOString(),code:"381604",demo:true},
+ {id:"demo-ng",country:"NG",phone:"+234 ••• ••• 661",service:"Instagram",type:"Demo code",time:new Date().toISOString(),code:"915273",demo:true},
+ {id:"demo-ca",country:"CA",phone:"+1 ••• ••• 5307",service:"Google",type:"Demo code",time:new Date().toISOString(),code:"604821",demo:true},
+ {id:"demo-de",country:"DE",phone:"+49 •••• 283 615",service:"Facebook",type:"Demo code",time:new Date().toISOString(),code:"267418",demo:true},
+ {id:"demo-fr",country:"FR",phone:"+33 •• •• 748 29",service:"TikTok",type:"Demo code",time:new Date().toISOString(),code:"830154",demo:true},
+ {id:"demo-br",country:"BR",phone:"+55 •• •••• 3912",service:"WhatsApp",type:"Demo code",time:new Date().toISOString(),code:"516902",demo:true},
+ {id:"demo-in",country:"IN",phone:"+91 ••••• 62418",service:"Telegram",type:"Demo code",time:new Date().toISOString(),code:"473085",demo:true}
 ];
+
+function flagFor(country:string){
+ const flags:Record<string,string>={US:"🇺🇸",GB:"🇬🇧",NG:"🇳🇬",CA:"🇨🇦",DE:"🇩🇪",FR:"🇫🇷",BR:"🇧🇷",IN:"🇮🇳",AU:"🇦🇺",AE:"🇦🇪",ZA:"🇿🇦"};
+ return flags[country]||"🌍";
+}
 
 function ago(value:string){
  const sec=Math.max(0,Math.floor((Date.now()-new Date(value).getTime())/1000));
@@ -31,6 +41,7 @@ function serviceLetter(name:string){return (name.trim()[0]||"N").toUpperCase()}
 export default function HomeLiveBoard(){
  const[data,setData]=useState<{popular:Popular[];activity:Activity[]}>({popular:[],activity:[]});
  const[promo,setPromo]=useState(0);
+ const[demoIndex,setDemoIndex]=useState(0);
  const[stamp,setStamp]=useState(Date.now());
 
  async function load(){
@@ -46,10 +57,12 @@ export default function HomeLiveBoard(){
   const a=setInterval(load,12000);
   const b=setInterval(()=>setStamp(Date.now()),1000);
   const c=setInterval(()=>setPromo(v=>(v+1)%promos.length),7000);
-  return()=>{clearInterval(a);clearInterval(b);clearInterval(c)};
+  const d=setInterval(()=>setDemoIndex(v=>(v+1)%demoActivity.length),5000);
+  return()=>{clearInterval(a);clearInterval(b);clearInterval(c);clearInterval(d)};
  },[]);
 
  const p=promos[promo];
+ const demoWindow=useMemo(()=>Array.from({length:4},(_,i)=>demoActivity[(demoIndex+i)%demoActivity.length]),[demoIndex]);
  const liveNumbers=useMemo(()=>{
   const fromActivity=data.activity.slice(0,3).map(a=>({
    country:a.country||"LIVE",
