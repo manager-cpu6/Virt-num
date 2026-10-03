@@ -1,1 +1,5 @@
-import {NextResponse} from "next/server";import {listServices,normalizeList} from "@/lib/smspool";export async function GET(){try{return NextResponse.json({ok:true,services:normalizeList(await listServices(),"services")})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Failed"},{status:502})}}
+import {NextResponse} from "next/server";
+import {listServices} from "@/lib/fivesim";
+export const runtime="nodejs";
+export const dynamic="force-dynamic";
+export async function GET(){try{return NextResponse.json({ok:true,services:await listServices()})}catch{return NextResponse.json({ok:false,services:[]},{status:502})}}
