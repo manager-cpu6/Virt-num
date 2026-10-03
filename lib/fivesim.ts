@@ -1,5 +1,5 @@
 const BASE="https://5sim.net";
-const key=process.env.FIVESIM_API_KEY?.trim();
+const key=(process.env.FIVESIM_API_KEY||process.env.SMSACTIVATE_API_KEY||"").trim();
 const TTL=5*60*1000;
 
 type Cache<T>={at:number;value:T};
