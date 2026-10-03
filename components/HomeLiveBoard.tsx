@@ -63,7 +63,7 @@ export default function HomeLiveBoard(){
 
  const p=promos[promo];
  const demoWindow=useMemo(()=>Array.from({length:4},(_,i)=>demoActivity[(demoIndex+i)%demoActivity.length]),[demoIndex]);
- const liveNumbers=useMemo(()=>{
+ const liveNumbers=useMemo<Array<{country:string;flag:string;number:string;service:string}>>(()=>{
   const fromActivity=data.activity.slice(0,3).map(a=>({
    country:a.country||"LIVE",
    flag:a.country==="US"?"🇺🇸":a.country==="GB"?"🇬🇧":a.country==="NG"?"🇳🇬":"🌍",
@@ -109,7 +109,7 @@ export default function HomeLiveBoard(){
     </div>
 
     <div className="live-number-list">
-     {liveNumbers.map((n,i)=><div className="live-number-item" key={n.number+i}>
+     {liveNumbers.map((n:{country:string;flag:string;number:string;service:string},i:number)=><div className="live-number-item" key={n.number+i}>
        <span className="live-number-flag">{n.flag}</span>
        <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
        <span className="live-number-state"><i/> Active</span>
