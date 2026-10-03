@@ -78,12 +78,11 @@ export async function listCountries(){
 
 export async function listServices(){
   if(servicesCache&&Date.now()-servicesCache.at<TTL)return servicesCache.value;
-  const raw=await guest("/v1/guest/countries");
+  const raw=await guest("/v1/guest/prices");
   const seen=new Map<string,{id:string;code:string;name:string;icon?:string}>();
-  for(const country of Object.values(raw||{}) as any[]){
-    for(const [product,data] of Object.entries(country||{})){
-      if(["iso","prefix","text_en"].includes(product))continue;
-      if(!data||typeof data!=="object"||!(data as any).activation)continue;
+  for(const countryTree of Object.values(raw||{}) as any[]){
+    if(!countryTree||typeof countryTree!=="object")continue;
+    for(const product of Object.keys(countryTree)){
       const id=String(product);
       if(!seen.has(id))seen.set(id,{id,code:id,name:humanize(id)});
     }
@@ -116,9 +115,9 @@ export async function servicePrices(service:string,countries:any[]=[]){
   const cached=pricesCache.get(cacheKey);
   if(cached&&Date.now()-cached.at<TTL)return cached.value;
   const raw=await guest("/v1/guest/prices?product="+encodeURIComponent(service));
-  const tree=raw?.[service]||{};
   const out:Record<string,{cost:number;count:number;rate:number}>={};
-  for(const [country,productTree] of Object.entries(tree)){
+  for(const [country,countryTree] of Object.entries(raw||{})){ 
+    const productTree=(countryTree as any)?.[service]||{};
     const p=bestOperator(productTree);
     const match=countries.find(c=>String(c.id).toLowerCase()===String(country).toLowerCase());
     const id=String(match?.id||country);
