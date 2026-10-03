@@ -10,6 +10,18 @@ let pricesCache=new Map<string,Cache<any>>();
 function configured(){return !!key}
 export function providerConfigured(){return configured()}
 
+class FiveSimError extends Error {
+  status:number;
+  providerBody:string;
+  constructor(status:number,body:string){
+    const clean=String(body||"").trim().replace(/\\s+/g," ").slice(0,300);
+    super("5SIM HTTP "+status+": "+clean);
+    this.name="FiveSimError";
+    this.status=status;
+    this.providerBody=clean;
+  }
+}
+
 async function request(path:string,init:RequestInit={}) {
   const headers=new Headers(init.headers);
   headers.set("Accept","application/json");
@@ -22,8 +34,8 @@ async function request(path:string,init:RequestInit={}) {
     let body:any=text;
     try{body=JSON.parse(text)}catch{}
     if(!r.ok){
-      const detail=typeof body==="string"?body:(body?.message||body?.error||"5SIM request failed");
-      throw new Error("5SIM HTTP "+r.status+": "+detail);
+      const detail=typeof body==="string"?body:(body?.message||body?.error||text||"5SIM request failed");
+      throw new FiveSimError(r.status,String(detail));
     }
     return body;
   }finally{clearTimeout(timer)}
@@ -143,11 +155,33 @@ export async function servicePrices(service:string,countries:any[]=[]){
 }
 
 export async function purchase(country:string,service:string,maxPrice?:number){
-  let path="/v1/user/buy/activation/"+encodeURIComponent(country)+"/any/"+encodeURIComponent(service);
-  if(Number.isFinite(maxPrice)&&Number(maxPrice)>0)path+="?maxPrice="+encodeURIComponent(String(maxPrice));
-  const p=await user(path);
-  if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
-  return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:600,operator:String(p.operator||"any"),providerCost:Number(p.price||maxPrice||0)};
+  const buy=async(limit:number)=>{
+    let path="/v1/user/buy/activation/"+encodeURIComponent(country)+"/any/"+encodeURIComponent(service);
+    if(Number.isFinite(limit)&&limit>0)path+="?maxPrice="+encodeURIComponent(String(limit));
+    return user(path);
+  };
+
+  // Re-check the live quote immediately before buying. The public price/stock
+  // can change between the product page and the actual purchase request.
+  const fresh=await getPrice(country,service);
+  if(!fresh.count||!fresh.cost)throw new Error("NO_FREE_PHONES");
+
+  const requestedLimit=Number.isFinite(maxPrice)&&Number(maxPrice)>0?Number(maxPrice):Number(fresh.cost);
+  try{
+    const p=await buy(requestedLimit);
+    if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
+    return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||"any"),providerCost:Number(p.price||requestedLimit)};
+  }catch(first){
+    // One fresh-price retry handles a normal race where the cheapest operator
+    // disappeared between the catalog request and the buy request.
+    const freshRetry=await getPrice(country,service);
+    if(!freshRetry.count||!freshRetry.cost)throw new Error("NO_FREE_PHONES");
+    const retryLimit=Math.max(requestedLimit,Number(freshRetry.cost));
+    if(retryLimit===requestedLimit)throw first;
+    const p=await buy(retryLimit);
+    if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
+    return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||"any"),providerCost:Number(p.price||retryLimit)};
+  }
 }
 
 export async function check(orderid:string){
