@@ -1,1 +1,3 @@
-import {NextResponse} from "next/server";import {APP_SERVICES} from "@/lib/smspool";export const dynamic="force-dynamic";export async function GET(){return NextResponse.json({ok:true,services:APP_SERVICES})}
+import {NextResponse} from "next/server";import {listServices,providerConfigured} from "@/lib/smspool";
+export const runtime="nodejs";export const dynamic="force-dynamic";
+export async function GET(req:Request){try{if(!providerConfigured())return NextResponse.json({ok:false,error:"SMS-Activate API is not configured."},{status:503});const country=new URL(req.url).searchParams.get("country")||undefined;const services=await listServices(country);return NextResponse.json({ok:true,services})}catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Unable to load services"},{status:502})}}
