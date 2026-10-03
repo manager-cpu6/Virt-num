@@ -2,8 +2,11 @@
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
+
 type S={id:string;code:string;name:string};
+
 const popular=["whatsapp","telegram","google","facebook","instagram","tiktok","twitter","snapchat","viber","discord","amazon","microsoft","apple","openai","signal"];
+
 function AppLogo({id,name}:{id:string;name:string}){
  const[hasLogo,setHasLogo]=useState(true);
  return <span className={"service-icon service-icon-"+id}>
@@ -12,9 +15,54 @@ function AppLogo({id,name}:{id:string;name:string}){
      : <span className="service-letter">{name.slice(0,1).toUpperCase()}</span>}
  </span>
 }
+
 export default function ServicesPage(){
  const[s,setS]=useState<S[]>([]),[q,setQ]=useState(""),[loading,setLoading]=useState(true),[showAll,setShowAll]=useState(false),[error,setError]=useState("");
- useEffect(()=>{fetch("/api/catalog/services",{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Live catalog unavailable");setS(Array.isArray(d.services)?d.services:[])}).catch(e=>{setError(e instanceof Error?e.message:"Unable to load live services")}).finally(()=>setLoading(false))},[]);
- const filtered=useMemo(()=>{const query=q.trim().toLowerCase();if(query)return s.filter(x=>(x.name+" "+x.id).toLowerCase().includes(query));if(showAll)return s;const p=s.filter(x=>popular.includes(x.id.toLowerCase()));return p.length?p:s.slice(0,16)},[s,q,showAll]);
- return <div className="services-page"><TopBar/><section className="market-hero"><div className="market-hero-copy"><span className="eyebrow">NUMELIXA • LIVE SMS CATALOG</span><h1>Virtual Numbers<br/>from <em>153 Countries</em></h1><p>Choose a service and then select any supported country with live price and stock.</p><div className="market-stats"><span>◉ <b>153</b> Countries</span><span>▱ <b>${s.length||"1,300+"}</b> Services</span><span>ϟ <b>Ready</b> Now</span></div></div><div className="market-globe" aria-hidden="true">🌍</div></section><div className="form-card service-search"><span className="search-icon">⌕</span><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search 1,300+ services…" autoComplete="off"/></div><div className="section-head service-section-head"><h2>{q?"Search results":"Popular Services"}</h2>{!q&&s.length>16&&<button className="view-all-btn" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show popular":"View all ("+s.length+")"} <span>→</span></button>}</div>{loading?<div className="service-loading">Loading live services…</div>:error?<div className="helper-card"><b>Live catalog unavailable</b><span>Please try again in a moment.</span></div>:<div className="service-grid">{filtered.map((x,i)=><Link key={x.id+i} className="service-card" href={"/countries?service="+encodeURIComponent(x.id)}><AppLogo id={x.id} name={x.name}/><div><b>{x.name}</b><small>Live SMS verification</small></div><span className="chevron">›</span></Link>)}</div>}{!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try another search.</span></div>}</div>;
+ useEffect(()=>{
+   fetch("/api/catalog/services",{cache:"no-store"})
+     .then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Live catalog unavailable");setS(Array.isArray(d.services)?d.services:[])})
+     .catch(e=>setError(e instanceof Error?e.message:"Unable to load live services"))
+     .finally(()=>setLoading(false))
+ },[]);
+ const filtered=useMemo(()=>{
+   const query=q.trim().toLowerCase();
+   if(query)return s.filter(x=>(x.name+" "+x.id).toLowerCase().includes(query));
+   if(showAll)return s;
+   const p=s.filter(x=>popular.includes(x.id.toLowerCase()));
+   return p.length?p:s.slice(0,16)
+ },[s,q,showAll]);
+
+ return <div className="services-page">
+   <TopBar/>
+   <section className="market-hero">
+     <div className="market-hero-copy">
+       <span className="eyebrow">NUMELIXA • LIVE SMS CATALOG</span>
+       <h1>Virtual Numbers<br/>from <em>153 Countries</em></h1>
+       <p>Choose a service and then select any supported country with live price and stock.</p>
+       <div className="market-stats">
+         <span>◉ <b>153</b> Countries</span>
+         <span>▱ <b>{s.length||"1,300+"}</b> Services</span>
+         <span>ϟ <b>Ready</b> Now</span>
+       </div>
+     </div>
+     <div className="market-globe" aria-hidden="true">🌍</div>
+   </section>
+
+   <div className="service-search-box">
+     <span className="search-icon" aria-hidden="true">⌕</span>
+     <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search 1,300+ services…" autoComplete="off" aria-label="Search services"/>
+     {q&&<button type="button" className="search-clear" onClick={()=>setQ("")} aria-label="Clear search">×</button>}
+   </div>
+
+   <div className="section-head service-section-head">
+     <div><h2>{q?"Search results":"Popular Services"}</h2>{q&&<span className="service-count">{filtered.length.toLocaleString()} matching services</span>}</div>
+     {!q&&s.length>16&&<button className="view-all-btn" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show popular":"View all ("+s.length+")"} <span>→</span></button>}
+   </div>
+
+   {loading?<div className="service-loading">Loading live services…</div>
+   :error?<div className="helper-card"><b>Live catalog unavailable</b><span>Please try again in a moment.</span></div>
+   :<div className="service-grid">{filtered.map((x,i)=><Link key={x.id+i} className="service-card" href={"/countries?service="+encodeURIComponent(x.id)}><AppLogo id={x.id} name={x.name}/><div><b>{x.name}</b><small>Live SMS verification</small></div><span className="chevron">›</span></Link>)}</div>}
+
+   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try another search.</span></div>}
+ </div>
 }
