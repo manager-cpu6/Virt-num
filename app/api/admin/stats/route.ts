@@ -41,6 +41,9 @@ export async function POST(req:Request){
     await requireAdmin();
     const b=await req.json();
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
+    const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
+    const providerOperators=Array.from(new Set((Array.isArray(b.providerOperators)?b.providerOperators:[]).map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean).concat("any"))).slice(0,50);
+    if(!providerOperators.includes(providerOperator))return NextResponse.json({ok:false,error:"Selected 5SIM operator must be in the operator list."},{status:400});
     if(!Number.isFinite(markupPercent)||markupPercent<0||markupPercent>1000)return NextResponse.json({ok:false,error:"Invalid markup percent."},{status:400});
     if(!Number.isFinite(coinsPerUsd)||coinsPerUsd<1||coinsPerUsd>1000000)return NextResponse.json({ok:false,error:"Invalid coins per USD."},{status:400});
     if(!Number.isFinite(minTopupUsd)||minTopupUsd<0.01||!Number.isFinite(maxTopupUsd)||maxTopupUsd<minTopupUsd)return NextResponse.json({ok:false,error:"Invalid top-up limits."},{status:400});
@@ -64,7 +67,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
