@@ -4,7 +4,14 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 type S={id:string;code:string;name:string};
 const popular=["whatsapp","telegram","google","facebook","instagram","tiktok","twitter","snapchat","viber","discord","amazon","microsoft","apple","openai","signal"];
-function AppLogo({id,name}:{id:string;name:string}){return <span className={"service-icon service-icon-"+id}><img src={"https://cdn.simpleicons.org/"+id} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none"}}/>{name.slice(0,1).toUpperCase()}</span>}
+function AppLogo({id,name}:{id:string;name:string}){
+ const[hasLogo,setHasLogo]=useState(true);
+ return <span className={"service-icon service-icon-"+id}>
+   {hasLogo
+     ? <img src={"https://cdn.simpleicons.org/"+id} alt="" loading="lazy" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
+     : <span className="service-letter">{name.slice(0,1).toUpperCase()}</span>}
+ </span>
+}
 export default function ServicesPage(){
  const[s,setS]=useState<S[]>([]),[q,setQ]=useState(""),[loading,setLoading]=useState(true),[showAll,setShowAll]=useState(false),[error,setError]=useState("");
  useEffect(()=>{fetch("/api/catalog/services",{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Live catalog unavailable");setS(Array.isArray(d.services)?d.services:[])}).catch(e=>{setError(e instanceof Error?e.message:"Unable to load live services")}).finally(()=>setLoading(false))},[]);
