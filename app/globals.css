@@ -68,3 +68,57 @@ a{text-decoration:none;color:inherit}button,input{font:inherit}button{cursor:poi
 @media(min-width:700px){.page-shell{padding-top:30px;padding-bottom:170px}.service-grid{grid-template-columns:repeat(3,1fr)}.hero-card{padding:40px}.bottom-nav{bottom:18px}}
 @media(max-width:520px){.service-card{min-height:92px;padding:14px}.service-icon{width:42px;height:42px}.hero-card{min-height:310px;padding:26px;border-radius:29px}.hero-orb{width:78px;height:78px;border-radius:25px;font-size:30px}.hero-card h1{font-size:38px}.quick-grid{grid-template-columns:1fr}.service-grid{grid-template-columns:1fr 1fr}.purchase-line{align-items:center}.bottom-nav{bottom:8px}}
 @media(max-width:390px){.page-shell{padding-left:13px;padding-right:13px;padding-bottom:145px}.service-grid{gap:8px}.service-card{padding:12px;gap:9px}.service-icon{width:39px;height:39px}.service-card b{font-size:13px}.service-card small{font-size:10px}.topup-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* Numelixa marketplace reference polish */
+.topbar-brand{grid-template-columns:1fr 42px;gap:12px}
+.topbar-detail{grid-template-columns:42px 1fr 42px}
+.brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
+.brand-logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#12b69a,#087d75);color:#fff;font-weight:950;font-size:22px;box-shadow:0 10px 24px rgba(8,125,117,.18)}
+.brand-copy{display:flex;flex-direction:column;min-width:0}
+.brand-copy b{font-size:18px;line-height:20px;letter-spacing:-.035em}
+.brand-copy small{font-size:9px;color:var(--muted);margin-top:2px;white-space:nowrap}
+.menu-btn{width:42px;height:42px;border:0;background:transparent;display:grid;align-content:center;justify-items:center;gap:4px}
+.menu-btn span{width:18px;height:2px;border-radius:2px;background:#17615f}
+.topbar-detail .top-title{font-size:18px}
+.market-hero{position:relative;min-height:210px;overflow:hidden;border-radius:25px;padding:23px 20px;color:#fff;background:linear-gradient(135deg,#074f50,#087d75 56%,#0aa58d);box-shadow:0 24px 55px rgba(4,102,96,.18);display:flex;align-items:stretch;justify-content:space-between}
+.market-hero:after{content:"";position:absolute;width:190px;height:190px;right:-70px;top:-80px;border-radius:50%;background:rgba(255,255,255,.10)}
+.market-hero-copy{position:relative;z-index:1;max-width:520px}
+.market-hero .eyebrow{color:#75dfca}
+.market-hero h1{font-size:30px;line-height:1.04;letter-spacing:-.055em;margin:9px 0 10px}
+.market-hero h1 em{font-style:normal;color:#b9fff0}
+.market-hero p{font-size:12px;margin:0;color:rgba(255,255,255,.88)}
+.market-globe{position:relative;z-index:1;align-self:center;width:104px;height:104px;border-radius:50%;display:grid;place-items:center;font-size:68px;background:radial-gradient(circle at 35% 30%,rgba(95,218,255,.75),rgba(25,139,204,.12) 65%,transparent 66%);filter:saturate(1.15)}
+.market-stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.market-stats span{background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.10);padding:7px 9px;border-radius:999px;font-size:9px;white-space:nowrap}
+.market-stats b{font-weight:850}
+.service-search,.country-search{display:flex;align-items:center;gap:9px}
+.service-search input,.country-search input{margin:0;border:0!important;background:transparent!important;box-shadow:none!important;height:45px;padding:0;outline:0;flex:1}
+.search-icon{font-size:23px;color:#1c6263;line-height:1}
+.service-section-head{align-items:center}
+.service-section-head h2{font-size:19px;letter-spacing:-.035em}
+.view-all-btn{border:0;background:transparent;color:#15977f;font-size:11px;font-weight:850;padding:6px 0}
+.service-card{min-height:82px;padding:13px;border-radius:18px}
+.service-icon{background:linear-gradient(145deg,#f7fbfc,#e7eef3);color:#087d75}
+.service-icon-wa{background:#16c47f;color:#fff}
+.service-icon-tg{background:#19a7e6;color:#fff}
+.service-icon-fb{background:#1877f2;color:#fff}
+.service-icon-go{background:#fff;color:#4285f4}
+.service-icon-ig{background:linear-gradient(145deg,#f58529,#dd2a7b 55%,#8134af);color:#fff}
+.service-icon-tw{background:#090b10;color:#fff}
+.service-icon-sn{background:#ffeb00;color:#111}
+.service-icon-vi{background:#8142d8;color:#fff}
+.service-icon-ym{background:#6d2bbd;color:#fff}
+.catalog-trust{margin:22px 0 0;padding:14px 15px;border-radius:18px;background:rgba(236,248,250,.75);display:flex;gap:10px;align-items:center;border:1px solid rgba(255,255,255,.82)}
+.trust-icon{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#10a98c;color:#fff;font-weight:900}
+.catalog-trust b{display:block;color:#138b73;font-size:12px}.catalog-trust small{display:block;color:#82939d;font-size:10px;margin-top:3px}
+.service-loading{padding:30px;text-align:center;color:var(--muted);font-size:12px}
+.country-banner{display:flex;align-items:center;gap:12px;padding:13px 14px;border-radius:18px;background:rgba(236,248,250,.86);border:1px solid rgba(255,255,255,.85);margin-bottom:14px}
+.country-banner .service-icon{width:43px;height:43px;border-radius:13px}
+.country-banner b{display:block;color:#087d75;font-size:12px}.country-banner small{display:block;color:#71838d;font-size:10px;margin-top:3px}
+.country-row{min-height:76px;padding:10px 13px}
+.flag{width:44px;height:44px;border-radius:14px;background:#f7fafb;font-size:26px}
+.country-price{min-width:72px}.country-price b{display:block;font-size:13px}.country-price small{display:block;color:var(--muted);font-size:9px;font-weight:500;margin-top:3px}
+.price-note{display:flex;gap:8px;align-items:flex-start;margin:14px 0 2px;padding:12px 13px;border-radius:16px;background:rgba(235,247,249,.75);color:#6f8089}
+.price-note span{width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:#16a98e;color:#fff;font-size:10px;font-weight:900;flex:0 0 auto}
+.price-note p{margin:0;font-size:9px;line-height:1.45}
+@media(max-width:520px){.market-hero{min-height:208px;padding:20px 18px}.market-hero h1{font-size:28px}.market-globe{width:84px;height:84px;font-size:55px;margin-right:-4px}.market-stats{gap:5px}.market-stats span{font-size:8px;padding:6px 7px}.brand-copy b{font-size:17px}.service-card{min-height:80px}}
