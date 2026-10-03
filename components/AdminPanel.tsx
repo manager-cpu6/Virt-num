@@ -2,9 +2,12 @@
 import type {FormEvent,ReactNode} from "react";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
-type Stats={users:number;activeNumbers:number;todayOrders:number;revenueCoins:number;settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number};providers:{name:string;status:string;balance?:any}[]};
+
+type Pack={coins:number;priceUsd:number;popular?:boolean};
+type Stats={users:number;activeNumbers:number;todayOrders:number;revenueCoins:number;settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};providers:{name:string;status:string;balance?:any}[]};
 type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
+
 export default function AdminPanel(){
  const[stats,setStats]=useState<Stats|null>(null),[tab,setTab]=useState("overview"),[users,setUsers]=useState<User[]>([]),[orders,setOrders]=useState<Order[]>([]),[error,setError]=useState(""),[saved,setSaved]=useState(""),[refreshing,setRefreshing]=useState(false);
  async function loadStats(){const r=await fetch("/api/admin/stats",{cache:"no-store"});const d=await r.json();d.ok?setStats(d):setError(d.error||"Unable to load admin data")}
@@ -12,23 +15,73 @@ export default function AdminPanel(){
  async function refresh(){setRefreshing(true);setError("");await Promise.all([loadStats(),loadData(tab)]);setRefreshing(false)}
  useEffect(()=>{loadStats()},[]);
  useEffect(()=>{loadData(tab)},[tab]);
- async function saveSettings(e:FormEvent<HTMLFormElement>){e.preventDefault();if(!stats)return;const f=new FormData(e.currentTarget),body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd"))};const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")}
- async function adjustCoins(user:User,mode:"add"|"remove"|"set"){const raw=prompt(mode==="set"?"Set exact coin balance:":"Coins to "+mode+":");if(raw===null)return;const amount=Number(raw);if(!Number.isFinite(amount)||amount<0){setError("Enter a valid non-negative coin amount.");return}const r=await fetch("/api/admin/users/coins",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,mode,amount})});const d=await r.json();if(!d.ok){setError(d.error||"Coin update failed");return}setUsers(v=>v.map(x=>x.id===user.id?{...x,coins:d.coins}:x))}
+
+ async function saveSettings(e:FormEvent<HTMLFormElement>){
+   e.preventDefault();if(!stats)return;
+   const f=new FormData(e.currentTarget);
+   const coinPackages=[0,1,2,3].map(i=>({
+     coins:Number(f.get("coins"+i)),
+     priceUsd:Number(f.get("price"+i)),
+     popular:f.get("popular")===String(i)
+   })).filter(p=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0);
+   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages};
+   const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
+   if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
+ }
+
+ async function adjustCoins(user:User,mode:"add"|"remove"|"set"){
+   const raw=prompt(mode==="set"?"Set exact coin balance:":"Coins to "+mode+":");
+   if(raw===null)return;
+   const amount=Number(raw);
+   if(!Number.isFinite(amount)||amount<0){setError("Enter a valid non-negative coin amount.");return}
+   const r=await fetch("/api/admin/users/coins",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,mode,amount})});
+   const d=await r.json();if(!d.ok){setError(d.error||"Coin update failed");return}
+   setUsers(v=>v.map(x=>x.id===user.id?{...x,coins:d.coins}:x))
+ }
+
  const topUsers=useMemo(()=>[...users].sort((a,b)=>b.coins-a.coins),[users]);
  const waiting=useMemo(()=>orders.filter(o=>String(o.status).toLowerCase()==="waiting"),[orders]);
- return <div className="admin-shell"><header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
- {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
- <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
- {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
- {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
- {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
- {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
- {tab==="providers"&&<Providers stats={stats}/>}
- {tab==="pricing"&&stats&&<Table title="Numelixa pricing"><form onSubmit={saveSettings} className="admin-form"><label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>Add this percentage to the live provider cost before converting to coins.</small></label><label>Coins per $1 USD<input name="coinsPerUsd" type="number" min="1" step="1" defaultValue={stats.settings.coinsPerUsd}/></label><label>Minimum top-up USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label><label>Maximum top-up USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label><button className="primary-btn" type="submit">Save pricing</button></form></Table>}
+
+ return <div className="admin-shell">
+  <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
+  {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
+  {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
+  {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
+  {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
+  {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
+  {tab==="providers"&&<Providers stats={stats}/>}
+  {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
  </div>
 }
+
+function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormElement>)=>void}){
+ const packs=stats.settings.coinPackages||[];
+ return <Table title="Numelixa pricing">
+  <form onSubmit={onSave} className="admin-form">
+   <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>Add this percentage to the live provider cost before converting to coins.</small></label>
+   <label>Coins per $1 USD<input name="coinsPerUsd" type="number" min="1" step="1" defaultValue={stats.settings.coinsPerUsd}/></label>
+   <label>Minimum payment USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
+   <label>Maximum payment USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label>
+   <div className="coin-package-admin">
+    <div className="coin-package-admin-head"><div><b>Wallet coin packages</b><small>Set the exact coins and payment price shown to customers.</small></div></div>
+    {[0,1,2,3].map(i=>{const p=packs[i]||{coins:"",priceUsd:"",popular:false};return <div className="coin-package-row" key={i}>
+      <span className="coin-package-index">{i+1}</span>
+      <input name={"coins"+i} type="number" min="1" step="1" defaultValue={p.coins} placeholder="Coins"/>
+      <input name={"price"+i} type="number" min="0.01" step="0.01" defaultValue={p.priceUsd} placeholder="Price USD"/>
+      <label className="popular-check"><input name="popular" type="radio" value={String(i)} defaultChecked={Boolean(p.popular)}/><span>Popular</span></label>
+    </div>})}
+   </div>
+   <button className="primary-btn" type="submit">Save pricing</button>
+  </form>
+ </Table>
+}
+
 function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){return <><div className="admin-grid">{[["Users",stats?.users??"—"],["Waiting OTP",waiting],["Today orders",stats?.todayOrders??"—"],["Revenue",stats?stats.revenueCoins.toLocaleString():"—"]].map(([a,b])=><div className="metric" key={a}><span>{a}</span><strong>{b}</strong><small>live database</small></div>)}</div><Table title="System health"><div className="check">✓ MongoDB storage connected</div><div className="check">✓ 5SIM live catalog and order integration</div><div className="check">✓ Cryptomus wallet payment integration</div><div className="check">✓ Spacemail transactional email integration</div></Table><Table title="Admin capabilities"><div className="check">• Adjust any user's coin balance</div><div className="check">• See users with the highest coin balances</div><div className="check">• Monitor every active OTP order</div><div className="check">• Inspect phone, SMS/code, status and expiry</div><div className="check">• Change global markup and coin pricing</div></Table></>}
+
 function UsersTable({users,onAdjust}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users by coin balance ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button></div></div>)}</Table>}
+
 function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;active?:boolean}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: {Number(o.price_coins||0).toLocaleString()} coins</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div></div>)}</Table>}
+
 function Table({title,children}:{title:string;children:ReactNode}){return <div className="admin-card"><h2>{title}</h2>{children}</div>}
 function Providers({stats}:{stats:Stats|null}){return <Table title="Integrations">{stats?.providers.map(p=><div className="admin-row" key={p.name}><span><b>{p.name}</b><small>{p.name==="5SIM"&&p.balance!==undefined?"Provider balance: $"+Number(p.balance).toFixed(2):"Server-side integration"}</small></span><small>{p.status}</small></div>)}</Table>}
