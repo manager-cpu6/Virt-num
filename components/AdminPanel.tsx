@@ -16,7 +16,6 @@ export default function AdminPanel(){
  useEffect(()=>{loadStats()},[]);
  useEffect(()=>{loadData(tab)},[tab]);
 
- let operatorList:string[]=[];
  async function saveSettings(e:FormEvent<HTMLFormElement>){
    e.preventDefault();if(!stats)return;
    const f=new FormData(e.currentTarget);
@@ -25,7 +24,7 @@ export default function AdminPanel(){
      priceUsd:Number(f.get("price"+i)),
      popular:f.get("popular")===String(i)
    })).filter(p=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0);
-   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),providerOperators:operatorList};
+   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
    const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
    if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
  }
@@ -60,14 +59,13 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  const packs=stats.settings.coinPackages||[];
  const [operators,setOperators]=useState<string[]>(Array.from(new Set([...(stats.settings.providerOperators||[]),"any"])).map(x=>String(x).toLowerCase()));
  const [newOperator,setNewOperator]=useState("");
- operatorList=operators;
  function addOperator(){const v=newOperator.trim().toLowerCase();if(!v||operators.includes(v))return;setOperators([...operators,v]);setNewOperator("")}
  function removeOperator(v:string){if(v==="any")return;const next=operators.filter(x=>x!==v);setOperators(next);}
  return <Table title="Numelixa pricing & 5SIM">
   <form onSubmit={onSave} className="admin-form">
    <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>This percentage is added to the live 5SIM provider cost before customer coins are calculated.</small></label>
    <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses 5SIM's any operator. A named operator is sent directly to the 5SIM buy endpoint.</small></label>
-   <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
+   <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
    <label>Coins per $1 USD<input name="coinsPerUsd" type="number" min="1" step="1" defaultValue={stats.settings.coinsPerUsd}/></label>
    <label>Minimum payment USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
    <label>Maximum payment USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label>
