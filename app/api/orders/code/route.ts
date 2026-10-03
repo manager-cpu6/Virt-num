@@ -6,7 +6,7 @@ export async function POST(req:Request){try{const u=await requireUser(),id=Strin
  const age=Date.now()-new Date(o.createdAt).getTime();
  if(age>=10*60*1000){try{await cancel(String(o.providerOrderId))}catch{}await refund(o);return NextResponse.json({ok:false,error:"10 minutes passed without an SMS. Your coins have been refunded.",status:"refunded"},{status:409})}
  const p=await check(String(o.providerOrderId));
- if(Number(p.status)===3){const code=String(p.sms||"");await orders.updateOne({_id:id,userId:u.id,status:"waiting"},{$set:{code,fullSms:code,status:"received",completedAt:new Date()}});return NextResponse.json({ok:true,code,fullSms:code,status:"received"})}
+ if(Number(p.status)===3){const code=String(p.sms||"");try{await (await import("@/lib/smspool")).callFinalize?.(String(o.providerOrderId))}catch{}await orders.updateOne({_id:id,userId:u.id,status:"waiting"},{$set:{code,fullSms:code,status:"received",completedAt:new Date()}});return NextResponse.json({ok:true,code,fullSms:code,status:"received"})}
  if(Number(p.status)===6){try{await refund(o)}catch{}return NextResponse.json({ok:false,error:"This order was refunded.",status:"refunded"},{status:409})}
  return NextResponse.json({ok:true,code:"",status:"waiting",timeLeft:Math.max(0,600-Math.floor(age/1000))})
 }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Code check failed"},{status:500})}}
