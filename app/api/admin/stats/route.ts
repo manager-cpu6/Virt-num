@@ -60,6 +60,7 @@ export async function POST(req:Request){
       if(p.popular&&!popularUsed)popularUsed=true;
       else p.popular=false;
     }
+    if(!popularUsed)coinPackages[0].popular=true;
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
