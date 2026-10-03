@@ -35,7 +35,7 @@ export default function HomeLiveBoard(){
   </div>
 
   <div className="popular-service-grid">
-   {data.popular.map(s=><Link href={"/services/"+s.service} className="live-service-card" key={s.service}>
+   {data.popular.map(s=><Link href={"/countries?service="+encodeURIComponent(s.service)} className="live-service-card" key={s.service}>
     <span className="live-service-icon">{s.label.slice(0,1)}</span>
     <span className="live-service-copy"><b>{s.label}</b><small>{s.flag} {s.country.toUpperCase()} · {s.available===false?"Checking stock":"Live numbers"}</small></span>
     <span className="live-service-arrow">→</span>
