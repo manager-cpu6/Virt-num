@@ -54,6 +54,15 @@ export async function getPrice(country:string,service:string){
  return {cost:Number(serviceObj.cost||0),count:Number(serviceObj.count||0),physicalCount:Number(serviceObj.physicalCount||0)};
 }
 export async function stock(country:string,service:string){return getPrice(country,service)}
+export async function servicePrices(service:string){
+ const raw=await call("getPrices",{service},true);
+ const out:Record<string,{cost:number;count:number;physicalCount:number}>={};
+ for(const [countryId,countryData] of Object.entries(raw||{})){
+  const item=(countryData as any)?.[service];
+  if(item)out[String(countryId)]={cost:Number(item.cost||0),count:Number(item.count||0),physicalCount:Number(item.physicalCount||0)};
+ }
+ return out;
+}
 export async function purchase(country:string,service:string,maxPrice?:number){
  const v=await call("getNumber",{country,service,...(Number.isFinite(maxPrice)?{maxPrice}: {})});
  const s=String(v);
