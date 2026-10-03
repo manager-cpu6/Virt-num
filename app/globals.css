@@ -183,3 +183,22 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
 .purchase-hints{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:13px;color:#72999c;font-size:9px}
 .get-number-card .primary-btn{min-height:54px;border-radius:18px;font-size:13px}
 @media(max-width:390px){.availability-panel strong{font-size:20px}.get-number-card{padding:18px}}
+
+
+/* Admin control center */
+.admin-head-actions{display:flex;gap:8px;align-items:center}
+.admin-live{display:block;color:var(--muted);font-size:10px;margin-top:4px}
+.admin-search{margin-bottom:10px}.admin-search input{margin:0!important}
+.admin-user-row{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line-dark)}
+.admin-user-row:last-child{border-bottom:0}
+.admin-user-row>div:first-child{min-width:0}.admin-user-row b,.admin-user-row small,.admin-user-row strong{display:block}.admin-user-row b{font-size:12px}.admin-user-row small{color:var(--muted);font-size:10px;margin-top:3px;overflow:hidden;text-overflow:ellipsis}.admin-user-row strong{font-size:14px;margin-top:6px;color:#5ce5ca}
+.coin-actions{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.coin-actions button{border:1px solid var(--line);background:rgba(8,70,76,.7);color:#dffff8;border-radius:10px;padding:7px 8px;font-size:9px;font-weight:850}
+.admin-order-card{padding:14px 0;border-bottom:1px solid var(--line-dark)}.admin-order-card:last-child{border-bottom:0}
+.admin-order-head{display:flex;justify-content:space-between;gap:8px;align-items:center}.admin-order-head b{font-size:12px}
+.admin-order-meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:7px}.admin-order-meta span{font-size:9px;color:var(--muted)}
+.admin-sms-box{margin-top:10px;padding:12px;border-radius:14px;background:rgba(2,28,35,.55);border:1px solid var(--line)}
+.admin-sms-box b,.admin-sms-box strong,.admin-sms-box small{display:block}.admin-sms-box b{font-size:9px;color:#70b8b3}.admin-sms-box strong{font-size:22px;letter-spacing:.15em;margin:4px 0;color:#63e7cc}.admin-sms-box small{font-size:10px;color:#b4d1d0;word-break:break-word}
+.error-box{position:relative}.error-box button{position:absolute;right:10px;top:8px;border:0;background:transparent;color:inherit;font-size:18px}
+.topbar{position:relative}.top-menu{position:absolute;z-index:100;right:0;top:51px;width:190px;padding:8px;border:1px solid rgba(121,246,229,.18);border-radius:18px;background:rgba(3,35,43,.94);box-shadow:0 20px 50px rgba(0,0,0,.38);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.top-menu a{display:block;padding:11px 12px;border-radius:11px;color:#dffcf8;font-size:11px;font-weight:800}.top-menu a:hover{background:rgba(16,210,180,.12)}
+@media(max-width:520px){.admin-head-actions .secondary-btn{padding:0 10px;font-size:10px}.admin-user-row{align-items:flex-start;flex-direction:column}.coin-actions{justify-content:flex-start}.coin-actions button{padding:8px 10px}}
