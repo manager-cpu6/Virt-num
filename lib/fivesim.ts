@@ -104,17 +104,25 @@ export async function listServices(){
   return items;
 }
 
-function bestOperator(productTree:any){
-  const candidates=Object.values(productTree||{}) as any[];
+function quoteForOperator(productTree:any,operator="any"){
+  const tree=productTree||{};
+  if(operator&&operator.toLowerCase()!=="any"){
+    const x=tree[operator]||tree[operator.toLowerCase()]||tree[operator.toUpperCase()];
+    if(!x||!Number.isFinite(Number(x.cost)))return {cost:0,count:0,rate:0,operator};
+    return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator};
+  }
+  const candidates=Object.entries(tree).map(([op,x]:any)=>({...x,operator:String(op)});
   const usable=candidates.filter(x=>Number(x?.count||0)>0&&Number.isFinite(Number(x?.cost)));
   const list=(usable.length?usable:candidates).filter(x=>Number.isFinite(Number(x?.cost)));
-  if(!list.length)return {cost:0,count:0,rate:0};
+  if(!list.length)return {cost:0,count:0,rate:0,operator:"any"};
   list.sort((a,b)=>Number(a.cost)-Number(b.cost));
   const x=list[0];
-  return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0)};
+  return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator:String(x.operator||"any")};
 }
 
-export async function getPrice(country:string,service:string){
+function bestOperator(productTree:any){return quoteForOperator(productTree,"any")}
+
+export async function getPrice(country:string,service:string,operator="any"){
   const raw=await guest("/v1/guest/prices?country="+encodeURIComponent(country)+"&product="+encodeURIComponent(service));
 
   // 5SIM's new protocol can return the filtered tree as:
@@ -130,7 +138,7 @@ export async function getPrice(country:string,service:string){
     raw?.[String(country).toLowerCase()]?.[service] ||
     {};
 
-  const quote=bestOperator(root);
+  const quote=quoteForOperator(root,operator);
   return quote;
 }
 
@@ -154,36 +162,31 @@ export async function servicePrices(service:string,countries:any[]=[]){
   return out;
 }
 
-export async function purchase(country:string,service:string,maxPrice?:number){
+export async function purchase(country:string,service:string,maxPrice?:number,operator="any"){
+  const selectedOperator=String(operator||"any").trim()||"any";
   const buy=async(limit:number)=>{
-    let path="/v1/user/buy/activation/"+encodeURIComponent(country)+"/any/"+encodeURIComponent(service);
-    if(Number.isFinite(limit)&&limit>0)path+="?maxPrice="+encodeURIComponent(String(limit));
+    let path="/v1/user/buy/activation/"+encodeURIComponent(country)+"/"+encodeURIComponent(selectedOperator)+"/"+encodeURIComponent(service);
+    if(selectedOperator.toLowerCase()==="any"&&Number.isFinite(limit)&&limit>0)path+="?maxPrice="+encodeURIComponent(String(limit));
     return user(path);
   };
-
-  // Re-check the live quote immediately before buying. The public price/stock
-  // can change between the product page and the actual purchase request.
-  const fresh=await getPrice(country,service);
-  if(!fresh.count||!fresh.cost)throw new Error("NO_FREE_PHONES");
-
+  const fresh=await getPrice(country,service,selectedOperator);
+  if(!fresh.count||!fresh.cost)throw new Error(selectedOperator.toLowerCase()==="any"?"NO_FREE_PHONES":"OPERATOR_OUT_OF_STOCK");
   const requestedLimit=Number.isFinite(maxPrice)&&Number(maxPrice)>0?Number(maxPrice):Number(fresh.cost);
-  try{
-    const p=await buy(requestedLimit);
-    if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
-    return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||"any"),providerCost:Number(p.price||requestedLimit)};
-  }catch(first){
-    // One fresh-price retry handles a normal race where the cheapest operator
-    // disappeared between the catalog request and the buy request.
-    const freshRetry=await getPrice(country,service);
+  let p:any;
+  try{p=await buy(requestedLimit)}catch(first){
+    const msg=first instanceof Error?first.message:String(first);
+    // Only retry a documented any-operator price/stock race. Never retry
+    // authentication, balance, country, operator or product errors.
+    if(selectedOperator.toLowerCase()!=="any"||!/no free phones|price|maxprice|stock/i.test(msg))throw first;
+    const freshRetry=await getPrice(country,service,selectedOperator);
     if(!freshRetry.count||!freshRetry.cost)throw new Error("NO_FREE_PHONES");
-    const retryLimit=Math.max(requestedLimit,Number(freshRetry.cost));
-    if(retryLimit===requestedLimit)throw first;
-    const p=await buy(retryLimit);
-    if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
-    return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||"any"),providerCost:Number(p.price||retryLimit)};
+    const retryLimit=Number(freshRetry.cost);
+    if(retryLimit<=0||retryLimit===requestedLimit)throw first;
+    p=await buy(retryLimit);
   }
+  if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
+  return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||selectedOperator),providerCost:Number(p.price||requestedLimit)};
 }
-
 export async function check(orderid:string){
   const p=await user("/v1/user/check/"+encodeURIComponent(orderid));
   const sms=Array.isArray(p?.sms)?p.sms:[];
