@@ -302,3 +302,12 @@
  .ad-code{font-size:7px}
  .live-v2-footer{font-size:6px}
 }
+
+
+.developer-key-actions{display:flex;gap:10px;flex-wrap:wrap;}
+.developer-key-actions button{min-height:46px;}
+.developer-key-actions .developer-key-copy{min-width:150px;}
+.developer-key-actions .developer-revoke{min-width:150px;}
+.developer-refresh{border:1px solid rgba(121,246,229,.22);background:rgba(114,223,206,.06);color:#91d8cf;border-radius:11px;padding:0 15px;font-weight:900;cursor:pointer;min-width:92px;}
+.developer-key-actions button:disabled{opacity:.45;cursor:not-allowed;}
+@media(max-width:760px){.developer-key-actions{flex-direction:column}.developer-key-actions button{width:100%;}.developer-key-actions .developer-key-copy,.developer-key-actions .developer-revoke{min-width:0;}}
