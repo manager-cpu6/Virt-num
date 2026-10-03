@@ -221,13 +221,41 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
       : path);
   }
 
-  // Accept the documented top-level response and tolerate a harmless
-  // data/activation wrapper if the provider changes its JSON envelope.
-  const activation=p?.data||p?.activation||p;
-  const activationId=activation?.id??p?.id;
-  const activationPhone=activation?.phone??p?.phone;
+  // 5SIM's documented New Protocol response is a top-level activation
+  // object (id, phone, operator, product, price, status, expires). Some
+  // gateways/proxies can wrap the same object in data/activation/result,
+  // so normalize those envelopes before deciding that the purchase failed.
+  function findActivation(value:any, depth=0):any{
+    if(!value||depth>4)return null;
+    if(Array.isArray(value)){
+      for(const item of value){
+        const hit=findActivation(item,depth+1);
+        if(hit)return hit;
+      }
+      return null;
+    }
+    if(typeof value!=="object")return null;
+    const hasId=value.id!=null||value.order_id!=null||value.orderId!=null;
+    const hasPhone=value.phone!=null||value.number!=null||value.phoneNumber!=null;
+    if(hasId&&hasPhone)return value;
+    for(const k of ["data","activation","result","order"]){
+      if(value[k]){
+        const hit=findActivation(value[k],depth+1);
+        if(hit)return hit;
+      }
+    }
+    return null;
+  }
+
+  const activation=findActivation(p);
+  const activationId=activation?.id??activation?.order_id??activation?.orderId??p?.id??p?.order_id??p?.orderId;
+  const activationPhone=activation?.phone??activation?.number??activation?.phoneNumber??p?.phone??p?.number??p?.phoneNumber;
   if(activationId==null||!activationPhone){
-    console.error("[5SIM BUY RESPONSE]",{keys:p&&typeof p==="object"?Object.keys(p):[],body:p});
+    console.error("[5SIM BUY RESPONSE]",{
+      type:Array.isArray(p)?"array":typeof p,
+      keys:p&&typeof p==="object"?Object.keys(p):[],
+      body:p
+    });
     throw new Error("5SIM did not return an activation number.");
   }
 
@@ -239,7 +267,7 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
   // Never let a stale price make Numelixa undercharge. If 5SIM returns a
   // higher price than our approved ceiling, cancel the activation immediately.
   if(Number.isFinite(quoteCeiling)&&quoteCeiling>0&&providerCost>quoteCeiling){
-    try{await cancel(String(p.id))}catch{}
+    try{await cancel(String(activationId))}catch{}
     throw new Error("PRICE_CHANGED");
   }
 
