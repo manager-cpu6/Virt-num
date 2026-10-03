@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
@@ -148,6 +148,31 @@ export async function POST(req:Request){
           dbError:lastDbError instanceof Error?lastDbError.message:String(lastDbError)
         });
         throw new Error("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:"+providerOrderId+":"+number);
+      }
+
+      // The activation is durable. Email is best-effort so SMTP issues can never
+      // turn a successful 5SIM purchase into a failed purchase.
+      try{
+        const base=new URL(req.url).origin;
+        const buyerName=String(fresh.name||"there");
+        await sendEmail(
+          String(fresh.email||u.email||""),
+          "Number secured — Numelixa purchase complete",
+          purchaseSuccessEmail(
+            buyerName,
+            service,
+            country,
+            number,
+            price,
+            base+"/get-code/"+id
+          )
+        );
+      }catch(emailError){
+        console.error("[PURCHASE EMAIL]",{
+          orderId:id,
+          userId:u.id,
+          message:emailError instanceof Error?emailError.message:String(emailError)
+        });
       }
 
       // The actual order is now durable. Ledger logging is secondary and
