@@ -145,3 +145,4 @@ export default function HomeLiveBoard(){
    <span>Last update · {new Date(stamp).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit",second:"2-digit"})}</span>
   </div>
  </section>
+}
