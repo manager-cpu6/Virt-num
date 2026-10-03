@@ -17,7 +17,22 @@ export async function POST(req:Request){let providerOrderId="",debitWritten=fals
   if(debitWritten)try{await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:price,balanceAfter:Number(refund?.coins||0),reference:id,description:"Refund after failed order creation",createdAt:new Date()})}catch{}
   throw e
  }
- }catch(e){const m=e instanceof Error?e.message:"Order failed";if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});return NextResponse.json({ok:false,error:"Unable to reserve the number right now. Please try again."},{status:500})}}
+ }catch(e){
+ const m=e instanceof Error?e.message:"Order failed";
+ console.error("[5SIM ORDER]",{message:m,service:typeof service==="string"?service:undefined,country:typeof country==="string"?country:undefined,userId:typeof u!=="undefined"?u?.id:undefined});
+ if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
+ if(m==="EMAIL_VERIFICATION_REQUIRED")return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
+ if(m==="PROVIDER_BALANCE_TOO_LOW")return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
+ if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
+ if(/not enough user balance/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
+ if(/not enough rating/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
+ if(/bad country/i.test(m))return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
+ if(/bad operator/i.test(m))return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
+ if(/no product/i.test(m))return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
+ if(/server offline/i.test(m))return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
+ if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
+ return NextResponse.json({ok:false,error:"5SIM purchase failed. Please try again."},{status:502})
+}}
 export async function DELETE(req:Request){try{
  const u=await requireUser(),b=await req.json(),id=String(b.orderId||""),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),o=await orders.findOne({_id:id,userId:u.id});
  if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
