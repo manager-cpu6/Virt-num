@@ -25,32 +25,10 @@ async function call(action:string,params:Record<string,string|number|boolean>={}
    if(attempt===0)await new Promise(resolve=>setTimeout(resolve,350));
   }
  }
- if(!r){
-  const msg=lastError instanceof Error?lastError.message:"Network request failed";
-  throw new Error("SMS-Activate connection failed: "+msg);
- }
+ if(!r){const msg=lastError instanceof Error?lastError.message:"Network request failed";throw new Error("SMS-Activate connection failed: "+msg)}
  const text=await r.text();
  let body:any=text;try{body=JSON.parse(text)}catch{}
- if(!r.ok)throw new Error(`SMS-Activate HTTP ${r.status}`);
- if(typeof body==="string"&&(body==="BAD_KEY"||body==="BAD_ACTION"||body.startsWith("NO_")||body.startsWith("ERROR")||body.startsWith("WRONG_")||body.startsWith("EARLY_")||body.startsWith("NO_BALANCE")))throw new Error(body);
- return expectJson&&typeof body==="string"?JSON.parse(body):body;
-}onst base=(process.env.SMSACTIVATE_BASE_URL||"https://api.sms-activate.ae/stubs/handler_api.php").trim();
-const key=process.env.SMSACTIVATE_API_KEY?.trim();
-const TTL=5*60*1000;
-let countriesCache:{at:number;items:any[]}|null=null;
-let servicesCache:{at:number;items:any[]}|null=null;
-
-function configured(){return !!key}
-export function providerConfigured(){return configured()}
-
-async function call(action:string,params:Record<string,string|number|boolean>={},expectJson=false){
- if(!key)throw new Error("SMS-Activate API is not configured. Add SMSACTIVATE_API_KEY in Vercel Production.");
- const qs=new URLSearchParams({api_key:key,action});
- for(const [k,v] of Object.entries(params))qs.set(k,String(v));
- const r=await fetch(base+"?"+qs.toString(),{cache:"no-store",headers:{Accept:"application/json,text/plain"}});
- const text=await r.text();
- let body:any=text;try{body=JSON.parse(text)}catch{}
- if(!r.ok)throw new Error(`SMS-Activate HTTP ${r.status}`);
+ if(!r.ok)throw new Error("SMS-Activate HTTP "+r.status);
  if(typeof body==="string"&&(body==="BAD_KEY"||body==="BAD_ACTION"||body.startsWith("NO_")||body.startsWith("ERROR")||body.startsWith("WRONG_")||body.startsWith("EARLY_")||body.startsWith("NO_BALANCE")))throw new Error(body);
  return expectJson&&typeof body==="string"?JSON.parse(body):body;
 }
@@ -59,7 +37,8 @@ function objectArray(raw:any,key?:string){const v=key?raw?.[key]:raw;if(Array.is
 export async function balance(){const v=await call("getBalance");const s=String(v);return Number(s.includes(":")?s.split(":")[1]:s)}
 export async function listCountries(){
  if(countriesCache&&Date.now()-countriesCache.at<TTL)return countriesCache.items;
- const raw=await call("getCountries",{},true),items=Object.entries(raw||{}).map(([name,v]:any)=>({id:String(v?.id??name),name:String(v?.eng||name),code:String(v?.id??name),short_name:String(v?.eng||name),retry:Number(v?.retry||0),visible:Number(v?.visible??1),rent:Number(v?.rent||0)})).filter((x:any)=>x.visible!==0);
+ const raw=await call("getCountries",{},true);
+ const items=Object.entries(raw||{}).map(([name,v]:any)=>({id:String(v?.id??name),name:String(v?.eng||name),code:String(v?.id??name),short_name:String(v?.eng||name),retry:Number(v?.retry||0),visible:Number(v?.visible??1),rent:Number(v?.rent||0)})).filter((x:any)=>x.visible!==0);
  countriesCache={at:Date.now(),items};return items;
 }
 export async function listServices(country?:string){
@@ -71,14 +50,14 @@ export async function getPrice(country:string,service:string){
  const raw=await call("getPrices",{country,service},true);
  const countryObj=raw?.[country]||raw?.[String(country)]||Object.values(raw||{})[0]||{};
  const serviceObj=countryObj?.[service]||Object.values(countryObj||{})[0];
- if(!serviceObj) return {cost:0,count:0,physicalCount:0};
+ if(!serviceObj)return {cost:0,count:0,physicalCount:0};
  return {cost:Number(serviceObj.cost||0),count:Number(serviceObj.count||0),physicalCount:Number(serviceObj.physicalCount||0)};
 }
 export async function stock(country:string,service:string){return getPrice(country,service)}
 export async function purchase(country:string,service:string,maxPrice?:number){
  const v=await call("getNumber",{country,service,...(Number.isFinite(maxPrice)?{maxPrice}: {})});
  const s=String(v);
- const m=s.match(/^ACCESS_NUMBER:(\d+):(.*)$/);
+ const m=s.match(/^ACCESS_NUMBER:(\\d+):(.*)$/);
  if(!m)throw new Error(s);
  return {success:1,order_id:m[1],number:m[2],country,service,expires_in:600};
 }
