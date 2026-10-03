@@ -21,8 +21,13 @@ export default function Developers(){
  useEffect(()=>{load()},[]);
 
  async function copyKey(){
-  try{await navigator.clipboard.writeText(visibleKey);setNotice("API key copied to clipboard.");}
-  catch{setNotice("Copy failed. Please select and copy the key manually.");}
+  try{
+   const r=await fetch("/api/developer/keys?reveal=1",{cache:"no-store"});
+   const j=await r.json();
+   if(!r.ok||!j.key){setNotice(j.error||"Unable to copy API key.");return;}
+   await navigator.clipboard.writeText(j.key);
+   setNotice("API key copied to clipboard.");
+  }catch{setNotice("Copy failed. Please try again.");}
  }
 
  async function revoke(id:string){
@@ -36,16 +41,33 @@ export default function Developers(){
  const active=keys.find(k=>k.active);
 
  return <main className="developer-shell" style={{color:"#eafff9"}}>
-  <div className="developer-hero" style={{marginBottom:28}}>
+  <div className="developer-hero" style={{marginBottom:18}}>
    <div style={{fontSize:11,letterSpacing:3,color:"#72dfce",fontWeight:900}}>NUMELIXA DEVELOPERS</div>
    <h1 style={{fontSize:42,letterSpacing:-2.2,margin:"8px 0"}}>Developer API</h1>
    <p style={{color:"#83a5a6",maxWidth:800}}>Build your own app, bot or automation on top of Numelixa. Use your account balance to check live inventory, read current prices, buy numbers and retrieve SMS codes.</p>
   </div>
 
+  <section style={{marginBottom:16,padding:22,borderRadius:24,border:"1px solid rgba(121,246,229,.2)",background:"linear-gradient(145deg,rgba(8,53,61,.96),rgba(4,30,37,.94))",boxShadow:"0 18px 50px rgba(0,0,0,.18)"}}>
+   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:14,flexWrap:"wrap"}}>
+    <div>
+     <div style={{fontSize:11,letterSpacing:2,color:"#72dfce",fontWeight:900}}>PRODUCTION API KEY</div>
+     <h2 style={{margin:"6px 0 3px",fontSize:24}}>Your API access</h2>
+     <div style={{fontSize:12,color:"#78999a"}}>Keep the secret hidden. Copy it directly when you need to connect your app.</div>
+    </div>
+    <span style={{padding:"7px 11px",borderRadius:999,background:"rgba(80,220,150,.1)",color:"#79e5ae",fontSize:11,fontWeight:900}}>{active?"ACTIVE":"ROTATING"}</span>
+   </div>
+   <div className="developer-key-row" style={{marginTop:16}}>
+    <code className="developer-key-value" style={{padding:14,borderRadius:13,background:"rgba(0,0,0,.28)",fontSize:13,flex:1}}>{active?.prefix||"nx_live_"}••••••••••••••••••••</code>
+    {active&&<button className="developer-key-copy" onClick={copyKey}>Copy API key</button>}
+    {active&&<button className="developer-revoke" onClick={()=>revoke(active._id)}>Revoke & Replace</button>}
+   </div>
+   {notice&&<div style={{marginTop:12,padding:11,borderRadius:11,background:"rgba(114,223,206,.06)",color:"#91d8cf",fontSize:12}}>{notice}</div>}
+  </section>
+
   <section className="developer-main-grid" style={{marginBottom:16}}>
    <div style={{padding:22,borderRadius:24,border:"1px solid rgba(121,246,229,.14)",background:"rgba(5,39,47,.78)"}}>
     <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",flexWrap:"wrap"}}>
-     <div><h2 style={{margin:"0 0 5px"}}>Production API key</h2><p style={{margin:0,fontSize:12,color:"#75999a"}}>Automatically created for every account. No manual Create API button.</p></div>
+     <div><h2 style={{margin:"0 0 5px"}}>API access</h2><p style={{margin:0,fontSize:12,color:"#75999a"}}>Your production key is managed automatically for this account.</p></div>
      <span style={{padding:"6px 10px",borderRadius:999,background:"rgba(80,220,150,.1)",color:"#79e5ae",fontSize:11,fontWeight:900}}>{active?"ACTIVE":"ROTATING"}</span>
     </div>
 
