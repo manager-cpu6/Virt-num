@@ -39,8 +39,8 @@ export async function getPrice(country:string,service:string){
  return {cost:Number(serviceObj.cost||0),count:Number(serviceObj.count||0),physicalCount:Number(serviceObj.physicalCount||0)};
 }
 export async function stock(country:string,service:string){return getPrice(country,service)}
-export async function purchase(country:string,service:string){
- const v=await call("getNumber",{country,service});
+export async function purchase(country:string,service:string,maxPrice?:number){
+ const v=await call("getNumber",{country,service,...(Number.isFinite(maxPrice)?{maxPrice}: {})});
  const s=String(v);
  const m=s.match(/^ACCESS_NUMBER:(\d+):(.*)$/);
  if(!m)throw new Error(s);
