@@ -7,6 +7,8 @@ export type PricingSettings={
   minTopupUsd:number;
   maxTopupUsd:number;
   coinPackages:CoinPackage[];
+  providerOperator:string;
+  providerOperators:string[];
 };
 
 const defaults:PricingSettings={
@@ -19,7 +21,9 @@ const defaults:PricingSettings={
     {coins:1000,priceUsd:10},
     {coins:2500,priceUsd:25,popular:true},
     {coins:5000,priceUsd:50}
-  ]
+  ],
+  providerOperator:"any",
+  providerOperators:["any"]
 };
 
 export async function getSettings():Promise<PricingSettings>{
@@ -34,7 +38,9 @@ export async function getSettings():Promise<PricingSettings>{
     coinsPerUsd:Number(s?.coinsPerUsd??defaults.coinsPerUsd),
     minTopupUsd:Number(s?.minTopupUsd??defaults.minTopupUsd),
     maxTopupUsd:Number(s?.maxTopupUsd??defaults.maxTopupUsd),
-    coinPackages:coinPackages.length?coinPackages:defaults.coinPackages
+    coinPackages:coinPackages.length?coinPackages:defaults.coinPackages,
+    providerOperator:String(s?.providerOperator||defaults.providerOperator).trim()||"any",
+    providerOperators:Array.isArray(s?.providerOperators)&&s.providerOperators.length?s.providerOperators.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):defaults.providerOperators
   };
 }
 
