@@ -16,7 +16,7 @@ export async function GET(req:Request){
    return NextResponse.json({ok:true,key});
   }
   return NextResponse.json({ok:true,key:ensured.raw,keyCreated:ensured.created,keys:await listApiKeys(u.id)});
- }catch{return NextResponse.json({ok:false,error:"Please sign in."},{status:401})}
+ }catch(e){if(e instanceof Error && e.message==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in."},{status:401});console.error("[DEVELOPER KEY GET]",e);return NextResponse.json({ok:false,error:"Unable to load API key right now."},{status:500})}
 }
 
 export async function POST(){
