@@ -1,6 +1,7 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import LiveVideoFeed from "@/components/LiveVideoFeed";
+import HomeLiveBoard from "@/components/HomeLiveBoard";
 export default function HomePage(){
  return <div>
   <TopBar/>
@@ -15,6 +16,8 @@ export default function HomePage(){
   </section>
 
   <LiveVideoFeed/>
+
+  <HomeLiveBoard/>
 
   <div className="quick-grid">
    <Link href="/services" className="quick-card"><span>＋</span><div><b>Get a number</b><small>Choose an app & country</small></div><i>→</i></Link>
