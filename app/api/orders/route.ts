@@ -9,7 +9,7 @@ export async function POST(req:Request){let providerOrderId="";try{
  const updated=await users.findOneAndUpdate({_id:u.id,coins:{$gte:price}},{$inc:{coins:-price}},{returnDocument:"after"});
  if(!updated)return NextResponse.json({ok:false,error:"Insufficient coins. Please top up your wallet."},{status:402});
  try{
-  const p=await purchase(country,service);providerOrderId=String(p.order_id||"");if(!providerOrderId)throw new Error("Provider did not return an activation ID.");
+  const p=await purchase(country,service,Number(quote.cost));providerOrderId=String(p.order_id||"");if(!providerOrderId)throw new Error("Provider did not return an activation ID.");
   const now=new Date(),expiresAt=new Date(now.getTime()+10*60*1000),number=String(p.number||"");
   const after=Number(updated.coins||0);
   await txs.insertOne({_id:mongoId(),userId:u.id,type:"debit",amount:-price,balanceAfter:after,reference:id,description:"Number purchase: "+service+" / "+country,createdAt:now});
