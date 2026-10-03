@@ -111,7 +111,7 @@ function quoteForOperator(productTree:any,operator="any"){
     if(!x||!Number.isFinite(Number(x.cost)))return {cost:0,count:0,rate:0,operator};
     return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator};
   }
-  const candidates=Object.entries(tree).map(([op,x]:any)=>({...x,operator:String(op)});
+  const candidates=Object.entries(tree).map(([op,x]:any)=>({...x,operator:String(op)}));
   const usable=candidates.filter(x=>Number(x?.count||0)>0&&Number.isFinite(Number(x?.cost)));
   const list=(usable.length?usable:candidates).filter(x=>Number.isFinite(Number(x?.cost)));
   if(!list.length)return {cost:0,count:0,rate:0,operator:"any"};
