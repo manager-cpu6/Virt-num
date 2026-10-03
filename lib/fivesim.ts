@@ -163,32 +163,74 @@ export async function servicePrices(service:string,countries:any[]=[]){
 }
 
 export async function purchase(country:string,service:string,maxPrice?:number,operator="any"){
-  const selectedOperator=String(operator||"any").trim()||"any";
-  const buy=async(limit:number)=>{
-    let path="/v1/user/buy/activation/"+encodeURIComponent(country)+"/"+encodeURIComponent(selectedOperator)+"/"+encodeURIComponent(service);
-    if(selectedOperator.toLowerCase()==="any"&&Number.isFinite(limit)&&limit>0)path+="?maxPrice="+encodeURIComponent(String(limit));
-    return user(path);
-  };
+  const selectedOperator=String(operator||"any").trim().toLowerCase()||"any";
+
+  // Read the live quote immediately before purchase. The quote is used as a
+  // safety ceiling, not as a stale price that must be sent to 5SIM.
   const fresh=await getPrice(country,service,selectedOperator);
-  if(!fresh.count||!fresh.cost)throw new Error(selectedOperator.toLowerCase()==="any"?"NO_FREE_PHONES":"OPERATOR_OUT_OF_STOCK");
-  const requestedLimit=Number.isFinite(maxPrice)&&Number(maxPrice)>0?Number(maxPrice):Number(fresh.cost);
+  if(!fresh.count||!fresh.cost){
+    throw new Error(selectedOperator==="any"?"NO_FREE_PHONES":"OPERATOR_OUT_OF_STOCK");
+  }
+
+  const quoteCeiling=Number.isFinite(Number(maxPrice))&&Number(maxPrice)>0
+    ? Number(maxPrice)
+    : Number(fresh.cost);
+
   const profile=await user("/v1/user/profile");
   const providerBalance=Number(profile?.balance||0);
-  if(!Number.isFinite(providerBalance)||providerBalance<requestedLimit)throw new Error("PROVIDER_BALANCE_TOO_LOW");
-  let p:any;
-  try{p=await buy(requestedLimit)}catch(first){
-    const msg=first instanceof Error?first.message:String(first);
-    // Only retry a documented any-operator price/stock race. Never retry
-    // authentication, balance, country, operator or product errors.
-    if(selectedOperator.toLowerCase()!=="any"||!/no free phones|price|maxprice|stock/i.test(msg))throw first;
-    const freshRetry=await getPrice(country,service,selectedOperator);
-    if(!freshRetry.count||!freshRetry.cost)throw new Error("NO_FREE_PHONES");
-    const retryLimit=Number(freshRetry.cost);
-    if(retryLimit<=0||retryLimit===requestedLimit)throw first;
-    p=await buy(retryLimit);
+  if(!Number.isFinite(providerBalance)||providerBalance<Number(fresh.cost)){
+    throw new Error("PROVIDER_BALANCE_TOO_LOW");
   }
+
+  // 5SIM New Protocol accepts the normal buy URL directly. Do not make
+  // maxPrice mandatory: doing so can turn a valid live purchase into a
+  // false failure when the provider quote changes between two requests.
+  // We still enforce our own price ceiling after the provider responds.
+  const path="/v1/user/buy/activation/"
+    +encodeURIComponent(country)+"/"
+    +encodeURIComponent(selectedOperator)+"/"
+    +encodeURIComponent(service);
+
+  let p:any;
+  try{
+    p=await user(path);
+  }catch(first){
+    const msg=first instanceof Error?first.message:String(first);
+    // A single retry is allowed only for a transient provider stock race.
+    if(!/no free phones|price|maxprice|stock|temporarily unavailable/i.test(msg))throw first;
+    const retryQuote=await getPrice(country,service,selectedOperator);
+    if(!retryQuote.count||!retryQuote.cost)throw new Error("NO_FREE_PHONES");
+    p=await user(path);
+  }
+
   if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
-  return {success:1,order_id:String(p.id),number:String(p.phone),country:String(p.country||country),service:String(p.product||service),expires_in:p?.expires?Math.max(0,Math.floor((new Date(p.expires).getTime()-Date.now())/1000)):600,operator:String(p.operator||selectedOperator),providerCost:Number(p.price||requestedLimit)};
+
+  const providerCost=Number(p.price||fresh.cost);
+  if(!Number.isFinite(providerCost)||providerCost<=0){
+    throw new Error("5SIM returned an invalid purchase price.");
+  }
+
+  // Never let a stale price make Numelixa undercharge. If 5SIM returns a
+  // higher price than our approved ceiling, cancel the activation immediately.
+  if(Number.isFinite(quoteCeiling)&&quoteCeiling>0&&providerCost>quoteCeiling){
+    try{await cancel(String(p.id))}catch{}
+    throw new Error("PRICE_CHANGED");
+  }
+
+  const expiresAt=p?.expires?new Date(p.expires):null;
+  return {
+    success:1,
+    order_id:String(p.id),
+    number:String(p.phone),
+    country:String(p.country||country),
+    service:String(p.product||service),
+    expires_in:expiresAt
+      ? Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000))
+      :600,
+    expires_at:expiresAt?.toISOString()||null,
+    operator:String(p.operator||selectedOperator),
+    providerCost
+  };
 }
 export async function check(orderid:string){
   const p=await user("/v1/user/check/"+encodeURIComponent(orderid));
