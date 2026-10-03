@@ -55,6 +55,7 @@ export async function check(orderid:string){
  if(s==="STATUS_WAIT_RETRY")return {status:1,sms:""};
  return {status:1,sms:"",raw:s};
 }
+export async function finalize(orderid:string){const v=await call("setStatus",{id:orderid,status:6});return String(v)}
 export async function cancel(orderid:string){
  const v=await call("setStatus",{id:orderid,status:8});
  const s=String(v);
