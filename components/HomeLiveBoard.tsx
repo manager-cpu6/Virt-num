@@ -70,7 +70,7 @@ export default function HomeLiveBoard(){
    number:a.phone||"•••• ••••",
    service:a.service
   }));
-  return fromActivity.length?fromActivity:fallbackNumbers;
+  return fromActivity.length?fromActivity:demoWindow.map(a=>({country:a.country,flag:flagFor(a.country),number:a.phone,service:a.service}));
  },[data.activity]);
 
  return <section className="home-live-board-v2">
