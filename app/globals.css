@@ -13,7 +13,14 @@ body:after{width:300px;height:300px;right:-130px;bottom:80px;background:rgba(207
 a{text-decoration:none;color:inherit}button,input{font:inherit}button{cursor:pointer}
 .app-shell{min-height:100vh}
 .page-shell{width:min(100%,820px);margin:0 auto;padding:20px 18px 150px}
-.topbar{height:58px;display:grid;grid-template-columns:42px 1fr 42px;align-items:center;margin-bottom:18px}
+.topbar{height:58px;display:grid;grid-template-columns:1fr auto;align-items:center;margin-bottom:18px;position:relative}
+.topbar-detail{grid-template-columns:42px 1fr auto}
+.topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.coin-pill{height:36px;min-width:96px;padding:0 11px;display:inline-flex;align-items:center;justify-content:center;gap:5px;border:1px solid rgba(121,246,229,.18);border-radius:13px;background:rgba(5,31,39,.78);color:#dffcf8;text-decoration:none;box-shadow:0 8px 24px rgba(0,0,0,.18);white-space:nowrap}
+.coin-pill .coin-icon{font-size:14px;color:#72f5df}
+.coin-pill span:not(.coin-icon){font-size:12px;font-weight:900}
+.coin-pill small{font-size:9px;font-weight:800;opacity:.65}
+
 .top-title{text-align:center;font-size:16px;font-weight:800;letter-spacing:-.02em}
 .brand-mark,.icon-btn{width:42px;height:42px;border-radius:15px;display:grid;place-items:center}
 .brand-mark{background:rgba(17,21,29,.94);color:#fff;font-weight:900;box-shadow:0 10px 24px rgba(17,21,29,.16)}
@@ -70,7 +77,7 @@ a{text-decoration:none;color:inherit}button,input{font:inherit}button{cursor:poi
 @media(max-width:390px){.page-shell{padding-left:13px;padding-right:13px;padding-bottom:145px}.service-grid{gap:8px}.service-card{padding:12px;gap:9px}.service-icon{width:39px;height:39px}.service-card b{font-size:13px}.service-card small{font-size:10px}.topup-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* Numelixa marketplace reference polish */
-.topbar-brand{grid-template-columns:1fr 42px;gap:12px}
+.topbar-brand{grid-template-columns:1fr auto;gap:12px}
 .topbar-detail{grid-template-columns:42px 1fr 42px}
 .brand-lockup{display:flex;align-items:center;gap:10px;min-width:0}
 .brand-logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#12b69a,#087d75);color:#fff;font-weight:950;font-size:22px;box-shadow:0 10px 24px rgba(8,125,117,.18)}
