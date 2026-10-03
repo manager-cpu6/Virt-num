@@ -1,0 +1,1 @@
+import {POST as checkCode} from "@/app/api/orders/code/route";export const runtime="nodejs";export const dynamic="force-dynamic";export async function POST(req:Request){return checkCode(req)}

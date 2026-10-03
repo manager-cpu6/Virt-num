@@ -1,0 +1,1 @@
+import {POST as purchaseOrder} from "@/app/api/orders/route";export const runtime="nodejs";export const dynamic="force-dynamic";export async function POST(req:Request){return purchaseOrder(req)}
