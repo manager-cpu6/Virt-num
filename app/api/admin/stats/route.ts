@@ -64,7 +64,6 @@ export async function POST(req:Request){
     })).filter((p:any)=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0).slice(0,8);
 
     if(!coinPackages.length)return NextResponse.json({ok:false,error:"Add at least one valid coin package."},{status:400});
-    if(coinPackages.some((p:any)=>p.priceUsd<minTopupUsd||p.priceUsd>maxTopupUsd))return NextResponse.json({ok:false,error:"Coin package prices must stay inside the top-up limits."},{status:400});
 
     let popularUsed=false;
     for(const p of coinPackages){
