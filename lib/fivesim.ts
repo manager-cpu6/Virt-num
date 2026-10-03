@@ -111,13 +111,25 @@ function quoteForOperator(productTree:any,operator="any"){
     if(!x||!Number.isFinite(Number(x.cost)))return {cost:0,count:0,rate:0,operator};
     return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator};
   }
+  // For operator=any, 5SIM itself decides which operator to issue.
+  // If the filtered price tree contains an explicit "any" quote, that is
+  // the only safe quote to use for the purchase ceiling.
+  const anyQuote=tree["any"]||tree["ANY"];
+  if(anyQuote&&Number.isFinite(Number(anyQuote.cost))){
+    return {
+      cost:Number(anyQuote.cost||0),
+      count:Number(anyQuote.count||0),
+      rate:Number(anyQuote.rate||0),
+      operator:"any"
+    };
+  }
   const candidates=Object.entries(tree).map(([op,x]:any)=>({...x,operator:String(op)}));
   const usable=candidates.filter(x=>Number(x?.count||0)>0&&Number.isFinite(Number(x?.cost)));
   const list=(usable.length?usable:candidates).filter(x=>Number.isFinite(Number(x?.cost)));
   if(!list.length)return {cost:0,count:0,rate:0,operator:"any"};
   list.sort((a,b)=>Number(a.cost)-Number(b.cost));
   const x=list[0];
-  return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator:String(x.operator||"any")};
+  return {cost:Number(x.cost||0),count:Number(x.count||0),rate:Number(x.rate||0),operator:"any"};
 }
 
 function bestOperator(productTree:any){return quoteForOperator(productTree,"any")}
@@ -193,19 +205,33 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
 
   let p:any;
   try{
-    p=await user(path);
+    // maxPrice is now safe because getPrice(any) uses 5SIM's explicit any quote.
+    const buyPath=selectedOperator==="any" && quoteCeiling>0
+      ? path+"?maxPrice="+encodeURIComponent(String(quoteCeiling))
+      : path;
+    p=await user(buyPath);
   }catch(first){
     const msg=first instanceof Error?first.message:String(first);
     // A single retry is allowed only for a transient provider stock race.
     if(!/no free phones|price|maxprice|stock|temporarily unavailable/i.test(msg))throw first;
     const retryQuote=await getPrice(country,service,selectedOperator);
     if(!retryQuote.count||!retryQuote.cost)throw new Error("NO_FREE_PHONES");
-    p=await user(path);
+    p=await user(selectedOperator==="any" && Number(retryQuote.cost)>0
+      ? path+"?maxPrice="+encodeURIComponent(String(retryQuote.cost))
+      : path);
   }
 
-  if(!p?.id||!p?.phone)throw new Error("5SIM did not return an activation number.");
+  // Accept the documented top-level response and tolerate a harmless
+  // data/activation wrapper if the provider changes its JSON envelope.
+  const activation=p?.data||p?.activation||p;
+  const activationId=activation?.id??p?.id;
+  const activationPhone=activation?.phone??p?.phone;
+  if(activationId==null||!activationPhone){
+    console.error("[5SIM BUY RESPONSE]",{keys:p&&typeof p==="object"?Object.keys(p):[],body:p});
+    throw new Error("5SIM did not return an activation number.");
+  }
 
-  const providerCost=Number(p.price||fresh.cost);
+  const providerCost=Number(activation?.price??p?.price??fresh.cost);
   if(!Number.isFinite(providerCost)||providerCost<=0){
     throw new Error("5SIM returned an invalid purchase price.");
   }
@@ -217,18 +243,18 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
     throw new Error("PRICE_CHANGED");
   }
 
-  const expiresAt=p?.expires?new Date(p.expires):null;
+  const expiresAt=activation?.expires?new Date(activation.expires):null;
   return {
     success:1,
-    order_id:String(p.id),
-    number:String(p.phone),
-    country:String(p.country||country),
-    service:String(p.product||service),
+    order_id:String(activationId),
+    number:String(activationPhone),
+    country:String(activation?.country||p?.country||country),
+    service:String(activation?.product||p?.product||service),
     expires_in:expiresAt
       ? Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000))
       :600,
     expires_at:expiresAt?.toISOString()||null,
-    operator:String(p.operator||selectedOperator),
+    operator:String(activation?.operator||p?.operator||selectedOperator),
     providerCost
   };
 }
