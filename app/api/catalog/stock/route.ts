@@ -10,6 +10,6 @@ export async function GET(req:Request){
     if(!country||!service)return NextResponse.json({ok:false,error:"Country and service are required."},{status:400});
     const settings=await getSettings(),operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
     const q=await stock(country,service,operator),coins=q.cost?sellCoins(q.cost,settings):0;
-    return NextResponse.json({ok:true,stock:{...q,providerCost:q.cost,sellCoins:coins,usdPrice:settings.coinsPerUsd?coins/settings.coinsPerUsd:0,currency:"USD",markupPercent:settings.markupPercent,coinsPerUsd:settings.coinsPerUsd,operator:q.operator||operator}});
+    return NextResponse.json({ok:true,stock:{...q,providerCost:q.cost,sellCoins:coins,usdPrice:settings.coinsPerUsd?coins/settings.coinsPerUsd:0,currency:"USD",coinsPerUsd:settings.coinsPerUsd,operator:q.operator||operator}});
   }catch{return NextResponse.json({ok:false},{status:502})}
 }
