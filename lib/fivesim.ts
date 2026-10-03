@@ -172,6 +172,9 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
   const fresh=await getPrice(country,service,selectedOperator);
   if(!fresh.count||!fresh.cost)throw new Error(selectedOperator.toLowerCase()==="any"?"NO_FREE_PHONES":"OPERATOR_OUT_OF_STOCK");
   const requestedLimit=Number.isFinite(maxPrice)&&Number(maxPrice)>0?Number(maxPrice):Number(fresh.cost);
+  const profile=await user("/v1/user/profile");
+  const providerBalance=Number(profile?.balance||0);
+  if(!Number.isFinite(providerBalance)||providerBalance<requestedLimit)throw new Error("PROVIDER_BALANCE_TOO_LOW");
   let p:any;
   try{p=await buy(requestedLimit)}catch(first){
     const msg=first instanceof Error?first.message:String(first);
