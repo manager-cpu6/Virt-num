@@ -5,7 +5,7 @@ const PREFIX="nx_live_";
 const CIPHER="aes-256-gcm";
 
 function encryptionKey(){
- const seed=process.env.API_KEY_ENCRYPTION_SECRET||process.env.MONGO_URL;
+ const seed=process.env.API_KEY_ENCRYPTION_SECRET||process.env.MONGODB_URI;
  if(!seed)throw new Error("API key encryption secret is not configured.");
  return crypto.createHash("sha256").update("numelixa-api-key-v1:"+seed).digest();
 }
