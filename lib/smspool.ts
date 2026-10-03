@@ -48,21 +48,48 @@ export async function listServices(country?:string){
 }
 export async function getPrice(country:string,service:string){
  const raw=await call("getPrices",{country,service},true);
- const countryObj=raw?.[country]||raw?.[String(country)]||Object.values(raw||{})[0]||{};
- const serviceObj=countryObj?.[service]||Object.values(countryObj||{})[0];
+ const root=raw&&typeof raw==="object"?raw:{};
+ const countryObj=root?.[country]||Object.values(root).find((v:any)=>v&&typeof v==="object"&&(v as any)[service])||Object.values(root)[0]||{};
+ const serviceObj=(countryObj as any)?.[service];
  if(!serviceObj)return {cost:0,count:0,physicalCount:0};
- return {cost:Number(serviceObj.cost||0),count:Number(serviceObj.count||0),physicalCount:Number(serviceObj.physicalCount||0)};
+ return {cost:Number((serviceObj as any).cost||0),count:Number((serviceObj as any).count||0),physicalCount:Number((serviceObj as any).physicalCount||0)};
 }
 export async function stock(country:string,service:string){return getPrice(country,service)}
-export async function servicePrices(service:string){
- const raw=await call("getPrices",{service},true);
+
+function addPrice(out:Record<string,{cost:number;count:number;physicalCount:number}>,key:string,item:any){
+ if(!item||typeof item!=="object")return;
+ const cost=Number(item.cost??item.price??0),count=Number(item.count??0),physicalCount=Number(item.physicalCount??0);
+ if(cost>0||count>0)out[String(key)]={cost,count,physicalCount};
+}
+
+export async function servicePrices(service:string,countries:any[]=[]){
  const out:Record<string,{cost:number;count:number;physicalCount:number}>={};
- for(const [countryId,countryData] of Object.entries(raw||{})){
-  const item=(countryData as any)?.[service];
-  if(item)out[String(countryId)]={cost:Number(item.cost||0),count:Number(item.count||0),physicalCount:Number(item.physicalCount||0)};
+ let raw:any;
+ try{raw=await call("getPrices",{service},true)}catch{raw=null}
+ if(raw&&typeof raw==="object"){
+  for(const [countryKey,countryData] of Object.entries(raw)){
+   const item=(countryData as any)?.[service];
+   if(item){
+    addPrice(out,String(countryKey),item);
+    const match=countries.find((c:any)=>String(c.id)===String(countryKey)||String(c.name).toLowerCase()===String(countryKey).toLowerCase()||String(c.short_name).toLowerCase()===String(countryKey).toLowerCase());
+    if(match)addPrice(out,String(match.id),item);
+   }
+  }
+ }
+ if(!Object.keys(out).length){
+  try{
+   const verification=await call("getPricesVerification",{service},true);
+   const tree=(verification&&verification[service])||verification||{};
+   for(const [countryKey,item] of Object.entries(tree)){
+    addPrice(out,String(countryKey),item);
+    const match=countries.find((c:any)=>String(c.id)===String(countryKey)||String(c.name).toLowerCase()===String(countryKey).toLowerCase()||String(c.short_name).toLowerCase()===String(countryKey).toLowerCase());
+    if(match)addPrice(out,String(match.id),item);
+   }
+  }catch{}
  }
  return out;
 }
+
 export async function purchase(country:string,service:string,maxPrice?:number){
  const v=await call("getNumber",{country,service,...(Number.isFinite(maxPrice)?{maxPrice}: {})});
  const s=String(v);
