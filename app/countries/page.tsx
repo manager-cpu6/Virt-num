@@ -10,7 +10,14 @@ const asia=new Set(["afghanistan","bahrain","bangladesh","cambodia","china","hon
 const serviceNames:Record<string,string>={whatsapp:"WhatsApp",telegram:"Telegram",google:"Google",facebook:"Facebook",instagram:"Instagram/Threads",tiktok:"TikTok",twitter:"X / Twitter",snapchat:"Snapchat",viber:"Viber",discord:"Discord",amazon:"Amazon",microsoft:"Microsoft",apple:"Apple",openai:"OpenAI/ChatGPT",signal:"Signal",wechat:"WeChat",yahoo:"Yahoo"};
 function serviceName(s:string){return serviceNames[s.toLowerCase()]||s.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function flag(iso:string){const code=String(iso||"").toUpperCase();return /^[A-Z]{2}$/.test(code)?String.fromCodePoint(...[...code].map(c=>127397+c.charCodeAt(0))):"🌐"}
-function AppLogo({service,name}:{service:string;name:string}){return <span className={"service-icon service-icon-"+service}><img src={"https://cdn.simpleicons.org/"+service} alt="" onError={e=>{e.currentTarget.style.display="none"}}/>{name.slice(0,1)}</span>}
+function AppLogo({service,name}:{service:string;name:string}){
+ const[hasLogo,setHasLogo]=useState(true);
+ return <span className={"service-icon service-icon-"+service}>
+   {hasLogo
+     ? <img src={"https://cdn.simpleicons.org/"+service} alt="" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
+     : <span className="service-letter">{name.slice(0,1).toUpperCase()}</span>}
+ </span>
+}
 export default function CountriesPage(){
  const[countries,setCountries]=useState<C[]>([]),[service,setService]=useState(""),[loading,setLoading]=useState(true),[search,setSearch]=useState(""),[filter,setFilter]=useState("All"),[error,setError]=useState("");
  useEffect(()=>{const p=new URLSearchParams(window.location.search),sv=p.get("service")||"";setService(sv);if(!sv){setError("Choose a service first.");setLoading(false);return}fetch("/api/catalog/countries?service="+encodeURIComponent(sv),{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Live countries unavailable");setCountries(Array.isArray(d.countries)?d.countries:[])}).catch(e=>setError(e instanceof Error?e.message:"Unable to load live countries")).finally(()=>setLoading(false))},[]);
