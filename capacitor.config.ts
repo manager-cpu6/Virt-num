@@ -7,7 +7,7 @@ const config:CapacitorConfig={
   cleartext:false,
   allowNavigation:["numelixa.com","www.numelixa.com","pay.cryptomus.com"]
  },
- android:{allowMixedContent:false,captureInput:true},
+ android:{allowMixedContent:false,captureInput:true,adjustMarginsForEdgeToEdge:"force"},
  plugins:{
   SplashScreen:{launchShowDuration:1200,launchAutoHide:true,backgroundColor:"#031b22",showSpinner:false},
   PushNotifications:{presentationOptions:["badge","sound","alert"]}
