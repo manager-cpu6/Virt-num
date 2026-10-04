@@ -335,7 +335,7 @@ jobs:
           from pathlib import Path
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
-              s=s.replace("    <application","    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application",1)
+              s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n\\n    <application', 1)
           p.write_text(s)
           PY
       - name: Configure Firebase push messaging
