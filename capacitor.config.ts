@@ -8,7 +8,7 @@ const config:CapacitorConfig={
   // The native app uses only the official Numelixa domains.
   // Primary: www.numelixa.com
   // Fallback: numelixa.com
-  url:"https://www.numelixa.com",
+  url:"https://numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
