@@ -358,8 +358,11 @@ s = manifest.read_text(encoding="utf-8")
 if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
     s = s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />\n\n    <application', 1)
 elif "android.permission.FOREGROUND_SERVICE_DATA_SYNC" not in s:
-    s = s.replace("    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />",
-                  "    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />", 1)
+    s = s.replace(
+        '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />',
+        '    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />\\n    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />',
+        1
+    )
 service = '''\n        <service\n            android:name=".NumelixaUpdateService"\n            android:exported="false"\n            android:foregroundServiceType="dataSync" />'''
 if ".NumelixaUpdateService" not in s:
     s = s.replace("</application>", service + "\n    </application>", 1)
