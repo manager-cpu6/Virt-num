@@ -169,7 +169,13 @@ jobs:
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
               s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n\\n    <application', 1)
+          provider='''\n        <provider\n            android:name="androidx.core.content.FileProvider"\n            android:authorities="${applicationId}.fileprovider"\n            android:exported="false"\n            android:grantUriPermissions="true">\n            <meta-data\n                android:name="android.support.FILE_PROVIDER_PATHS"\n                android:resource="@xml/numelixa_file_paths" />\n        </provider>'''
+          if "androidx.core.content.FileProvider" not in s:
+              s=s.replace("</application>", provider+"\n    </application>", 1)
           p.write_text(s)
+          xml=Path("android/app/src/main/res/xml/numelixa_file_paths.xml")
+          xml.parent.mkdir(parents=True, exist_ok=True)
+          xml.write_text('''<?xml version="1.0" encoding="utf-8"?>\n<paths xmlns:android="http://schemas.android.com/apk/res/android">\n    <external-files-path name="update_files" path="Download/" />\n</paths>''')
           PY
       - name: Configure Firebase push messaging
         run: |
@@ -402,7 +408,13 @@ jobs:
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
               s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n\\n    <application', 1)
+          provider='''\n        <provider\n            android:name="androidx.core.content.FileProvider"\n            android:authorities="${applicationId}.fileprovider"\n            android:exported="false"\n            android:grantUriPermissions="true">\n            <meta-data\n                android:name="android.support.FILE_PROVIDER_PATHS"\n                android:resource="@xml/numelixa_file_paths" />\n        </provider>'''
+          if "androidx.core.content.FileProvider" not in s:
+              s=s.replace("</application>", provider+"\n    </application>", 1)
           p.write_text(s)
+          xml=Path("android/app/src/main/res/xml/numelixa_file_paths.xml")
+          xml.parent.mkdir(parents=True, exist_ok=True)
+          xml.write_text('''<?xml version="1.0" encoding="utf-8"?>\n<paths xmlns:android="http://schemas.android.com/apk/res/android">\n    <external-files-path name="update_files" path="Download/" />\n</paths>''')
           PY
       - name: Configure Firebase push messaging
         run: |
@@ -470,7 +482,13 @@ jobs:
               raise SystemExit("Could not locate Android buildTypes for release signing")
           s = s.replace(marker, block + marker, 1)
           s = s.replace("buildTypes {\n        release {", "buildTypes {\n        release {\n            signingConfig signingConfigs.release", 1)
+          provider='''\n        <provider\n            android:name="androidx.core.content.FileProvider"\n            android:authorities="${applicationId}.fileprovider"\n            android:exported="false"\n            android:grantUriPermissions="true">\n            <meta-data\n                android:name="android.support.FILE_PROVIDER_PATHS"\n                android:resource="@xml/numelixa_file_paths" />\n        </provider>'''
+          if "androidx.core.content.FileProvider" not in s:
+              s=s.replace("</application>", provider+"\n    </application>", 1)
           p.write_text(s)
+          xml=Path("android/app/src/main/res/xml/numelixa_file_paths.xml")
+          xml.parent.mkdir(parents=True, exist_ok=True)
+          xml.write_text('''<?xml version="1.0" encoding="utf-8"?>\n<paths xmlns:android="http://schemas.android.com/apk/res/android">\n    <external-files-path name="update_files" path="Download/" />\n</paths>''')
           PY
       - name: Build signed release APK
         working-directory: android
