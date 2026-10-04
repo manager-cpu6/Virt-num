@@ -22,7 +22,7 @@ export type PushSendResult = {
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
  const app=firebaseApp();
- if(!app||!tokens.length)return {configured:Boolean(app),successCount:0,failureCount:0,invalidTokens:[],errors:[]};
+ if(!app||!tokens.length)return {configured:Boolean(app),successCount:0,failureCount:0,invalidTokens:[],errors:tokens.length?[]:[{code:"messaging/no-tokens",message:"No registered FCM device tokens."}]};
  const unique=[...new Set(tokens.filter(Boolean))];
  let successCount=0,failureCount=0;
  const invalidTokens:string[]=[];const errors:{code:string;message:string}[]=[];
