@@ -8,7 +8,7 @@ export const metadata:Metadata={
     title:"Numelixa APK — Official Android App",
     description:"Download the official Numelixa Android APK for virtual numbers and SMS verification.",
     url:"https://numelixa.com/android",
-    images:[{url:"/numelixa-icon.svg",width:512,height:512,alt:"Numelixa Android app"}]
+    images:[{url:"/numelixa-favicon.png",width:512,height:512,alt:"Numelixa Android app"}]
   }
 };
 
