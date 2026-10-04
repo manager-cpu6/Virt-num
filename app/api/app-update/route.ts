@@ -13,7 +13,7 @@ export async function GET(){
       update:latest?{
         version:String(latest.version||""),
         versionCode:Number(latest.versionCode||0),
-        sizeMb:Number(latest.sizeMb||0),
+        sizeMb:Number(latest.sizeMb||0),sizeBytes:Number(latest.sizeBytes||0),
         apkUrl:String(latest.apkUrl||""),
         releaseNotes:String(latest.releaseNotes||""),
         force:Boolean(latest.force),
