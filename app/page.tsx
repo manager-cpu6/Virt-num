@@ -15,12 +15,6 @@ export default function HomePage(){
    <div className="hero-orb"><span>✦</span></div>
   </section>
 
-  <Link href="/download" className="quick-card android-download-home" style={{marginTop:14,borderColor:"rgba(22,166,145,.24)",background:"linear-gradient(135deg,rgba(226,255,249,.88),rgba(255,255,255,.72))"}}>
-   <span aria-hidden="true" style={{background:"#d5fbf2",color:"#087d70",fontSize:20}}>📱</span>
-   <div><b>Download Android App</b><small>Install Numelixa on your phone</small></div>
-   <i>↓</i>
-  </Link>
-
   <LiveVideoFeed/>
   <HomeLiveBoard/>
 
@@ -33,5 +27,17 @@ export default function HomePage(){
    <Link href="/numbers" className="quick-card"><span>▣</span><div><b>My orders</b><small>Numbers and SMS status</small></div><i>→</i></Link>
    <Link href="/account" className="quick-card"><span>◉</span><div><b>Account</b><small>Profile and session</small></div><i>→</i></Link>
   </div>
+
+  <section className="section-head" style={{marginTop:30}}>
+   <div>
+    <span className="eyebrow">MOBILE APP</span>
+    <h2>Numelixa for Android</h2>
+   </div>
+  </section>
+  <Link href="/download" className="quick-card android-download-home" style={{marginTop:12,marginBottom:28,borderColor:"rgba(22,166,145,.24)",background:"linear-gradient(135deg,rgba(226,255,249,.88),rgba(255,255,255,.72))"}}>
+   <span aria-hidden="true" style={{background:"#d5fbf2",color:"#087d70",fontSize:20}}>📱</span>
+   <div><b>Download Android App</b><small>Install Numelixa on your phone</small></div>
+   <i>↓</i>
+  </Link>
  </div>
 }
