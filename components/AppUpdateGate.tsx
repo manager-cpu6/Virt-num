@@ -36,7 +36,7 @@ export default function AppUpdateGate(){
    if(cancelled)return;
    try{
     const p=await NumelixaUpdater.getDownloadProgress();
-    if(p.status!=="idle"){setProgress(p);if(p.status==="completed")setBusy(false);if(p.status==="failed")setBusy(false);}
+    if(p.status!=="idle"){setProgress(p);if(p.status==="completed")setBusy(false);if(p.status==="failed"){setBusy(false);setError(p.notification||"Update download failed. Tap Download update to retry.");}}
    }catch{}
   },700);
   return()=>{cancelled=true;window.clearInterval(poll)};
