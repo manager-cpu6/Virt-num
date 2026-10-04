@@ -36,80 +36,113 @@ jobs:
           mkdir -p android/app/src/main/java/com/numelixa/app
           cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
           package com.numelixa.app;
-          import android.app.DownloadManager;
+          
           import android.content.Context;
           import android.content.Intent;
           import android.net.Uri;
+          import android.os.Build;
           import android.os.Environment;
           import android.provider.Settings;
+          import androidx.core.content.FileProvider;
           import com.getcapacitor.JSObject;
           import com.getcapacitor.Plugin;
           import com.getcapacitor.PluginCall;
           import com.getcapacitor.PluginMethod;
           import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.*;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import java.util.concurrent.ExecutorService;
+          import java.util.concurrent.Executors;
           
           @CapacitorPlugin(name = "NumelixaUpdater")
           public class NumelixaUpdaterPlugin extends Plugin {
               private static final String PREFS="numelixa_update";
-              private static final String DOWNLOAD_ID="download_id";
-              private long savedId(){ return getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(DOWNLOAD_ID,-1); }
-              private void saveId(long id){ getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong(DOWNLOAD_ID,id).apply(); }
+              private static final String FILE_NAME="current_file";
+              private static final String TOTAL="total_bytes";
+              private final ExecutorService executor=Executors.newSingleThreadExecutor();
+              private volatile String status="idle";
+              private volatile long downloaded=0;
+              private volatile long total=0;
+              private volatile String error="";
+              private File updateFile;
           
-              @PluginMethod public void installApk(PluginCall call) {
-                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk"); long expectedTotal=call.getLong("totalBytes",0);
+              private File file(){
+                  if(updateFile==null){
+                      String saved=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getString(FILE_NAME,null);
+                      updateFile=saved!=null?new File(saved):new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"Numelixa-update.apk");
+                  }
+                  return updateFile;
+              }
+          
+              @PluginMethod public void installApk(PluginCall call){
+                  String url=call.getString("url");
+                  String name=call.getString("fileName","Numelixa-update.apk");
+                  long expected=call.getLong("totalBytes",0);
                   if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
-                  try{
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      long existing=savedId();
-                      if(existing>0){
-                          android.database.Cursor q=manager.query(new DownloadManager.Query().setFilterById(existing));
-                          if(q!=null){try{if(q.moveToFirst()){
-                              int st=q.getInt(q.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                              if(st==DownloadManager.STATUS_RUNNING||st==DownloadManager.STATUS_PENDING||st==DownloadManager.STATUS_PAUSED){
-                                  JSObject out=new JSObject();out.put("started",true);out.put("downloadId",existing);call.resolve(out);return;
+                  if("downloading".equals(status)){JSObject o=new JSObject();o.put("started",true);call.resolve(o);return;}
+                  executor.execute(()->{
+                      try{
+                          File f=new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),name);
+                          updateFile=f;
+                          getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putString(FILE_NAME,f.getAbsolutePath()).putLong(TOTAL,expected).apply();
+                          long existing=f.exists()?f.length():0;
+                          HttpURLConnection c=(HttpURLConnection)new URL(url).openConnection();
+                          c.setInstanceFollowRedirects(true);
+                          c.setConnectTimeout(30000); c.setReadTimeout(60000);
+                          c.setRequestProperty("User-Agent","Numelixa/"+BuildConfig.VERSION_NAME);
+                          if(existing>0) c.setRequestProperty("Range","bytes="+existing+"-");
+                          c.connect();
+                          int code=c.getResponseCode();
+                          boolean resumed=existing>0 && code==206;
+                          if(existing>0 && !resumed){f.delete();existing=0;}
+                          long content=c.getContentLengthLong();
+                          total=resumed?(existing+Math.max(0,content)):(content>0?content:expected);
+                          downloaded=existing;
+                          status="downloading"; error="";
+                          try(InputStream in=new BufferedInputStream(c.getInputStream()); RandomAccessFile out=new RandomAccessFile(f,"rw")){
+                              out.seek(existing);
+                              byte[] buf=new byte[1024*1024];
+                              int n;
+                              while((n=in.read(buf))!=-1){
+                                  out.write(buf,0,n); downloaded+=n;
                               }
-                              if(st==DownloadManager.STATUS_SUCCESSFUL){JSObject out=new JSObject();out.put("started",true);out.put("downloadId",existing);call.resolve(out);return;}
-                          }}finally{q.close();}}
+                          }finally{c.disconnect();}
+                          if(total>0 && downloaded!=total) throw new IOException("Downloaded "+downloaded+" bytes but expected "+total+" bytes");
+                          status="completed";
+                          getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong(TOTAL,downloaded).apply();
+                      }catch(Exception e){
+                          status="failed"; error=e.getMessage()==null?"Download failed":e.getMessage();
                       }
-                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
-                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
-                      request.setMimeType("application/vnd.android.package-archive");
-                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                      request.setAllowedOverMetered(true); request.setAllowedOverRoaming(true);
-                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
-                      long id=manager.enqueue(request); saveId(id); getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong("expected_total",Math.max(0,expectedTotal)).apply();
-                      JSObject out=new JSObject();out.put("started",true);out.put("downloadId",id);call.resolve(out);
-                  }catch(Exception e){call.reject("Unable to start update download",e);}
+                  });
+                  JSObject o=new JSObject();o.put("started",true);call.resolve(o);
               }
           
               @PluginMethod public void getDownloadProgress(PluginCall call){
-                  JSObject out=new JSObject(); out.put("status","idle");out.put("downloadedBytes",0);out.put("totalBytes",0);out.put("percent",0);out.put("mbDownloaded",0);out.put("mbTotal",0);
-                  try{
-                      long id=savedId(); if(id<0){call.resolve(out);return;}
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      android.database.Cursor c=manager.query(new DownloadManager.Query().setFilterById(id));
-                      if(c==null||!c.moveToFirst()){if(c!=null)c.close();call.resolve(out);return;}
-                      try{
-                          int st=c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                          long got=c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                          long total=c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)); if(total<=0) total=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong("expected_total",0); if(total<=0) total=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong("expected_total",0);
-                          String status=st==DownloadManager.STATUS_SUCCESSFUL?"completed":st==DownloadManager.STATUS_FAILED?"failed":"downloading";
-                          double pct=total>0?Math.min(100.0,(got*100.0)/total):0;
-                          out.put("status",status);out.put("downloadedBytes",got);out.put("totalBytes",total);out.put("percent",pct);out.put("mbDownloaded",got/1024.0/1024.0);out.put("mbTotal",total>0?total/1024.0/1024.0:0);
-                          call.resolve(out);
-                      }finally{c.close();}
-                  }catch(Exception e){call.resolve(out);}
+                  JSObject o=new JSObject();
+                  long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
+                  long t=total>0?total:savedTotal;
+                  double pct=t>0?Math.min(100.0,(downloaded*100.0)/t):0;
+                  o.put("status",status);o.put("downloadedBytes",downloaded);o.put("totalBytes",t);
+                  o.put("percent",pct);o.put("mbDownloaded",downloaded/1024.0/1024.0);o.put("mbTotal",t/1024.0/1024.0);
+                  if(!error.isEmpty())o.put("notification",error);
+                  call.resolve(o);
               }
           
               @PluginMethod public void openDownloadedApk(PluginCall call){
                   try{
-                      long id=savedId(); if(id<0){call.reject("No downloaded update");return;}
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      Uri uri=manager.getUriForDownloadedFile(id);
-                      if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                      File f=file();
+                      if(!f.exists()||f.length()<=0){call.reject("Downloaded update file is unavailable");return;}
+                      if(Build.VERSION.SDK_INT>=26 && !getContext().getPackageManager().canRequestPackageInstalls()){
+                          Intent settings=new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getContext().getPackageName()));
+                          settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);getActivity().startActivity(settings);
+                          call.reject("INSTALL_PERMISSION_REQUIRED");return;
+                      }
+                      Uri uri=FileProvider.getUriForFile(getContext(),getContext().getPackageName()+".fileprovider",f);
                       Intent intent=new Intent(Intent.ACTION_VIEW);intent.setDataAndType(uri,"application/vnd.android.package-archive");
-                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                      getActivity().startActivity(intent);JSObject out=new JSObject();out.put("opened",true);call.resolve(out);
+                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                      getActivity().startActivity(intent);
+                      JSObject o=new JSObject();o.put("opened",true);call.resolve(o);
                   }catch(Exception e){call.reject("Unable to open downloaded update",e);}
               }
           }
@@ -236,80 +269,113 @@ jobs:
           mkdir -p android/app/src/main/java/com/numelixa/app
           cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
           package com.numelixa.app;
-          import android.app.DownloadManager;
+          
           import android.content.Context;
           import android.content.Intent;
           import android.net.Uri;
+          import android.os.Build;
           import android.os.Environment;
           import android.provider.Settings;
+          import androidx.core.content.FileProvider;
           import com.getcapacitor.JSObject;
           import com.getcapacitor.Plugin;
           import com.getcapacitor.PluginCall;
           import com.getcapacitor.PluginMethod;
           import com.getcapacitor.annotation.CapacitorPlugin;
+          import java.io.*;
+          import java.net.HttpURLConnection;
+          import java.net.URL;
+          import java.util.concurrent.ExecutorService;
+          import java.util.concurrent.Executors;
           
           @CapacitorPlugin(name = "NumelixaUpdater")
           public class NumelixaUpdaterPlugin extends Plugin {
               private static final String PREFS="numelixa_update";
-              private static final String DOWNLOAD_ID="download_id";
-              private long savedId(){ return getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(DOWNLOAD_ID,-1); }
-              private void saveId(long id){ getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong(DOWNLOAD_ID,id).apply(); }
+              private static final String FILE_NAME="current_file";
+              private static final String TOTAL="total_bytes";
+              private final ExecutorService executor=Executors.newSingleThreadExecutor();
+              private volatile String status="idle";
+              private volatile long downloaded=0;
+              private volatile long total=0;
+              private volatile String error="";
+              private File updateFile;
           
-              @PluginMethod public void installApk(PluginCall call) {
-                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk"); long expectedTotal=call.getLong("totalBytes",0);
+              private File file(){
+                  if(updateFile==null){
+                      String saved=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getString(FILE_NAME,null);
+                      updateFile=saved!=null?new File(saved):new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),"Numelixa-update.apk");
+                  }
+                  return updateFile;
+              }
+          
+              @PluginMethod public void installApk(PluginCall call){
+                  String url=call.getString("url");
+                  String name=call.getString("fileName","Numelixa-update.apk");
+                  long expected=call.getLong("totalBytes",0);
                   if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
-                  try{
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      long existing=savedId();
-                      if(existing>0){
-                          android.database.Cursor q=manager.query(new DownloadManager.Query().setFilterById(existing));
-                          if(q!=null){try{if(q.moveToFirst()){
-                              int st=q.getInt(q.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                              if(st==DownloadManager.STATUS_RUNNING||st==DownloadManager.STATUS_PENDING||st==DownloadManager.STATUS_PAUSED){
-                                  JSObject out=new JSObject();out.put("started",true);out.put("downloadId",existing);call.resolve(out);return;
+                  if("downloading".equals(status)){JSObject o=new JSObject();o.put("started",true);call.resolve(o);return;}
+                  executor.execute(()->{
+                      try{
+                          File f=new File(getContext().getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS),name);
+                          updateFile=f;
+                          getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putString(FILE_NAME,f.getAbsolutePath()).putLong(TOTAL,expected).apply();
+                          long existing=f.exists()?f.length():0;
+                          HttpURLConnection c=(HttpURLConnection)new URL(url).openConnection();
+                          c.setInstanceFollowRedirects(true);
+                          c.setConnectTimeout(30000); c.setReadTimeout(60000);
+                          c.setRequestProperty("User-Agent","Numelixa/"+BuildConfig.VERSION_NAME);
+                          if(existing>0) c.setRequestProperty("Range","bytes="+existing+"-");
+                          c.connect();
+                          int code=c.getResponseCode();
+                          boolean resumed=existing>0 && code==206;
+                          if(existing>0 && !resumed){f.delete();existing=0;}
+                          long content=c.getContentLengthLong();
+                          total=resumed?(existing+Math.max(0,content)):(content>0?content:expected);
+                          downloaded=existing;
+                          status="downloading"; error="";
+                          try(InputStream in=new BufferedInputStream(c.getInputStream()); RandomAccessFile out=new RandomAccessFile(f,"rw")){
+                              out.seek(existing);
+                              byte[] buf=new byte[1024*1024];
+                              int n;
+                              while((n=in.read(buf))!=-1){
+                                  out.write(buf,0,n); downloaded+=n;
                               }
-                              if(st==DownloadManager.STATUS_SUCCESSFUL){JSObject out=new JSObject();out.put("started",true);out.put("downloadId",existing);call.resolve(out);return;}
-                          }}finally{q.close();}}
+                          }finally{c.disconnect();}
+                          if(total>0 && downloaded!=total) throw new IOException("Downloaded "+downloaded+" bytes but expected "+total+" bytes");
+                          status="completed";
+                          getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong(TOTAL,downloaded).apply();
+                      }catch(Exception e){
+                          status="failed"; error=e.getMessage()==null?"Download failed":e.getMessage();
                       }
-                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
-                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
-                      request.setMimeType("application/vnd.android.package-archive");
-                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
-                      request.setAllowedOverMetered(true); request.setAllowedOverRoaming(true);
-                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
-                      long id=manager.enqueue(request); saveId(id); getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong("expected_total",Math.max(0,expectedTotal)).apply();
-                      JSObject out=new JSObject();out.put("started",true);out.put("downloadId",id);call.resolve(out);
-                  }catch(Exception e){call.reject("Unable to start update download",e);}
+                  });
+                  JSObject o=new JSObject();o.put("started",true);call.resolve(o);
               }
           
               @PluginMethod public void getDownloadProgress(PluginCall call){
-                  JSObject out=new JSObject(); out.put("status","idle");out.put("downloadedBytes",0);out.put("totalBytes",0);out.put("percent",0);out.put("mbDownloaded",0);out.put("mbTotal",0);
-                  try{
-                      long id=savedId(); if(id<0){call.resolve(out);return;}
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      android.database.Cursor c=manager.query(new DownloadManager.Query().setFilterById(id));
-                      if(c==null||!c.moveToFirst()){if(c!=null)c.close();call.resolve(out);return;}
-                      try{
-                          int st=c.getInt(c.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
-                          long got=c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR));
-                          long total=c.getLong(c.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES)); if(total<=0) total=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong("expected_total",0);
-                          String status=st==DownloadManager.STATUS_SUCCESSFUL?"completed":st==DownloadManager.STATUS_FAILED?"failed":"downloading";
-                          double pct=total>0?Math.min(100.0,(got*100.0)/total):0;
-                          out.put("status",status);out.put("downloadedBytes",got);out.put("totalBytes",total);out.put("percent",pct);out.put("mbDownloaded",got/1024.0/1024.0);out.put("mbTotal",total>0?total/1024.0/1024.0:0);
-                          call.resolve(out);
-                      }finally{c.close();}
-                  }catch(Exception e){call.resolve(out);}
+                  JSObject o=new JSObject();
+                  long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
+                  long t=total>0?total:savedTotal;
+                  double pct=t>0?Math.min(100.0,(downloaded*100.0)/t):0;
+                  o.put("status",status);o.put("downloadedBytes",downloaded);o.put("totalBytes",t);
+                  o.put("percent",pct);o.put("mbDownloaded",downloaded/1024.0/1024.0);o.put("mbTotal",t/1024.0/1024.0);
+                  if(!error.isEmpty())o.put("notification",error);
+                  call.resolve(o);
               }
           
               @PluginMethod public void openDownloadedApk(PluginCall call){
                   try{
-                      long id=savedId(); if(id<0){call.reject("No downloaded update");return;}
-                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
-                      Uri uri=manager.getUriForDownloadedFile(id);
-                      if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                      File f=file();
+                      if(!f.exists()||f.length()<=0){call.reject("Downloaded update file is unavailable");return;}
+                      if(Build.VERSION.SDK_INT>=26 && !getContext().getPackageManager().canRequestPackageInstalls()){
+                          Intent settings=new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+getContext().getPackageName()));
+                          settings.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);getActivity().startActivity(settings);
+                          call.reject("INSTALL_PERMISSION_REQUIRED");return;
+                      }
+                      Uri uri=FileProvider.getUriForFile(getContext(),getContext().getPackageName()+".fileprovider",f);
                       Intent intent=new Intent(Intent.ACTION_VIEW);intent.setDataAndType(uri,"application/vnd.android.package-archive");
-                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                      getActivity().startActivity(intent);JSObject out=new JSObject();out.put("opened",true);call.resolve(out);
+                      intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION|Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                      getActivity().startActivity(intent);
+                      JSObject o=new JSObject();o.put("opened",true);call.resolve(o);
                   }catch(Exception e){call.reject("Unable to open downloaded update",e);}
               }
           }
