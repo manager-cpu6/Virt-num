@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";\nimport {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
@@ -174,6 +174,17 @@ export async function POST(req:Request){
           userId:u.id,
           message:emailError instanceof Error?emailError.message:String(emailError)
         });
+      }
+
+      try{
+        await notifyUser(
+          String(u.id),
+          "📱 Number ready",
+          "Your " + service + " number " + number + " is ready. Open Numelixa to get the verification code.",
+          {orderId:id, type:"order"}
+        );
+      }catch(error){
+        console.error("[ORDER PUSH]", error);
       }
 
       // The actual order is now durable. Ledger logging is secondary and
