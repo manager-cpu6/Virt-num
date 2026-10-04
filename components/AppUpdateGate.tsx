@@ -53,7 +53,15 @@ export default function AppUpdateGate(){
    const p=await NumelixaUpdater.getDownloadProgress();
    if(p.status==="completed"){await NumelixaUpdater.openDownloadedApk();return;}
    await NumelixaUpdater.installApk({url:update.apkUrl,fileName:"Numelixa-"+update.version+".apk"});
-   setProgress({...p,status:"downloading",percent:p.percent||0,notification:"Download continues in the background"});
+   setProgress({
+    status:"downloading",
+    downloadedBytes:p.downloadedBytes||0,
+    totalBytes:p.totalBytes||Number(update.sizeBytes||0),
+    percent:p.percent||0,
+    mbDownloaded:p.mbDownloaded||0,
+    mbTotal:p.mbTotal||Number(update.sizeMb||0),
+    notification:"Download continues in the background"
+   });
   }catch(e){console.error("[NUMELIXA UPDATE INSTALL]",e);setError("Unable to start the update. Please try again.");setBusy(false);}
  };
  const totalBytes=progress.totalBytes||Number(update.sizeBytes||0);
