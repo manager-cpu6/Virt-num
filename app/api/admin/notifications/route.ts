@@ -106,10 +106,12 @@ export async function POST(req:Request){
       .find({userId:{$in:ids}})
       .toArray();
 
-    let pushResult = {
+    let pushResult: Awaited<ReturnType<typeof sendPush>> = {
       configured:false,
       successCount:0,
-      failureCount:0
+      failureCount:0,
+      invalidTokens:[],
+      errors:[]
     };
     let pushError:string|null = null;
 
