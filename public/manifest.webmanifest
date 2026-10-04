@@ -6,5 +6,5 @@
   "display":"standalone",
   "background_color":"#031b22",
   "theme_color":"#031b22",
-  "icons":[{"src":"/numelixa-icon.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]
+  "icons":[{"src":"/numelixa-favicon.png","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]
 }
