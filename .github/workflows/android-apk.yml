@@ -1,5 +1,6 @@
 name: Numelixa Android APK
 # Native in-app updater + Firebase push build
+# Final validation branch
 
 on:
   push:
