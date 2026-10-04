@@ -118,7 +118,7 @@ jobs:
                   JSObject o=new JSObject();o.put("started",true);call.resolve(o);
               }
           
-              @PluginMethod public void getDownloadProgress(PluginCall call){
+              @PluginMethod public void getAppVersion(PluginCall call){ JSObject o=new JSObject(); o.put("version",BuildConfig.VERSION_NAME); o.put("versionCode",BuildConfig.VERSION_CODE); call.resolve(o); }\n\n    @PluginMethod public void getDownloadProgress(PluginCall call){
                   JSObject o=new JSObject();
                   long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
                   long t=total>0?total:savedTotal;
@@ -357,7 +357,7 @@ jobs:
                   JSObject o=new JSObject();o.put("started",true);call.resolve(o);
               }
           
-              @PluginMethod public void getDownloadProgress(PluginCall call){
+              @PluginMethod public void getAppVersion(PluginCall call){ JSObject o=new JSObject(); o.put("version",BuildConfig.VERSION_NAME); o.put("versionCode",BuildConfig.VERSION_CODE); call.resolve(o); }\n\n    @PluginMethod public void getDownloadProgress(PluginCall call){
                   JSObject o=new JSObject();
                   long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
                   long t=total>0?total:savedTotal;
