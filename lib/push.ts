@@ -12,7 +12,15 @@ function firebaseApp(){
  return getApps()[0]||initializeApp({credential:cert({projectId,clientEmail,privateKey})});
 }
 
-export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}){
+export type PushSendResult = {
+ configured:boolean;
+ successCount:number;
+ failureCount:number;
+ invalidTokens:string[];
+ errors:{code:string;message:string}[];
+};
+
+export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
  const app=firebaseApp();
  if(!app||!tokens.length)return {configured:Boolean(app),successCount:0,failureCount:0,invalidTokens:[],errors:[]};
  const unique=[...new Set(tokens.filter(Boolean))];
