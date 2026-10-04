@@ -124,13 +124,32 @@ jobs:
           npm install
           npx cap add android
           npx cap sync android
-      - name: Configure Firebase push messaging (optional)
-        env:
-          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.ANDROID_GOOGLE_SERVICES_JSON_BASE64 }}
+      - name: Configure Firebase push messaging
         run: |
-          if [ -n "$GOOGLE_SERVICES_JSON_BASE64" ]; then
-            echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
-          fi
+          cp google-services.json android/app/google-services.json
+          python - <<'PY'
+          from pathlib import Path
+          
+          root = Path("android/build.gradle")
+          app = Path("android/app/build.gradle")
+          root_text = root.read_text()
+          app_text = app.read_text()
+          
+          if "com.google.gms:google-services:" not in root_text:
+              marker = "dependencies {"
+              if marker not in root_text:
+                  raise SystemExit("Could not locate root Gradle dependencies block")
+              root_text = root_text.replace(
+                  marker,
+                  marker + "\n        classpath 'com.google.gms:google-services:4.5.0'",
+                  1
+              )
+          if "com.google.gms.google-services" not in app_text:
+              app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
+          
+          root.write_text(root_text)
+          app.write_text(app_text)
+          PY
           python -m pip install --quiet pillow
           python scripts/generate-android-icons.py
       - name: Set Android version
