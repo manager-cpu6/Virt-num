@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
-import {sendPush} from "@/lib/push";
+import {sendPush, type PushSendResult} from "@/lib/push";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -47,7 +47,7 @@ export async function POST(req:Request){
     await updates.updateMany({published:true},{$set:{published:false}});
     await updates.insertOne(doc);
 
-    let push={configured:false,successCount:0,failureCount:0,invalidTokens:[],errors:[]};
+    let push:PushSendResult={configured:false,successCount:0,failureCount:0,invalidTokens:[],errors:[]};
     if(sendAll){
       const devices=await (await collection<any>("deviceTokens")).find({}).toArray();
       push=await sendPush(
