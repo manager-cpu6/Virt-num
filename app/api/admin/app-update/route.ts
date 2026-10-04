@@ -51,9 +51,10 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Check the APK URL and try again."},{status:400});
     const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
     const now=new Date();
+    const targetCreatedBefore=force?now:null;
     const doc={
       _id:mongoId(),version,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
-      publishedAt:now,createdAt:now,pushSent:0,pushFailed:0
+      publishedAt:now,createdAt:now,targetCreatedBefore,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
     await updates.updateMany({published:true},{$set:{published:false}});
@@ -76,7 +77,7 @@ export async function POST(req:Request){
 
     return NextResponse.json({
       ok:true,version,sizeMb,sizeBytes,sendAll,pushConfigured:push.configured,
-      sent:push.successCount,failed:push.failureCount
+      sent:push.successCount,failed:push.failureCount,errors:push.errors||[]
     });
   }catch(error){
     console.error("[ADMIN APP UPDATE]",error);
