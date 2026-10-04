@@ -127,7 +127,10 @@ jobs:
     }\n\n    @PluginMethod public void getDownloadProgress(PluginCall call){
                   JSObject o=new JSObject();
                   long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
+                  File f=file();
+                  if(downloaded<=0 && f.exists()) downloaded=f.length();
                   long t=total>0?total:savedTotal;
+                  if(status.equals("idle") && t>0 && downloaded>=t){status="completed";}
                   double pct=t>0?Math.min(100.0,(downloaded*100.0)/t):0;
                   o.put("status",status);o.put("downloadedBytes",downloaded);o.put("totalBytes",t);
                   o.put("percent",pct);o.put("mbDownloaded",downloaded/1024.0/1024.0);o.put("mbTotal",t/1024.0/1024.0);
@@ -366,7 +369,10 @@ jobs:
               @PluginMethod public void getAppVersion(PluginCall call){ JSObject o=new JSObject(); o.put("version",BuildConfig.VERSION_NAME); o.put("versionCode",BuildConfig.VERSION_CODE); call.resolve(o); }\n\n    @PluginMethod public void getDownloadProgress(PluginCall call){
                   JSObject o=new JSObject();
                   long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
+                  File f=file();
+                  if(downloaded<=0 && f.exists()) downloaded=f.length();
                   long t=total>0?total:savedTotal;
+                  if(status.equals("idle") && t>0 && downloaded>=t){status="completed";}
                   double pct=t>0?Math.min(100.0,(downloaded*100.0)/t):0;
                   o.put("status",status);o.put("downloadedBytes",downloaded);o.put("totalBytes",t);
                   o.put("percent",pct);o.put("mbDownloaded",downloaded/1024.0/1024.0);o.put("mbTotal",t/1024.0/1024.0);
