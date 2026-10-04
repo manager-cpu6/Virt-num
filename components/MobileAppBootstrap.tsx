@@ -14,6 +14,7 @@ export default function MobileAppBootstrap(){
     let stopped=false;
     let retryTimer:ReturnType<typeof setTimeout>|null=null;
     let syncInFlight=false;
+    let permissionInFlight=false;
     let push:any=null;
     const cleanups:Array<()=>void>=[];
 
@@ -97,6 +98,8 @@ export default function MobileAppBootstrap(){
 
     const ensurePushPermission=async()=>{
       if(!push||stopped)return false;
+      if(permissionInFlight)return false;
+      permissionInFlight=true;
       try{
         const current=await push.checkPermissions();
         if(current.receive==="granted"){
@@ -125,6 +128,8 @@ export default function MobileAppBootstrap(){
         console.error("[NUMELIXA PUSH PERMISSION]",error);
         showPermissionGate();
         return false;
+      }finally{
+        permissionInFlight=false;
       }
     };
 
