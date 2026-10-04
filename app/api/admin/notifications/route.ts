@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(){
   try{
     await requireAdmin();
+    const deviceCount = await (await collection<any>("deviceTokens")).countDocuments({});
     const rows = await (await collection<any>("notifications"))
       .find({adminSent:true})
       .sort({createdAt:-1})
@@ -25,7 +26,9 @@ export async function GET(){
         createdAt:x.createdAt,
         sentCount:Number(x.sentCount||0),
         pushConfigured:Boolean(x.pushConfigured)
-      }))
+      })),
+      deviceCount,
+      serverPushConfigured:Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY))
     });
   }catch(error){
     console.error("[ADMIN NOTIFICATIONS GET]", error);
@@ -110,17 +113,15 @@ export async function POST(req:Request){
     };
     let pushError:string|null = null;
 
-    if(devices.length){
-      try{
-        pushResult = await sendPush(
+    try{
+      pushResult = await sendPush(
           devices.map(x=>String(x.token||"")),
           title,
           message
-        );
-      }catch(error){
-        pushError = error instanceof Error ? error.message : String(error);
-        console.error("[ADMIN NOTIFICATIONS PUSH]", pushError);
-      }
+      );
+    }catch(error){
+      pushError = error instanceof Error ? error.message : String(error);
+      console.error("[ADMIN NOTIFICATIONS PUSH]", pushError);
     }
 
     await notificationsCollection.updateMany(
