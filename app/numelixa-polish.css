@@ -625,3 +625,45 @@ body.numelixa-native{
  box-shadow:0 14px 30px rgba(14,91,255,.28);font-size:14px;
 }
 .numelixa-notification-gate-card small{display:block;margin-top:12px;color:#5878a4;font-size:9px}
+
+
+/* Native app shell: keep the WebView feeling like a real app, not a browser. */
+html.numelixa-native,body.numelixa-native{
+  background:#020817!important;
+  overscroll-behavior:none!important;
+  -webkit-user-select:none;
+  user-select:none;
+  -webkit-tap-highlight-color:transparent;
+}
+.numelixa-native .app-shell{min-height:100dvh;overflow-x:hidden}
+.numelixa-native .page-shell{
+  min-height:100dvh;
+  padding-top:max(10px,env(safe-area-inset-top,0px))!important;
+  padding-bottom:max(125px,calc(110px + env(safe-area-inset-bottom,0px)))!important;
+}
+.numelixa-native a,.numelixa-native button{touch-action:manipulation}
+.numelixa-native .bottom-nav{padding-bottom:max(8px,env(safe-area-inset-bottom,0px))}
+.numelixa-native .numelixa-notification-gate-card{padding-bottom:max(24px,calc(24px + env(safe-area-inset-bottom,0px)))}
+.public-doc-page{
+  width:min(100%,860px);margin:0 auto;padding:44px 22px 90px;
+  color:#eef6ff;min-height:100dvh;
+}
+.public-doc-brand{display:flex;align-items:center;gap:10px;margin-bottom:28px;font-size:20px;letter-spacing:-.04em}
+.public-doc-brand span{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#18d8ff,#1465ff,#192fff);font-weight:950;box-shadow:0 12px 28px rgba(13,103,255,.25)}
+.public-doc-page .eyebrow{color:#48cfff}
+.public-doc-page h1{font-size:clamp(34px,7vw,58px);line-height:1;letter-spacing:-.06em;margin:10px 0 16px;max-width:760px}
+.public-doc-page>p{color:#8da8cf;line-height:1.7;max-width:680px;font-size:14px}
+.public-doc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:28px}
+.public-doc-grid a,.public-doc-section{
+  border:1px solid rgba(82,143,240,.15);border-radius:22px;
+  background:linear-gradient(145deg,rgba(7,31,68,.92),rgba(3,18,42,.96));
+  box-shadow:0 18px 48px rgba(0,0,0,.20);
+}
+.public-doc-grid a{padding:20px;display:block}
+.public-doc-grid b{display:block;color:#f5f9ff;font-size:14px}
+.public-doc-grid span{display:block;color:#7694bf;font-size:12px;line-height:1.55;margin-top:7px}
+.public-doc-section{padding:20px;margin-top:12px}
+.public-doc-section h2{margin:0 0 8px;font-size:17px}
+.public-doc-section p{margin:0;color:#8da8cf;font-size:13px;line-height:1.7}
+.public-doc-page footer{margin-top:28px;color:#6d89b1;font-size:12px}
+@media(max-width:560px){.public-doc-grid{grid-template-columns:1fr}.public-doc-page{padding-top:30px}}
