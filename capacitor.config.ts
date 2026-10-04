@@ -5,7 +5,7 @@ const config:CapacitorConfig={
   url:"https://numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
-  allowNavigation:["numelixa.com","www.numelixa.com","pay.cryptomus.com"]
+  allowNavigation:["numelixa.com","www.numelixa.com","app.numelixa.com","docs.numelixa.com","privacy.numelixa.com","pay.cryptomus.com"]
  },
  android:{allowMixedContent:false,captureInput:true,adjustMarginsForEdgeToEdge:"force"},
  plugins:{
