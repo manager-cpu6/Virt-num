@@ -7,7 +7,7 @@ const config:CapacitorConfig={
  server:{
   // Keep the app inside the native WebView. Both production hostnames are trusted
   // so a normal www redirect never hands the user to Chrome.
-  url:"https://app.numelixa.com",
+  url:"https://numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
