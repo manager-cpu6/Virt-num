@@ -70,7 +70,7 @@ export default function AppUpdateGate(){
  const downloadedMb=progress.mbDownloaded||Number((downloaded/1024/1024).toFixed(2));
  const totalMb=progress.mbTotal||Number((totalBytes/1024/1024).toFixed(2))||Number(update.sizeMb||0);
  const done=progress.status==="completed";
- return <div className="numelixa-update-backdrop"><section className="numelixa-update-card" role="dialog" aria-modal="true">
+ return <div className={"numelixa-update-backdrop"+(update.force?" required":"")}><section className="numelixa-update-card" role="dialog" aria-modal="true">
   <div className="numelixa-update-icon">{done?"✓":"↟"}</div><span className="eyebrow">{update.force?"REQUIRED UPDATE":"NEW UPDATE"}</span>
   <h2>Numelixa {update.version}</h2><p>{done?"Update downloaded successfully. Install it to continue.":update.releaseNotes||"A new version of Numelixa is ready with improvements and fixes."}</p>
   <div className="numelixa-update-meta"><span>APK SIZE</span><b>{totalMb.toFixed(2)} MB</b></div>
