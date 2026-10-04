@@ -18,7 +18,7 @@ export async function GET(){
         sizeMb:Number(latest.sizeMb||0),sizeBytes:Number(latest.sizeBytes||0),
         apkUrl:String(latest.apkUrl||""),
         releaseNotes:String(latest.releaseNotes||""),
-        force:Boolean(latest.force) && Boolean(user) && (!latest.targetCreatedBefore || new Date(user.createdAt||0).getTime() <= new Date(latest.targetCreatedBefore).getTime()),
+        force:Boolean(latest.force) && user !== null && (!latest.targetCreatedBefore || new Date(user.createdAt||0).getTime() <= new Date(latest.targetCreatedBefore).getTime()),
         publishedAt:latest.publishedAt||null
       }:null
     },{headers:{"Cache-Control":"no-store"}});
