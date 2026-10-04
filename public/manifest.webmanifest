@@ -1,10 +1,11 @@
 {
-  "name":"Numelixa — Virtual Numbers & SMS Verification",
-  "short_name":"Numelixa",
-  "description":"Fast virtual numbers for SMS verification codes.",
-  "start_url":"/",
-  "display":"standalone",
-  "background_color":"#031b22",
-  "theme_color":"#031b22",
-  "icons":[{"src":"/numelixa-favicon.png","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]
+ "name":"Numelixa — Virtual Numbers & SMS Verification",
+ "short_name":"Numelixa",
+ "description":"Fast virtual numbers, SMS verification, wallet and mobile notifications.",
+ "start_url":"/",
+ "scope":"/",
+ "display":"standalone",
+ "background_color":"#031b22",
+ "theme_color":"#031b22",
+ "icons":[{"src":"/numelixa-favicon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
 }
