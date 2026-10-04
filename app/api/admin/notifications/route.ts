@@ -124,11 +124,16 @@ export async function POST(req:Request){
       console.error("[ADMIN NOTIFICATIONS PUSH]", pushError);
     }
 
+    if(pushResult.invalidTokens?.length){
+      await (await collection<any>("deviceTokens")).deleteMany({token:{$in:pushResult.invalidTokens}});
+    }
+
     await notificationsCollection.updateMany(
       {_id:{$in:notifications.map(x=>x._id)}},
       {$set:{
         sentCount:pushResult.successCount,
         failureCount:pushResult.failureCount,
+        pushErrors:pushResult.errors||[],
         pushConfigured:pushResult.configured,
         pushError,
         updatedAt:new Date()
