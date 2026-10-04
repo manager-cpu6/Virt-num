@@ -79,7 +79,7 @@ export async function POST(req:Request){
               {email:{$exists:false}},
               {email:null},
               {email:""},
-              {email:{$not:/@gmail\\.com$/i}}
+              {email:{$not:/@gmail\.com$/i}}
             ]
           }, {projection:{_id:1}}).toArray()
         : await users.findOne(
