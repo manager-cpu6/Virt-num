@@ -3,6 +3,7 @@ import "./numelixa-polish.css";
 import type {Metadata} from "next";
 import BottomNav from "@/components/BottomNav";
 import MobileAppBootstrap from "@/components/MobileAppBootstrap";
+import AppUpdateGate from "@/components/AppUpdateGate";
 
 export const metadata:Metadata={
  metadataBase:new URL("https://numelixa.com"),
@@ -16,4 +17,4 @@ export const metadata:Metadata={
  twitter:{card:"summary_large_image",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers, SMS verification and native mobile alerts.",images:["https://numelixa.com/numelixa-favicon.png"]},
  manifest:"/manifest.webmanifest",themeColor:"#031b22"
 };
-export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><MobileAppBootstrap/><div className="app-shell"><main className="page-shell">{children}</main><BottomNav/></div></body></html>;}
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="en"><body><MobileAppBootstrap/><AppUpdateGate/><div className="app-shell"><main className="page-shell">{children}</main><BottomNav/></div></body></html>;}
