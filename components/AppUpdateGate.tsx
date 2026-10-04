@@ -24,7 +24,7 @@ export default function AppUpdateGate(){
     const r=await fetch("/api/app-update",{cache:"no-store"}); const d=await r.json();
     if(cancelled||!d?.update)return;
     const u=d.update as Update;
-    if(u.version&&u.version!=="2.4.0"){setUpdate(u);setVisible(true);}
+    if(u.version&&u.version!=="2.4.1"){setUpdate(u);setVisible(true);}
    }catch{}
   };
   load();
