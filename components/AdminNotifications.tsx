@@ -82,11 +82,11 @@ export default function AdminNotifications(){
   <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered app device{deviceCount===1?"":"s"}</p></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
-   <p>Send a real native phone notification to every user or one specific user. Numelixa does not use an in-app notification inbox.</p>
+   <p>Send a real native phone notification to all users, users without Gmail, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
-      <option value="all">All users</option>
+      <option value="all">All users</option><option value="non_gmail">Users without Gmail</option>
       {users.map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email}</option>)}
      </select>
     </label>
