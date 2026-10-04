@@ -126,7 +126,9 @@ jobs:
             JSObject o=new JSObject(); o.put("version",p.versionName==null?"0.0.0":p.versionName);
             o.put("versionCode",android.os.Build.VERSION.SDK_INT>=28?p.getLongVersionCode():p.versionCode); call.resolve(o);
         }catch(Exception e){call.reject("Unable to read app version",e);}
-    }\n\n    @PluginMethod public void getDownloadProgress(PluginCall call){
+    }
+    
+    @PluginMethod public void getDownloadProgress(PluginCall call){
                   JSObject o=new JSObject();
                   long savedTotal=getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).getLong(TOTAL,0);
                   File f=file();
