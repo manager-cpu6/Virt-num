@@ -149,6 +149,7 @@ export async function POST(req:Request){
       sent:pushResult.successCount,
       failed:pushResult.failureCount,
       pushConfigured:pushResult.configured,
+      errors:pushResult.errors||[],
       pushError
     });
   }catch(error){
