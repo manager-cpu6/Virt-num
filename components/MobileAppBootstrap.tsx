@@ -16,7 +16,7 @@ export default function MobileAppBootstrap(){
       try{
         const {PushNotifications} = await import("@capacitor/push-notifications");
 
-        const permission = await PushNotifications.checkPermissions();
+        await PushNotifications.createChannel({id:"numelixa",name:"Numelixa",description:"Important Numelixa alerts",importance:5,sound:"default",vibration:true});\n\n        const permission = await PushNotifications.checkPermissions();
         const result = permission.receive === "granted"
           ? permission
           : await PushNotifications.requestPermissions();
