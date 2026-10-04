@@ -256,7 +256,7 @@ jobs:
               private void saveId(long id){ getContext().getSharedPreferences(PREFS,Context.MODE_PRIVATE).edit().putLong(DOWNLOAD_ID,id).apply(); }
           
               @PluginMethod public void installApk(PluginCall call) {
-                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk");
+                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk"); long expectedTotal=call.getLong("totalBytes",0);
                   if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
                   try{
                       DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
