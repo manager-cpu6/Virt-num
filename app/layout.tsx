@@ -16,16 +16,16 @@ export const metadata:Metadata={
   category:"technology",
   alternates:{canonical:"https://numelixa.com/"},
   icons:{
-    icon:[{url:"/numelixa-icon.svg",type:"image/svg+xml"},{url:"/numelixa-icon.svg",sizes:"512x512",type:"image/svg+xml"}],
-    apple:"/numelixa-icon.svg"
+    icon:[{url:"/numelixa-favicon.png",type:"image/svg+xml"},{url:"/numelixa-favicon.png",sizes:"512x512",type:"image/svg+xml"}],
+    apple:"/numelixa-favicon.png"
   },
   openGraph:{
     type:"website",url:"https://numelixa.com/",siteName:"Numelixa",
     title:"Numelixa — Virtual Numbers & SMS Verification",
     description:"Fast virtual numbers for SMS verification codes. Simple, powerful and built for mobile.",
-    images:[{url:"/numelixa-icon.svg",width:512,height:512,alt:"Numelixa app logo"}]
+    images:[{url:"/numelixa-favicon.png",width:512,height:512,alt:"Numelixa app logo"}]
   },
-  twitter:{card:"summary",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers for SMS verification codes.",images:["/numelixa-icon.svg"]},
+  twitter:{card:"summary",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers for SMS verification codes.",images:["/numelixa-favicon.png"]},
   manifest:"/manifest.webmanifest",
   themeColor:"#031b22"
 };
