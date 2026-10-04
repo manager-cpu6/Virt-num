@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
