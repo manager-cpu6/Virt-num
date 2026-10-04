@@ -1,26 +1,26 @@
 import nodemailer from "nodemailer";
 
-const DEFAULT_HOST="mail.spacemail.com";
-const DEFAULT_PORT=587;
+const DEFAULT_HOST="mail.privateemail.com";
+const DEFAULT_PORT=465;
 type SmtpConfig={host:string;port:number;user:string;pass:string;from:string};
 
 function smtpConfig():SmtpConfig{
- const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
- const port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
- const user=(process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
- const pass=process.env.SPACEMAIL_SMTP_PASSWORD||"";
- const from=(process.env.SPACEMAIL_FROM||user).trim();
- if(!user)throw new Error("Spacemail SMTP username is missing.");
- if(!pass)throw new Error("Spacemail SMTP password is missing.");
- if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port.");
+ const host=(process.env.PRIVATE_EMAIL_SMTP_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env.PRIVATE_EMAIL_SMTP_PORT||DEFAULT_PORT);
+ const user=(process.env.PRIVATE_EMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const pass=process.env.PRIVATE_EMAIL_SMTP_PASSWORD||"";
+ const from=(process.env.PRIVATE_EMAIL_FROM||user).trim();
+ if(!user)throw new Error("Private Email SMTP username is missing.");
+ if(!pass)throw new Error("Private Email SMTP password is missing.");
+ if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Private Email SMTP port.");
  if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
  return{host,port,user,pass,from};
 }
 function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|h3|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim();}
 function makeTransporter(config:SmtpConfig){return nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,requireTLS:config.port===587,auth:{user:config.user,pass:config.pass},tls:{minVersion:"TLSv1.2",servername:config.host}} as any);}
-async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,replyTo:config.from,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa","Auto-Submitted":"auto-generated","X-Auto-Response-Suppress":"All","Importance":"high","X-Priority":"1"}});}
+async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,replyTo:config.from,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
 function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
-export async function sendEmail(to:string,subject:string,html:string){const config=smtpConfig();try{await sendWithConfig(config,to,subject,html);}catch(error){if(config.port===465&&isSocketTlsError(error)){try{await sendWithConfig({...config,port:587},to,subject,html);return;}catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Spacemail SMTP error: "+message);}}const message=error instanceof Error?error.message:String(error);throw new Error("Spacemail SMTP error: "+message);}}
+export async function sendEmail(to:string,subject:string,html:string){const config=smtpConfig();try{await sendWithConfig(config,to,subject,html);}catch(error){if(config.port===465&&isSocketTlsError(error)){try{await sendWithConfig({...config,port:587},to,subject,html);return;}catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Private Email SMTP error: "+message);}}const message=error instanceof Error?error.message:String(error);throw new Error("Private Email SMTP error: "+message);}}
 
 const shell=(content:string,preheader:string)=>{
  const logo='<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto"><tr><td align="center" valign="middle" style="width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#58e6cf,#0c777a);color:#031d25;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:46px;text-align:center;vertical-align:middle;box-shadow:0 10px 28px rgba(39,218,190,.25)">N</td></tr></table>';
