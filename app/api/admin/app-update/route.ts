@@ -49,8 +49,8 @@ export async function POST(req:Request){
       sizeBytes=match?Number(match[1]):Number(rangeResponse.headers.get("content-length")||0);
       try{await rangeResponse.body?.cancel();}catch{}
     }
-    if(!Number.isFinite(sizeBytes)||sizeBytes<=0)
-      return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Check the APK URL and try again."},{status:400});
+    if((!Number.isFinite(sizeBytes)||sizeBytes<=0)&&manualSizeMb<=0)
+      return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Enter APK size in MB manually or check the APK URL and try again."},{status:400});
     const sizeMb=manualSizeMb>0
       ?Number(manualSizeMb.toFixed(2))
       :Number((sizeBytes/(1024*1024)).toFixed(2));
