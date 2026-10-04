@@ -6,7 +6,7 @@ type Update={version:string;versionCode:number;sizeMb:number;sizeBytes?:number;a
 type Progress={status:"idle"|"downloading"|"completed"|"failed";downloadedBytes:number;totalBytes:number;percent:number;mbDownloaded:number;mbTotal:number;notification?:string};
 type UpdaterPlugin={
  installApk(options:{url:string;fileName:string;totalBytes?:number}):Promise<{started:boolean;downloadId?:number}>;
- getDownloadProgress():Promise<Progress>;
+ getDownloadProgress():Promise<Progress>; getAppVersion():Promise<{version:string;versionCode:number}>;
  openDownloadedApk():Promise<{opened:boolean}>;
 };
 const NumelixaUpdater=registerPlugin<UpdaterPlugin>("NumelixaUpdater");
@@ -24,7 +24,11 @@ export default function AppUpdateGate(){
     const r=await fetch("/api/app-update",{cache:"no-store"}); const d=await r.json();
     if(cancelled||!d?.update)return;
     const u=d.update as Update;
-    if(u.version&&u.version!=="2.4.2"){setUpdate(u);setVisible(true);}
+    let current="0.0.0";
+    try{const native=await NumelixaUpdater.getAppVersion();current=String(native.version||"0.0.0")}catch{}
+    const a=current.split(".").map(Number),b=String(u.version||"0").split(".").map(Number);
+    const newer=(b[0]||0)>(a[0]||0)||(b[0]||0)===(a[0]||0)&&((b[1]||0)>(a[1]||0)||(b[1]||0)===(a[1]||0)&&(b[2]||0)>(a[2]||0));
+    if(newer){setUpdate(u);setVisible(true);}
    }catch{}
   };
   load();
@@ -62,7 +66,7 @@ export default function AppUpdateGate(){
     mbTotal:p.mbTotal||Number(update.sizeMb||0),
     notification:"Download continues in the background"
    });
-  }catch(e){console.error("[NUMELIXA UPDATE INSTALL]",e);setError("Unable to start the update. Please try again.");setBusy(false);}
+  }catch(e){console.error("[NUMELIXA UPDATE INSTALL]",e);setError(String(e).includes("INSTALL_PERMISSION_REQUIRED")?"Allow Numelixa to install updates, then tap Install update again.":"Unable to start the update. Please try again.");setBusy(false);}
  };
  const totalBytes=progress.totalBytes||Number(update.sizeBytes||0);
  const downloaded=progress.downloadedBytes||0;
