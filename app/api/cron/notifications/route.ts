@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 function authorized(req: Request) {
-  const secret = String(process.env.CRON_SECRET || "").trim();
+  const secret = String(process.env.CRON_SECRET || process.env.NUMELIXA_CRON_SECRET || "").trim();
   if (!secret) return false;
   return req.headers.get("authorization") === "Bearer " + secret;
 }
