@@ -1,11 +1,11 @@
 import {NextRequest,NextResponse} from "next/server";
 
-export function proxy(request:NextRequest){
-  const host=request.headers.get("host")?.split(":")[0].toLowerCase()||"";
-  const pathname=request.nextUrl.pathname;
+export function proxy(req:NextRequest){
+  const host=(req.headers.get("host")||"").split(":")[0].toLowerCase();
+  const pathname=req.nextUrl.pathname;
 
   if(host==="docs.numelixa.com"&&pathname==="/"){
-    const url=request.nextUrl.clone();
+    const url=req.nextUrl.clone();
     url.pathname="/docs";
     return NextResponse.rewrite(url);
   }
