@@ -12,6 +12,8 @@ export default function AdminNotifications(){
  const[target,setTarget]=useState("all");
  const[users,setUsers]=useState<{id:string;name:string;email:string}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
+ const[deviceCount,setDeviceCount]=useState(0);
+ const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
 
@@ -19,7 +21,7 @@ export default function AdminNotifications(){
   try{
    const r=await fetch("/api/admin/notifications",{cache:"no-store"});
    const d=await r.json();
-   if(d.ok)setHistory(d.notifications||[]);
+   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
   }catch{}
  }
 
@@ -76,10 +78,10 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose">
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered app device{deviceCount===1?"":"s"}</p></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
-   <p>Send an important update to every user or one specific user. Messages are also saved inside the app notification center.</p>
+   <p>Send a real native phone notification to every user or one specific user. Numelixa does not use an in-app notification inbox.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
