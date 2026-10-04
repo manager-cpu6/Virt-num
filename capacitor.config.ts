@@ -5,9 +5,7 @@ const config:CapacitorConfig={
  appName:"Numelixa",
  webDir:"public",
  server:{
-  // Keep the app inside the native WebView. Both production hostnames are trusted
-  // so a normal www redirect never hands the user to Chrome.
-  url:"https://numelixa.com",
+  url:"https://www.numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
@@ -15,7 +13,9 @@ const config:CapacitorConfig={
    "numelixa.com",
    "www.numelixa.com",
    "docs.numelixa.com",
-   "privacy.numelixa.com"
+   "privacy.numelixa.com",
+   "nowpayments.io",
+   "www.nowpayments.io"
   ]
  },
  android:{
