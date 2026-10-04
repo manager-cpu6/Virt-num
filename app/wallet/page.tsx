@@ -9,17 +9,18 @@ type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPacka
 
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);
+  const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
   const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
       setU(d.user||null);setPricing(d.pricing||null);
       const packs:Array<Pack>=d.pricing?.coinPackages||[];
-      if(packs.length)setSelected(Number(packs.find((p:Pack)=>p.popular)?.coins||packs[0].coins));
+      if(fixedPacks.length)setSelected(fixedPacks[0].coins);
     }).catch(()=>setError("Unable to load wallet right now.")).finally(()=>setLoaded(true));
   },[]);
 
-  const packs=useMemo(()=>pricing?.coinPackages||[],[pricing]);
+  const packs=useMemo(()=>fixedPacks,[fixedPacks]);
   const selectedPack=packs.find(p=>p.coins===selected)||null;
 
   async function pay(){
