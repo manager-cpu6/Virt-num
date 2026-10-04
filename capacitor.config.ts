@@ -5,14 +5,17 @@ const config:CapacitorConfig={
  appName:"Numelixa",
  webDir:"public",
  server:{
-  // The native app uses only the official Numelixa domains.
-  // Primary: www.numelixa.com
-  // Fallback: numelixa.com
-  url:"https://numelixa.com",
+  // Keep the app inside the native WebView. Both production hostnames are trusted
+  // so a normal www redirect never hands the user to Chrome.
+  url:"https://app.numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
-   "numelixa.com"
+   "app.numelixa.com",
+   "numelixa.com",
+   "www.numelixa.com",
+   "docs.numelixa.com",
+   "privacy.numelixa.com"
   ]
  },
  android:{
@@ -22,7 +25,7 @@ const config:CapacitorConfig={
  },
  plugins:{
   SplashScreen:{
-   launchShowDuration:1200,
+   launchShowDuration:700,
    launchAutoHide:true,
    backgroundColor:"#031b22",
    showSpinner:false
