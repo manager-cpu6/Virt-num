@@ -36,6 +36,10 @@ export async function notifyUser(
     );
     sent = result.successCount;
     pushConfigured = result.configured;
+    if(result.invalidTokens?.length){
+      await (await collection<any>("deviceTokens")).deleteMany({token:{$in:result.invalidTokens}});
+    }
+    if(result.errors?.length) console.error("[PUSH USER RESULT]", {userId, errors:result.errors});
   } catch (error) {
     console.error("[PUSH USER]", {
       userId,
