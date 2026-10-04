@@ -1,6 +1,8 @@
 import {getApps,initializeApp,cert} from "firebase-admin/app";
 import {getMessaging} from "firebase-admin/messaging";
 
+export type PushSendResult={configured:boolean;successCount:number;failureCount:number;invalidTokens:string[];errors:string[]};
+
 function firebaseApp(){
  const serviceJson=String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||"").trim();
  let service:any=null;
