@@ -84,7 +84,7 @@ export function normalizeWebhook(data:any){
     packageId:String(tx.package_id||tx.packageId||""),
     price:Number(tx.price??tx.package_price??0),
     currency:String(tx.currency||"").toUpperCase(),
-    customParameters:tx.custom_parameters||tx.customParameters||{},
+    customParameters:(()=>{const v=tx.custom_parameters||tx.customParameters||{};if(typeof v==="string"){try{return JSON.parse(v)}catch{return {}}}return v})(),
     raw:data
   };
 }
