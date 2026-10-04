@@ -1,23 +1,15 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
-import LiveVideoFeed from "@/components/LiveVideoFeed";
 import HomeLiveBoard from "@/components/HomeLiveBoard";
+import MobileAppDownloadCTA from "@/components/MobileAppDownloadCTA";
 export default function HomePage(){
  return <div>
   <TopBar/>
   <section className="hero-card home-hero-refresh">
-   <div className="hero-copy">
-    <span className="eyebrow">NUMELIXA • LIVE</span>
-    <h1>Numbers, without the noise.</h1>
-    <p>Choose a service, pick a country and get a live SMS number in a few taps. Your wallet, orders and codes stay in one clean place.</p>
-    <Link className="primary-btn" href="/services">Get a number <span>→</span></Link>
-   </div>
+   <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Numbers, without the noise.</h1><p>Choose a service, pick a country and get a live SMS number in a few taps. Your wallet, orders and codes stay in one clean place.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
    <div className="hero-orb"><span>✦</span></div>
   </section>
-
-  <LiveVideoFeed/>
   <HomeLiveBoard/>
-
   <div className="quick-grid">
    <Link href="/services" className="quick-card"><span>＋</span><div><b>Get a number</b><small>Choose an app & country</small></div><i>→</i></Link>
    <Link href="/wallet" className="quick-card"><span>◈</span><div><b>Wallet</b><small>Check coins & top up</small></div><i>→</i></Link>
@@ -27,17 +19,6 @@ export default function HomePage(){
    <Link href="/numbers" className="quick-card"><span>▣</span><div><b>My orders</b><small>Numbers and SMS status</small></div><i>→</i></Link>
    <Link href="/account" className="quick-card"><span>◉</span><div><b>Account</b><small>Profile and session</small></div><i>→</i></Link>
   </div>
-
-  <section className="section-head" style={{marginTop:30}}>
-   <div>
-    <span className="eyebrow">MOBILE APP</span>
-    <h2>Numelixa for Android</h2>
-   </div>
-  </section>
-  <Link href="/download" className="quick-card android-download-home" style={{marginTop:12,marginBottom:28,borderColor:"rgba(22,166,145,.24)",background:"linear-gradient(135deg,rgba(226,255,249,.88),rgba(255,255,255,.72))"}}>
-   <span aria-hidden="true" style={{background:"#d5fbf2",color:"#087d70",fontSize:20}}>📱</span>
-   <div><b>Download Android App</b><small>Install Numelixa on your phone</small></div>
-   <i>↓</i>
-  </Link>
+  <MobileAppDownloadCTA/>
  </div>
 }
