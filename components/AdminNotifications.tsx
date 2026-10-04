@@ -63,7 +63,8 @@ export default function AdminNotifications(){
     );
    }else if(Number(d.failed||0)>0){
     setResult(
-     "⚠️ Sent to "+d.sent+" devices, but "+d.failed+" devices failed."
+     "⚠️ Sent to "+d.sent+" devices, but "+d.failed+" devices failed."+
+     (d.errors?.[0]?.message?" FCM: "+d.errors[0].message:" Please reopen the latest Numelixa app so its FCM token can be registered again.")
     );
    }else{
     setResult("✅ Sent to "+d.sent+" app devices · saved for "+d.recipients+" users");
