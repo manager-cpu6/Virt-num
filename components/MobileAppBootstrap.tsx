@@ -2,8 +2,8 @@
 import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token";
-const APP_VERSION="2.3.0";
+const TOKEN_KEY="numelixa_fcm_token_v2_4_1";
+const APP_VERSION="2.4.1";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
