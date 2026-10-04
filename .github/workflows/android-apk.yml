@@ -116,17 +116,26 @@ jobs:
           JAVA
           cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
           package com.numelixa.app;
+          import android.Manifest;
+          import android.content.pm.PackageManager;
+          import android.os.Build;
           import android.os.Bundle;
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
-              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+              @Override public void onCreate(Bundle savedInstanceState){
+                  registerPlugin(NumelixaUpdaterPlugin.class);
+                  super.onCreate(savedInstanceState);
+                  if(Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+                      requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},7001);
+                  }
+              }
           }
           JAVA
           python - <<'PY'
           from pathlib import Path
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
-              s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n\\n    <application', 1)
+              s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n\\n    <application', 1)
           p.write_text(s)
           PY
       - name: Configure Firebase push messaging
@@ -307,10 +316,19 @@ jobs:
           JAVA
           cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
           package com.numelixa.app;
+          import android.Manifest;
+          import android.content.pm.PackageManager;
+          import android.os.Build;
           import android.os.Bundle;
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
-              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+              @Override public void onCreate(Bundle savedInstanceState){
+                  registerPlugin(NumelixaUpdaterPlugin.class);
+                  super.onCreate(savedInstanceState);
+                  if(Build.VERSION.SDK_INT>=33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)!=PackageManager.PERMISSION_GRANTED){
+                      requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS},7001);
+                  }
+              }
           }
           JAVA
           python - <<'PY'
