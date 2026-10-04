@@ -5,18 +5,15 @@ const config:CapacitorConfig={
  appName:"Numelixa",
  webDir:"public",
  server:{
-  // Use the verified Vercel project domain for the native WebView.
-  // numelixa.com is currently pending Vercel domain verification.
-  url:"https://virt-num-liart.vercel.app",
+  // The native app uses only the official Numelixa domains.
+  // Primary: www.numelixa.com
+  // Fallback: numelixa.com
+  url:"https://www.numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
-   "virt-num-liart.vercel.app",
-   "numelixa.com",
    "www.numelixa.com",
-   "app.numelixa.com",
-   "docs.numelixa.com",
-   "privacy.numelixa.com"
+   "numelixa.com"
   ]
  },
  android:{
