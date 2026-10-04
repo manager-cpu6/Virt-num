@@ -11,7 +11,7 @@ export async function GET(){
     await requireAdmin();
     const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(20).toArray();
     return NextResponse.json({ok:true,updates:rows.map(x=>({
-      id:String(x._id),version:x.version,sizeMb:x.sizeMb,apkUrl:x.apkUrl,
+      id:String(x.releaseId||x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),apkUrl:x.apkUrl,
       releaseNotes:x.releaseNotes,force:Boolean(x.force),published:Boolean(x.published),
       publishedAt:x.publishedAt,pushSent:Number(x.pushSent||0),pushFailed:Number(x.pushFailed||0)
     }))});
@@ -28,6 +28,8 @@ export async function POST(req:Request){
     const version=String(body.version||"").trim().slice(0,30);
     const apkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
+    const manualSizeMb=Number(body.sizeMb||0);
+    const versionCode=Number(body.versionCode||0);
     
     const force=Boolean(body.force);
     const sendAll=body.sendAll!==false;
@@ -49,11 +51,14 @@ export async function POST(req:Request){
     }
     if(!Number.isFinite(sizeBytes)||sizeBytes<=0)
       return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Check the APK URL and try again."},{status:400});
-    const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
+    const sizeMb=manualSizeMb>0
+      ?Number(manualSizeMb.toFixed(2))
+      :Number((sizeBytes/(1024*1024)).toFixed(2));
+    if(manualSizeMb>0) sizeBytes=Math.round(manualSizeMb*1024*1024);
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
-      _id:mongoId(),version,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
+      _id:mongoId(),releaseId:mongoId(),version,versionCode,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
       publishedAt:now,createdAt:now,targetCreatedBefore,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
@@ -76,7 +81,7 @@ export async function POST(req:Request){
     }
 
     return NextResponse.json({
-      ok:true,version,sizeMb,sizeBytes,sendAll,pushConfigured:push.configured,
+      ok:true,version,versionCode,sizeMb,sizeBytes,sendAll,pushConfigured:push.configured,
       sent:push.successCount,failed:push.failureCount,errors:push.errors||[]
     });
   }catch(error){
