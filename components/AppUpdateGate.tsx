@@ -5,7 +5,7 @@ import {Capacitor,registerPlugin} from "@capacitor/core";
 type Update={version:string;versionCode:number;sizeMb:number;sizeBytes?:number;apkUrl:string;releaseNotes:string;force:boolean;publishedAt?:string|null};
 type Progress={status:"idle"|"downloading"|"completed"|"failed";downloadedBytes:number;totalBytes:number;percent:number;mbDownloaded:number;mbTotal:number;notification?:string};
 type UpdaterPlugin={
- installApk(options:{url:string;fileName:string}):Promise<{started:boolean;downloadId?:number}>;
+ installApk(options:{url:string;fileName:string;totalBytes?:number}):Promise<{started:boolean;downloadId?:number}>;
  getDownloadProgress():Promise<Progress>;
  openDownloadedApk():Promise<{opened:boolean}>;
 };
@@ -52,7 +52,7 @@ export default function AppUpdateGate(){
    if(Capacitor.getPlatform()!=="android")throw new Error("ANDROID_ONLY");
    const p=await NumelixaUpdater.getDownloadProgress();
    if(p.status==="completed"){await NumelixaUpdater.openDownloadedApk();return;}
-   await NumelixaUpdater.installApk({url:update.apkUrl,fileName:"Numelixa-"+update.version+".apk"});
+   await NumelixaUpdater.installApk({url:update.apkUrl,fileName:"Numelixa-"+update.version+".apk",totalBytes:Number(update.sizeBytes||0)});
    setProgress({
     status:"downloading",
     downloadedBytes:p.downloadedBytes||0,
