@@ -724,3 +724,7 @@ html.numelixa-native,body.numelixa-native{
 
 /* Required update: real download progress + liquid notification panel */
 .numelixa-download-progress{margin:12px 0 15px;padding:13px;border-radius:17px;background:rgba(8,30,61,.72);border:1px solid rgba(104,175,255,.13);text-align:left}.numelixa-download-progress-head,.numelixa-download-size{display:flex;justify-content:space-between;gap:10px;align-items:center}.numelixa-download-progress-head{color:#9bb9dd;font-size:9px;font-weight:800}.numelixa-download-progress-head b{color:#61c5ff;font-size:11px}.numelixa-download-track{height:7px;margin:9px 0 8px;border-radius:99px;overflow:hidden;background:rgba(255,255,255,.07)}.numelixa-download-track i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#18d8ff,#1465ff);box-shadow:0 0 14px rgba(31,151,255,.45);transition:width .35s ease}.numelixa-download-size{color:#7394bd;font-size:8px}.numelixa-download-size b{color:#82c9ff}.numelixa-download-progress>small{display:block;margin-top:9px;color:#5f80aa;font-size:8px;line-height:1.45}
+
+/* Native touch safety */
+.numelixa-native .bottom-nav{pointer-events:auto!important;touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
+.numelixa-native .bottom-nav .nav-item{pointer-events:auto!important;touch-action:manipulation!important}
