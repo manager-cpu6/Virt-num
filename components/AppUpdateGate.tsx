@@ -41,6 +41,10 @@ export default function AppUpdateGate(){
   if(!visible||!update||!Capacitor.isNativePlatform())return;
   NumelixaUpdater.getDownloadProgress().then(p=>{if(p.status!=="idle")setProgress(p)}).catch(()=>{});
  },[visible,update]);
+ useEffect(()=>{
+  if(!visible||!update||!update.force)return;
+  if(progress.status==="completed") NumelixaUpdater.openDownloadedApk().catch(e=>{console.error("[NUMELIXA UPDATE OPEN]",e);});
+ },[visible,update,progress.status]);
  if(!visible||!update)return null;
  const install=async()=>{
   setBusy(true);setError("");
