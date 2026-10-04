@@ -1,5 +1,6 @@
 "use client";
 import {useEffect,useState} from "react";
+import {Capacitor} from "@capacitor/core";
 
 type Update={version:string;versionCode:number;sizeMb:number;apkUrl:string;releaseNotes:string;force:boolean;publishedAt?:string|null};
 
@@ -7,7 +8,7 @@ export default function AppUpdateGate(){
  const[update,setUpdate]=useState<Update|null>(null);
  const[visible,setVisible]=useState(false);
  useEffect(()=>{
-  if(!document.documentElement.classList.contains("numelixa-native"))return;
+  if(!Capacitor.isNativePlatform())return;
   let cancelled=false;
   fetch("/api/app-update",{cache:"no-store"}).then(r=>r.json()).then(d=>{
    if(cancelled||!d?.update)return;
