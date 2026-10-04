@@ -110,6 +110,21 @@ jobs:
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
               s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\\n\\n    <application', 1)
+          provider='''<provider
+              android:name="androidx.core.content.FileProvider"
+              android:authorities="${applicationId}.fileprovider"
+              android:exported="false"
+              android:grantUriPermissions="true">
+              <meta-data
+                  android:name="android.support.FILE_PROVIDER_PATHS"
+                  android:resource="@xml/numelixa_file_paths" />
+          </provider>
+          <service
+              android:name=".NumelixaUpdateService"
+              android:exported="false"
+              android:foregroundServiceType="dataSync" />'''
+          if "NumelixaUpdateService" not in s:
+              s=s.replace("</application>",provider+"\n    </application>",1)
           p.write_text(s)
           from pathlib import Path
           x=Path("android/app/src/main/res/xml")
@@ -290,6 +305,21 @@ jobs:
           p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
           if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
               s=s.replace("    <application","    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application",1)
+          provider='''<provider
+              android:name="androidx.core.content.FileProvider"
+              android:authorities="${applicationId}.fileprovider"
+              android:exported="false"
+              android:grantUriPermissions="true">
+              <meta-data
+                  android:name="android.support.FILE_PROVIDER_PATHS"
+                  android:resource="@xml/numelixa_file_paths" />
+          </provider>
+          <service
+              android:name=".NumelixaUpdateService"
+              android:exported="false"
+              android:foregroundServiceType="dataSync" />'''
+          if "NumelixaUpdateService" not in s:
+              s=s.replace("</application>",provider+"\n    </application>",1)
           p.write_text(s)
           from pathlib import Path
           x=Path("android/app/src/main/res/xml")
@@ -364,6 +394,21 @@ jobs:
               raise SystemExit("Could not locate Android buildTypes for release signing")
           s = s.replace(marker, block + marker, 1)
           s = s.replace("buildTypes {\n        release {", "buildTypes {\n        release {\n            signingConfig signingConfigs.release", 1)
+          provider='''<provider
+              android:name="androidx.core.content.FileProvider"
+              android:authorities="${applicationId}.fileprovider"
+              android:exported="false"
+              android:grantUriPermissions="true">
+              <meta-data
+                  android:name="android.support.FILE_PROVIDER_PATHS"
+                  android:resource="@xml/numelixa_file_paths" />
+          </provider>
+          <service
+              android:name=".NumelixaUpdateService"
+              android:exported="false"
+              android:foregroundServiceType="dataSync" />'''
+          if "NumelixaUpdateService" not in s:
+              s=s.replace("</application>",provider+"\n    </application>",1)
           p.write_text(s)
           from pathlib import Path
           x=Path("android/app/src/main/res/xml")
