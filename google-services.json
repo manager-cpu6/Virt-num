@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "832390289699",
+    "project_id": "numelixa",
+    "storage_bucket": "numelixa.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:832390289699:android:963bd5705215947fb51496",
+        "android_client_info": {
+          "package_name": "com.numelixa.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCh5VUsXlnh173pHfFkJpd9qn18meykDzw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": {}
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
