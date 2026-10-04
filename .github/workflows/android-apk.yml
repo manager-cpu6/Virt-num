@@ -43,13 +43,25 @@ jobs:
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
+      - name: Prepare downloadable APK
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Numelixa.apk
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
           name: Numelixa-Android-test
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: Numelixa.apk
           if-no-files-found: error
           retention-days: 14
+      - name: Publish latest installable APK
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: Numelixa Android App (Latest)
+          prerelease: false
+          make_latest: true
+          files: Numelixa.apk
+          generate_release_notes: false
 
   signed-release:
     name: Build signed production APK
