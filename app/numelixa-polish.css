@@ -697,3 +697,11 @@ html.numelixa-native,body.numelixa-native{
 .numelixa-update-card h2{margin:7px 0 9px;font-size:24px;letter-spacing:-.04em}.numelixa-update-card p{margin:0 auto 16px;color:#8ca8cf;font-size:13px;line-height:1.6}
 .numelixa-update-meta{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:15px;background:rgba(15,50,98,.38);margin-bottom:12px;color:#80a0cb;font-size:11px}.numelixa-update-meta b{color:#fff}
 .numelixa-update-card small{display:block;margin-top:11px;color:#6684ad;font-size:9px}
+
+
+/* Numelixa 2.4 native polish */
+.numelixa-native .profile-avatar-initial{width:48px!important;height:48px!important;min-width:48px!important;border-radius:15px!important;display:grid!important;place-items:center!important;font-size:19px!important;font-weight:950!important;color:#fff!important;background:linear-gradient(145deg,#0d8fff,#164cff)!important;border:1px solid rgba(133,202,255,.24)!important;box-shadow:0 10px 24px rgba(14,93,255,.22)!important}
+.profile-avatar-initial{width:58px;height:58px;border-radius:18px;display:grid;place-items:center;font-size:22px;font-weight:950;color:#fff;background:linear-gradient(145deg,#18d8ff,#1465ff,#192fff);border:1px solid rgba(255,255,255,.16);box-shadow:0 12px 28px rgba(13,103,255,.22)}
+.numelixa-native .order-cta{min-height:56px!important;border-radius:18px!important;font-size:15px!important;font-weight:950!important;margin-top:14px!important;box-shadow:0 14px 30px rgba(11,101,255,.28)!important}
+.numelixa-native .purchase-hints span{flex:1;padding:9px 8px!important;border-radius:12px!important;background:rgba(11,45,88,.48)!important;border:1px solid rgba(87,151,241,.12)!important;color:#7797c2!important;font-size:9px!important;text-align:center}
+.numelixa-update-card button:disabled{opacity:.58}
