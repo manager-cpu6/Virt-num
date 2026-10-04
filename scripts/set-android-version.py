@@ -1,5 +1,6 @@
 import os
 import re
+import json
 from pathlib import Path
 
 path = Path("android/app/build.gradle")
@@ -8,6 +9,10 @@ version_code = os.environ.get("ANDROID_VERSION_CODE", "1")
 version_name = os.environ.get("ANDROID_VERSION_NAME", "1.0.0")
 if version_name.startswith("v"):
     version_name = version_name[1:]
+if version_name in {"main", "master"}:
+    package_json = Path("package.json")
+    if package_json.exists():
+        version_name = str(json.loads(package_json.read_text(encoding="utf-8")).get("version") or version_name)
 match = re.search(r"defaultConfig\s*\{", source)
 if not match:
     raise SystemExit("Could not find defaultConfig in android/app/build.gradle")
