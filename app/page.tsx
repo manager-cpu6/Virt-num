@@ -15,8 +15,13 @@ export default function HomePage(){
    <div className="hero-orb"><span>✦</span></div>
   </section>
 
-  <LiveVideoFeed/>
+  <Link href="/download" className="quick-card android-download-home" style={{marginTop:14,borderColor:"rgba(22,166,145,.24)",background:"linear-gradient(135deg,rgba(226,255,249,.88),rgba(255,255,255,.72))"}}>
+   <span aria-hidden="true" style={{background:"#d5fbf2",color:"#087d70",fontSize:20}}>📱</span>
+   <div><b>Download Android App</b><small>Install Numelixa on your phone</small></div>
+   <i>↓</i>
+  </Link>
 
+  <LiveVideoFeed/>
   <HomeLiveBoard/>
 
   <div className="quick-grid">
