@@ -1,15 +1,9 @@
-"use client";
-
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import TopBar from "@/components/TopBar";
 import { getUser } from "@/lib/auth";
 
 export default function AccountPage(){
- const [user,setUser]=useState<any>(null);
- const [loading,setLoading]=useState(true);
- useEffect(()=>{ getUser().then((u:any)=>{setUser(u);setLoading(false)}); },[]);
- if(loading) return <div className="account-premium-loading"><div className="account-skeleton-avatar"/><div className="account-skeleton-line"/><div className="account-skeleton-line short"/></div>;
+ const user=await getUser();
  if(!user)return <div className="auth-page"><div className="brand-mark">N</div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
  const name=(user.name||"User").trim();
  const initial=name.charAt(0).toUpperCase()||"U";
