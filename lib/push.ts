@@ -47,7 +47,7 @@ export async function sendPush(
     const response=await getMessaging(app).sendEachForMulticast({
       tokens:batch,
       notification:{title,body},
-      data:{url:"/notifications",...data},
+      data:{url:data.url||"/",...data},
       android:{
         priority:"high",
         notification:{
