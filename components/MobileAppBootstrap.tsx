@@ -14,6 +14,7 @@ export default function MobileAppBootstrap(){
     let stopped=false;
     let retryTimer:ReturnType<typeof setTimeout>|null=null;
     let syncInFlight=false;
+    let push:any=null;
     const cleanups:Array<()=>void>=[];
 
     const scheduleRetry=()=>{
@@ -40,8 +41,6 @@ export default function MobileAppBootstrap(){
           window.dispatchEvent(new Event("numelixa-push-ready"));
           return true;
         }
-        // A 401 normally means the app opened before the user session was
-        // available. Keep retrying so login later automatically binds the token.
         scheduleRetry();
         return false;
       }catch(error){
@@ -60,9 +59,79 @@ export default function MobileAppBootstrap(){
       }catch{}
     };
 
+    const showPermissionGate=()=>{
+      if(document.getElementById("numelixa-notification-gate"))return;
+      const gate=document.createElement("div");
+      gate.id="numelixa-notification-gate";
+      gate.innerHTML=`
+        <div class="numelixa-notification-gate-backdrop"></div>
+        <section class="numelixa-notification-gate-card" role="dialog" aria-modal="true">
+          <div class="numelixa-notification-gate-logo">N</div>
+          <div class="numelixa-notification-gate-icon">🔔</div>
+          <span class="eyebrow">NUMELIXA ALERTS</span>
+          <h2>Turn on notifications</h2>
+          <p>Notifications are required to receive verification codes, number status, payments and important account updates.</p>
+          <button id="numelixa-enable-notifications" type="button">Enable Notifications</button>
+          <small>Please allow notifications in the Android permission window.</small>
+        </section>`;
+      document.body.appendChild(gate);
+
+      const button=document.getElementById("numelixa-enable-notifications");
+      button?.addEventListener("click",async()=>{
+        if(!push)return;
+        try{
+          const result=await push.requestPermissions();
+          if(result.receive==="granted"){
+            gate.remove();
+            await push.register();
+          }
+        }catch(error){
+          console.error("[NUMELIXA PUSH PERMISSION]",error);
+        }
+      });
+    };
+
+    const removePermissionGate=()=>{
+      document.getElementById("numelixa-notification-gate")?.remove();
+    };
+
+    const ensurePushPermission=async()=>{
+      if(!push||stopped)return false;
+      try{
+        const current=await push.checkPermissions();
+        if(current.receive==="granted"){
+          removePermissionGate();
+          await push.register();
+          await syncStoredToken();
+          return true;
+        }
+
+        // Ask only after authentication is ready. This makes the Android
+        // permission prompt appear as part of the logged-in app experience.
+        const result=await push.requestPermissions();
+        if(result.receive==="granted"){
+          removePermissionGate();
+          await push.register();
+          await syncStoredToken();
+          return true;
+        }
+
+        // Android may keep the OS permission denied after a previous choice.
+        // Show an in-app blocking gate so the user is prompted again instead
+        // of silently leaving the account without push notifications.
+        showPermissionGate();
+        return false;
+      }catch(error){
+        console.error("[NUMELIXA PUSH PERMISSION]",error);
+        showPermissionGate();
+        return false;
+      }
+    };
+
     (async()=>{
       try{
         const {PushNotifications}=await import("@capacitor/push-notifications");
+        push=PushNotifications;
 
         if(Capacitor.getPlatform()==="android"){
           try{
@@ -79,8 +148,6 @@ export default function MobileAppBootstrap(){
           }
         }
 
-        // Register notification listeners before register() so a fast FCM
-        // event cannot be missed.
         const registration=await PushNotifications.addListener(
           "registration",
           (event)=>{
@@ -113,48 +180,54 @@ export default function MobileAppBootstrap(){
         );
         cleanups.push(()=>action.remove());
 
-        const permission=await PushNotifications.checkPermissions();
-        const result=permission.receive==="granted"
-          ?permission
-          :await PushNotifications.requestPermissions();
+        const retryOnAuth=()=>{
+          void ensurePushPermission();
+        };
+        const retryOnOnline=()=>{
+          void syncStoredToken();
+          void ensurePushPermission();
+        };
+        const retryOnFocus=()=>{
+          void syncStoredToken();
+        };
 
-        if(result.receive!=="granted"){
-          console.warn("[NUMELIXA PUSH] Notification permission was not granted.");
-          return;
-        }
-
-        await syncStoredToken();
-        await PushNotifications.register();
-        await syncStoredToken();
-
-        // Login can happen after the first native bootstrap. These events make
-        // the token bind to the authenticated user without reinstalling the app.
-        const retryOnOnline=()=>{void syncStoredToken();};
-        const retryOnFocus=()=>{void syncStoredToken();};
-        const retryOnAuth=()=>{void syncStoredToken();};
+        window.addEventListener("numelixa-auth-ready",retryOnAuth);
         window.addEventListener("online",retryOnOnline);
         window.addEventListener("focus",retryOnFocus);
-        window.addEventListener("numelixa-auth-ready",retryOnAuth);
         document.addEventListener("visibilitychange",retryOnFocus);
+
         cleanups.push(()=>{
+          window.removeEventListener("numelixa-auth-ready",retryOnAuth);
           window.removeEventListener("online",retryOnOnline);
           window.removeEventListener("focus",retryOnFocus);
-          window.removeEventListener("numelixa-auth-ready",retryOnAuth);
           document.removeEventListener("visibilitychange",retryOnFocus);
         });
 
-        // Keep retrying while a token exists but the server has not accepted it.
-        const heartbeat=window.setInterval(()=>{void syncStoredToken();},30000);
+        // Covers an already-authenticated session when the auth-ready event
+        // happened before this component finished initializing.
+        setTimeout(async()=>{
+          try{
+            const response=await fetch("/api/me",{cache:"no-store",credentials:"include"});
+            if(response.ok){
+              const data=await response.json();
+              if(data?.user) await ensurePushPermission();
+            }
+          }catch{}
+        },500);
+
+        const heartbeat=window.setInterval(()=>{
+          void syncStoredToken();
+        },30000);
         cleanups.push(()=>window.clearInterval(heartbeat));
       }catch(error){
         console.error("[NUMELIXA PUSH]",error);
-        scheduleRetry();
       }
     })();
 
     return()=>{
       stopped=true;
       if(retryTimer)clearTimeout(retryTimer);
+      removePermissionGate();
       cleanups.forEach(fn=>{try{fn()}catch{}});
       document.documentElement.classList.remove("numelixa-native");
       document.body.classList.remove("numelixa-native");
