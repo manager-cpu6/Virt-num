@@ -728,3 +728,5 @@ html.numelixa-native,body.numelixa-native{
 /* Native touch safety */
 .numelixa-native .bottom-nav{pointer-events:auto!important;touch-action:manipulation!important;-webkit-user-select:none!important;user-select:none!important}
 .numelixa-native .bottom-nav .nav-item{pointer-events:auto!important;touch-action:manipulation!important}
+
+.numelixa-update-backdrop:not(.required){pointer-events:none!important}.numelixa-update-backdrop:not(.required) .numelixa-update-card{pointer-events:auto!important}
