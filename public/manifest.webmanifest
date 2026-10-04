@@ -1,1 +1,10 @@
-{"name":"Numelixa","short_name":"Numelixa","start_url":"/","display":"standalone","background_color":"#f6f7fb","theme_color":"#111318","description":"Virtual numbers and SMS verification platform"}
+{
+  "name":"Numelixa — Virtual Numbers & SMS Verification",
+  "short_name":"Numelixa",
+  "description":"Fast virtual numbers for SMS verification codes.",
+  "start_url":"/",
+  "display":"standalone",
+  "background_color":"#031b22",
+  "theme_color":"#031b22",
+  "icons":[{"src":"/numelixa-icon.svg","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]
+}
