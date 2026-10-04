@@ -12,3 +12,5 @@ Built with Next.js App Router and designed for Vercel deployment. Provider crede
 
 <!-- Numelixa developer API key controls 2026-10-04 -->
 <!-- Numelixa API key encryption fallback fix 2026-10-04 -->
+
+<!-- TypeScript push-result typing cleanup 2026-10-04 -->
