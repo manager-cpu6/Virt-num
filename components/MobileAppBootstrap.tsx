@@ -66,12 +66,12 @@ export default function MobileAppBootstrap(){
     const received=await PushNotifications.addListener("pushNotificationReceived",()=>window.dispatchEvent(new Event("numelixa-notification")));cleanups.push(()=>received.remove());
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{const url=String(event.notification?.data?.url||"/");window.location.href=url.startsWith("/")?url:"/"});cleanups.push(()=>action.remove());
 
-    const retry=()=>{void syncStoredToken()};window.addEventListener("numelixa-auth-ready",retry);window.addEventListener("online",retry);window.addEventListener("focus",retry);document.addEventListener("visibilitychange",retry);
+    const retry=()=>{void syncStoredToken();window.setTimeout(()=>void syncStoredToken(),1000);window.setTimeout(()=>void syncStoredToken(),3000);window.setTimeout(()=>void syncStoredToken(),10000)};window.addEventListener("numelixa-auth-ready",retry);window.addEventListener("online",retry);window.addEventListener("focus",retry);document.addEventListener("visibilitychange",retry);
     cleanups.push(()=>{window.removeEventListener("numelixa-auth-ready",retry);window.removeEventListener("online",retry);window.removeEventListener("focus",retry);document.removeEventListener("visibilitychange",retry)});
 
     await ensurePushPermission();
     await syncStoredToken();
-    const heartbeat=window.setInterval(()=>{void syncStoredToken()},30000);cleanups.push(()=>window.clearInterval(heartbeat));
+    const heartbeat=window.setInterval(()=>{void syncStoredToken()},10000);cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){console.error("[NUMELIXA PUSH]",error)}
   })();
 
