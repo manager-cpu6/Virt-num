@@ -32,7 +32,7 @@ export async function notifyUser(
       devices.map((d) => String(d.token || "")),
       title,
       message,
-      {url: "/notifications", ...data}
+      {url: data.url || "/", ...data}
     );
     sent = result.successCount;
     pushConfigured = result.configured;
