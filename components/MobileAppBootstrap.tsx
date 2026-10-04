@@ -3,6 +3,7 @@ import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
 const TOKEN_KEY="numelixa_fcm_token";
+const APP_VERSION="2.3.0";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -42,6 +43,27 @@ export default function MobileAppBootstrap(){
    });
   };
 
+  const showUpdate=async()=>{
+   if(!Capacitor.isNativePlatform()||stopped)return;
+   try{
+    const response=await fetch("/api/app-update",{cache:"no-store"});
+    const payload=await response.json();
+    const update=payload?.update;
+    if(!update?.version||!update?.apkUrl)return;
+    const current=APP_VERSION.split(".").map(Number), next=String(update.version).split(".").map(Number);
+    const newer=(next[0]||0)>(current[0]||0)||(next[0]||0)===(current[0]||0)&&((next[1]||0)>(current[1]||0)||(next[1]||0)===(current[1]||0)&&(next[2]||0)>(current[2]||0));
+    if(!newer)return;
+    if(document.getElementById("numelixa-update-gate"))return;
+    const gate=document.createElement("div");
+    gate.id="numelixa-update-gate";
+    gate.innerHTML=`<div class="numelixa-update-backdrop"></div><section class="numelixa-update-card" role="dialog" aria-modal="true"><div class="numelixa-update-icon">↟</div><span class="eyebrow">NUMELIXA UPDATE</span><h2>New version available</h2><div class="numelixa-update-version">v${update.version} <span>• ${Number(update.sizeMb||0).toFixed(1)} MB</span></div><p>${String(update.releaseNotes||"Faster, smoother and more reliable Numelixa.").replace(/[<>]/g,"")}</p><button id="numelixa-update-now" type="button">Update now</button>${update.force?"<small>This update is required to continue.</small>":"<button id=\"numelixa-update-later\" type=\"button\" class=\"numelixa-update-later\">Later</button>"}</section>`;
+    document.body.appendChild(gate);
+    document.getElementById("numelixa-update-now")?.addEventListener("click",()=>{
+      const a=document.createElement("a");a.href=String(update.apkUrl);a.download="Numelixa-"+update.version+".apk";a.rel="noopener";document.body.appendChild(a);a.click();a.remove();
+    });
+    document.getElementById("numelixa-update-later")?.addEventListener("click",()=>gate.remove());
+   }catch(error){console.warn("[NUMELIXA UPDATE]",error)}
+  };
   const removePermissionGate=()=>document.getElementById("numelixa-notification-gate")?.remove();
 
   const ensurePushPermission=async()=>{
@@ -70,6 +92,7 @@ export default function MobileAppBootstrap(){
 
     await ensurePushPermission();
     await syncStoredToken();
+    await showUpdate();
     const heartbeat=window.setInterval(()=>{void syncStoredToken()},30000);cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){console.error("[NUMELIXA PUSH]",error)}
   })();
