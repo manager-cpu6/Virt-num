@@ -31,6 +31,71 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
+      - name: Add Numelixa native updater bridge
+        run: |
+          mkdir -p android/app/src/main/java/com/numelixa/app
+          cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
+          package com.numelixa.app;
+          import android.app.DownloadManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Environment;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          @CapacitorPlugin(name = "NumelixaUpdater")
+          public class NumelixaUpdaterPlugin extends Plugin {
+              @PluginMethod public void installApk(PluginCall call) {
+                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk");
+                  if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
+                  try{
+                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
+                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
+                      request.setMimeType("application/vnd.android.package-archive");
+                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                      request.setAllowedOverMetered(true);
+                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
+                      long id=manager.enqueue(request);
+                      android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+                      handler.post(new Runnable(){public void run(){
+                          android.database.Cursor cursor=manager.query(new DownloadManager.Query().setFilterById(id));
+                          if(cursor==null){call.reject("Update download could not be checked");return;}
+                          try{
+                              if(!cursor.moveToFirst()){call.reject("Update download disappeared");return;}
+                              int status=cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                              if(status==DownloadManager.STATUS_SUCCESSFUL){
+                                  Uri uri=manager.getUriForDownloadedFile(id);
+                                  if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                                  Intent intent=new Intent(Intent.ACTION_VIEW); intent.setDataAndType(uri,"application/vnd.android.package-archive");
+                                  intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION); getActivity().startActivity(intent);
+                                  JSObject result=new JSObject(); result.put("started",true); call.resolve(result);
+                              }else if(status==DownloadManager.STATUS_FAILED){call.reject("Update download failed");}
+                              else handler.postDelayed(this,700);
+                          }finally{cursor.close();}
+                      }});
+                  }catch(Exception e){call.reject("Unable to start update download",e);}
+              }
+          }
+          JAVA
+          cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
+          package com.numelixa.app;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+          }
+          JAVA
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
+          if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
+              s=s.replace("    <application","    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application",1)
+          p.write_text(s)
+          PY
       - name: Configure Firebase push messaging
         run: |
           cp google-services.json android/app/google-services.json
@@ -124,6 +189,71 @@ jobs:
           npm install
           npx cap add android
           npx cap sync android
+      - name: Add Numelixa native updater bridge
+        run: |
+          mkdir -p android/app/src/main/java/com/numelixa/app
+          cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
+          package com.numelixa.app;
+          import android.app.DownloadManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Environment;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          @CapacitorPlugin(name = "NumelixaUpdater")
+          public class NumelixaUpdaterPlugin extends Plugin {
+              @PluginMethod public void installApk(PluginCall call) {
+                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk");
+                  if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
+                  try{
+                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
+                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
+                      request.setMimeType("application/vnd.android.package-archive");
+                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                      request.setAllowedOverMetered(true);
+                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
+                      long id=manager.enqueue(request);
+                      android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+                      handler.post(new Runnable(){public void run(){
+                          android.database.Cursor cursor=manager.query(new DownloadManager.Query().setFilterById(id));
+                          if(cursor==null){call.reject("Update download could not be checked");return;}
+                          try{
+                              if(!cursor.moveToFirst()){call.reject("Update download disappeared");return;}
+                              int status=cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                              if(status==DownloadManager.STATUS_SUCCESSFUL){
+                                  Uri uri=manager.getUriForDownloadedFile(id);
+                                  if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                                  Intent intent=new Intent(Intent.ACTION_VIEW); intent.setDataAndType(uri,"application/vnd.android.package-archive");
+                                  intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION); getActivity().startActivity(intent);
+                                  JSObject result=new JSObject(); result.put("started",true); call.resolve(result);
+                              }else if(status==DownloadManager.STATUS_FAILED){call.reject("Update download failed");}
+                              else handler.postDelayed(this,700);
+                          }finally{cursor.close();}
+                      }});
+                  }catch(Exception e){call.reject("Unable to start update download",e);}
+              }
+          }
+          JAVA
+          cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
+          package com.numelixa.app;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+          }
+          JAVA
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
+          if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
+              s=s.replace("    <application","    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application",1)
+          p.write_text(s)
+          PY
       - name: Configure Firebase push messaging
         run: |
           cp google-services.json android/app/google-services.json
