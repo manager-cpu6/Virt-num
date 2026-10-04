@@ -66,7 +66,7 @@ export default function HomeLiveBoard(){
  const liveNumbers=useMemo<Array<{country:string;flag:string;number:string;service:string}>>(()=>{
   const fromActivity=data.activity.slice(0,3).map(a=>({
    country:a.country||"LIVE",
-   flag:a.country==="US"?"🇺🇸":a.country==="GB"?"🇬🇧":a.country==="NG"?"🇳🇬":"🌍",
+   flag:flagFor(String(a.country||"").toUpperCase()),
    number:a.phone||"•••• ••••",
    service:a.service
   }));
