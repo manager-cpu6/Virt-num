@@ -28,19 +28,31 @@ export async function POST(req:Request){
     const version=String(body.version||"").trim().slice(0,30);
     const apkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
-    const sizeMb=Number(body.sizeMb);
+    
     const force=Boolean(body.force);
     const sendAll=body.sendAll!==false;
 
-    if(!version||!apkUrl||!Number.isFinite(sizeMb)||sizeMb<=0)
-      return NextResponse.json({ok:false,error:"Version, APK URL and valid APK size are required."},{status:400});
+    if(!version||!apkUrl)
+      return NextResponse.json({ok:false,error:"Version and APK URL are required."},{status:400});
 
     if(!/^https:\/\//i.test(apkUrl))
       return NextResponse.json({ok:false,error:"APK URL must use HTTPS."},{status:400});
 
+    const sizeResponse=await fetch(apkUrl,{method:"HEAD",redirect:"follow",cache:"no-store"});
+    let sizeBytes=Number(sizeResponse.headers.get("content-length")||0);
+    if(!Number.isFinite(sizeBytes)||sizeBytes<=0){
+      const rangeResponse=await fetch(apkUrl,{method:"GET",headers:{Range:"bytes=0-0"},redirect:"follow",cache:"no-store"});
+      const contentRange=rangeResponse.headers.get("content-range")||"";
+      const match=contentRange.match(/\/([0-9]+)$/);
+      sizeBytes=match?Number(match[1]):Number(rangeResponse.headers.get("content-length")||0);
+      try{await rangeResponse.body?.cancel();}catch{}
+    }
+    if(!Number.isFinite(sizeBytes)||sizeBytes<=0)
+      return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Check the APK URL and try again."},{status:400});
+    const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
     const now=new Date();
     const doc={
-      _id:mongoId(),version,sizeMb,apkUrl,releaseNotes,force,published:true,
+      _id:mongoId(),version,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
       publishedAt:now,createdAt:now,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
@@ -63,7 +75,7 @@ export async function POST(req:Request){
     }
 
     return NextResponse.json({
-      ok:true,version,sizeMb,sendAll,pushConfigured:push.configured,
+      ok:true,version,sizeMb,sizeBytes,sendAll,pushConfigured:push.configured,
       sent:push.successCount,failed:push.failureCount
     });
   }catch(error){
