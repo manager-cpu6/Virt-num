@@ -12,7 +12,6 @@ const config:CapacitorConfig={
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
-   "www.numelixa.com",
    "numelixa.com"
   ]
  },
