@@ -21,6 +21,17 @@ export async function POST(req:Request){
     const success=["success","successful","paid","completed","complete"].includes(w.status);
     if(!success)return NextResponse.json({ok:true});
 
+    // Only credit the exact package/order that Numelixa created. If Zotlo
+    // supplies amount/currency, require them to agree with our pending order.
+    if(w.packageId && String(w.packageId)!==String(p.packageId)){
+      console.error("[ZOTLO WEBHOOK] package mismatch",w.packageId,p.packageId);
+      return NextResponse.json({ok:false,error:"Package mismatch"},{status:400});
+    }
+    if(w.price>0 && Math.abs(Number(w.price)-Number(p.amountUsd))>0.01){
+      console.error("[ZOTLO WEBHOOK] amount mismatch",w.price,p.amountUsd);
+      return NextResponse.json({ok:false,error:"Amount mismatch"},{status:400});
+    }
+
     const claimed=await payments.findOneAndUpdate(
       {_id:p._id,status:{$ne:"paid"}},
       {$set:{status:"paid",txid:w.transactionId||null,providerId:w.transactionId||p.providerId,raw:w.raw,paidAt:new Date()}},
