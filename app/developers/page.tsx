@@ -115,9 +115,7 @@ export default function Developers(){
      <button type="button" className="developer-revoke" onClick={revoke} disabled={loading||!active||busy}>
       Revoke & Replace
      </button>
-     <button type="button" className="developer-refresh" onClick={load} disabled={busy}>
-      Refresh
-     </button>
+     
     </div>
 
     <div style={{marginTop:10,fontSize:11,color:"#6f9192"}}>
