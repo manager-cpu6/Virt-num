@@ -6,7 +6,7 @@ import NotificationBell from "@/components/NotificationBell";
 type TopBarProps={title?:string;back?:boolean};type MeResponse={ok?:boolean;user?:{coins?:number}|null};
 export default function TopBar({title="Numelixa",back=false}:TopBarProps){
  const[open,setOpen]=useState(false),[coins,setCoins]=useState<number|null>(null),[native,setNative]=useState(false);
- useEffect(()=>{setNative(Capacitor.isNativePlatform());let cancelled=false;fetch("/api/me",{cache:"no-store"}).then(async r=>r.ok?(await r.json()) as MeResponse:null).then(d=>{if(!cancelled&&d?.user)setCoins(Number(d.user.coins||0))}).catch(()=>{if(!cancelled)setCoins(null)});return()=>{cancelled=true}},[]);
+ useEffect(()=>{setNative(Capacitor.isNativePlatform());let cancelled=false;fetch("/api/me",{cache:"no-store"}).then(async r=>r.ok?(await r.json()) as MeResponse:null).then(d=>{if(!cancelled&&d?.user){setCoins(Number(d.user.coins||0));window.dispatchEvent(new Event("numelixa-auth-ready"))}}).catch(()=>{if(!cancelled)setCoins(null)});return()=>{cancelled=true}},[]);
  return <header className={"topbar "+(back?"topbar-detail":"topbar-brand")}><div className="topbar-inner">
   {back?<Link href="/" className="icon-btn" aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.1"><path d="M15 18l-6-6 6-6"/></svg></Link>:<Link href="/" className="brand-lockup" aria-label="Numelixa home"><span className="brand-logo">N</span><span className="brand-copy"><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>}
   <div className="top-title">{back?title:""}</div>
