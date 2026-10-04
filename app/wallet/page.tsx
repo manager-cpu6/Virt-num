@@ -3,7 +3,7 @@
 import TopBar from "@/components/TopBar";
 import {useEffect,useMemo,useState} from "react";
 
-type Pack={coins:number;priceUsd:number;popular?:boolean};
+type Pack={coins:number;priceUsd:number;popular?:boolean;paymentUrl?:string};
 type Me={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
 
@@ -28,7 +28,7 @@ export default function Wallet(){
     if(!selectedPack)return;
     setLoading(true);setError("");
     try{
-      const d=await fetch("/api/payments/zotlo/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
+      const d=await fetch("/api/payments/nowpayments/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
       if(!d.ok){setError(d.error||"Unable to create payment");return}
       location.href=d.url;
     }catch(err){setError(err instanceof Error?err.message:"Unable to create payment")}
