@@ -61,8 +61,11 @@ export default function AppUpdateGate(){
     const newerByName=(b[0]||0)>(a[0]||0)||
       ((b[0]||0)===(a[0]||0)&&((b[1]||0)>(a[1]||0)||
       ((b[1]||0)===(a[1]||0)&&(b[2]||0)>(a[2]||0))));
-    const sameCodeNewRelease=Boolean(releaseId)&&serverCode>0&&installedCode>0&&serverCode===installedCode;
-    if(newerByCode||newerByName||sameCodeNewRelease){
+    const sameVersionNewRelease=Boolean(releaseId)&&(
+      (serverCode>0&&installedCode>0&&serverCode===installedCode) ||
+      serverCode===0
+    );
+    if(newerByCode||newerByName||sameVersionNewRelease){
       setUpdate(u);setVisible(true);
     }
    }catch{}
