@@ -7,7 +7,7 @@ const config: CapacitorConfig = {
   server: {
     url: "https://numelixa.com",
     cleartext: false,
-    allowNavigation: ["numelixa.com", "www.numelixa.com"]
+    allowNavigation: ["numelixa.com", "www.numelixa.com", "pay.cryptomus.com"]
   },
   android: {
     allowMixedContent: false,
