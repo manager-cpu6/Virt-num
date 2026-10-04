@@ -2,8 +2,7 @@
 import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token_v2_4_1";
-const APP_VERSION="2.4.1";
+const TOKEN_KEY="numelixa_fcm_token_v2_4_2";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -31,17 +30,7 @@ export default function MobileAppBootstrap(){
    try{const token=localStorage.getItem(TOKEN_KEY);if(token)await syncToken(token)}catch{}
   };
 
-  const showPermissionGate=()=>{
-   if(document.getElementById("numelixa-notification-gate"))return;
-   const gate=document.createElement("div");
-   gate.id="numelixa-notification-gate";
-   gate.innerHTML=`<div class="numelixa-notification-gate-backdrop"></div><section class="numelixa-notification-gate-card" role="dialog" aria-modal="true"><div class="numelixa-notification-gate-logo">N</div><div class="numelixa-notification-gate-icon">🔔</div><span class="eyebrow">NUMELIXA ALERTS</span><h2>Notifications are required</h2><p>Turn on Android notifications to use Numelixa. You will receive real phone notifications for SMS codes, wallet payments, number status, admin updates and other important account events.</p><button id="numelixa-enable-notifications" type="button">Allow Notifications</button><small>Numelixa will not continue until notifications are enabled.</small></section>`;
-   document.body.appendChild(gate);
-   document.getElementById("numelixa-enable-notifications")?.addEventListener("click",async()=>{
-    if(!push||permissionInFlight)return;permissionInFlight=true;
-    try{const result=await push.requestPermissions();if(result.receive==="granted"){gate.remove();await push.register();await syncStoredToken()}}catch(error){console.error("[NUMELIXA PUSH PERMISSION]",error)}finally{permissionInFlight=false}
-   });
-  };
+  const showPermissionGate=()=>{};
 
   const removePermissionGate=()=>document.getElementById("numelixa-notification-gate")?.remove();
 
@@ -52,7 +41,7 @@ export default function MobileAppBootstrap(){
     if(current.receive==="granted"){removePermissionGate();await push.register();await syncStoredToken();return true}
     const result=await push.requestPermissions();
     if(result.receive==="granted"){removePermissionGate();await push.register();await syncStoredToken();return true}
-    showPermissionGate();return false;
+    console.warn("[NUMELIXA PUSH] Notification permission was not granted. App remains usable.");return false;
    }catch(error){console.error("[NUMELIXA PUSH PERMISSION]",error);showPermissionGate();return false}
    finally{permissionInFlight=false}
   };
