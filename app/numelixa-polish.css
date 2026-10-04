@@ -593,3 +593,35 @@ body.numelixa-native{
  .numelixa-native .hero-card{min-height:285px!important}
  .app-download-buttons{grid-template-columns:1fr}
 }
+
+.numelixa-notification-gate-backdrop{
+ position:fixed;inset:0;z-index:99998;
+ background:rgba(0,5,16,.78);backdrop-filter:blur(12px);
+}
+.numelixa-notification-gate-card{
+ position:fixed;z-index:99999;left:50%;top:50%;transform:translate(-50%,-50%);
+ width:min(calc(100% - 30px),390px);padding:30px 22px 24px;text-align:center;
+ border-radius:30px;border:1px solid rgba(73,153,255,.24);
+ background:linear-gradient(145deg,#071f49,#03142d);
+ box-shadow:0 30px 100px rgba(0,0,0,.65);color:#fff;
+}
+.numelixa-notification-gate-logo{
+ width:54px;height:54px;margin:0 auto 12px;border-radius:17px;
+ display:grid;place-items:center;font-size:31px;font-weight:950;
+ background:linear-gradient(145deg,#17d9ff,#1465ff,#172fff);
+ box-shadow:0 12px 30px rgba(14,100,255,.32);
+}
+.numelixa-notification-gate-icon{
+ width:62px;height:62px;margin:4px auto 15px;border-radius:50%;
+ display:grid;place-items:center;background:rgba(15,105,255,.14);
+ border:1px solid rgba(66,158,255,.20);font-size:28px;
+}
+.numelixa-notification-gate-card .eyebrow{color:#51c8ff;font-size:10px;letter-spacing:.15em}
+.numelixa-notification-gate-card h2{margin:7px 0 8px;font-size:23px;letter-spacing:-.04em}
+.numelixa-notification-gate-card p{margin:0 auto 18px;color:#8ca8cf;font-size:13px;line-height:1.6}
+.numelixa-notification-gate-card button{
+ width:100%;height:52px;border:0;border-radius:16px;color:#fff;font-weight:900;
+ background:linear-gradient(135deg,#0b96ff,#164cff);
+ box-shadow:0 14px 30px rgba(14,91,255,.28);font-size:14px;
+}
+.numelixa-notification-gate-card small{display:block;margin-top:12px;color:#5878a4;font-size:9px}
