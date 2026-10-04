@@ -1,6 +1,6 @@
 {
   "name": "numelixa",
-  "version": "2.4.0",
+  "version": "2.4.1",
   "private": true,
   "scripts": {"dev":"next dev","build":"next build","start":"next start","android:init":"cap add android","android:sync":"cap sync android"},
   "dependencies": {
