@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 
-const PUBLIC_HOSTS=new Set(["developers.numelixa.com"]);
+const PUBLIC_HOSTS=new Set(["developers.numelixa.com","docs.numelixa.com"]);
 const API_PREFIX="/api/v1";
 const corsHeaders={
   "Access-Control-Allow-Origin":"*",
@@ -18,6 +18,13 @@ export function middleware(req:NextRequest){
     const res=NextResponse.next();
     for(const [k,v] of Object.entries(corsHeaders))res.headers.set(k,v);
     return res;
+  }
+
+  if(host==="api.numelixa.com"){
+    const url=req.nextUrl.clone();
+    if(pathname==="/"||pathname==="") url.pathname="/api/v1";
+    else if(pathname==="/v1"||pathname.startsWith("/v1/")) url.pathname="/api"+pathname;
+    return NextResponse.rewrite(url);
   }
 
   if(PUBLIC_HOSTS.has(host)){
