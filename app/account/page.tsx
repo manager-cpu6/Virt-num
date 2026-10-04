@@ -1,9 +1,50 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import TopBar from "@/components/TopBar";
-import {getUser} from "@/lib/auth";
-export default async function AccountPage(){
- const user=await getUser();
+import { getUser } from "@/lib/auth";
+
+export default function AccountPage(){
+ const [user,setUser]=useState<any>(null);
+ const [loading,setLoading]=useState(true);
+ useEffect(()=>{ getUser().then((u:any)=>{setUser(u);setLoading(false)}); },[]);
+ if(loading) return <div className="account-premium-loading"><div className="account-skeleton-avatar"/><div className="account-skeleton-line"/><div className="account-skeleton-line short"/></div>;
  if(!user)return <div className="auth-page"><div className="brand-mark">N</div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
- const parts=(user.name||"User").trim().split(/\s+/).filter(Boolean);const initial=(parts.slice(0,2).map((x:string)=>x.charAt(0)).join("")||"U").toUpperCase();
- return <div><TopBar title="Account"/><div className="account-hero"><div className="profile-avatar profile-avatar-initial" aria-label={"Profile for "+user.name}>{initial.slice(0,1)}</div><div><h1>{user.name}</h1><p>{user.email}</p></div></div><div className="wallet-hero"><span>AVAILABLE COINS</span><strong>{Number(user.coins||0).toLocaleString()}</strong><small>Use your balance to get numbers.</small></div>{!user.verified_at?<div className="form-card"><span className="eyebrow">ACCOUNT SECURITY</span><h2>Email not verified</h2><p>Verify your email before purchasing a number.</p><Link href="/verify-email" className="primary-btn full">Verify email</Link></div>:<div className="form-card"><div className="success-box">✓ Email verified</div></div>}<div className="quick-grid"><Link href="/services" className="quick-card"><span>＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>→</i></Link><Link href="/wallet" className="quick-card"><span>◈</span><div><b>Add coins</b><small>Top up securely</small></div><i>→</i></Link></div><div className="form-card"><Link href="/numbers" className="secondary-btn full">View my orders</Link><Link href="/developers" className="secondary-btn full developer-api-link">Developer API</Link>{user.role==="admin"&&<Link href="/admin" className="secondary-btn full">Admin control center</Link>}<form action="/api/auth/logout" method="post"><button className="secondary-btn full" type="submit">Sign out</button></form></div></div>;
+ const name=(user.name||"User").trim();
+ const initial=name.charAt(0).toUpperCase()||"U";
+ const coins=Number(user.coins||0).toLocaleString();
+ return <div className="account-premium-page"><TopBar title="Account"/>
+  <main className="account-premium-shell">
+   <section className="account-profile-card">
+    <div className="account-profile-glow"/>
+    <div className="account-profile-top">
+      <div className="account-avatar-premium">{initial}</div>
+      <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">NUMELIXA MEMBER</span></div>
+      <Link href="/account" className="account-edit-btn" aria-label="Account settings">•••</Link>
+    </div>
+    <div className="account-profile-footer"><span>Personal account</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
+   </section>
+
+   <section className="account-wallet-card">
+    <div className="account-wallet-orb">◈</div>
+    <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>{coins}</strong><small>Coins ready to use</small></div>
+    <Link href="/wallet" className="account-wallet-action">Add coins <b>↗</b></Link>
+   </section>
+
+   {!user.verified_at&&<section className="account-security-card"><div className="security-icon">!</div><div><b>Verify your email</b><small>Verification is required before purchasing a number.</small></div><Link href="/verify-email">Verify</Link></section>}
+   {user.verified_at&&<section className="account-security-card verified"><div className="security-icon">✓</div><div><b>Account verified</b><small>Your email is verified and your account is ready.</small></div><span>Secure</span></section>}
+
+   <div className="account-section-title"><div><span>QUICK ACCESS</span><h2>Everything you need</h2></div></div>
+   <section className="account-action-grid">
+    <Link href="/services" className="account-action-card primary"><span className="account-action-icon">＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>↗</i></Link>
+    <Link href="/numbers" className="account-action-card"><span className="account-action-icon">▣</span><div><b>My orders</b><small>View your numbers</small></div><i>↗</i></Link>
+    <Link href="/wallet" className="account-action-card"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
+    <Link href="/developers" className="account-action-card"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
+   </section>
+
+   {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
+   <form action="/api/auth/logout" method="post" className="account-logout-form"><button type="submit">Sign out <span>↗</span></button></form>
+  </main>
+ </div>;
 }
