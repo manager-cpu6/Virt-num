@@ -667,3 +667,19 @@ html.numelixa-native,body.numelixa-native{
 .public-doc-section p{margin:0;color:#8da8cf;font-size:13px;line-height:1.7}
 .public-doc-page footer{margin-top:28px;color:#6d89b1;font-size:12px}
 @media(max-width:560px){.public-doc-grid{grid-template-columns:1fr}.public-doc-page{padding-top:30px}}
+
+/* Native Android: lightweight app surface and hide website-only API. */
+.numelixa-native .developer-api-link,.numelixa-native .app-download-cta{display:none!important}
+.numelixa-native .page-shell{width:100%;max-width:760px;padding:8px 12px 118px}
+.numelixa-native .bottom-nav{bottom:8px;width:calc(100% - 16px);background:rgba(4,31,38,.96);border-color:rgba(121,246,229,.14);box-shadow:0 12px 34px rgba(0,0,0,.28);backdrop-filter:none;-webkit-backdrop-filter:none}
+.numelixa-native .nav-item{color:#62878a}.numelixa-native .nav-item.selected{background:rgba(114,223,206,.10);color:#79e7d3;box-shadow:none}
+.numelixa-native .hero-card{min-height:260px;border-radius:27px;padding:25px;background:linear-gradient(145deg,#073e47,#062830);box-shadow:0 16px 36px rgba(0,0,0,.20)}
+.numelixa-native .hero-card h1{font-size:36px}.numelixa-native .hero-card p{color:#8fb1b2}
+.numelixa-native .hero-orb{width:86px;height:86px;border-radius:27px}
+.numelixa-native .quick-card,.numelixa-native .service-card,.numelixa-native .list-card,.numelixa-native .purchase-card,.numelixa-native .code-card,.numelixa-native .form-card,.numelixa-native .admin-card,.numelixa-native .transaction-list{backdrop-filter:none;-webkit-backdrop-filter:none}
+.numelixa-native .quick-card{background:rgba(7,43,51,.94);border-color:rgba(121,246,229,.10);box-shadow:none}
+.numelixa-native .quick-card>span,.numelixa-native .service-icon,.numelixa-native .flag,.numelixa-native .number-icon{background:rgba(114,223,206,.08);border-color:rgba(121,246,229,.10);color:#79e7d3}
+.numelixa-native .section-head h2,.numelixa-native .page-intro h1,.numelixa-native .account-hero h1{color:#effffc}
+.numelixa-native .topbar{padding:8px 4px 8px!important}
+.numelixa-native .home-live-board,.numelixa-native .home-live-card,.numelixa-native .market-hero{box-shadow:none}
+.numelixa-native .home-live-video{opacity:.42}
