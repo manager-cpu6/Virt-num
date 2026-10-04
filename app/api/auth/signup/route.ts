@@ -18,7 +18,7 @@ export async function POST(req:Request){
   const code=String(Math.floor(100000+Math.random()*900000));
   await (await collection("emailTokens")).insertOne({_id:mongoId(),tokenHash:tokenHash(code),userId:id,type:"email_verify_code",expiresAt:new Date(Date.now()+10*60*1000),createdAt:new Date()});
   await createSession(id);
-  try{await sendEmail(email,"Verify your Numelixa email",verificationEmail(code));}catch(e){console.error("[SIGNUP EMAIL]",e)}
+  try{await sendEmail(email,"Verify your Numelixa email",verificationEmail(code))}catch(e){console.error("[SIGNUP EMAIL]",e)}
   return NextResponse.json({ok:true,verificationRequired:true});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Signup failed"},{status:500})}
 }
