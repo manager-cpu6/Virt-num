@@ -63,7 +63,7 @@ export async function POST(req:Request){
       );
     }
 
-    if(target!=="all" && target!=="non_gmail" && !target.startsWith("user:")){
+    if(target!=="all" && target!=="gmail" && target!=="non_gmail" && !target.startsWith("user:")){
       return NextResponse.json(
         {ok:false,error:"Invalid notification audience."},
         {status:400}
@@ -73,6 +73,8 @@ export async function POST(req:Request){
     const users = await collection<any>("users");
     const userIds = target==="all"
       ? await users.find({}, {projection:{_id:1}}).toArray()
+      : target==="gmail"
+        ? await users.find({email:/@gmail\.com$/i}, {projection:{_id:1}}).toArray()
       : target==="non_gmail"
         ? await users.find({
             $or:[
