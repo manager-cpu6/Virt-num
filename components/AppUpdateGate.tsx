@@ -54,7 +54,7 @@ export default function AppUpdateGate(){
 
     let native={version:"0.0.0",versionCode:0};
     try{native=await NumelixaUpdater.getAppVersion()}catch{}
-    const firstInstallTime=Number(native.firstInstallTime||0);
+    const firstInstallTime=Number((native as {firstInstallTime?:number}).firstInstallTime||0);
     const publishedAtMs=u.publishedAt?new Date(String(u.publishedAt)).getTime():0;
     if(firstInstallTime>0&&publishedAtMs>0&&firstInstallTime>publishedAtMs)return;
 
