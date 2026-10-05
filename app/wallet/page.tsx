@@ -10,11 +10,11 @@ type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPacka
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
-  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false);
+  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|null>(null);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
-      setU(d.user||null);setPricing(d.pricing||null);
+      setU(d.user||null);setPricing(d.pricing||null);setProvider(d.paymentProvider==="paypal"?"paypal":"nowpayments");
       const packs:Array<Pack>=d.pricing?.coinPackages||[];
       if(fixedPacks.length)setSelected(fixedPacks[0].coins);
     }).catch(()=>setError("Unable to load wallet right now.")).finally(()=>setLoaded(true));
@@ -29,7 +29,7 @@ export default function Wallet(){
     if(!selectedPack)return;
     setLoading(true);setError("");
     try{
-      const d=await fetch("/api/payments/nowpayments/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
+      const d=await fetch("/api/payments/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
       if(!d.ok){setError(d.error||"Unable to create payment");return}
       location.href=d.url;
     }catch(err){setError(err instanceof Error?err.message:"Unable to create payment")}
@@ -50,8 +50,8 @@ export default function Wallet(){
         {p.popular&&<span className="popular-badge">POPULAR</span>}<span className="coin-glyph">◈</span><strong>{p.coins.toLocaleString()}</strong><small>coins</small><b className="coin-price">{"$"+p.priceUsd.toFixed(2)}</b>
       </button>)}</div>}
     {selectedPack&&<section className="wallet-checkout"><div><span className="eyebrow">SELECTED PACKAGE</span><strong>{selectedPack.coins.toLocaleString()} coins</strong><small>{"Payment required: $"+selectedPack.priceUsd.toFixed(2)}</small></div>
-      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":u?"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
+      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":u?provider==="paypal"?"Continue with PayPal":"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
     </section>}
-    <p className="wallet-footnote">Coins are added only after the payment is confirmed.</p>
+    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":"Coins are added only after the payment is confirmed."}</p>
   </div>
 }
