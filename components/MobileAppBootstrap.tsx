@@ -15,15 +15,15 @@ export default function MobileAppBootstrap(){
   let push:any=null;
   let syncInFlight=false;
   let permissionInFlight=false;
-  let retryTimer:ReturnType<typeof setTimeout>|null=null;
-  let retryInterval:ReturnType<typeof setInterval>|null=null;
+  let retryTimer:number|null=null;
+  let retryInterval:number|null=null;
   let lastToken="";
 
   const cleanups:Array<()=>void>=[];
 
   const scheduleRetry=()=>{
    if(stopped||retryTimer)return;
-   retryTimer=setTimeout(()=>{
+   retryTimer=window.setTimeout(()=>{
     retryTimer=null;
     void ensurePushPermission();
     void syncStoredToken();
@@ -35,6 +35,7 @@ export default function MobileAppBootstrap(){
    if(!clean||clean.length<20||stopped)return false;
 
    localStorage.setItem(TOKEN_KEY,clean);
+   lastToken=clean;
    if(syncInFlight)return false;
 
    syncInFlight=true;
@@ -195,7 +196,7 @@ export default function MobileAppBootstrap(){
 
   return()=>{
    stopped=true;
-   if(retryTimer)clearTimeout(retryTimer);
+   if(retryTimer)window.clearTimeout(retryTimer);
    cleanups.forEach(fn=>{try{fn()}catch{}});
    document.documentElement.classList.remove("numelixa-native");
    document.body.classList.remove("numelixa-native");
