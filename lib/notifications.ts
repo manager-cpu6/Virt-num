@@ -1,5 +1,22 @@
+import {cookies} from "next/headers";
 import {collection, mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
+
+const DEVICE_COOKIE="numelixa_device_token";
+
+export async function claimDeviceTokenForUser(userId:string){
+  const token=String((await cookies()).get(DEVICE_COOKIE)?.value||"").trim();
+  if(!token||token.length<20)return false;
+
+  const now=new Date();
+  const devices=await collection<any>("deviceTokens");
+  await devices.updateOne(
+    {token},
+    {$set:{userId:String(userId),updatedAt:now},$setOnInsert:{token,platform:"android",createdAt:now}},
+    {upsert:true}
+  );
+  return true;
+}
 
 export async function notifyUser(
   userId: string,
