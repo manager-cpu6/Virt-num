@@ -389,3 +389,5 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
  .docs-back-home{top:12px;left:12px;width:42px;height:42px;border-radius:13px;font-size:25px}
  .numelixa-docs-page{padding-top:68px!important}
 }
+
+.payment-provider-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid rgba(91,151,224,.12);border-radius:17px;background:rgba(4,25,50,.45);margin-bottom:9px}.payment-provider-card>b,.payment-provider-card>div>b{display:block;color:#eaf7ff;font-size:12px}.payment-provider-card small,.payment-provider-card>div>small{display:block;margin-top:4px;color:#688bb3;font-size:9px}.admin-help{color:#6c8eaf;font-size:9px;line-height:1.55;margin:12px 0 0}.payment-provider-card button{white-space:nowrap}
