@@ -359,3 +359,33 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
 .admin-update-mode>b{font-size:11px;color:#dff3ff;letter-spacing:.02em}
 .admin-update-mode .admin-check{margin:0;line-height:1.45}
 .admin-update-mode small{color:#668bb3;font-size:9px;line-height:1.45}
+
+
+/* Docs host: no Numelixa app navigation; docs has its own return control. */
+.docs-host-shell{min-height:100vh!important}
+.docs-host-page{padding-bottom:0!important}
+.docs-back-home{
+  position:fixed;
+  top:16px;
+  left:16px;
+  z-index:100;
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  color:#eafff9;
+  background:rgba(5,30,38,.88);
+  border:1px solid rgba(121,246,229,.18);
+  box-shadow:0 10px 30px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);
+  text-decoration:none;
+  font-size:27px;
+  line-height:1;
+  transition:transform .18s ease,background .18s ease,border-color .18s ease;
+}
+.docs-back-home:hover{transform:translateY(-1px);background:rgba(8,55,64,.96);border-color:rgba(121,246,229,.30)}
+.numelixa-docs-page{padding-top:76px!important}
+@media(max-width:520px){
+ .docs-back-home{top:12px;left:12px;width:42px;height:42px;border-radius:13px;font-size:25px}
+ .numelixa-docs-page{padding-top:68px!important}
+}
