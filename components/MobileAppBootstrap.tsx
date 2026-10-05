@@ -13,6 +13,7 @@ export default function MobileAppBootstrap(){
 
   let stopped=false;
   let push:any=null;
+  let localNotifications:any=null;
   let syncInFlight=false;
   let permissionInFlight=false;
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
@@ -100,6 +101,11 @@ export default function MobileAppBootstrap(){
    try{
     const {PushNotifications}=await import("@capacitor/push-notifications");
     push=PushNotifications;
+    try{
+      const module=await import("@capacitor/local-notifications");
+      localNotifications=module.LocalNotifications;
+      await localNotifications.createChannel({id:"numelixa",name:"Numelixa",description:"Important Numelixa alerts",importance:5,sound:"default",vibration:true});
+    }catch(error){console.warn("[NUMELIXA LOCAL NOTIFICATIONS]",error);}
 
     // Native fallback: obtain the Firebase token directly from Android.
     // This bypasses timing issues where Capacitor's registration event can
@@ -143,11 +149,20 @@ export default function MobileAppBootstrap(){
     });
     cleanups.push(()=>registrationError.remove());
 
-    const received=await PushNotifications.addListener("pushNotificationReceived",()=>{
+    const received=await PushNotifications.addListener("pushNotificationReceived",async(notification:any)=>{
      window.dispatchEvent(new Event("numelixa-notification"));
+     try{
+      if(localNotifications)await localNotifications.schedule({notifications:[{id:Math.floor(Date.now()%2147483000),title:String(notification?.title||"Numelixa"),body:String(notification?.body||""),channelId:"numelixa",sound:"default",extra:notification?.data||{}}]});
+     }catch(error){console.warn("[NUMELIXA FOREGROUND NOTIFICATION]",error);}
     });
     cleanups.push(()=>received.remove());
 
+    try{
+      if(localNotifications){
+        const localAction=await localNotifications.addListener("localNotificationActionPerformed",(event:any)=>{const raw=String(event.notification?.extra?.url||"/");window.location.href=raw.startsWith("/")?raw:"/";});
+        cleanups.push(()=>localAction.remove());
+      }
+    }catch(error){console.warn("[NUMELIXA LOCAL ACTION]",error);}
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{
      const raw=String(event.notification?.data?.url||"/");
      window.location.href=raw.startsWith("/")?raw:"/";
