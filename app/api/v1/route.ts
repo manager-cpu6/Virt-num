@@ -27,7 +27,7 @@ export async function GET(){
     status:"operational",
     authenticated:Boolean(u),
     authentication:"Bearer nx_live_* or x-api-key",
-    provider:providerConfigured()?"5sim":"not_configured",
+    provider:providerConfigured()?"available":"temporarily_unavailable",
     currency:"coins",
     coinsPerUsd:Number(settings?.coinsPerUsd||100),
     endpoints:{
