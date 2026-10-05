@@ -185,6 +185,10 @@ export default function MobileAppBootstrap(){
     // are separate steps. If login finishes after the FCM token is created,
     // the same token is uploaded again and attached to the current user.
     retryInterval=window.setInterval(()=>{
+     // Permission may be granted by the native Android dialog after the
+     // first ensurePushPermission() call. Re-check here so FCM registration
+     // starts immediately after the user taps Allow.
+     void ensurePushPermission();
      if(lastToken) void syncToken(lastToken);
      else void syncStoredToken();
     },2000);
