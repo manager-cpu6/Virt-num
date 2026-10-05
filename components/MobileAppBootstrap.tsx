@@ -96,6 +96,18 @@ export default function MobileAppBootstrap(){
     const {PushNotifications}=await import("@capacitor/push-notifications");
     push=PushNotifications;
 
+    // Native fallback: obtain the Firebase token directly from Android.
+    // This bypasses timing issues where Capacitor's registration event can
+    // fire before the WebView/auth lifecycle is ready.
+    try{
+      const {registerPlugin}=await import("@capacitor/core");
+      const NativePushToken:any=registerPlugin("NumelixaPushToken");
+      const nativeToken=await NativePushToken.getToken();
+      if(nativeToken?.token) await syncToken(String(nativeToken.token));
+    }catch(error){
+      console.warn("[NUMELIXA NATIVE FCM TOKEN]",error);
+    }
+
     if(Capacitor.getPlatform()==="android"){
      try{
       await PushNotifications.createChannel({
