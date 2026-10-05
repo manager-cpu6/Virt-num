@@ -2,9 +2,11 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush, type PushSendResult} from "@/lib/push";
+import {put} from "@vercel/blob";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
+export const maxDuration=300;
 
 export async function GET(){
   try{
@@ -26,7 +28,7 @@ export async function POST(req:Request){
     await requireAdmin();
     const body=await req.json();
     const version=String(body.version||"").trim().slice(0,30);
-    const apkUrl=String(body.apkUrl||"").trim();
+    const sourceApkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
     const manualSizeMb=Number(body.sizeMb||0);
     const versionCode=Number(body.versionCode||0);
@@ -37,16 +39,26 @@ export async function POST(req:Request){
     const force=installRequired || Boolean(body.force);
     const sendAll=body.sendAll!==false;
 
-    if(!version||!apkUrl)
-      return NextResponse.json({ok:false,error:"Version and APK URL are required."},{status:400});
+    if(!version||!sourceApkUrl)
+      return NextResponse.json({ok:false,error:"Version and APK source URL are required."},{status:400});
 
-    if(!/^https:\/\//i.test(apkUrl))
-      return NextResponse.json({ok:false,error:"APK URL must use HTTPS."},{status:400});
+    let sourceUrl:URL;
+    try{sourceUrl=new URL(sourceApkUrl)}catch{
+      return NextResponse.json({ok:false,error:"Invalid APK source URL."},{status:400});
+    }
+    const allowedHosts=new Set([
+      "github.com","www.github.com",
+      "objects.githubusercontent.com","release-assets.githubusercontent.com",
+      "raw.githubusercontent.com","githubusercontent.com"
+    ]);
+    if(sourceUrl.protocol!=="https:"||!allowedHosts.has(sourceUrl.hostname.toLowerCase())){
+      return NextResponse.json({ok:false,error:"APK source must be a GitHub HTTPS release/file URL."},{status:400});
+    }
 
-    const sizeResponse=await fetch(apkUrl,{method:"HEAD",redirect:"follow",cache:"no-store"});
+    const sizeResponse=await fetch(sourceUrl,{method:"HEAD",redirect:"follow",cache:"no-store"});
     let sizeBytes=Number(sizeResponse.headers.get("content-length")||0);
     if(!Number.isFinite(sizeBytes)||sizeBytes<=0){
-      const rangeResponse=await fetch(apkUrl,{method:"GET",headers:{Range:"bytes=0-0"},redirect:"follow",cache:"no-store"});
+      const rangeResponse=await fetch(sourceUrl,{method:"GET",headers:{Range:"bytes=0-0"},redirect:"follow",cache:"no-store"});
       const contentRange=rangeResponse.headers.get("content-range")||"";
       const match=contentRange.match(/\/([0-9]+)$/);
       sizeBytes=match?Number(match[1]):Number(rangeResponse.headers.get("content-length")||0);
@@ -58,10 +70,35 @@ export async function POST(req:Request){
       ?Number(manualSizeMb.toFixed(2))
       :Number((sizeBytes/(1024*1024)).toFixed(2));
     if(manualSizeMb>0) sizeBytes=Math.round(manualSizeMb*1024*1024);
+    const releaseId=mongoId();
+    const safeVersion=version.replace(/[^a-zA-Z0-9._-]+/g,"-");
+    let sourceResponse:Response;
+    try{
+      sourceResponse=await fetch(sourceUrl,{redirect:"follow",cache:"no-store"});
+    }catch(error){
+      throw new Error("Unable to download the APK from the GitHub source.");
+    }
+    if(!sourceResponse.ok||!sourceResponse.body)
+      throw new Error("Unable to download the APK from the GitHub source. HTTP "+sourceResponse.status);
+
+    const blob=await put(
+      "android/Numelixa-"+safeVersion+"-"+releaseId+".apk",
+      sourceResponse.body,
+      {
+        access:"public",
+        contentType:"application/vnd.android.package-archive",
+        multipart:true,
+        cacheControlMaxAge:300
+      }
+    );
+    const blobUrl=String(blob.downloadUrl||blob.url||"").trim();
+    if(!blobUrl) throw new Error("APK storage upload did not return a download URL.");
+
+    const apkUrl="https://apk.numelixa.com/android";
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
-      _id:mongoId(),releaseId:mongoId(),version,versionCode,sizeMb,sizeBytes,apkUrl,releaseNotes,installRequired,force,published:true,
+      _id:releaseId,releaseId,version,versionCode,sizeMb,sizeBytes,apkUrl,sourceApkUrl,blobUrl,releaseNotes,installRequired,force,published:true,
       publishedAt:now,createdAt:now,targetCreatedBefore,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
@@ -91,6 +128,6 @@ export async function POST(req:Request){
     console.error("[ADMIN APP UPDATE]",error);
     const message=error instanceof Error?error.message:String(error);
     const status=message==="AUTH_REQUIRED"||message==="ADMIN_REQUIRED"?401:500;
-    return NextResponse.json({ok:false,error:status===401?"Unauthorized":"Unable to publish update."},{status});
+    return NextResponse.json({ok:false,error:status===401?"Unauthorized":message||"Unable to publish update."},{status});
   }
 }
