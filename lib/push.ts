@@ -30,7 +30,7 @@ function firebaseApp():App|null{
     service?.private_key||
     process.env.FIREBASE_PRIVATE_KEY||
     ""
-  ).replace(/\\n/g,"\n").trim();
+  ).replace(/\\n/g,"\n").trim().replace(/^["']|["']$/g,"");
 
   if(!projectId||!clientEmail||!privateKey){
     console.error("[FIREBASE CONFIG] Missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY/service-account JSON.");
@@ -62,6 +62,11 @@ export async function sendPush(
   data:Record<string,string>={}
 ):Promise<PushSendResult>{
   const unique=[...new Set(tokens.map(x=>String(x||"").trim()).filter(Boolean))];
+
+  console.info("[FCM PUSH] send requested", {
+    tokenCount:unique.length,
+    title:String(title||"").slice(0,80)
+  });
 
   if(!unique.length){
     return {
@@ -142,11 +147,20 @@ export async function sendPush(
     }
   }
 
-  return {
+  const result={
     configured:true,
     successCount,
     failureCount,
     invalidTokens:[...new Set(invalidTokens)],
     errors
   };
+
+  console.info("[FCM PUSH] send completed", {
+    tokenCount:unique.length,
+    successCount,
+    failureCount,
+    errorCount:errors.length
+  });
+
+  return result;
 }
