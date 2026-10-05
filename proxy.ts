@@ -30,11 +30,11 @@ export function proxy(req:NextRequest){
   if(host==="docs.numelixa.com"){
     const url=req.nextUrl.clone();
     if(pathname==="/"||pathname===""){
-      url.pathname="/developers/docs";
+      url.pathname="/docs";
     }else if(pathname==="/api"||pathname.startsWith("/api/")){
-      url.pathname="/developers/docs";
+      url.pathname="/docs";
     }else if(pathname==="/docs"||pathname.startsWith("/docs/")){
-      url.pathname="/developers/docs"+pathname.slice(5);
+      url.pathname="/docs"+pathname.slice(5);
     }else{
       url.pathname="/docs"+pathname;
     }
