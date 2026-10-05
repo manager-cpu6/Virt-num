@@ -7,13 +7,12 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 
 async function ensurePaypalWebhook(clientId:string,secretKey:string,currentId:string){
   const base=String(process.env.NEXT_PUBLIC_APP_URL||"https://numelixa.com").replace(/\/$/,"");
-  if(currentId)return currentId;
-  // Authenticate explicitly with supplied credentials, then create a webhook for the production callback.
+  // Authenticate explicitly with supplied credentials, then reuse a webhook already registered for this callback URL.
   const basic=Buffer.from(clientId.trim()+":"+secretKey.trim()).toString("base64");
   const tokenRes=await fetch(paypalBaseUrl()+"/v1/oauth2/token",{method:"POST",headers:{Authorization:"Basic "+basic,"Content-Type":"application/x-www-form-urlencoded"},body:"grant_type=client_credentials",cache:"no-store"});
   const tokenData:any=await tokenRes.json().catch(()=>null);
   if(!tokenRes.ok||!tokenData?.access_token)throw new Error("PAYPAL_CREDENTIALS_INVALID");
-  const events=["CHECKOUT.ORDER.APPROVED","PAYMENT.CAPTURE.COMPLETED","PAYMENT.CAPTURE.DENIED","PAYMENT.CAPTURE.REFUNDED"];
+  const existingRes=await fetch(paypalBaseUrl()+"/v1/notifications/webhooks?page_size=100",{headers:{Authorization:"Bearer "+tokenData.access_token,Accept:"application/json"},cache:"no-store"});\n  const existing:any=await existingRes.json().catch(()=>null);\n  const existingHook=Array.isArray(existing?.webhooks)?existing.webhooks.find((x:any)=>String(x.url||"")===base+"/api/payments/paypal/webhook"):null;\n  if(existingHook?.id)return String(existingHook.id);\n  const events=["PAYMENT.CAPTURE.COMPLETED","PAYMENT.CAPTURE.DENIED","PAYMENT.CAPTURE.REFUNDED"];
   const r=await fetch(paypalBaseUrl()+"/v1/notifications/webhooks",{method:"POST",headers:{Authorization:"Bearer "+tokenData.access_token,"Content-Type":"application/json","Accept":"application/json"},body:JSON.stringify({url:base+"/api/payments/paypal/webhook",event_types:events.map(name=>({name}))}),cache:"no-store"});
   const d:any=await r.json().catch(()=>null);
   if(!r.ok||!d?.id){console.error("[PAYPAL WEBHOOK CREATE]",r.status,d);throw new Error("PAYPAL_WEBHOOK_CREATE_FAILED");}
