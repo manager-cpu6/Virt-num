@@ -37,7 +37,9 @@ export async function GET(){
         target:x.target,
         createdAt:x.createdAt,
         sentCount:Number(x.sentCount||0),
-        pushConfigured:Boolean(x.pushConfigured)
+        pushConfigured:Boolean(x.pushConfigured),
+        pushDelivered:Boolean(x.pushDelivered),
+        pushRetryCount:Number(x.pushRetryCount||0)
       })),
       deviceCount,
       claimedDeviceCount,
@@ -124,7 +126,9 @@ export async function POST(req:Request){
       createdAt:new Date(),
       readAt:null,
       sentCount:0,
-      pushConfigured:false
+      pushConfigured:false,
+      pushDelivered:false,
+      pushRetryCount:0
     }));
 
     await notificationsCollection.insertMany(notifications);
@@ -164,6 +168,8 @@ export async function POST(req:Request){
         failureCount:pushResult.failureCount,
         pushErrors:pushResult.errors||[],
         pushConfigured:pushResult.configured,
+        pushDelivered:pushResult.successCount>0,
+        pushRetryCount:1,
         pushError,
         updatedAt:new Date()
       }}
