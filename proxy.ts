@@ -20,6 +20,12 @@ export function proxy(req:NextRequest){
     return res;
   }
 
+  if(host==="apk.numelixa.com"){
+    const url=req.nextUrl.clone();
+    if(pathname==="/"||pathname==="") url.pathname="/android";
+    return NextResponse.rewrite(url);
+  }
+
   if(host==="api.numelixa.com"){
     const url=req.nextUrl.clone();
     if(pathname==="/"||pathname==="") url.pathname="/api/v1";
