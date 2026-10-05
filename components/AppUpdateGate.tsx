@@ -26,7 +26,7 @@ type Progress={
 type UpdaterPlugin={
  installApk(options:{url:string;fileName:string;totalBytes?:number;installRequired?:boolean;releaseId?:string}):Promise<{started:boolean}>;
  getDownloadProgress():Promise<Progress>;
- getAppVersion():Promise<{version:string;versionCode:number}>;
+ getAppVersion():Promise<{version:string;versionCode:number;firstInstallTime?:number}>;
  openDownloadedApk():Promise<{opened:boolean}>;
 };
 const NumelixaUpdater=registerPlugin<UpdaterPlugin>("NumelixaUpdater");
@@ -54,6 +54,10 @@ export default function AppUpdateGate(){
 
     let native={version:"0.0.0",versionCode:0};
     try{native=await NumelixaUpdater.getAppVersion()}catch{}
+    const firstInstallTime=Number(native.firstInstallTime||0);
+    const publishedAtMs=u.publishedAt?new Date(String(u.publishedAt)).getTime():0;
+    if(firstInstallTime>0&&publishedAtMs>0&&firstInstallTime>publishedAtMs)return;
+
     const serverCode=Number(u.versionCode||0);
     const installedCode=Number(native.versionCode||0);
     const newerByCode=serverCode>0&&installedCode>0&&serverCode>installedCode;
