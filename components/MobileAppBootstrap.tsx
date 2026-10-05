@@ -16,6 +16,9 @@ export default function MobileAppBootstrap(){
   let syncInFlight=false;
   let permissionInFlight=false;
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
+  let retryInterval:ReturnType<typeof setInterval>|null=null;
+  let lastToken="";
+
   const cleanups:Array<()=>void>=[];
 
   const scheduleRetry=()=>{
@@ -173,10 +176,15 @@ export default function MobileAppBootstrap(){
     await ensurePushPermission();
     await syncStoredToken();
 
-    const heartbeat=window.setInterval(()=>{
-     void syncStoredToken();
-    },10000);
-    cleanups.push(()=>window.clearInterval(heartbeat));
+    // Keep registration alive. This is intentionally independent of the
+    // notification permission dialog: permission and FCM device registration
+    // are separate steps. If login finishes after the FCM token is created,
+    // the same token is uploaded again and attached to the current user.
+    retryInterval=window.setInterval(()=>{
+     if(lastToken) void syncToken(lastToken);
+     else void syncStoredToken();
+    },2000);
+    cleanups.push(()=>window.clearInterval(retryInterval));
    }catch(error){
     console.error("[NUMELIXA PUSH]",error);
    }
