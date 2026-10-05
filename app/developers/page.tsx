@@ -144,7 +144,7 @@ export default function Developers(){
     <h2 style={{margin:"7px 0"}}>Ready to integrate</h2>
     <p style={{color:"#7e9e9f",fontSize:13}}>Base URL</p>
     <code style={{display:"block",padding:11,borderRadius:10,background:"#021b21",fontSize:11,wordBreak:"break-all"}}>{base}</code>
-    <a href="/developers/docs" style={{display:"inline-block",marginTop:15,padding:"11px 14px",borderRadius:11,background:"#72dfce",color:"#03242b",fontWeight:900,textDecoration:"none"}}>Open complete API Docs →</a>
+    <a href="https://docs.numelixa.com/" style={{display:"inline-block",marginTop:15,padding:"11px 14px",borderRadius:11,background:"#72dfce",color:"#03242b",fontWeight:900,textDecoration:"none"}}>Open complete API Docs →</a>
     <p style={{color:"#6f9192",fontSize:11,lineHeight:1.6}}>Revoke & Replace invalidates the old secret immediately and creates a new production key.</p>
    </div>
   </section>
@@ -162,7 +162,7 @@ export default function Developers(){
   <section style={{padding:22,borderRadius:24,border:"1px solid rgba(121,246,229,.14)",background:"rgba(5,39,47,.78)"}}>
    <h2 style={{marginTop:0}}>Build with Numelixa</h2>
    <p style={{color:"#7e9e9f"}}>The complete documentation includes copy-ready cURL, JavaScript, Python and PHP examples for balance, services, countries, live stock, purchasing, SMS polling, cancellation, refunds, transactions and errors.</p>
-   <a href="/developers/docs" style={{color:"#72dfce",fontWeight:900}}>View complete reference →</a>
+   <a href="https://docs.numelixa.com/" style={{color:"#72dfce",fontWeight:900}}>View complete reference →</a>
   </section>
  </main>
 }
