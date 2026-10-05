@@ -259,7 +259,8 @@ public class NumelixaUpdaterPlugin extends Plugin {
         String name = call.getString("fileName", "Numelixa-update.apk");
         Long expectedValue = call.getLong("totalBytes");
         long expected = expectedValue == null ? 0 : expectedValue;
-        boolean installRequired = Boolean.TRUE.equals(call.getBoolean("installRequired", true));
+        Boolean installRequiredValue = call.getBoolean("installRequired", true);
+        boolean installRequired = installRequiredValue == null ? true : installRequiredValue;
         if (url == null || !url.startsWith("https://")) {
             call.reject("Invalid update URL");
             return;
