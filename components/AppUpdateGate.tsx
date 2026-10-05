@@ -24,7 +24,7 @@ type Progress={
  notification?:string
 };
 type UpdaterPlugin={
- installApk(options:{url:string;fileName:string;totalBytes?:number;installRequired?:boolean}):Promise<{started:boolean}>;
+ installApk(options:{url:string;fileName:string;totalBytes?:number;installRequired?:boolean;releaseId?:string}):Promise<{started:boolean}>;
  getDownloadProgress():Promise<Progress>;
  getAppVersion():Promise<{version:string;versionCode:number}>;
  openDownloadedApk():Promise<{opened:boolean}>;
@@ -135,7 +135,8 @@ export default function AppUpdateGate(){
     url:update.apkUrl,
     fileName:"Numelixa-"+update.version+".apk",
     totalBytes:Number(update.sizeBytes||0),
-    installRequired:Boolean(update.installRequired)
+    installRequired:Boolean(update.installRequired),
+    releaseId:String(update.id||"")
    });
    setProgress({
     status:"downloading",
