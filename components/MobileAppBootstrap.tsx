@@ -54,11 +54,15 @@ export default function MobileAppBootstrap(){
      })
     });
 
+    const responseText=await response.text().catch(()=>"");
     if(response.ok){
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
-
+    console.warn("[NUMELIXA PUSH REGISTER] Server rejected token",{
+     status:response.status,
+     body:responseText.slice(0,500)
+    });
     scheduleRetry();
     return false;
    }catch(error){
@@ -84,21 +88,22 @@ export default function MobileAppBootstrap(){
 
    permissionInFlight=true;
    try{
-    const current=await push.checkPermissions();
-
-    // MainActivity owns the first-install Android POST_NOTIFICATIONS prompt.
-    // This bootstrap never creates a custom permission screen and never
-    // repeatedly prompts users. It only registers FCM when permission exists.
+    await new Promise<void>(resolve=>window.setTimeout(resolve,800));
+    let current=await push.checkPermissions();
     if(current.receive!=="granted"){
-     // Capacitor's requestPermissions() opens Android's native
-     // POST_NOTIFICATIONS dialog. It is not a custom Numelixa screen.
      const requested=await push.requestPermissions();
      if(requested.receive!=="granted"){
       console.warn("[NUMELIXA PUSH] Notification permission was not granted.");
+      scheduleRetry();
       return false;
      }
+     current=await push.checkPermissions();
     }
-
+    if(current.receive!=="granted"){
+     console.warn("[NUMELIXA PUSH] Permission still not granted after request.");
+     scheduleRetry();
+     return false;
+    }
     try{
      await push.register();
     }catch(error){
