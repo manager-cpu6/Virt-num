@@ -366,15 +366,17 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final int NOTIFICATION_PERMISSION_REQUEST = 7001;
+    private boolean notificationPermissionRequestPending = false;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
         super.onCreate(savedInstanceState);
 
-        // Numelixa requires notification permission. Android itself owns
-        // the permission dialog; Numelixa never renders a custom gate.
+        // Android owns the real system notification permission dialog.
+        // Numelixa never renders a custom notification permission screen.
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notificationPermissionRequestPending = true;
             requestPermissions(
                 new String[]{Manifest.permission.POST_NOTIFICATIONS},
                 NOTIFICATION_PERMISSION_REQUEST
@@ -388,29 +390,33 @@ public class MainActivity extends BridgeActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            notificationPermissionRequestPending = false;
             boolean granted = grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED;
 
-            // Deny or dismiss: Numelixa cannot continue without push permission.
+            // Numelixa requires push permission. Denying the Android
+            // permission closes the app immediately.
             if (!granted) {
                 finishAndRemoveTask();
             }
         }
     }
 
-    
     @Override protected void onResume() {
         super.onResume();
 
-        // If the user later disables notifications from Android Settings,
-        // immediately close Numelixa again. There is no custom permission
-        // screen and the app cannot be used without notification permission.
+        // Do not close the activity while Android's first-run permission
+        // dialog is still active. After the result returns, a denial closes
+        // the app above. If the user later disables notifications in Settings,
+        // there is no pending request, so returning here closes the app.
         if (Build.VERSION.SDK_INT >= 33 &&
+            !notificationPermissionRequestPending &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             finishAndRemoveTask();
         }
-    }}
-''', encoding="utf-8")
+    }
+}
+''', encoding="utf-8"), encoding="utf-8")
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
 s = manifest.read_text(encoding="utf-8")
