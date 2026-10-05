@@ -9,7 +9,8 @@ export async function POST(req:Request){
  try{
   const u=await requireUser(); const body:any=await req.json(),paypalOrderId=String(body.orderId||"");if(!paypalOrderId)return NextResponse.json({ok:false,error:"Missing PayPal order ID."},{status:400});
   const p=await (await collection<any>("payments")).findOne({provider:"paypal",providerId:paypalOrderId});if(!p)return NextResponse.json({ok:false,error:"Payment not found."},{status:404});
-  if(String(p.userId)!==String(u.id))return NextResponse.json({ok:false,error:"Payment user not found."},{status:404});
+  if(String(p.userId)!==String(u.id))return NextResponse.json({ok:false,error:"Payment does not belong to this account."},{status:403});
+  if(p.status==="paid")return NextResponse.json({ok:true,alreadyPaid:true,coins:Number(p.coins)});
   const result:any=await paypalApi("/v2/checkout/orders/"+encodeURIComponent(paypalOrderId)+"/capture",{method:"POST",body:"{}"});
   const capture=result?.purchase_units?.[0]?.payments?.captures?.[0];if(String(result?.status||"")!=="COMPLETED"||String(capture?.status||"")!=="COMPLETED")return NextResponse.json({ok:false,error:"PayPal payment is not completed."},{status:409});
   const payments=await collection<any>("payments");
