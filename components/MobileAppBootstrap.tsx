@@ -2,7 +2,7 @@
 import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token_v2_6_0";
+const TOKEN_KEY="numelixa_fcm_token_v2_7_0";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -47,6 +47,7 @@ export default function MobileAppBootstrap(){
      return true;
     }
 
+    console.warn("[NUMELIXA PUSH REGISTER] Server returned",response.status);
     scheduleRetry();
     return false;
    }catch(error){
@@ -74,8 +75,8 @@ export default function MobileAppBootstrap(){
    try{
     const current=await push.checkPermissions();
 
-    // Do NOT create a custom Numelixa permission screen.
-    // Android itself must show the normal system notification permission dialog.
+    // Never render a custom Numelixa notification-permission screen.
+    // Android shows its own system dialog when permission is needed.
     if(current.receive==="granted"){
      await push.register();
      await syncStoredToken();
@@ -103,9 +104,9 @@ export default function MobileAppBootstrap(){
   const retryAfterAuth=()=>{
    void ensurePushPermission();
    void syncStoredToken();
-   window.setTimeout(()=>void syncStoredToken(),1000);
-   window.setTimeout(()=>void syncStoredToken(),3000);
-   window.setTimeout(()=>void syncStoredToken(),10000);
+   window.setTimeout(()=>void syncStoredToken(),500);
+   window.setTimeout(()=>void syncStoredToken(),1500);
+   window.setTimeout(()=>void syncStoredToken(),5000);
   };
 
   (async()=>{
@@ -162,9 +163,8 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",retryAfterAuth);
     });
 
-    // Android MainActivity requests the real system permission on first launch.
-    // Once granted, Capacitor registers FCM and this component registers the token
-    // against the currently authenticated Numelixa user.
+    // Register FCM immediately. This works even before login.
+    // After login, the same token is rebound to the user's account.
     await ensurePushPermission();
     await syncStoredToken();
 
