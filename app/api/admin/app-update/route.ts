@@ -2,7 +2,6 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush, type PushSendResult} from "@/lib/push";
-import {put} from "@vercel/blob";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -71,34 +70,12 @@ export async function POST(req:Request){
       :Number((sizeBytes/(1024*1024)).toFixed(2));
     if(manualSizeMb>0) sizeBytes=Math.round(manualSizeMb*1024*1024);
     const releaseId=mongoId();
-    const safeVersion=version.replace(/[^a-zA-Z0-9._-]+/g,"-");
-    let sourceResponse:Response;
-    try{
-      sourceResponse=await fetch(sourceUrl,{redirect:"follow",cache:"no-store"});
-    }catch(error){
-      throw new Error("Unable to download the APK from the GitHub source.");
-    }
-    if(!sourceResponse.ok||!sourceResponse.body)
-      throw new Error("Unable to download the APK from the GitHub source. HTTP "+sourceResponse.status);
-
-    const blob=await put(
-      "android/Numelixa-"+safeVersion+"-"+releaseId+".apk",
-      sourceResponse.body,
-      {
-        access:"public",
-        contentType:"application/vnd.android.package-archive",
-        multipart:true,
-        cacheControlMaxAge:300
-      }
-    );
-    const blobUrl=String(blob.downloadUrl||blob.url||"").trim();
-    if(!blobUrl) throw new Error("APK storage upload did not return a download URL.");
-
-    const apkUrl="https://apk.numelixa.com/android";
+    // Keep GitHub as the private source; users download through apk.numelixa.com.
+    // This avoids exposing GitHub and does not require Vercel Blob credentials.
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
-      _id:releaseId,releaseId,version,versionCode,sizeMb,sizeBytes,apkUrl,sourceApkUrl,blobUrl,releaseNotes,installRequired,force,published:true,
+      _id:releaseId,releaseId,version,versionCode,sizeMb,sizeBytes,apkUrl,sourceApkUrl,releaseNotes,installRequired,force,published:true,
       publishedAt:now,createdAt:now,targetCreatedBefore,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
