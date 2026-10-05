@@ -356,6 +356,33 @@ public class NumelixaUpdaterPlugin extends Plugin {
 }
 ''', encoding="utf-8")
 
+(JAVA_DIR / "NumelixaPushTokenPlugin.java").write_text(r'''package com.numelixa.app;
+
+import com.getcapacitor.JSObject;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.firebase.messaging.FirebaseMessaging;
+
+@CapacitorPlugin(name = "NumelixaPushToken")
+public class NumelixaPushTokenPlugin extends Plugin {
+    @PluginMethod
+    public void getToken(PluginCall call) {
+        FirebaseMessaging.getInstance().getToken()
+            .addOnSuccessListener(token -> {
+                JSObject result = new JSObject();
+                result.put("token", token);
+                call.resolve(result);
+            })
+            .addOnFailureListener(error ->
+                call.reject("Unable to get Firebase token", error)
+            );
+    }
+}
+
+''', encoding="utf-8")
+
 (JAVA_DIR / "MainActivity.java").write_text(r'''package com.numelixa.app;
 
 import android.Manifest;
@@ -370,6 +397,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
+        registerPlugin(NumelixaPushTokenPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Android owns the real system notification permission dialog.
