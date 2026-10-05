@@ -11,7 +11,7 @@ export async function GET(){
     await requireAdmin();
     const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(20).toArray();
     return NextResponse.json({ok:true,updates:rows.map(x=>({
-      id:String(x.releaseId||x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),apkUrl:x.apkUrl,
+      id:String(x.releaseId||x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),apkUrl:x.apkUrl,installRequired:Boolean(x.installRequired||x.force),
       releaseNotes:x.releaseNotes,force:Boolean(x.force),published:Boolean(x.published),
       publishedAt:x.publishedAt,pushSent:Number(x.pushSent||0),pushFailed:Number(x.pushFailed||0)
     }))});
@@ -31,7 +31,10 @@ export async function POST(req:Request){
     const manualSizeMb=Number(body.sizeMb||0);
     const versionCode=Number(body.versionCode||0);
     
-    const force=Boolean(body.force);
+    const installRequired=Boolean(body.installRequired);
+    // Hard install updates are the only updates that can block the app.
+    // Keep legacy force=true records compatible with the install-required behavior.
+    const force=installRequired || Boolean(body.force);
     const sendAll=body.sendAll!==false;
 
     if(!version||!apkUrl)
@@ -58,7 +61,7 @@ export async function POST(req:Request){
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
-      _id:mongoId(),releaseId:mongoId(),version,versionCode,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
+      _id:mongoId(),releaseId:mongoId(),version,versionCode,sizeMb,sizeBytes,apkUrl,releaseNotes,installRequired,force,published:true,
       publishedAt:now,createdAt:now,targetCreatedBefore,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");
@@ -81,7 +84,7 @@ export async function POST(req:Request){
     }
 
     return NextResponse.json({
-      ok:true,version,versionCode,sizeMb,sizeBytes,sendAll,pushConfigured:push.configured,
+      ok:true,version,versionCode,sizeMb,sizeBytes,installRequired,sendAll,pushConfigured:push.configured,
       sent:push.successCount,failed:push.failureCount,errors:push.errors||[]
     });
   }catch(error){
