@@ -36,18 +36,20 @@ public class NumelixaUpdateService extends Service {
     private static final String STATUS_KEY = "status";
     private static final String ERROR_KEY = "error";
     private static final String INSTALL_REQUIRED_KEY = "install_required";
+    private static final String RELEASE_ID_KEY = "release_id";
     private static final int NOTIFICATION_ID = 4811;
     private static final String CHANNEL_ID = "numelixa_update";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private volatile boolean running = false;
 
-    public static void start(Context context, String url, String fileName, long expectedBytes, boolean installRequired) {
+    public static void start(Context context, String url, String fileName, long expectedBytes, boolean installRequired, String releaseId) {
         Intent i = new Intent(context, NumelixaUpdateService.class);
         i.setAction(ACTION_START);
         i.putExtra("url", url);
         i.putExtra("fileName", fileName);
         i.putExtra("expectedBytes", expectedBytes);
         i.putExtra("installRequired", installRequired);
+        i.putExtra("releaseId", releaseId);
         if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i);
         else context.startService(i);
     }
@@ -64,10 +66,20 @@ public class NumelixaUpdateService extends Service {
             String fileName = intent.getStringExtra("fileName");
             long expected = intent.getLongExtra("expectedBytes", 0);
             boolean installRequired = intent.getBooleanExtra("installRequired", true);
+            String releaseId = intent.getStringExtra("releaseId");
             if (url != null && url.startsWith("https://") && fileName != null && !running) {
-                getSharedPreferences(PREFS, MODE_PRIVATE).edit()
+                android.content.SharedPreferences currentPrefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+                String oldReleaseId = currentPrefs.getString(RELEASE_ID_KEY, "");
+                String oldUrl = currentPrefs.getString(URL_KEY, "");
+                if ((releaseId != null && !releaseId.equals(oldReleaseId)) || !url.equals(oldUrl)) {
+                    File oldFile = updateFile();
+                    if (oldFile.exists()) oldFile.delete();
+                }
+                currentPrefs.edit()
                     .putString(URL_KEY, url).putString(FILE_KEY, fileName)
-                    .putLong(TOTAL_KEY, expected).putBoolean(INSTALL_REQUIRED_KEY, installRequired).putString(STATUS_KEY, "downloading")
+                    .putString(RELEASE_ID_KEY, releaseId == null ? "" : releaseId)
+                    .putLong(TOTAL_KEY, expected).putLong(DOWNLOADED_KEY, 0)
+                    .putBoolean(INSTALL_REQUIRED_KEY, installRequired).putString(STATUS_KEY, "downloading")
                     .putString(ERROR_KEY, "").apply();
                 startDownload();
             }
@@ -259,6 +271,7 @@ public class NumelixaUpdaterPlugin extends Plugin {
     @PluginMethod public void installApk(PluginCall call) {
         String url = call.getString("url");
         String name = call.getString("fileName", "Numelixa-update.apk");
+        String releaseId = call.getString("releaseId", "");
         Long expectedValue = call.getLong("totalBytes");
         long expected = expectedValue == null ? 0 : expectedValue;
         Boolean installRequiredValue = call.getBoolean("installRequired", true);
@@ -268,7 +281,7 @@ public class NumelixaUpdaterPlugin extends Plugin {
             return;
         }
         try {
-            NumelixaUpdateService.start(getContext(), url, name, expected, installRequired);
+            NumelixaUpdateService.start(getContext(), url, name, expected, installRequired, releaseId);
             JSObject o = new JSObject();
             o.put("started", true);
             call.resolve(o);
