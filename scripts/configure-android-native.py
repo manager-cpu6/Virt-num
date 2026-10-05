@@ -397,7 +397,19 @@ public class MainActivity extends BridgeActivity {
             }
         }
     }
-}
+
+    
+    @Override protected void onResume() {
+        super.onResume();
+
+        // If the user later disables notifications from Android Settings,
+        // immediately close Numelixa again. There is no custom permission
+        // screen and the app cannot be used without notification permission.
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            finishAndRemoveTask();
+        }
+    }}
 ''', encoding="utf-8")
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
