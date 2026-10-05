@@ -1,5 +1,7 @@
-import {getApps,initializeApp,cert, type App} from "firebase-admin/app";
-import {getMessaging, type MulticastMessage} from "firebase-admin/messaging";
+import {getApp,getApps,initializeApp,cert,type App} from "firebase-admin/app";
+import {getMessaging,type Message} from "firebase-admin/messaging";
+
+const FIREBASE_APP_NAME="numelixa-fcm";
 
 function readServiceAccount(){
   const raw=String(
@@ -33,16 +35,29 @@ function firebaseApp():App|null{
   ).replace(/\\n/g,"\n").trim().replace(/^["']|["']$/g,"");
 
   if(!projectId||!clientEmail||!privateKey){
-    console.error("[FIREBASE CONFIG] Missing FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL or FIREBASE_PRIVATE_KEY/service-account JSON.");
+    console.error("[FIREBASE CONFIG] Missing Firebase Admin credentials.");
     return null;
   }
 
   try{
-    return getApps()[0]||initializeApp({
-      credential:cert({projectId,clientEmail,privateKey})
+    const existing=getApps().find(app=>app.name===FIREBASE_APP_NAME);
+    if(existing)return existing;
+
+    const app=initializeApp({
+      credential:cert({projectId,clientEmail,privateKey}),
+      projectId
+    },FIREBASE_APP_NAME);
+
+    console.info("[FIREBASE CONFIG] Firebase Admin initialized",{
+      projectId,
+      appName:FIREBASE_APP_NAME
     });
+    return app;
   }catch(error){
-    console.error("[FIREBASE CONFIG] Firebase Admin initialization failed",error);
+    console.error("[FIREBASE CONFIG] Firebase Admin initialization failed",{
+      projectId,
+      message:error instanceof Error?error.message:String(error)
+    });
     return null;
   }
 }
@@ -55,6 +70,22 @@ export type PushSendResult={
   errors:{code:string;message:string}[];
 };
 
+function makeMessage(token:string,title:string,body:string,data:Record<string,string>):Message{
+  return {
+    token,
+    notification:{title,body},
+    data:{url:data.url||"/",...data},
+    android:{
+      priority:"high",
+      notification:{
+        channelId:"numelixa",
+        sound:"default",
+        defaultSound:true
+      }
+    }
+  };
+}
+
 export async function sendPush(
   tokens:string[],
   title:string,
@@ -63,14 +94,16 @@ export async function sendPush(
 ):Promise<PushSendResult>{
   const unique=[...new Set(tokens.map(x=>String(x||"").trim()).filter(Boolean))];
 
-  console.info("[FCM PUSH] send requested", {
+  console.info("[FCM PUSH] send requested",{
     tokenCount:unique.length,
     title:String(title||"").slice(0,80)
   });
 
+  const app=firebaseApp();
+
   if(!unique.length){
     return {
-      configured:Boolean(firebaseApp()),
+      configured:Boolean(app),
       successCount:0,
       failureCount:0,
       invalidTokens:[],
@@ -78,7 +111,6 @@ export async function sendPush(
     };
   }
 
-  const app=firebaseApp();
   if(!app){
     return {
       configured:false,
@@ -87,7 +119,7 @@ export async function sendPush(
       invalidTokens:[],
       errors:[{
         code:"messaging/server-not-configured",
-        message:"Firebase Admin is not configured. Add FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY to the Vercel Production environment."
+        message:"Firebase Admin is not configured. Add FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY to Vercel Production."
       }]
     };
   }
@@ -96,26 +128,16 @@ export async function sendPush(
   let failureCount=0;
   const invalidTokens:string[]=[];
   const errors:{code:string;message:string}[]=[];
+  const messaging=getMessaging(app);
 
+  // FCM supports batches of up to 500 messages. Individual messages give us
+  // an exact response for every device, which makes failures diagnosable.
   for(let i=0;i<unique.length;i+=500){
     const batch=unique.slice(i,i+500);
-
-    const message:MulticastMessage={
-      tokens:batch,
-      notification:{title,body},
-      data:{url:data.url||"/",...data},
-      android:{
-        priority:"high",
-        notification:{
-          channelId:"numelixa",
-          sound:"default",
-          defaultSound:true
-        }
-      }
-    };
+    const messages=batch.map(token=>makeMessage(token,title,body,data));
 
     try{
-      const response=await getMessaging(app).sendEachForMulticast(message);
+      const response=await messaging.sendEach(messages);
       successCount+=response.successCount;
       failureCount+=response.failureCount;
 
@@ -155,11 +177,12 @@ export async function sendPush(
     errors
   };
 
-  console.info("[FCM PUSH] send completed", {
+  console.info("[FCM PUSH] send completed",{
     tokenCount:unique.length,
     successCount,
     failureCount,
-    errorCount:errors.length
+    errorCount:errors.length,
+    firstError:errors[0]||null
   });
 
   return result;
