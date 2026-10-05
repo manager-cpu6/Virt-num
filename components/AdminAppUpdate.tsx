@@ -7,7 +7,7 @@ export default function AdminAppUpdate(){
  const[apkUrl,setApkUrl]=useState("");
  const[sizeMb,setSizeMb]=useState("");
  const[notes,setNotes]=useState("");
- const[force,setForce]=useState(false);
+ const[installRequired,setInstallRequired]=useState(false);
  const[sendAll,setSendAll]=useState(true);
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
@@ -32,7 +32,7 @@ export default function AdminAppUpdate(){
     credentials:"include",
     body:JSON.stringify({
      version,versionCode:Number(versionCode||0),apkUrl,sizeMb:Number(sizeMb||0),
-     releaseNotes:notes,force,sendAll
+     releaseNotes:notes,installRequired,force:installRequired,sendAll
     })
    });
    const d=await r.json();
@@ -40,7 +40,7 @@ export default function AdminAppUpdate(){
    setResult(sendAll
     ?"✅ Update published. "+d.sizeMb+" MB · push sent to "+d.sent+" devices."
     :"✅ Update published. "+d.sizeMb+" MB. Users will see it in the app.");
-   setVersion("");setVersionCode("");setApkUrl("");setSizeMb("");setNotes("");setForce(false);
+   setVersion("");setVersionCode("");setApkUrl("");setSizeMb("");setNotes("");setInstallRequired(false);
    await load();
   }finally{setBusy(false)}
  }
@@ -68,7 +68,12 @@ export default function AdminAppUpdate(){
     <label>What's new
      <textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={1200} rows={5} placeholder="Performance, notifications, fixes…"/>
     </label>
-    <label className="admin-check"><input type="checkbox" checked={force} onChange={e=>setForce(e.target.checked)}/> Required update</label>
+    <div className="admin-update-mode">
+     <b>Update behavior</b>
+     <label className="admin-check"><input type="radio" name="update-mode" checked={!installRequired} onChange={()=>setInstallRequired(false)}/> Download update only — no APK installation. After the download finishes, the app returns to normal automatically.</label>
+     <label className="admin-check"><input type="radio" name="update-mode" checked={installRequired} onChange={()=>setInstallRequired(true)}/> Require APK installation — user must install the downloaded APK before continuing.</label>
+     <small>Installation is never opened for a download-only update. Required mode keeps the app blocked until Android installation is completed.</small>
+    </div>
     <label className="admin-check"><input type="checkbox" checked={sendAll} onChange={e=>setSendAll(e.target.checked)}/> Send update notification to all registered app devices</label>
     <button className="primary-btn" disabled={busy}>{busy?"Publishing…":"🚀 Publish & Send Update"}</button>
     {result&&<div className="success-box">{result}</div>}
@@ -77,7 +82,7 @@ export default function AdminAppUpdate(){
   <div className="admin-card"><h2>Update history</h2>
    {updates.length?updates.map(x=><div className="admin-notification-history" key={x.id}>
     <div>
-     <b>v{x.version} · {Number(x.sizeMb||0).toFixed(2)} MB</b>
+     <b>v{x.version} · {Number(x.sizeMb||0).toFixed(2)} MB · {x.installRequired?"Install required":"Download only"}</b>
      <p>{x.releaseNotes||"No release notes."}</p>
      <small>{x.publishedAt?new Date(x.publishedAt).toLocaleString():"—"} · {x.pushSent||0} push sent · {x.pushFailed||0} failed</small>
     </div>
