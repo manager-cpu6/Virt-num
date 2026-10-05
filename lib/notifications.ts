@@ -4,6 +4,14 @@ import {sendPush} from "@/lib/push";
 
 const DEVICE_COOKIE="numelixa_device_token";
 
+export async function resetPendingNotificationRetries(userId:string){
+  const notifications=await collection<any>("notifications");
+  await notifications.updateMany(
+    {userId:String(userId),pushDelivered:{$ne:true},createdAt:{$gte:new Date(Date.now()-24*60*60*1000)}},
+    {$set:{pushRetryCount:0}}
+  );
+}
+
 export async function claimDeviceTokenForUser(userId:string){
   const token=String((await cookies()).get(DEVICE_COOKIE)?.value||"").trim();
   if(!token||token.length<20)return false;
@@ -15,6 +23,7 @@ export async function claimDeviceTokenForUser(userId:string){
     {$set:{userId:String(userId),updatedAt:now},$setOnInsert:{token,platform:"android",createdAt:now}},
     {upsert:true}
   );
+  await resetPendingNotificationRetries(String(userId));
   return true;
 }
 
