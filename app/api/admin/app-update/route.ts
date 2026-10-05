@@ -74,6 +74,7 @@ export async function POST(req:Request){
     const releaseId=mongoId();
     // Keep GitHub as the private source; users download through apk.numelixa.com.
     // This avoids exposing GitHub and does not require Vercel Blob credentials.
+    const apkUrl="https://apk.numelixa.com/android";
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
