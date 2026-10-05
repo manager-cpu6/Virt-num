@@ -14,7 +14,8 @@ function Code({children}:{children:string}){
 function Section({id,title,children}:{id:string;title:string;children:ReactNode}){return <section id={id} style={{scrollMarginTop:30,marginTop:42}}><h2 style={{fontSize:25,letterSpacing:-.7}}>{title}</h2>{children}</section>}
 
 export default function Docs(){
- return <main style={{maxWidth:1120,margin:"0 auto",padding:"34px 18px 120px",color:"#eafff9",lineHeight:1.7}}>
+ return <main className="numelixa-docs-page" style={{maxWidth:1120,margin:"0 auto",padding:"24px 18px 80px",color:"#eafff9",lineHeight:1.7}}>
+  <a href="https://numelixa.com" className="docs-back-home" aria-label="Back to Numelixa" title="Back to Numelixa">←</a>
   <div style={{fontSize:11,letterSpacing:3,color:"#72dfce",fontWeight:900}}>NUMELIXA DEVELOPER PLATFORM</div>
   <h1 style={{fontSize:44,letterSpacing:-2.5,margin:"8px 0"}}>API Documentation</h1>
   <p style={{color:"#86a8a9",maxWidth:850,fontSize:15}}>Production REST API at https://numelixa.com/api/v1 for virtual-number applications. Discover live inventory, exact selling prices, purchase activations from the authenticated user's wallet, retrieve SMS and manage orders.</p>
