@@ -54,7 +54,7 @@ public class NumelixaUpdateService extends Service {
     @Override public void onCreate() {
         super.onCreate();
         createChannel();
-        promote("Downloading Numelixa update", 0, 0, true);
+        promote("Downloading Numelixa update", 0, 0, false);
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) {
@@ -154,7 +154,8 @@ public class NumelixaUpdateService extends Service {
         } finally {
             if (connection != null) connection.disconnect();
             running = false;
-            if ("completed".equals(getSharedPreferences(PREFS, MODE_PRIVATE).getString(STATUS_KEY, ""))) {
+            String finalStatus = getSharedPreferences(PREFS, MODE_PRIVATE).getString(STATUS_KEY, "");
+            if ("completed".equals(finalStatus) || "failed".equals(finalStatus)) {
                 stopForeground(STOP_FOREGROUND_DETACH);
                 stopSelf();
             }
