@@ -2,7 +2,7 @@
 import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token_v2_5_0";
+const TOKEN_KEY="numelixa_fcm_token_v2_6_0";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -18,40 +18,11 @@ export default function MobileAppBootstrap(){
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
   const cleanups:Array<()=>void>=[];
 
-  const removeGate=()=>document.getElementById("numelixa-notification-gate")?.remove();
-
-  const openPermissionGate=()=>{
-   if(stopped||document.getElementById("numelixa-notification-gate"))return;
-
-   const gate=document.createElement("div");
-   gate.id="numelixa-notification-gate";
-   gate.style.cssText=[
-    "position:fixed","inset:0","z-index:2147483647","display:flex",
-    "align-items:center","justify-content:center","padding:24px",
-    "background:rgba(1,13,18,.94)","backdrop-filter:blur(18px)"
-   ].join(";");
-
-   gate.innerHTML=[
-    '<div style="width:min(420px,100%);padding:28px;border:1px solid rgba(255,255,255,.12);border-radius:28px;background:rgba(8,31,38,.98);box-shadow:0 24px 80px rgba(0,0,0,.45);color:#fff;text-align:center">',
-    '<div style="font-size:42px;margin-bottom:12px">🔔</div>',
-    '<h2 style="margin:0 0 10px;font-size:24px">Turn on notifications</h2>',
-    '<p style="margin:0 0 22px;color:rgba(255,255,255,.72);line-height:1.55">Numelixa uses notifications for verification codes, order updates, refunds and important account alerts.</p>',
-    '<button id="numelixa-notification-enable" style="width:100%;border:0;border-radius:16px;padding:14px 18px;font-weight:800;font-size:16px;background:#fff;color:#06161c">Enable notifications</button>',
-    '<p style="margin:14px 0 0;color:rgba(255,255,255,.48);font-size:12px">You can manage notification permission from Android settings.</p>',
-    '</div>'
-   ].join("");
-
-   document.body.appendChild(gate);
-   gate.querySelector("#numelixa-notification-enable")?.addEventListener("click",()=>{
-    void ensurePushPermission(true);
-   });
-  };
-
   const scheduleRetry=()=>{
    if(stopped||retryTimer)return;
    retryTimer=setTimeout(()=>{
     retryTimer=null;
-    void ensurePushPermission(false);
+    void ensurePushPermission();
     void syncStoredToken();
    },5000);
   };
@@ -81,11 +52,6 @@ export default function MobileAppBootstrap(){
      return true;
     }
 
-    if(response.status===401){
-     scheduleRetry();
-     return false;
-    }
-
     scheduleRetry();
     return false;
    }catch(error){
@@ -106,41 +72,37 @@ export default function MobileAppBootstrap(){
    }
   };
 
-  const ensurePushPermission=async(showGate:boolean)=>{
+  const ensurePushPermission=async()=>{
    if(!push||stopped||permissionInFlight)return false;
 
    permissionInFlight=true;
    try{
     let current=await push.checkPermissions();
 
+    // This calls the native Android permission API. There is deliberately
+    // no custom HTML permission screen or "Turn on notifications" overlay.
     if(current.receive!=="granted"){
-     const requested=await push.requestPermissions();
-     current=requested;
+     current=await push.requestPermissions();
     }
 
-    if(current.receive==="granted"){
-     removeGate();
-
-     try{
-      await push.register();
-     }catch(error){
-      console.error("[NUMELIXA FCM REGISTER]",error);
-      scheduleRetry();
-      return false;
-     }
-
-     await syncStoredToken();
-     return true;
+    if(current.receive!=="granted"){
+     console.warn("[NUMELIXA PUSH] Native notification permission is not granted.");
+     return false;
     }
 
-    if(showGate)openPermissionGate();
-    else scheduleRetry();
+    try{
+     await push.register();
+    }catch(error){
+     console.error("[NUMELIXA FCM REGISTER]",error);
+     scheduleRetry();
+     return false;
+    }
 
-    return false;
+    await syncStoredToken();
+    return true;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
-    if(showGate)openPermissionGate();
-    else scheduleRetry();
+    scheduleRetry();
     return false;
    }finally{
     permissionInFlight=false;
@@ -178,22 +140,20 @@ export default function MobileAppBootstrap(){
     });
     cleanups.push(()=>registrationError.remove());
 
-    const received=await PushNotifications.addListener("pushNotificationReceived",()=>{
-     window.dispatchEvent(new Event("numelixa-notification"));
+    const received=await PushNotifications.addListener("pushNotificationReceived",(event)=>{
+     window.dispatchEvent(new CustomEvent("numelixa-notification",{detail:event}));
     });
     cleanups.push(()=>received.remove());
 
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{
      const raw=String(event.notification?.data?.url||"/");
-     const url=raw.startsWith("/")?raw:"/";
-     window.location.href=url;
+     window.location.href=raw.startsWith("/")?raw:"/";
     });
     cleanups.push(()=>action.remove());
 
     const retry=()=>{
-     void ensurePushPermission(false);
+     void ensurePushPermission();
      void syncStoredToken();
-
      window.setTimeout(()=>void syncStoredToken(),1000);
      window.setTimeout(()=>void syncStoredToken(),3000);
      window.setTimeout(()=>void syncStoredToken(),10000);
@@ -211,26 +171,23 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",retry);
     });
 
-    // Always request notification permission on a fresh/native app start.
-    // The server registration itself is tied to the authenticated user.
-    await ensurePushPermission(true);
+    // On first install Android shows its own POST_NOTIFICATIONS dialog.
+    // If permission is already allowed, nothing is displayed.
+    await ensurePushPermission();
     await syncStoredToken();
 
     const heartbeat=window.setInterval(()=>{
-     void ensurePushPermission(false);
      void syncStoredToken();
     },10000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){
     console.error("[NUMELIXA PUSH]",error);
-    openPermissionGate();
    }
   })();
 
   return()=>{
    stopped=true;
    if(retryTimer)clearTimeout(retryTimer);
-   removeGate();
    cleanups.forEach(fn=>{try{fn()}catch{}});
    document.documentElement.classList.remove("numelixa-native");
    document.body.classList.remove("numelixa-native");
