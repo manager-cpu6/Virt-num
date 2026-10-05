@@ -63,9 +63,9 @@ export default function AdminAppUpdate(){
      <input value={apkUrl} onChange={e=>setApkUrl(e.target.value)} type="url" placeholder="https://github.com/..." required/>
      <small>GitHub is used only as the private publishing source. Users will never receive the GitHub link. After publishing, the app downloads from <b>https://apk.numelixa.com/android</b>.</small>
     </label>
-    <label>APK size (MB) <span className="field-help">optional</span>
-     <input value={sizeMb} onChange={e=>setSizeMb(e.target.value)} type="number" min="0.01" step="0.01" placeholder="Leave blank for automatic exact detection"/>
-     <small>Leave blank to detect the file size automatically. Enter it manually when the APK host does not expose Content-Length.</small>
+    <label>APK size (MB) <span className="field-help">required</span>
+     <input value={sizeMb} onChange={e=>setSizeMb(e.target.value.replace(/[^0-9.]/g,""))} type="number" min="0.01" step="0.01" placeholder="e.g. 48.73" required/>
+     <small>Enter the exact APK size in MB. This is used by the updater to show the correct downloaded and remaining MB.</small>
     </label>
     <label>What's new
      <textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={1200} rows={5} placeholder="Performance, notifications, fixes…"/>
