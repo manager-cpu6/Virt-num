@@ -136,36 +136,57 @@ export async function sendPush(
     const batch=unique.slice(i,i+500);
     const messages=batch.map(token=>makeMessage(token,title,body,data));
 
-    try{
-      const response=await messaging.sendEach(messages);
-      successCount+=response.successCount;
-      failureCount+=response.failureCount;
+    let pending=batch.map((token,index)=>({token,index}));
+    for(let attempt=1;attempt<=3&&pending.length;attempt++){
+      try{
+        const response=await messaging.sendEach(pending.map(x=>messages[x.index]));
+        const next:any[]=[];
 
-      response.responses.forEach((item,index)=>{
-        if(item.success)return;
+        response.responses.forEach((item,index)=>{
+          const target=pending[index];
+          if(item.success){
+            successCount++;
+            return;
+          }
 
-        const code=String(item.error?.code||"unknown");
-        const messageText=String(item.error?.message||"FCM send failed");
+          const code=String(item.error?.code||"unknown");
+          const messageText=String(item.error?.message||"FCM send failed");
 
-        if(errors.length<20)errors.push({code,message:messageText});
+          if(code==="messaging/registration-token-not-registered"||code==="messaging/invalid-registration-token"){
+            invalidTokens.push(target.token);
+            failureCount++;
+            return;
+          }
 
-        if(
-          code==="messaging/registration-token-not-registered"||
-          code==="messaging/invalid-registration-token"
-        ){
-          invalidTokens.push(batch[index]);
-        }
-      });
-    }catch(error){
-      const messageText=error instanceof Error?error.message:String(error);
-      failureCount+=batch.length;
-      if(errors.length<20){
-        errors.push({
-          code:"messaging/send-batch-failed",
-          message:messageText
+          const retryable=[
+            "messaging/internal-error",
+            "messaging/server-unavailable",
+            "messaging/unavailable",
+            "messaging/quota-exceeded"
+          ].includes(code);
+
+          if(retryable&&attempt<3){
+            next.push(target);
+          }else{
+            failureCount++;
+            if(errors.length<20)errors.push({code,message:messageText});
+          }
         });
+
+        pending=next;
+        if(pending.length&&attempt<3){
+          await new Promise(resolve=>setTimeout(resolve,300*Math.pow(3,attempt-1)));
+        }
+      }catch(error){
+        const messageText=error instanceof Error?error.message:String(error);
+        if(attempt<3){
+          await new Promise(resolve=>setTimeout(resolve,300*Math.pow(3,attempt-1)));
+        }else{
+          failureCount+=pending.length;
+          if(errors.length<20)errors.push({code:"messaging/send-batch-failed",message:messageText});
+          console.error("[FCM SEND BATCH]",messageText);
+        }
       }
-      console.error("[FCM SEND BATCH]",messageText);
     }
   }
 
