@@ -90,8 +90,13 @@ export default function MobileAppBootstrap(){
     // This bootstrap never creates a custom permission screen and never
     // repeatedly prompts users. It only registers FCM when permission exists.
     if(current.receive!=="granted"){
-     console.warn("[NUMELIXA PUSH] Native notification permission is not granted.");
-     return false;
+     // Capacitor's requestPermissions() opens Android's native
+     // POST_NOTIFICATIONS dialog. It is not a custom Numelixa screen.
+     const requested=await push.requestPermissions();
+     if(requested.receive!=="granted"){
+      console.warn("[NUMELIXA PUSH] Notification permission was not granted.");
+      return false;
+     }
     }
 
     try{
