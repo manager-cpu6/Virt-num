@@ -9,7 +9,19 @@ export const dynamic = "force-dynamic";
 export async function GET(){
   try{
     await requireAdmin();
-    const deviceCount = await (await collection<any>("deviceTokens")).countDocuments({});
+    const deviceTokens = await collection<any>("deviceTokens");
+    const users = await collection<any>("users");
+    const deviceCount = await deviceTokens.countDocuments({});
+    const claimedDeviceCount = await deviceTokens.countDocuments({userId:{$nin:[null,""]}});
+    const unclaimedDeviceCount = await deviceTokens.countDocuments({$or:[{userId:null},{userId:""}]});
+    const verifiedGmailUsers = await users.find(
+      {verifiedAt:{$exists:true,$ne:null},email:/@gmail\\.com$/i},
+      {projection:{_id:1}}
+    ).toArray();
+    const verifiedGmailIds = verifiedGmailUsers.map(u=>String(u._id));
+    const verifiedGmailDeviceCount = verifiedGmailIds.length
+      ? await deviceTokens.countDocuments({userId:{$in:verifiedGmailIds}})
+      : 0;
     const rows = await (await collection<any>("notifications"))
       .find({adminSent:true})
       .sort({createdAt:-1})
@@ -28,6 +40,10 @@ export async function GET(){
         pushConfigured:Boolean(x.pushConfigured)
       })),
       deviceCount,
+      claimedDeviceCount,
+      unclaimedDeviceCount,
+      verifiedGmailUsers:verifiedGmailUsers.length,
+      verifiedGmailDeviceCount,
       serverPushConfigured:Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY))
     });
   }catch(error){
