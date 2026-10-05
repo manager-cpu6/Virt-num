@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {collection, mongoId} from "@/lib/mongo";
 import {check, cancel, finalize} from "@/lib/fivesim";
 import {notifyUser} from "@/lib/notifications";
+import {sendPush} from "@/lib/push";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -46,11 +47,50 @@ async function refundOrder(o: any) {
   return true;
 }
 
+async function retryPendingPushes() {
+  const notifications = await collection<any>("notifications");
+  const devices = await collection<any>("deviceTokens");
+  const pending = await notifications.find({
+    userId: {$exists:true,$nin:[null,""]},
+    pushDelivered: {$ne:true},
+    createdAt: {$gte:new Date(Date.now()-24*60*60*1000)},
+    pushRetryCount: {$lt:12}
+  }).sort({createdAt:1}).limit(100).toArray();
+
+  let attempted=0, delivered=0;
+  for(const n of pending){
+    try{
+      const rows=await devices.find({userId:String(n.userId)}).toArray();
+      if(!rows.length){
+        await notifications.updateOne({_id:n._id},{$inc:{pushRetryCount:1},$set:{lastPushRetryAt:new Date()}});
+        continue;
+      }
+      attempted++;
+      const result=await sendPush(rows.map(x=>String(x.token||"")),String(n.title||"Numelixa"),String(n.message||""),{url:"/",type:"notification"});
+      if(result.invalidTokens?.length) await devices.deleteMany({token:{$in:result.invalidTokens}});
+      await notifications.updateOne({_id:n._id},{$set:{
+        pushConfigured:result.configured,
+        pushDelivered:result.successCount>0,
+        sentCount:result.successCount,
+        failureCount:result.failureCount,
+        pushErrors:result.errors||[],
+        lastPushRetryAt:new Date()
+      },$inc:{pushRetryCount:1}});
+      if(result.successCount>0) delivered++;
+    }catch(error){
+      console.error("[PUSH RETRY]",{notificationId:n?._id,message:error instanceof Error?error.message:String(error)});
+      await notifications.updateOne({_id:n._id},{$inc:{pushRetryCount:1},$set:{lastPushRetryAt:new Date()}});
+    }
+  }
+  return {attempted,delivered};
+}
+
 export async function GET(req: Request) {
   if (!authorized(req)) {
     return NextResponse.json({ok: false, error: "Unauthorized"}, {status: 401});
   }
 
+  const retry=await retryPendingPushes();
   const orders = await collection<any>("orders");
   const now = Date.now();
   const waiting = await orders.find({
@@ -151,5 +191,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ok: true, checked, received, refunded, warnings});
+  return NextResponse.json({ok: true, checked, received, refunded, warnings, pushRetry:retry});
 }
