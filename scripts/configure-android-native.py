@@ -365,15 +365,36 @@ import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 7001;
+
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
         super.onCreate(savedInstanceState);
 
-        // Let Android show its real system notification permission dialog.
-        // There is intentionally no custom Numelixa permission screen.
+        // Numelixa requires notification permission. Android itself owns
+        // the permission dialog; Numelixa never renders a custom gate.
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 7001);
+            requestPermissions(
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                NOTIFICATION_PERMISSION_REQUEST
+            );
+        }
+    }
+
+    @Override public void onRequestPermissionsResult(
+        int requestCode, String[] permissions, int[] grantResults
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            boolean granted = grantResults.length > 0 &&
+                grantResults[0] == PackageManager.PERMISSION_GRANTED;
+
+            // Deny or dismiss: Numelixa cannot continue without push permission.
+            if (!granted) {
+                finishAndRemoveTask();
+            }
         }
     }
 }
