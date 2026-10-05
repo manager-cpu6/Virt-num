@@ -77,14 +77,11 @@ export default function MobileAppBootstrap(){
 
    permissionInFlight=true;
    try{
-    let current=await push.checkPermissions();
+    const current=await push.checkPermissions();
 
-    // This calls the native Android permission API. There is deliberately
-    // no custom HTML permission screen or "Turn on notifications" overlay.
-    if(current.receive!=="granted"){
-     current=await push.requestPermissions();
-    }
-
+    // MainActivity owns the first-install Android POST_NOTIFICATIONS prompt.
+    // This bootstrap never creates a custom permission screen and never
+    // repeatedly prompts users. It only registers FCM when permission exists.
     if(current.receive!=="granted"){
      console.warn("[NUMELIXA PUSH] Native notification permission is not granted.");
      return false;
