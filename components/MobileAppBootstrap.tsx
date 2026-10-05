@@ -196,7 +196,7 @@ export default function MobileAppBootstrap(){
 
   return()=>{
    stopped=true;
-   if(retryTimer)window.clearTimeout(retryTimer);
+   if(retryTimer!==null){window.clearTimeout(retryTimer);retryTimer=null;}
    cleanups.forEach(fn=>{try{fn()}catch{}});
    document.documentElement.classList.remove("numelixa-native");
    document.body.classList.remove("numelixa-native");
