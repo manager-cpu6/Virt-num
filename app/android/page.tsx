@@ -3,7 +3,7 @@ import Link from "next/link";
 import {useEffect,useState} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const apk="https://github.com/manager-cpu6/Virt-num/releases/download/android-latest/Numelixa.apk";
+const apk="https://apk.numelixa.com/android";
 
 export default function AndroidPage(){
  const[native,setNative]=useState(false);
@@ -57,7 +57,7 @@ export default function AndroidPage(){
   <div className="mobile-version-card">
    <span>Latest Android build</span>
    <strong>Numelixa 2.3</strong>
-   <small>Tap Android APK above to install the latest build.</small>
+   <small>Tap Android APK above to download the latest Numelixa build.</small>
   </div>
  </div>;
 }
