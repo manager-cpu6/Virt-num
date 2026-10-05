@@ -16,9 +16,13 @@ export default function MobileAppBootstrap(){
   let syncInFlight=false;
   let permissionInFlight=false;
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
+  let registrationAttempts=0;
+  let lastNativeToken="";
   const cleanups:Array<()=>void>=[];
 
   const scheduleRetry=()=>{
+   registrationAttempts++;
+   if(registrationAttempts>100)return;
    if(stopped||retryTimer)return;
    retryTimer=setTimeout(()=>{
     retryTimer=null;
@@ -43,6 +47,7 @@ export default function MobileAppBootstrap(){
     });
 
     if(response.ok){
+     registrationAttempts=0;
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
@@ -103,7 +108,11 @@ export default function MobileAppBootstrap(){
       const {registerPlugin}=await import("@capacitor/core");
       const NativePushToken:any=registerPlugin("NumelixaPushToken");
       const nativeToken=await NativePushToken.getToken();
-      if(nativeToken?.token) await syncToken(String(nativeToken.token));
+      const value=String(nativeToken?.token||"").trim();
+      if(value && value!==lastNativeToken){
+       lastNativeToken=value;
+       await syncToken(value);
+      }
     }catch(error){
       console.warn("[NUMELIXA NATIVE FCM TOKEN]",error);
     }
@@ -162,9 +171,21 @@ export default function MobileAppBootstrap(){
     await ensurePushPermission();
     await syncStoredToken();
 
-    const heartbeat=window.setInterval(()=>{
+    const heartbeat=window.setInterval(async()=>{
      void ensurePushPermission();
      void syncStoredToken();
+     // Re-read Firebase's current native token so token rotation is repaired
+     // even if the Capacitor registration event is missed.
+     try{
+      const {registerPlugin}=await import("@capacitor/core");
+      const NativePushToken:any=registerPlugin("NumelixaPushToken");
+      const nativeToken=await NativePushToken.getToken();
+      const value=String(nativeToken?.token||"").trim();
+      if(value && value!==lastNativeToken){
+       lastNativeToken=value;
+       await syncToken(value);
+      }
+     }catch{}
     },10000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){
