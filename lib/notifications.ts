@@ -36,7 +36,9 @@ export async function notifyUser(
     readAt: null,
     systemSent: true,
     sentCount: 0,
-    pushConfigured: false
+    pushConfigured: false,
+    pushDelivered: false,
+    pushRetryCount: 0
   });
 
   let sent = 0;
@@ -66,7 +68,7 @@ export async function notifyUser(
 
   await notifications.updateOne(
     {_id: id},
-    {$set: {sentCount: sent, pushConfigured, updatedAt: new Date()}}
+    {$set: {sentCount: sent, pushConfigured, pushDelivered: sent>0, updatedAt: new Date()}, $inc: {pushRetryCount:1}}
   );
 
   return {id, sent, pushConfigured};
