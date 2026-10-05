@@ -162,6 +162,7 @@ export default function AppUpdateGate(){
  const totalMb=progress.mbTotal||Number((totalBytes/1024/1024).toFixed(2))||Number(update.sizeMb||0);
  const remainingMb=Math.max(0,totalMb-downloadedMb);
  const done=progress.status==="completed";
+ const softDone=done&&!update.installRequired;
 
  return <div className={"numelixa-update-backdrop"+(update.force?" required":"")}>
   <section className="numelixa-update-card" role="dialog" aria-modal="true">
@@ -180,7 +181,7 @@ export default function AppUpdateGate(){
     {!done&&<small>Download continues even if you close the app. Progress also remains in your Android notification.</small>}
    </div>}
    {error&&<div className="error-box">{error}</div>}
-   <button className="primary-btn full" onClick={done?openInstaller:install} disabled={busy&&!done}>
+   <button className="primary-btn full" onClick={done?(update.installRequired?openInstaller:()=>{}):install} disabled={(busy&&!done)||(softDone)}>
     {done?(update.installRequired?"Install update":"Finishing…"):busy?"Downloading…":"Download update"} <span>→</span>
    </button>
    {!update.force&&<button className="secondary-btn full" onClick={()=>setVisible(false)} disabled={busy}>Later</button>}
