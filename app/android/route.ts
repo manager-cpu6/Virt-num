@@ -62,7 +62,7 @@ export async function GET(req:Request){
       const value=upstream.headers.get(name);
       if(value) responseHeaders.set(name,value);
     }
-    responseHeaders.set("Content-Disposition","attachment; filename="Numelixa.apk"");
+    responseHeaders.set("Content-Disposition",'attachment; filename="Numelixa.apk"');
     responseHeaders.set("Cache-Control","no-store, no-cache, must-revalidate");
     responseHeaders.set("X-Content-Type-Options","nosniff");
 
