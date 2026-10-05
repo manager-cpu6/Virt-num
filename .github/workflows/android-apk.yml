@@ -50,6 +50,24 @@ jobs:
               root_text = root_text.replace(marker, marker + "\n        classpath 'com.google.gms:google-services:4.5.0'", 1)
           if "com.google.gms.google-services" not in app_text:
               app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
+          if "firebase-bom:34.19.0" not in app_text:
+              marker = "dependencies {"
+              if marker not in app_text:
+                  raise SystemExit("Could not locate app Gradle dependencies block")
+              app_text = app_text.replace(
+                  marker,
+                  marker + "\n    implementation platform('com.google.firebase:firebase-bom:34.19.0')\n    implementation 'com.google.firebase:firebase-messaging'",
+                  1
+              )
+          if "firebase-bom:34.19.0" not in app_text:
+              marker = "dependencies {"
+              if marker not in app_text:
+                  raise SystemExit("Could not locate app Gradle dependencies block")
+              app_text = app_text.replace(
+                  marker,
+                  marker + "\n    implementation platform('com.google.firebase:firebase-bom:34.19.0')\n    implementation 'com.google.firebase:firebase-messaging'",
+                  1
+              )
           root.write_text(root_text)
           app.write_text(app_text)
           PY
