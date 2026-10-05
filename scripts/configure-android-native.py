@@ -50,7 +50,7 @@ public class NumelixaUpdateService extends Service {
         i.putExtra("expectedBytes", expectedBytes);
         i.putExtra("installRequired", installRequired);
         i.putExtra("releaseId", releaseId);
-        if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i);
+        if (Build.VERSION.SDK_INT >= 26) ContextCompat.startForegroundService(context, i);
         else context.startService(i);
     }
 
@@ -286,7 +286,8 @@ public class NumelixaUpdaterPlugin extends Plugin {
             o.put("started", true);
             call.resolve(o);
         } catch (Exception e) {
-            call.reject("Unable to start update service", e);
+            String detail = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            call.reject("Unable to start update service: " + detail);
         }
     }
 
@@ -297,6 +298,7 @@ public class NumelixaUpdaterPlugin extends Plugin {
             JSObject o = new JSObject();
             o.put("version", p.versionName == null ? "0.0.0" : p.versionName);
             o.put("versionCode", Build.VERSION.SDK_INT >= 28 ? p.getLongVersionCode() : p.versionCode);
+            o.put("firstInstallTime", p.firstInstallTime);
             call.resolve(o);
         } catch (Exception e) {
             call.reject("Unable to read app version", e);
