@@ -34,8 +34,8 @@ export async function POST(req:Request){
     if(!quote.count||!quote.cost){
       return NextResponse.json(
         {ok:false,error:operator==="any"
-          ?"This service/country is currently out of stock."
-          :"The selected 5SIM operator is currently out of stock for this service/country."},
+          ?"No availiable Numbers"
+          :"No availiable Numbers"},
         {status:409}
       );
     }
@@ -284,7 +284,7 @@ export async function POST(req:Request){
     if(m==="PRICE_CHANGED")
       return NextResponse.json({ok:false,error:"5SIM changed the number price before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
     if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
+      return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
     if(/not enough user balance/i.test(m))
       return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
     if(/not enough rating/i.test(m))
@@ -294,7 +294,7 @@ export async function POST(req:Request){
     if(/bad operator/i.test(m))
       return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
     if(/no product/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
+      return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
     if(/server offline/i.test(m))
       return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
     if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
