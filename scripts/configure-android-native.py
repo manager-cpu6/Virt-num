@@ -340,9 +340,9 @@ public class NumelixaUpdaterPlugin extends Plugin {
             }
             Uri uri = FileProvider.getUriForFile(getContext(),
                 getContext().getPackageName() + ".fileprovider", f);
-            Intent intent = new Intent(Intent.ACTION_VIEW);
+            Intent intent = Build.VERSION.SDK_INT >= 24 ? new Intent(Intent.ACTION_INSTALL_PACKAGE) : new Intent(Intent.ACTION_VIEW);
             intent.setDataAndType(uri, "application/vnd.android.package-archive");
-            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
             getActivity().startActivity(intent);
             JSObject o = new JSObject();
             o.put("opened", true);
@@ -387,6 +387,19 @@ elif "android.permission.FOREGROUND_SERVICE_DATA_SYNC" not in s:
 service = '''\n        <service\n            android:name=".NumelixaUpdateService"\n            android:exported="false"\n            android:foregroundServiceType="dataSync" />'''
 if ".NumelixaUpdateService" not in s:
     s = s.replace("</application>", service + "\n    </application>", 1)
+provider = '''
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/numelixa_file_paths" />
+        </provider>
+        '''
+if "androidx.core.content.FileProvider" not in s:
+    s = s.replace("</application>", provider + "\n    </application>", 1)
 manifest.write_text(s, encoding="utf-8")
 
 xml = Path("android/app/src/main/res/xml/numelixa_file_paths.xml")
