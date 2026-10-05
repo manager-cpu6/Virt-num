@@ -1,6 +1,6 @@
 # Numelixa API v1
 
-Base URL: https://api.numelixa.com/v1
+Base URL: https://numelixa.com/api/v1
 
 Authentication: Authorization: Bearer NX_API_KEY
 
