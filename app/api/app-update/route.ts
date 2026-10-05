@@ -18,6 +18,7 @@ export async function GET(){
     versionCode:Number(latest.versionCode||0),
     sizeMb:Number(latest.sizeMb||0),
     sizeBytes:Number(latest.sizeBytes||0),
+    installRequired:Boolean(latest.installRequired||latest.force),
     apkUrl:String(latest.apkUrl||""),
     releaseNotes:String(latest.releaseNotes||""),
     force:Boolean(latest.force) && user!==null &&
