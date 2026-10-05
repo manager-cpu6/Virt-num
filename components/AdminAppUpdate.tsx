@@ -4,7 +4,8 @@ import {useEffect,useState} from "react";
 export default function AdminAppUpdate(){
  const[version,setVersion]=useState("");
  const[versionCode,setVersionCode]=useState("");
- const[apkUrl,setApkUrl]=useState("");
+ const DEFAULT_APK_SOURCE="https://github.com/manager-cpu6/Virt-num/releases/download/android-latest/Numelixa.apk";
+ const[apkUrl,setApkUrl]=useState(DEFAULT_APK_SOURCE);
  const[sizeMb,setSizeMb]=useState("");
  const[notes,setNotes]=useState("");
  const[installRequired,setInstallRequired]=useState(false);
@@ -40,7 +41,7 @@ export default function AdminAppUpdate(){
    setResult(sendAll
     ?"✅ Update published. "+d.sizeMb+" MB · push sent to "+d.sent+" devices."
     :"✅ Update published. "+d.sizeMb+" MB. Users will see it in the app.");
-   setVersion("");setVersionCode("");setApkUrl("");setSizeMb("");setNotes("");setInstallRequired(false);
+   setVersion("");setVersionCode("");setApkUrl(DEFAULT_APK_SOURCE);setSizeMb("");setNotes("");setInstallRequired(false);
    await load();
   }finally{setBusy(false)}
  }
@@ -58,8 +59,9 @@ export default function AdminAppUpdate(){
      <input value={versionCode} onChange={e=>setVersionCode(e.target.value.replace(/\D/g,""))} inputMode="numeric" placeholder="e.g. 250"/>
      <small>Use the APK's versionCode when you know it. The app also uses the release ID so an admin-created update is not ignored just because the version name did not change.</small>
     </label>
-    <label>APK HTTPS URL
-     <input value={apkUrl} onChange={e=>setApkUrl(e.target.value)} type="url" placeholder="https://..." required/>
+    <label>APK source (GitHub)
+     <input value={apkUrl} onChange={e=>setApkUrl(e.target.value)} type="url" placeholder="https://github.com/..." required/>
+     <small>GitHub is used only as the private publishing source. Users will never receive the GitHub link. After publishing, the app downloads from <b>https://apk.numelixa.com/android</b>.</small>
     </label>
     <label>APK size (MB) <span className="field-help">optional</span>
      <input value={sizeMb} onChange={e=>setSizeMb(e.target.value)} type="number" min="0.01" step="0.01" placeholder="Leave blank for automatic exact detection"/>
