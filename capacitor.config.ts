@@ -5,11 +5,10 @@ const config:CapacitorConfig={
  appName:"Numelixa",
  webDir:"public",
  server:{
-  url:"https://www.numelixa.com",
+  url:"https://numelixa.com",
   errorPath:"offline.html",
   cleartext:false,
   allowNavigation:[
-   "app.numelixa.com",
    "numelixa.com",
    "www.numelixa.com",
    "docs.numelixa.com",
