@@ -13,6 +13,9 @@ export default function AdminNotifications(){
  const[users,setUsers]=useState<{id:string;name:string;email:string}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0);
+ const[claimedDeviceCount,setClaimedDeviceCount]=useState(0);
+ const[verifiedGmailUsers,setVerifiedGmailUsers]=useState(0);
+ const[verifiedGmailDeviceCount,setVerifiedGmailDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
@@ -21,7 +24,14 @@ export default function AdminNotifications(){
   try{
    const r=await fetch("/api/admin/notifications",{cache:"no-store"});
    const d=await r.json();
-   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
+   if(d.ok){
+ setHistory(d.notifications||[]);
+ setDeviceCount(Number(d.deviceCount||0));
+ setClaimedDeviceCount(Number(d.claimedDeviceCount||0));
+ setVerifiedGmailUsers(Number(d.verifiedGmailUsers||0));
+ setVerifiedGmailDeviceCount(Number(d.verifiedGmailDeviceCount||0));
+ setServerPushConfigured(Boolean(d.serverPushConfigured));
+}
   }catch{}
  }
 
@@ -79,7 +89,7 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered app device{deviceCount===1?"":"s"}</p></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered device{deviceCount===1?"":"s"} · <b>{claimedDeviceCount}</b> linked to accounts · <b>{verifiedGmailDeviceCount}</b> devices on {verifiedGmailUsers} verified Gmail user{verifiedGmailUsers===1?"":"s"}</p></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
    <p>Send a real native phone notification to all users, Gmail users, users without Gmail, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
