@@ -11,6 +11,7 @@ type Update={
  apkUrl:string;
  releaseNotes:string;
  force:boolean;
+ installRequired:boolean;
  publishedAt?:string|null
 };
 type Progress={
@@ -23,7 +24,7 @@ type Progress={
  notification?:string
 };
 type UpdaterPlugin={
- installApk(options:{url:string;fileName:string;totalBytes?:number}):Promise<{started:boolean}>;
+ installApk(options:{url:string;fileName:string;totalBytes?:number;installRequired?:boolean}):Promise<{started:boolean}>;
  getDownloadProgress():Promise<Progress>;
  getAppVersion():Promise<{version:string;versionCode:number}>;
  openDownloadedApk():Promise<{opened:boolean}>;
@@ -110,8 +111,16 @@ export default function AppUpdateGate(){
  };
 
  useEffect(()=>{
-  if(!visible||!update||!update.force||progress.status!=="completed")return;
-  void openInstaller();
+  if(!visible||!update||progress.status!=="completed")return;
+  if(update.installRequired){
+   void openInstaller();
+   return;
+  }
+  setBusy(true);
+  const id=String(update.id||"");
+  if(id)localStorage.setItem(appliedKey(id),"1");
+  const timer=window.setTimeout(()=>{setBusy(false);setVisible(false)},1200);
+  return()=>window.clearTimeout(timer);
  },[visible,update,progress.status]);
 
  if(!visible||!update)return null;
@@ -125,7 +134,8 @@ export default function AppUpdateGate(){
    await NumelixaUpdater.installApk({
     url:update.apkUrl,
     fileName:"Numelixa-"+update.version+".apk",
-    totalBytes:Number(update.sizeBytes||0)
+    totalBytes:Number(update.sizeBytes||0),
+    installRequired:Boolean(update.installRequired)
    });
    setProgress({
     status:"downloading",
@@ -158,7 +168,7 @@ export default function AppUpdateGate(){
    <div className="numelixa-update-icon">{done?"✓":"↟"}</div>
    <span className="eyebrow">{update.force?"REQUIRED UPDATE":"NEW UPDATE"}</span>
    <h2>Numelixa {update.version}</h2>
-   <p>{done?"Update downloaded successfully. Install it to continue.":update.releaseNotes||"A new version of Numelixa is ready with improvements and fixes."}</p>
+   <p>{done?(update.installRequired?"Update downloaded successfully. Install it to continue.":"Update downloaded successfully. Finishing…"):update.releaseNotes||"A new version of Numelixa is ready with improvements and fixes."}</p>
    <div className="numelixa-update-meta"><span>APK SIZE</span><b>{totalMb.toFixed(2)} MB</b></div>
    {(busy||progress.status==="downloading"||done)&&<div className="numelixa-download-progress">
     <div className="numelixa-download-progress-head"><span>{done?"Downloaded":"Downloading update"}</span><b>{percent.toFixed(0)}%</b></div>
@@ -171,10 +181,10 @@ export default function AppUpdateGate(){
    </div>}
    {error&&<div className="error-box">{error}</div>}
    <button className="primary-btn full" onClick={done?openInstaller:install} disabled={busy&&!done}>
-    {done?"Install update":busy?"Downloading…":"Download update"} <span>→</span>
+    {done?(update.installRequired?"Install update":"Finishing…"):busy?"Downloading…":"Download update"} <span>→</span>
    </button>
    {!update.force&&<button className="secondary-btn full" onClick={()=>setVisible(false)} disabled={busy}>Later</button>}
-   {update.force&&<small>This update is required to continue using Numelixa.</small>}
+   {update.installRequired&&<small>This update is required to continue using Numelixa.</small>}
   </section>
  </div>;
 }
