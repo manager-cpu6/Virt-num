@@ -15,15 +15,12 @@ export default function MobileAppBootstrap(){
   let push:any=null;
   let syncInFlight=false;
   let permissionInFlight=false;
-  let retryTimer:number|null=null;
-  let retryInterval:number|null=null;
-  let lastToken="";
-
+  let retryTimer:ReturnType<typeof setTimeout>|null=null;
   const cleanups:Array<()=>void>=[];
 
   const scheduleRetry=()=>{
    if(stopped||retryTimer)return;
-   retryTimer=window.setTimeout(()=>{
+   retryTimer=setTimeout(()=>{
     retryTimer=null;
     void ensurePushPermission();
     void syncStoredToken();
@@ -32,37 +29,24 @@ export default function MobileAppBootstrap(){
 
   const syncToken=async(token:string)=>{
    const clean=String(token||"").trim();
-   if(!clean||clean.length<20||stopped)return false;
+   if(!clean||clean.length<20||stopped||syncInFlight)return false;
 
    localStorage.setItem(TOKEN_KEY,clean);
-   lastToken=clean;
-   if(syncInFlight)return false;
-
    syncInFlight=true;
    try{
-    const apiBase=(window.location.origin==="https://numelixa.com"||window.location.origin==="https://www.numelixa.com")
-      ? window.location.origin
-      : "https://numelixa.com";
-    const response=await fetch(apiBase+"/api/notifications/register",{
+    const response=await fetch("/api/notifications/register",{
      method:"POST",
      credentials:"include",
      cache:"no-store",
      headers:{"Content-Type":"application/json"},
-     body:JSON.stringify({
-      token:clean,
-      platform:Capacitor.getPlatform()
-     })
+     body:JSON.stringify({token:clean,platform:Capacitor.getPlatform()})
     });
 
-    const responseText=await response.text().catch(()=>"");
     if(response.ok){
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
-    console.warn("[NUMELIXA PUSH REGISTER] Server rejected token",{
-     status:response.status,
-     body:responseText.slice(0,500)
-    });
+
     scheduleRetry();
     return false;
    }catch(error){
@@ -88,32 +72,25 @@ export default function MobileAppBootstrap(){
 
    permissionInFlight=true;
    try{
-    await new Promise<void>(resolve=>window.setTimeout(resolve,800));
-    let current=await push.checkPermissions();
-    if(current.receive!=="granted"){
-     const requested=await push.requestPermissions();
-     if(requested.receive!=="granted"){
-      console.warn("[NUMELIXA PUSH] Notification permission was not granted.");
-      scheduleRetry();
-      return false;
-     }
-     current=await push.checkPermissions();
-    }
-    if(current.receive!=="granted"){
-     console.warn("[NUMELIXA PUSH] Permission still not granted after request.");
-     scheduleRetry();
-     return false;
-    }
-    try{
+    const current=await push.checkPermissions();
+
+    // Do NOT create a custom Numelixa permission screen.
+    // Android itself must show the normal system notification permission dialog.
+    if(current.receive==="granted"){
      await push.register();
-    }catch(error){
-     console.error("[NUMELIXA FCM REGISTER]",error);
-     scheduleRetry();
-     return false;
+     await syncStoredToken();
+     return true;
     }
 
-    await syncStoredToken();
-    return true;
+    const result=await push.requestPermissions();
+    if(result.receive==="granted"){
+     await push.register();
+     await syncStoredToken();
+     return true;
+    }
+
+    console.warn("[NUMELIXA PUSH] Android notification permission was not granted.");
+    return false;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
     scheduleRetry();
@@ -121,6 +98,14 @@ export default function MobileAppBootstrap(){
    }finally{
     permissionInFlight=false;
    }
+  };
+
+  const retryAfterAuth=()=>{
+   void ensurePushPermission();
+   void syncStoredToken();
+   window.setTimeout(()=>void syncStoredToken(),1000);
+   window.setTimeout(()=>void syncStoredToken(),3000);
+   window.setTimeout(()=>void syncStoredToken(),10000);
   };
 
   (async()=>{
@@ -154,8 +139,8 @@ export default function MobileAppBootstrap(){
     });
     cleanups.push(()=>registrationError.remove());
 
-    const received=await PushNotifications.addListener("pushNotificationReceived",(event)=>{
-     window.dispatchEvent(new CustomEvent("numelixa-notification",{detail:event}));
+    const received=await PushNotifications.addListener("pushNotificationReceived",()=>{
+     window.dispatchEvent(new Event("numelixa-notification"));
     });
     cleanups.push(()=>received.remove());
 
@@ -165,44 +150,29 @@ export default function MobileAppBootstrap(){
     });
     cleanups.push(()=>action.remove());
 
-    const retry=()=>{
-     void ensurePushPermission();
-     void syncStoredToken();
-     window.setTimeout(()=>void syncStoredToken(),1000);
-     window.setTimeout(()=>void syncStoredToken(),3000);
-     window.setTimeout(()=>void syncStoredToken(),10000);
-    };
-
-    window.addEventListener("numelixa-auth-ready",retry);
-    window.addEventListener("online",retry);
-    window.addEventListener("focus",retry);
-    document.addEventListener("visibilitychange",retry);
+    window.addEventListener("numelixa-auth-ready",retryAfterAuth);
+    window.addEventListener("online",retryAfterAuth);
+    window.addEventListener("focus",retryAfterAuth);
+    document.addEventListener("visibilitychange",retryAfterAuth);
 
     cleanups.push(()=>{
-     window.removeEventListener("numelixa-auth-ready",retry);
-     window.removeEventListener("online",retry);
-     window.removeEventListener("focus",retry);
-     document.removeEventListener("visibilitychange",retry);
+     window.removeEventListener("numelixa-auth-ready",retryAfterAuth);
+     window.removeEventListener("online",retryAfterAuth);
+     window.removeEventListener("focus",retryAfterAuth);
+     document.removeEventListener("visibilitychange",retryAfterAuth);
     });
 
-    // On first install Android shows its own POST_NOTIFICATIONS dialog.
-    // If permission is already allowed, nothing is displayed.
+    // Android MainActivity requests the real system permission on first launch.
+    // Once granted, Capacitor registers FCM and this component registers the token
+    // against the currently authenticated Numelixa user.
     await ensurePushPermission();
     await syncStoredToken();
 
-    // Keep registration alive. This is intentionally independent of the
-    // notification permission dialog: permission and FCM device registration
-    // are separate steps. If login finishes after the FCM token is created,
-    // the same token is uploaded again and attached to the current user.
-    retryInterval=window.setInterval(()=>{
-     // Permission may be granted by the native Android dialog after the
-     // first ensurePushPermission() call. Re-check here so FCM registration
-     // starts immediately after the user taps Allow.
+    const heartbeat=window.setInterval(()=>{
      void ensurePushPermission();
-     if(lastToken) void syncToken(lastToken);
-     else void syncStoredToken();
-    },2000);
-    cleanups.push(()=>{if(retryInterval!==null){window.clearInterval(retryInterval);retryInterval=null;}});
+     void syncStoredToken();
+    },10000);
+    cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){
     console.error("[NUMELIXA PUSH]",error);
    }
@@ -210,7 +180,7 @@ export default function MobileAppBootstrap(){
 
   return()=>{
    stopped=true;
-   if(retryTimer!==null){window.clearTimeout(retryTimer);retryTimer=null;}
+   if(retryTimer)clearTimeout(retryTimer);
    cleanups.forEach(fn=>{try{fn()}catch{}});
    document.documentElement.classList.remove("numelixa-native");
    document.body.classList.remove("numelixa-native");
