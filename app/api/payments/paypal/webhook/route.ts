@@ -23,8 +23,7 @@ export async function POST(req:Request){
  try{
   const body:any=await req.json();if(!(await verify(req.headers,body)))return NextResponse.json({ok:false,error:"Invalid PayPal webhook."},{status:401});
   const event=String(body?.event_type||"");const resource=body?.resource||{};let providerId="";
-  if(event==="CHECKOUT.ORDER.APPROVED")providerId=String(resource?.id||"");
-  else if(event==="PAYMENT.CAPTURE.COMPLETED")providerId=String(resource?.supplementary_data?.related_ids?.order_id||"");
+  if(event==="PAYMENT.CAPTURE.COMPLETED")providerId=String(resource?.supplementary_data?.related_ids?.order_id||"");
   if(providerId){const p=await (await collection<any>("payments")).findOne({provider:"paypal",providerId});if(p)await credit(p,body);}
   return NextResponse.json({ok:true});
  }catch(e){console.error("[PAYPAL WEBHOOK]",e);return NextResponse.json({ok:false,error:"Webhook processing failed."},{status:500});}
