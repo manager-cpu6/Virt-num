@@ -280,25 +280,27 @@ export async function POST(req:Request){
     if(m==="EMAIL_VERIFICATION_REQUIRED")
       return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
     if(m==="PROVIDER_BALANCE_TOO_LOW")
-      return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
+      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try again."},{status:503});
     if(m==="PRICE_CHANGED")
-      return NextResponse.json({ok:false,error:"5SIM changed the number price before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
+      return NextResponse.json({ok:false,error:"The number price changed before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
     if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
       return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
     if(/not enough user balance/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
+      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try again."},{status:503});
     if(/not enough rating/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
-    if(/bad country/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
+      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try another service or country."},{status:503});
+    if(m==="INVALID_COUNTRY"||/bad country|country is incorrect/i.test(m))
+      return NextResponse.json({ok:false,code:"INVALID_COUNTRY",error:"Country is not supported. Use a country code listed by Numelixa."},{status:400});
+    if(m==="INVALID_SERVICE")
+      return NextResponse.json({ok:false,code:"INVALID_SERVICE",error:"Service is not supported. Use a service ID listed by Numelixa."},{status:400});
     if(/bad operator/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
+      return NextResponse.json({ok:false,code:"INVALID_OPERATOR",error:"Operator is not available for this service and country."},{status:400});
     if(/no product/i.test(m))
       return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
     if(/server offline/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again shortly."},{status:503});
     if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again shortly."},{status:503});
     if(m==="ORDER_SAVE_FAILED_REFUNDED")
       return NextResponse.json({ok:false,error:"The number service could not be saved, so your coins were refunded. Please try again."},{status:502});
     if(m.startsWith("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:")){
@@ -306,13 +308,13 @@ export async function POST(req:Request){
       return NextResponse.json({
         ok:false,
         code:"ACTIVATION_RECOVERY_REQUIRED",
-        error:"5SIM issued a number, but Numelixa could not save the order. Do not buy another number. Contact support with activation ID "+(parts[1]||"unknown")+"."
+        error:"A number was issued but could not be saved safely. Do not buy another number. Contact Numelixa support with recovery ID "+(parts[1]||"unknown")+"."
       },{status:503});
     }
     if(m==="PROVIDER_ORDER_CONFLICT")
       return NextResponse.json({ok:false,error:"The provider activation could not be safely attached to this account. Please contact support."},{status:409});
 
-    return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
+    return NextResponse.json({ok:false,error:"Number purchase failed. Your wallet is protected; please try again."},{status:502});
   }
 }
 export async function DELETE(req:Request){try{
