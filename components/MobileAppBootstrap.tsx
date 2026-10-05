@@ -39,7 +39,10 @@ export default function MobileAppBootstrap(){
 
    syncInFlight=true;
    try{
-    const response=await fetch("/api/notifications/register",{
+    const apiBase=(window.location.origin==="https://numelixa.com"||window.location.origin==="https://www.numelixa.com")
+      ? window.location.origin
+      : "https://numelixa.com";
+    const response=await fetch(apiBase+"/api/notifications/register",{
      method:"POST",
      credentials:"include",
      cache:"no-store",
