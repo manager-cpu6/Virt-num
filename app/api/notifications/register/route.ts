@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {getUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
+import {resetPendingNotificationRetries} from "@/lib/notifications";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -32,6 +33,8 @@ export async function POST(req:Request){
         : {$set:{token,platform,updatedAt:now},$setOnInsert:{createdAt:now,userId:null}},
       {upsert:true}
     );
+
+    if(user) await resetPendingNotificationRetries(String(user.id));
 
     const jar=await cookies();
     jar.set(DEVICE_COOKIE,token,{
