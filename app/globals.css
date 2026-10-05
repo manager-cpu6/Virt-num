@@ -353,3 +353,9 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
 .orders-empty{text-align:center;padding:44px 20px 35px;border-radius:23px;background:linear-gradient(145deg,rgba(7,34,65,.72),rgba(3,19,40,.78));border:1px solid rgba(91,147,219,.11)}.orders-empty-icon{width:58px;height:58px;margin:0 auto 12px;border-radius:19px;display:grid;place-items:center;background:rgba(59,153,255,.09);border:1px solid rgba(91,174,255,.13);color:#65bfff;font-size:24px;font-weight:950}.orders-empty h3{margin:0;color:#edf7ff;font-size:16px}.orders-empty p{margin:6px auto 16px;color:#698ab1;font-size:10px;line-height:1.5;max-width:300px}.orders-empty .primary-btn{display:inline-flex}
 .numelixa-native .orders-page{padding-bottom:112px}
 @media(max-width:430px){.orders-page{padding-left:0;padding-right:0}.orders-hero{padding:18px 15px;border-radius:22px}.orders-hero h1{font-size:25px}.orders-hero p{font-size:9px}.orders-refresh{width:40px;height:40px;flex-basis:40px}.orders-stat-strip{gap:5px}.orders-stat-strip>div{padding:10px 9px}.orders-tabs{gap:5px}.orders-tabs button{padding:6px;min-height:51px}.orders-tabs button span{width:23px;height:23px}.order-card{padding:13px;border-radius:21px}.order-status{font-size:6px;padding:5px 6px}.order-number-box span:first-child{font-size:14px}}
+
+
+.admin-update-mode{display:grid;gap:8px;margin:6px 0 12px;padding:13px 14px;border:1px solid rgba(91,151,224,.12);border-radius:16px;background:rgba(4,25,50,.45)}
+.admin-update-mode>b{font-size:11px;color:#dff3ff;letter-spacing:.02em}
+.admin-update-mode .admin-check{margin:0;line-height:1.45}
+.admin-update-mode small{color:#668bb3;font-size:9px;line-height:1.45}
