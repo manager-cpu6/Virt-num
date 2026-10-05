@@ -188,7 +188,7 @@ export default function MobileAppBootstrap(){
      if(lastToken) void syncToken(lastToken);
      else void syncStoredToken();
     },2000);
-    cleanups.push(()=>window.clearInterval(retryInterval));
+    cleanups.push(()=>{if(retryInterval!==null){window.clearInterval(retryInterval);retryInterval=null;}});
    }catch(error){
     console.error("[NUMELIXA PUSH]",error);
    }
