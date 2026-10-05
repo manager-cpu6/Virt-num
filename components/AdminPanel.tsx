@@ -47,12 +47,12 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","notifications","app update"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","app update"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
   {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
-  {tab==="providers"&&<Providers stats={stats}/>}
+  {tab==="providers"&&<Providers stats={stats}/>}\n  {tab==="payments"&&<AdminPayments/>}
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="app update"&&<AdminAppUpdate/>}
@@ -98,3 +98,29 @@ function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;ac
 
 function Table({title,children}:{title:string;children:ReactNode}){return <div className="admin-card"><h2>{title}</h2>{children}</div>}
 function Providers({stats}:{stats:Stats|null}){return <Table title="Integrations">{stats?.providers.map(p=><div className="admin-row" key={p.name}><span><b>{p.name}</b><small>{p.name==="5SIM"&&p.balance!==undefined?"Provider balance: $"+Number(p.balance).toFixed(2):"Server-side integration"}</small></span><small>{p.status}</small></div>)}</Table>}
+
+
+function AdminPayments(){
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState("");
+ async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
+ useEffect(()=>{load()},[]);
+ async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
+ async function activate(provider:"paypal"|"nowpayments"){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})}).then(r=>r.json());setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":"NOWPayments")+".":d.error||"Unable to switch payment method.");if(d.ok)await load();}finally{setBusy(false)}}
+ if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
+ return <div className="admin-two-col">
+  <Table title="Active payment method">
+   <div className="payment-provider-card"><div><b>NOWPayments</b><small>Existing crypto payment method</small></div><button className={state.activeProvider==="nowpayments"?"primary-btn":"secondary-btn"} disabled={busy||!state.nowpayments.configured} onClick={()=>activate("nowpayments")}>{state.activeProvider==="nowpayments"?"OPEN NOWPAYMENTS":"Open NOWPayments"}</button></div>
+   <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>
+   <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
+   {msg&&<div className="success-box">{msg}</div>}
+  </Table>
+  <Table title="PayPal credentials">
+   <div className="admin-form">
+    <label>Client ID<input value={clientId} onChange={e=>setClientId(e.target.value)} placeholder={state.paypal.clientId||"Paste PayPal Client ID"} autoComplete="off"/></label>
+    <label>Secret Key<input value={secretKey} onChange={e=>setSecretKey(e.target.value)} placeholder="Paste PayPal Secret Key" type="password" autoComplete="new-password"/></label>
+    <button className="primary-btn" disabled={busy||!clientId||!secretKey} onClick={save}>{busy?"Connecting PayPal…":"Save PayPal & connect webhook"}</button>
+    <small>Credentials are stored server-side encrypted and are never returned to the browser after saving. PayPal payments use dynamic Orders and completed-capture verification.</small>
+   </div>
+  </Table>
+ </div>
+}
