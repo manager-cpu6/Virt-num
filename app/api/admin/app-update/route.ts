@@ -54,21 +54,23 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"APK source must be a GitHub HTTPS release/file URL."},{status:400});
     }
 
-    const sizeResponse=await fetch(sourceUrl,{method:"HEAD",redirect:"follow",cache:"no-store"});
-    let sizeBytes=Number(sizeResponse.headers.get("content-length")||0);
-    if(!Number.isFinite(sizeBytes)||sizeBytes<=0){
-      const rangeResponse=await fetch(sourceUrl,{method:"GET",headers:{Range:"bytes=0-0"},redirect:"follow",cache:"no-store"});
-      const contentRange=rangeResponse.headers.get("content-range")||"";
-      const match=contentRange.match(/\/([0-9]+)$/);
-      sizeBytes=match?Number(match[1]):Number(rangeResponse.headers.get("content-length")||0);
-      try{await rangeResponse.body?.cancel();}catch{}
+    let sizeBytes=0;
+    if(manualSizeMb>0){
+      sizeBytes=Math.round(manualSizeMb*1024*1024);
+    }else{
+      const sizeResponse=await fetch(sourceUrl,{method:"HEAD",redirect:"follow",cache:"no-store"});
+      sizeBytes=Number(sizeResponse.headers.get("content-length")||0);
+      if(!Number.isFinite(sizeBytes)||sizeBytes<=0){
+        const rangeResponse=await fetch(sourceUrl,{method:"GET",headers:{Range:"bytes=0-0"},redirect:"follow",cache:"no-store"});
+        const contentRange=rangeResponse.headers.get("content-range")||"";
+        const match=contentRange.match(/\/([0-9]+)$/);
+        sizeBytes=match?Number(match[1]):Number(rangeResponse.headers.get("content-length")||0);
+        try{await rangeResponse.body?.cancel();}catch{}
+      }
+      if(!Number.isFinite(sizeBytes)||sizeBytes<=0)
+        return NextResponse.json({ok:false,error:"Unable to detect the APK file size."},{status:400});
     }
-    if((!Number.isFinite(sizeBytes)||sizeBytes<=0)&&manualSizeMb<=0)
-      return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Enter APK size in MB manually or check the APK URL and try again."},{status:400});
-    const sizeMb=manualSizeMb>0
-      ?Number(manualSizeMb.toFixed(2))
-      :Number((sizeBytes/(1024*1024)).toFixed(2));
-    if(manualSizeMb>0) sizeBytes=Math.round(manualSizeMb*1024*1024);
+    const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
     const releaseId=mongoId();
     // Keep GitHub as the private source; users download through apk.numelixa.com.
     // This avoids exposing GitHub and does not require Vercel Blob credentials.
