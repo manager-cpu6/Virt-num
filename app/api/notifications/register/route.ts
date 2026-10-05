@@ -1,13 +1,19 @@
 import {NextResponse} from "next/server";
-import {requireUser} from "@/lib/auth";
+import {requireUser, getUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
+/**
+ * Register an Android FCM token.
+ *
+ * Important: the FCM token can arrive before the user finishes logging in.
+ * We therefore store it immediately with userId:null and attach it to the
+ * authenticated user on the next sync. This removes the login/FCM race.
+ */
 export async function POST(req:Request){
   try{
-    const user=await requireUser();
     let body:any;
     try{
       body=await req.json();
@@ -22,13 +28,18 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"Invalid device token."},{status:400});
     }
 
+    const user=await getUser();
     const now=new Date();
-    await (await collection<any>("deviceTokens")).updateOne(
+    const devices=await collection<any>("deviceTokens");
+
+    // If the user is already authenticated, bind the token immediately.
+    // Otherwise keep the token pending until the same app syncs after login.
+    await devices.updateOne(
       {token},
       {
         $set:{
           token,
-          userId:String(user.id),
+          userId:user ? String(user.id) : null,
           platform,
           updatedAt:now
         },
@@ -37,14 +48,17 @@ export async function POST(req:Request){
       {upsert:true}
     );
 
-    return NextResponse.json({ok:true,registered:true});
+    return NextResponse.json({
+      ok:true,
+      registered:true,
+      authenticated:Boolean(user)
+    });
   }catch(error){
     const message=error instanceof Error?error.message:String(error);
-    const status=message==="AUTH_REQUIRED"?401:500;
     console.error("[NOTIFICATION DEVICE REGISTER]",message);
     return NextResponse.json(
-      {ok:false,error:status===401?"AUTH_REQUIRED":"Unable to register device."},
-      {status}
+      {ok:false,error:"Unable to register device."},
+      {status:500}
     );
   }
 }
