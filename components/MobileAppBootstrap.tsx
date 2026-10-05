@@ -69,35 +69,17 @@ export default function MobileAppBootstrap(){
   };
 
   const ensurePushPermission=async()=>{
-   if(!push||stopped||permissionInFlight)return false;
-
-   permissionInFlight=true;
+   if(!push||stopped)return false;
    try{
     const current=await push.checkPermissions();
-
-    // Never render a custom Numelixa notification-permission screen.
-    // Android shows its own system dialog when permission is needed.
-    if(current.receive==="granted"){
-     await push.register();
-     await syncStoredToken();
-     return true;
-    }
-
-    const result=await push.requestPermissions();
-    if(result.receive==="granted"){
-     await push.register();
-     await syncStoredToken();
-     return true;
-    }
-
-    console.warn("[NUMELIXA PUSH] Android notification permission was not granted.");
-    return false;
+    // MainActivity owns the Android system permission dialog. During the
+    // dialog Android may temporarily report denied; do not close the app here.
+    if(current.receive!=="granted")return false;
+    await push.register();
+    return true;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
-    scheduleRetry();
     return false;
-   }finally{
-    permissionInFlight=false;
    }
   };
 
