@@ -10,6 +10,36 @@ let pricesCache=new Map<string,Cache<any>>();
 function configured(){return !!key}
 export function providerConfigured(){return configured()}
 
+const COUNTRY_ALIASES:Record<string,string>={
+  us:"usa", usa:"usa",
+  uk:"uk", gb:"uk",
+  ae:"uae", uae:"uae",
+  sa:"saudiarabia", "saudi-arabia":"saudiarabia",
+  tz:"tanzania", ng:"nigeria", ke:"kenya", et:"ethiopia"
+};
+
+function normalizeCountryInput(value:string){
+  const raw=String(value||"").trim().toLowerCase();
+  return COUNTRY_ALIASES[raw]||raw;
+}
+
+async function resolvePublicCountry(value:string){
+  const normalized=normalizeCountryInput(value);
+  if(!/^[a-z0-9_-]{2,40}$/.test(normalized)) throw new Error("INVALID_COUNTRY");
+  const countries=await listCountries();
+  const found=countries.find(c=>String(c.id).toLowerCase()===normalized);
+  if(!found) throw new Error("INVALID_COUNTRY");
+  return String(found.id);
+}
+
+async function resolvePublicService(value:string){
+  const service=String(value||"").trim().toLowerCase();
+  if(!/^[a-z0-9_-]{2,60}$/.test(service)) throw new Error("INVALID_SERVICE");
+  const services=await listServices();
+  if(!services.some(s=>String(s.id).toLowerCase()===service)) throw new Error("INVALID_SERVICE");
+  return service;
+}
+
 class FiveSimError extends Error {
   status:number;
   providerBody:string;
@@ -141,19 +171,21 @@ function quoteForOperator(productTree:any,operator="any"){
 function bestOperator(productTree:any){return quoteForOperator(productTree,"any")}
 
 export async function getPrice(country:string,service:string,operator="any"){
-  const raw=await guest("/v1/guest/prices?country="+encodeURIComponent(country)+"&product="+encodeURIComponent(service));
+  const safeCountry=await resolvePublicCountry(country);
+  const safeService=await resolvePublicService(service);
+  const raw=await guest("/v1/guest/prices?country="+encodeURIComponent(safeCountry)+"&product="+encodeURIComponent(safeService));
 
   // 5SIM's new protocol can return the filtered tree as:
   // { product: { country: { operator: { cost, count, rate } } } }
   // or, depending on the endpoint response, { country: { product: { ... } } }.
   // Never pass the whole product tree to bestOperator: that could select
   // the cheapest operator from a DIFFERENT country and make maxPrice fail.
-  const byProduct=raw?.[service];
+  const byProduct=raw?.[safeService];
   const root=
-    byProduct?.[country] ||
-    byProduct?.[String(country).toLowerCase()] ||
-    raw?.[country]?.[service] ||
-    raw?.[String(country).toLowerCase()]?.[service] ||
+    byProduct?.[safeCountry] ||
+    byProduct?.[String(safeCountry).toLowerCase()] ||
+    raw?.[safeCountry]?.[safeService] ||
+    raw?.[String(safeCountry).toLowerCase()]?.[safeService] ||
     {};
 
   const quote=quoteForOperator(root,operator);
@@ -181,11 +213,13 @@ export async function servicePrices(service:string,countries:any[]=[]){
 }
 
 export async function purchase(country:string,service:string,maxPrice?:number,operator="any"){
+  const safeCountry=await resolvePublicCountry(country);
+  const safeService=await resolvePublicService(service);
   const selectedOperator=String(operator||"any").trim().toLowerCase()||"any";
 
   // Read the live quote immediately before purchase. The quote is used as a
   // safety ceiling, not as a stale price that must be sent to 5SIM.
-  const fresh=await getPrice(country,service,selectedOperator);
+  const fresh=await getPrice(safeCountry,safeService,selectedOperator);
   if(!fresh.count||!fresh.cost){
     throw new Error(selectedOperator==="any"?"NO_FREE_PHONES":"OPERATOR_OUT_OF_STOCK");
   }
@@ -205,9 +239,9 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
   // false failure when the provider quote changes between two requests.
   // We still enforce our own price ceiling after the provider responds.
   const path="/v1/user/buy/activation/"
-    +encodeURIComponent(country)+"/"
+    +encodeURIComponent(safeCountry)+"/"
     +encodeURIComponent(selectedOperator)+"/"
-    +encodeURIComponent(service);
+    +encodeURIComponent(safeService);
 
   let p:any;
   try{
@@ -220,7 +254,7 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
     const msg=first instanceof Error?first.message:String(first);
     // A single retry is allowed only for a transient provider stock race.
     if(!/no free phones|price|maxprice|stock|temporarily unavailable/i.test(msg))throw first;
-    const retryQuote=await getPrice(country,service,selectedOperator);
+    const retryQuote=await getPrice(safeCountry,safeService,selectedOperator);
     if(!retryQuote.count||!retryQuote.cost)throw new Error("NO_FREE_PHONES");
     p=await user(selectedOperator==="any" && Number(retryQuote.cost)>0
       ? path+"?maxPrice="+encodeURIComponent(String(retryQuote.cost))
@@ -282,8 +316,8 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
     success:1,
     order_id:String(activationId),
     number:String(activationPhone),
-    country:String(activation?.country||p?.country||country),
-    service:String(activation?.product||p?.product||service),
+    country:String(activation?.country||p?.country||safeCountry),
+    service:String(activation?.product||p?.product||safeService),
     expires_in:expiresAt
       ? Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000))
       :600,
