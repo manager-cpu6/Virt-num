@@ -10,6 +10,7 @@ import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.IBinder;
@@ -101,7 +102,7 @@ public class NumelixaUpdateService extends Service {
             connection.setInstanceFollowRedirects(true);
             connection.setConnectTimeout(30000);
             connection.setReadTimeout(60000);
-            connection.setRequestProperty("User-Agent", "Numelixa-Android/" + BuildConfig.VERSION_NAME);
+            connection.setRequestProperty("User-Agent", "Numelixa-Android");
             connection.setRequestProperty("Accept", "application/vnd.android.package-archive,application/octet-stream,*/*");
             if (existing > 0) connection.setRequestProperty("Range", "bytes=" + existing + "-");
             connection.connect();
