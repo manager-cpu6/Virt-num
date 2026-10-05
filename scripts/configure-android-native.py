@@ -34,17 +34,19 @@ public class NumelixaUpdateService extends Service {
     private static final String DOWNLOADED_KEY = "downloaded_bytes";
     private static final String STATUS_KEY = "status";
     private static final String ERROR_KEY = "error";
+    private static final String INSTALL_REQUIRED_KEY = "install_required";
     private static final int NOTIFICATION_ID = 4811;
     private static final String CHANNEL_ID = "numelixa_update";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private volatile boolean running = false;
 
-    public static void start(Context context, String url, String fileName, long expectedBytes) {
+    public static void start(Context context, String url, String fileName, long expectedBytes, boolean installRequired) {
         Intent i = new Intent(context, NumelixaUpdateService.class);
         i.setAction(ACTION_START);
         i.putExtra("url", url);
         i.putExtra("fileName", fileName);
         i.putExtra("expectedBytes", expectedBytes);
+        i.putExtra("installRequired", installRequired);
         if (Build.VERSION.SDK_INT >= 26) context.startForegroundService(i);
         else context.startService(i);
     }
@@ -60,10 +62,11 @@ public class NumelixaUpdateService extends Service {
             String url = intent.getStringExtra("url");
             String fileName = intent.getStringExtra("fileName");
             long expected = intent.getLongExtra("expectedBytes", 0);
+            boolean installRequired = intent.getBooleanExtra("installRequired", true);
             if (url != null && url.startsWith("https://") && fileName != null && !running) {
                 getSharedPreferences(PREFS, MODE_PRIVATE).edit()
                     .putString(URL_KEY, url).putString(FILE_KEY, fileName)
-                    .putLong(TOTAL_KEY, expected).putString(STATUS_KEY, "downloading")
+                    .putLong(TOTAL_KEY, expected).putBoolean(INSTALL_REQUIRED_KEY, installRequired).putString(STATUS_KEY, "downloading")
                     .putString(ERROR_KEY, "").apply();
                 startDownload();
             }
@@ -174,7 +177,8 @@ public class NumelixaUpdateService extends Service {
 
         String text;
         if ("completed".equals(getSharedPreferences(PREFS, MODE_PRIVATE).getString(STATUS_KEY, ""))) {
-            text = "Update downloaded. Tap to open Numelixa and install it.";
+            boolean installRequired = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(INSTALL_REQUIRED_KEY, true);
+            text = installRequired ? "Update downloaded. Tap to open Numelixa and install it." : "Update download complete. Return to Numelixa.";
         } else if ("failed".equals(getSharedPreferences(PREFS, MODE_PRIVATE).getString(STATUS_KEY, ""))) {
             text = getSharedPreferences(PREFS, MODE_PRIVATE).getString(ERROR_KEY, "Download failed");
         } else if (total > 0) {
@@ -255,12 +259,13 @@ public class NumelixaUpdaterPlugin extends Plugin {
         String name = call.getString("fileName", "Numelixa-update.apk");
         Long expectedValue = call.getLong("totalBytes");
         long expected = expectedValue == null ? 0 : expectedValue;
+        boolean installRequired = Boolean.TRUE.equals(call.getBoolean("installRequired", true));
         if (url == null || !url.startsWith("https://")) {
             call.reject("Invalid update URL");
             return;
         }
         try {
-            NumelixaUpdateService.start(getContext(), url, name, expected);
+            NumelixaUpdateService.start(getContext(), url, name, expected, installRequired);
             JSObject o = new JSObject();
             o.put("started", true);
             call.resolve(o);
