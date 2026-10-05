@@ -137,6 +137,8 @@ export default function AppUpdateGate(){
    if(p.status==="completed"){await openInstaller();setBusy(false);return;}
    // The native service downloads the APK into the app's private external-files area.
    // This is resumable and does not depend on the browser download manager.
+   // Native service downloads into the app-private update area.
+   // It is resumable and independent of the browser download manager.
    await NumelixaUpdater.installApk({
     url:update.apkUrl,
     fileName:"Numelixa-"+update.version+".apk",
