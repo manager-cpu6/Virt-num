@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#031b22">
-<title>Numelixa — Connection</title>
+<meta name="theme-color" content="#020817">
+<title>Numelixa — Reconnecting</title>
 <style>
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#020817;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
@@ -13,24 +13,67 @@ body:before{content:"";position:fixed;width:360px;height:360px;top:-150px;right:
 body:after{content:"";position:fixed;width:300px;height:300px;bottom:-150px;left:-120px;border-radius:50%;background:rgba(0,207,255,.12);filter:blur(55px)}
 .card{position:relative;z-index:1;width:min(100%,390px);padding:34px 24px 26px;text-align:center;border:1px solid rgba(83,145,255,.18);border-radius:32px;background:linear-gradient(145deg,rgba(7,29,66,.96),rgba(3,16,39,.98));box-shadow:0 30px 90px rgba(0,0,0,.45)}
 .logo{width:76px;height:76px;margin:0 auto 20px;border-radius:25px;display:grid;place-items:center;font-size:48px;font-weight:950;background:linear-gradient(145deg,#18d8ff,#1465ff 58%,#192fff);box-shadow:0 18px 40px rgba(13,103,255,.34),inset 0 1px 0 rgba(255,255,255,.38)}
-.icon{width:78px;height:78px;margin:4px auto 22px;border-radius:50%;display:grid;place-items:center;border:1px solid rgba(75,160,255,.18);background:rgba(12,65,150,.18);font-size:36px}
+.spinner{width:48px;height:48px;margin:5px auto 22px;border-radius:50%;border:4px solid rgba(86,164,255,.14);border-top-color:#42b6ff;border-right-color:#235dff;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 h1{margin:0;font-size:25px;letter-spacing:-.045em}
 p{margin:10px auto 24px;max-width:310px;color:#8ea9d0;font-size:13px;line-height:1.6}
 button{width:100%;height:52px;border:0;border-radius:16px;color:#fff;font-weight:900;font-size:14px;background:linear-gradient(135deg,#0b96ff,#164cff);box-shadow:0 14px 30px rgba(14,91,255,.28)}
+button:disabled{opacity:.65}
 .small{margin-top:16px;color:#55749f;font-size:9px}
 </style>
 </head>
 <body>
 <main class="card">
  <div class="logo">N</div>
- <div class="icon">⌁</div>
- <h1>Please check your internet connection</h1>
- <p>It looks like you're not connected to the internet. Please check your mobile data or Wi-Fi and try again.</p>
- <button onclick="window.location.href=&quot;https://numelixa.com/&quot;">↻ &nbsp; Refresh</button>
- <div class="small">Numelixa · Fast · Simple · Powerful</div>
+ <div class="spinner" id="spinner"></div>
+ <h1 id="title">Checking your connection</h1>
+ <p id="message">Numelixa is checking mobile data or Wi-Fi. When the connection is back, the app will return automatically — no browser will be opened.</p>
+ <button id="retry">↻ &nbsp; Check again</button>
+ <div class="small">Numelixa · Secure app connection</div>
 </main>
 <script>
-window.addEventListener("online",function(){location.reload()});
+(function(){
+ const APP="https://numelixa.com/";
+ const title=document.getElementById("title");
+ const message=document.getElementById("message");
+ const button=document.getElementById("retry");
+ const spinner=document.getElementById("spinner");
+ let checking=false;
+ async function check(){
+   if(checking)return;
+   checking=true;
+   button.disabled=true;
+   spinner.style.display="block";
+   title.textContent="Checking your connection";
+   message.textContent="Please wait while Numelixa checks the internet connection.";
+   try{
+     const controller=new AbortController();
+     const timer=setTimeout(()=>controller.abort(),5000);
+     const r=await fetch(APP+"?connection_check="+Date.now(),{
+       method:"GET",
+       cache:"no-store",
+       redirect:"follow",
+       signal:controller.signal
+     });
+     clearTimeout(timer);
+     if(r.ok){
+       title.textContent="Connection restored";
+       message.textContent="Returning to Numelixa…";
+       window.location.replace(APP);
+       return;
+     }
+   }catch(e){}
+   spinner.style.display="block";
+   title.textContent="No internet connection";
+   message.textContent="Turn on mobile data or Wi-Fi. Numelixa will automatically return when the connection is working.";
+   button.disabled=false;
+   checking=false;
+ }
+ button.addEventListener("click",check);
+ window.addEventListener("online",check);
+ setInterval(check,3000);
+ check();
+})();
 </script>
 </body>
 </html>
