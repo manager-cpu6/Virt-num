@@ -135,6 +135,8 @@ export default function AppUpdateGate(){
    if(Capacitor.getPlatform()!=="android")throw new Error("ANDROID_ONLY");
    const p=await NumelixaUpdater.getDownloadProgress();
    if(p.status==="completed"){await openInstaller();setBusy(false);return;}
+   // The native service downloads the APK into the app's private external-files area.
+   // This is resumable and does not depend on the browser download manager.
    await NumelixaUpdater.installApk({
     url:update.apkUrl,
     fileName:"Numelixa-"+update.version+".apk",
@@ -153,9 +155,13 @@ export default function AppUpdateGate(){
    });
   }catch(e){
    console.error("[NUMELIXA UPDATE INSTALL]",e);
-   setError(String(e).includes("INSTALL_PERMISSION_REQUIRED")
+   const raw=String(e||"");
+   console.error("[NUMELIXA UPDATE START ERROR]",raw);
+   setError(raw.includes("INSTALL_PERMISSION_REQUIRED")
     ?"Allow Numelixa to install updates, then tap Install update again."
-    :"Unable to start the update. Please try again.");
+    :raw.includes("Unable to start update service")
+      ?"The update service could not start. Please keep Numelixa open and tap Download update again."
+      :"Unable to start the update. Please try again.");
    setBusy(false);
   }
  };
