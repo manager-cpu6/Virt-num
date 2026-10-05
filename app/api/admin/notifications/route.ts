@@ -15,7 +15,7 @@ export async function GET(){
     const claimedDeviceCount = await deviceTokens.countDocuments({userId:{$nin:[null,""]}});
     const unclaimedDeviceCount = await deviceTokens.countDocuments({$or:[{userId:null},{userId:""}]});
     const verifiedGmailUsers = await users.find(
-      {verifiedAt:{$exists:true,$ne:null},email:/@gmail\\.com$/i},
+      {verifiedAt:{$exists:true,$ne:null},email:/@gmail\.com$/i},
       {projection:{_id:1}}
     ).toArray();
     const verifiedGmailIds = verifiedGmailUsers.map(u=>String(u._id));
