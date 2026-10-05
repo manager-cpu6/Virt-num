@@ -32,21 +32,40 @@ export async function POST(req:Request){
     const now=new Date();
     const devices=await collection<any>("deviceTokens");
 
-    // If the user is already authenticated, bind the token immediately.
-    // Otherwise keep the token pending until the same app syncs after login.
-    await devices.updateOne(
-      {token},
-      {
-        $set:{
-          token,
-          userId:user ? String(user.id) : null,
-          platform,
-          updatedAt:now
+    // Never unbind a token that is already linked to a user just because
+    // this request arrived before the auth cookie was ready. This prevents
+    // a verified user's push device from disappearing during auth races.
+    if(user){
+      await devices.updateOne(
+        {token},
+        {
+          $set:{
+            token,
+            userId:String(user.id),
+            platform,
+            updatedAt:now
+          },
+          $setOnInsert:{createdAt:now}
         },
-        $setOnInsert:{createdAt:now}
-      },
-      {upsert:true}
-    );
+        {upsert:true}
+      );
+    }else{
+      await devices.updateOne(
+        {token},
+        {
+          $set:{
+            token,
+            platform,
+            updatedAt:now
+          },
+          $setOnInsert:{
+            createdAt:now,
+            userId:null
+          }
+        },
+        {upsert:true}
+      );
+    }
 
     return NextResponse.json({
       ok:true,
