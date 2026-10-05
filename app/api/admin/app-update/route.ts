@@ -48,7 +48,8 @@ export async function POST(req:Request){
     const allowedHosts=new Set([
       "github.com","www.github.com",
       "objects.githubusercontent.com","release-assets.githubusercontent.com",
-      "raw.githubusercontent.com","githubusercontent.com"
+      "raw.githubusercontent.com","githubusercontent.com",
+      "numelixa.com","www.numelixa.com"
     ]);
     if(sourceUrl.protocol!=="https:"||!allowedHosts.has(sourceUrl.hostname.toLowerCase())){
       return NextResponse.json({ok:false,error:"APK source must be a GitHub HTTPS release/file URL."},{status:400});
@@ -74,7 +75,7 @@ export async function POST(req:Request){
     const releaseId=mongoId();
     // Keep GitHub as the private source; users download through apk.numelixa.com.
     // This avoids exposing GitHub and does not require Vercel Blob credentials.
-    const apkUrl="https://apk.numelixa.com/android";
+    const apkUrl="https://numelixa.com/api/mobile/apk";
     const now=new Date();
     const targetCreatedBefore=force?now:null;
     const doc={
