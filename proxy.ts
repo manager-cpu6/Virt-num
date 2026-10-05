@@ -27,7 +27,21 @@ export function proxy(req:NextRequest){
     return NextResponse.rewrite(url);
   }
 
-  if(PUBLIC_HOSTS.has(host)){
+  if(host==="docs.numelixa.com"){
+    const url=req.nextUrl.clone();
+    if(pathname==="/"||pathname===""){
+      url.pathname="/developers/docs";
+    }else if(pathname==="/api"||pathname.startsWith("/api/")){
+      url.pathname="/developers/docs";
+    }else if(pathname==="/docs"||pathname.startsWith("/docs/")){
+      url.pathname="/developers/docs"+pathname.slice(5);
+    }else{
+      url.pathname="/docs"+pathname;
+    }
+    return NextResponse.rewrite(url);
+  }
+
+  if(host==="developers.numelixa.com"){
     if(pathname==="/"||pathname===""){
       const url=req.nextUrl.clone();
       url.pathname="/developers";
