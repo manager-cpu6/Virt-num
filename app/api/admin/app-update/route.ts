@@ -87,17 +87,70 @@ export async function POST(req:Request){
 
     let push:PushSendResult={configured:false,successCount:0,failureCount:0,invalidTokens:[],errors:[]};
     if(sendAll){
-      const devices=await (await collection<any>("deviceTokens")).find({}).toArray();
-      push=await sendPush(
-        devices.map(x=>String(x.token||"")),
-        "🚀 New Numelixa update",
-        "Version "+version+" is ready. Update now for the latest Numelixa experience.",
-        {url:"/account?update=1",type:"app_update",version}
-      );
-      if(push.invalidTokens?.length){
-        await (await collection<any>("deviceTokens")).deleteMany({token:{$in:push.invalidTokens}});
+      // Only notify users who already existed when this release was published.
+      // This keeps a later signup from receiving an old release notification.
+      const users=await collection<any>("users");
+      const existingUsers=await users.find(
+        {createdAt:{$lte:now}},
+        {projection:{_id:1}}
+      ).toArray();
+      const existingUserIds=existingUsers.map(x=>String(x._id));
+
+      const notifications=await collection<any>("notifications");
+      if(existingUserIds.length){
+        await notifications.insertMany(existingUserIds.map(userId=>({
+          _id:mongoId(),
+          userId,
+          title:"🚀 New Numelixa update",
+          message:"Version "+version+" is ready. Update now for the latest Numelixa experience.",
+          adminSent:true,
+          target:"app_update",
+          type:"app_update",
+          version,
+          releaseId,
+          createdAt:now,
+          readAt:null,
+          sentCount:0,
+          pushConfigured:false
+        })));
+
+        const devices=await (await collection<any>("deviceTokens"))
+          .find({userId:{$in:existingUserIds}})
+          .toArray();
+
+        push=await sendPush(
+          devices.map(x=>String(x.token||"")),
+          "🚀 New Numelixa update",
+          "Version "+version+" is ready. Update now for the latest Numelixa experience.",
+          {url:"/account?update=1",type:"app_update",version,releaseId}
+        );
+
+        if(push.invalidTokens?.length){
+          await (await collection<any>("deviceTokens"))
+            .deleteMany({token:{$in:push.invalidTokens}});
+        }
+
+        await notifications.updateMany(
+          {releaseId},
+          {$set:{
+            sentCount:push.successCount,
+            failureCount:push.failureCount,
+            pushErrors:push.errors||[],
+            pushConfigured:push.configured,
+            updatedAt:new Date()
+          }}
+        );
       }
-      await updates.updateOne({_id:doc._id},{$set:{pushSent:push.successCount,pushFailed:push.failureCount}});
+
+      await updates.updateOne(
+        {_id:doc._id},
+        {$set:{
+          pushSent:push.successCount,
+          pushFailed:push.failureCount,
+          pushConfigured:push.configured,
+          pushErrors:push.errors||[]
+        }}
+      );
     }
 
     return NextResponse.json({
