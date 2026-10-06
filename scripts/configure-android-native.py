@@ -425,20 +425,7 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    @Override protected void onResume() {
-        super.onResume();
 
-        // Do not close the activity while Android's first-run permission
-        // dialog is still active. After the result returns, a denial closes
-        // the app above. If the user later disables notifications in Settings,
-        // there is no pending request, so returning here closes the app.
-        if (Build.VERSION.SDK_INT >= 33 &&
-            !notificationPermissionRequestPending &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            finishAndRemoveTask();
-        }
-    }
-}
 ''', encoding="utf-8")
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
