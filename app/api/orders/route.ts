@@ -1,6 +1,6 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
-import {notifyUser} from "@/lib/notifications";
-export const runtime="nodejs";export const dynamic="force-dynamic";
+import {NextResponse} from "next/server";\nimport {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
+import {notifyUser} from "@/lib/notifications";\nimport {watchOrderForPush} from "@/lib/order-watcher";
+export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
   let walletDebited=false;
@@ -117,7 +117,7 @@ export async function POST(req:Request){
         }
       }
 
-      if(!saved){
+      // Start a short-lived durable watcher after the HTTP response so SMS pushes do not depend on the 5-minute backup worker.\n      after(async()=>{\n        try{await watchOrderForPush(String(id),String(u.id));}\n        catch(error){console.error("[ORDER WATCHER]",error);}\n      });\n\n      if(!saved){
         // The activation is real, but Numelixa could not persist it. Do not
         // silently report a normal purchase failure. Try to cancel; only
         // refund if cancellation is confirmed.
