@@ -29,6 +29,14 @@ export async function POST(req:Request){
 
   // A recent successful/failed send attempt should not be hammered by
   // repeated taps. If a valid token exists, the page can simply reuse it.
+  if(!latest&&attemptAge>=0&&attemptAge<60*1000){
+   const retryAfter=Math.ceil((60*1000-attemptAge)/1000);
+   return NextResponse.json({
+    ok:false,
+    error:"Please wait "+retryAfter+" seconds before requesting another code.",
+    retryAfter
+   },{status:429,headers:{"Retry-After":String(retryAfter)}});
+  }
   if(resend&&attemptAge>=0&&attemptAge<60*1000){
    const retryAfter=Math.ceil((60*1000-attemptAge)/1000);
    return NextResponse.json({
