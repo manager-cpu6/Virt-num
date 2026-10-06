@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush,isFirebaseConfigured} from "@/lib/push";
-import {sendEmail,emailTemplate} from "@/lib/mailer";
+import {cookies} from "next/headers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,6 +77,19 @@ export async function POST(req:Request){
     }
 
     const action = String(body.action||"").trim();
+
+    if(action==="test_current_device"){
+      const token=String((await cookies()).get("numelixa_device_token")?.value||"").trim();
+      if(!token)return NextResponse.json({ok:false,error:"This admin device has no registered FCM token. Open the latest Numelixa Android app and allow notifications first."},{status:409});
+      const result=await sendPush(
+        [token],
+        "🔔 Numelixa notification test",
+        "Firebase push is working on this Android device.",
+        {url:"/account",type:"diagnostic",test:"1"}
+      );
+      if(result.invalidTokens?.length)await (await collection<any>("deviceTokens")).deleteMany({token:{$in:result.invalidTokens}});
+      return NextResponse.json({ok:true,sent:result.successCount,failed:result.failureCount,configured:result.configured,errors:result.errors||[]});
+    }
     if(action==="register_all" || action==="register_email"){
       const users = await collection<any>("users");
       const subs = await collection<any>("notificationEmailSubscriptions");
@@ -176,20 +189,7 @@ export async function POST(req:Request){
       console.error("[ADMIN NOTIFICATIONS PUSH]", pushError);
     }
 
-    const emailSubs = await (await collection<any>("notificationEmailSubscriptions")).find({userId:{$in:ids},enabled:true}).toArray();
-    let emailSent=0;
-    let emailFailed=0;
-    await Promise.all(emailSubs.map(async (sub:any)=>{
-      try{
-        await sendEmail(String(sub.email),title,emailTemplate(title,message,undefined,"Numelixa notification"));
-        emailSent++;
-      }catch(error){
-        emailFailed++;
-        console.error("[ADMIN NOTIFICATION EMAIL]",{email:sub.email,error:error instanceof Error?error.message:String(error)});
-      }
-    }));
-
-    if(pushResult.invalidTokens?.length){
+    // Admin Push Center is native-push only. Account email remains reserved for security/verification mail.\n    if(pushResult.invalidTokens?.length){
       await (await collection<any>("deviceTokens")).deleteMany({token:{$in:pushResult.invalidTokens}});
     }
 
@@ -215,9 +215,9 @@ export async function POST(req:Request){
       failed:pushResult.failureCount,
       pushConfigured:pushResult.configured,
       errors:pushResult.errors||[],
-      emailRecipients:emailSubs.length,
-      emailSent,
-      emailFailed,
+      emailRecipients:0,
+      emailSent:0,
+      emailFailed:0,
       pushError
     });
   }catch(error){
