@@ -25,8 +25,9 @@ export async function POST(req:Request){
     }
 
     const settings=await getSettings();
-    const requestedOperator=String(b.operator||"").trim().toLowerCase();
-    const operator=requestedOperator||String(settings.providerOperator||"any").trim().toLowerCase()||"any";
+    // Provider/operator selection is an internal Numelixa setting.
+    // Never accept or expose an upstream operator choice through the public API.
+    const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
 
     // Always obtain a fresh provider quote immediately before debiting.
     const quote=await getPrice(country,service,operator);
