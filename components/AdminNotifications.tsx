@@ -16,8 +16,6 @@ export default function AdminNotifications(){
  const[claimedDeviceCount,setClaimedDeviceCount]=useState(0);
  const[verifiedGmailUsers,setVerifiedGmailUsers]=useState(0);
  const[verifiedGmailDeviceCount,setVerifiedGmailDeviceCount]=useState(0);
- const[emailRegisteredCount,setEmailRegisteredCount]=useState(0);
- const[usersWithEmail,setUsersWithEmail]=useState(0);
  const[registerBusy,setRegisterBusy]=useState(false);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false),[testBusy,setTestBusy]=useState(false);
@@ -33,9 +31,7 @@ export default function AdminNotifications(){
  setClaimedDeviceCount(Number(d.claimedDeviceCount||0));
  setVerifiedGmailUsers(Number(d.verifiedGmailUsers||0));
  setVerifiedGmailDeviceCount(Number(d.verifiedGmailDeviceCount||0));
- setEmailRegisteredCount(Number(d.emailRegisteredCount||0));
- setUsersWithEmail(Number(d.usersWithEmail||0));
- setServerPushConfigured(Boolean(d.serverPushConfigured));
+  setServerPushConfigured(Boolean(d.serverPushConfigured));
 }
   }catch{}
  }
@@ -47,18 +43,6 @@ export default function AdminNotifications(){
    .then(d=>{if(d.ok)setUsers(d.users||[])})
    .catch(()=>{});
  },[]);
-
- async function registerAll(){
-  if(!usersWithEmail)return;
-  setRegisterBusy(true);setResult("");
-  try{
-   const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"register_all"})});
-   const d=await r.json();
-   setResult(d.ok?"✅ Registered "+d.registered+" user email"+(Number(d.registered)===1?"":"s")+" for notification delivery.":"❌ "+(d.error||"Unable to register users."));
-   await load();
-  }catch{setResult("❌ Unable to register users right now.");}
-  finally{setRegisterBusy(false);}
- }
 
  async function testCurrentDevice(){
   setTestBusy(true);setResult("");
@@ -121,10 +105,10 @@ export default function AdminNotifications(){
    <div className="admin-grid admin-grid-wide" style={{marginBottom:16}}>
     <div className="metric"><span>Registered devices</span><strong>{deviceCount}</strong><small>FCM tokens</small></div>
     <div className="metric"><span>Linked devices</span><strong>{claimedDeviceCount}</strong><small>ready for user push</small></div>
-    <div className="metric"><span>Email users</span><strong>{usersWithEmail}</strong><small>accounts with email</small></div>
-    <div className="metric"><span>Email registered</span><strong>{emailRegisteredCount}</strong><small>notification recipients</small></div>
+    <div className="metric"><span>Unlinked devices</span><strong>{Math.max(0,deviceCount-claimedDeviceCount)}</strong><small>need app login</small></div>
+    <div className="metric"><span>Gmail app devices</span><strong>{verifiedGmailDeviceCount}</strong><small>verified Gmail accounts</small></div>
    </div>
-   <div className="admin-card" style={{marginBottom:16}}><h2>Native notification diagnostics</h2><p className="admin-help">Push notifications are sent only to registered Numelixa Android devices. Email is not used as a substitute for app push.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="secondary-btn" disabled={testBusy} onClick={testCurrentDevice}>{testBusy?"Testing…":"🔔 Test this admin device"}</button><button className="secondary-btn" disabled={registerBusy||!usersWithEmail} onClick={registerAll}>{registerBusy?"Syncing…":"Sync users with email"}</button></div></div>
+   <div className="admin-card" style={{marginBottom:16}}><h2>Native notification diagnostics</h2><p className="admin-help">Push notifications are sent only to registered Numelixa Android devices. Email is not used as a substitute for app push.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="secondary-btn" disabled={testBusy} onClick={testCurrentDevice}>{testBusy?"Testing…":"🔔 Test this admin device"}</button> </div></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
    <p>Send a real native Firebase notification to every registered app device, Gmail users, non-Gmail users, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
