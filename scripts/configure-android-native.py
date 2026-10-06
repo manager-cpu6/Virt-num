@@ -444,7 +444,7 @@ public class MainActivity extends BridgeActivity {
         }
     }
 }
-''', encoding="utf-8"), encoding="utf-8")
+''', encoding="utf-8")
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
 s = manifest.read_text(encoding="utf-8")
