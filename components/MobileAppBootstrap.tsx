@@ -76,16 +76,28 @@ export default function MobileAppBootstrap(){
 
   const ensurePushPermission=async()=>{
    if(!push||stopped)return false;
+   if(permissionInFlight)return false;
+   permissionInFlight=true;
    try{
-    const current=await push.checkPermissions();
-    // MainActivity owns the Android system permission dialog. During the
-    // dialog Android may temporarily report denied; do not close the app here.
-    if(current.receive!=="granted")return false;
+    let current=await push.checkPermissions();
+    // Android 13+ requires POST_NOTIFICATIONS to be granted at runtime.
+    // Never assume another native screen will request it: the Capacitor
+    // push plugin is the source of truth for this permission.
+    if(current.receive!=="granted"){
+      current=await push.requestPermissions();
+    }
+    if(current.receive!=="granted"){
+      console.warn("[NUMELIXA PUSH PERMISSION] Notifications are not granted.");
+      return false;
+    }
     await push.register();
     return true;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
+    scheduleRetry();
     return false;
+   }finally{
+    permissionInFlight=false;
    }
   };
 
@@ -174,8 +186,20 @@ export default function MobileAppBootstrap(){
         cleanups.push(()=>localAction.remove());
       }
     }catch(error){console.warn("[NUMELIXA LOCAL ACTION]",error);}
-    const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{
-     const raw=String(event.notification?.data?.url||"/");
+    const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event:any)=>{
+     const data=event?.notification?.data||{};
+     if(String(data?.type||"")==="login_approval"&&data?.approvalId){
+      window.dispatchEvent(new CustomEvent("numelixa-login-approval",{detail:{
+       type:"login_approval",
+       approvalId:String(data.approvalId),
+       device:String(data.device||"Browser"),
+       browser:String(data.browser||"Browser"),
+       city:String(data.city||""),
+       country:String(data.country||"")
+      }}));
+      return;
+     }
+     const raw=String(data?.url||"/");
      window.location.href=raw.startsWith("/")?raw:"/";
     });
     cleanups.push(()=>action.remove());
