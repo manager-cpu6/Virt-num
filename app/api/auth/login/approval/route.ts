@@ -46,6 +46,7 @@ export async function PUT(req:Request){
   const approvals=await import("@/lib/mongo").then(x=>x.collection<any>("loginApprovals"));
   const row=await approvals.findOne({approvalId:id,status:"approved"});
   if(!row)return NextResponse.json({ok:false,error:"Approval is no longer available."},{status:409});
+  if(row.sessionIssuedAt)return NextResponse.json({ok:false,error:"Login session already issued."},{status:409});
 
   await createSession(String(row.userId),requestMeta(req.headers));
   await approvals.updateOne({_id:row._id},{$set:{sessionIssuedAt:new Date()}});
