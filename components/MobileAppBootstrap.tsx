@@ -151,6 +151,17 @@ export default function MobileAppBootstrap(){
 
     const received=await PushNotifications.addListener("pushNotificationReceived",async(notification:any)=>{
      window.dispatchEvent(new Event("numelixa-notification"));
+     const pushData=notification?.data||{};
+     if(String(pushData?.type||"")==="login_approval"&&pushData?.approvalId){
+      window.dispatchEvent(new CustomEvent("numelixa-login-approval",{detail:{
+       type:"login_approval",
+       approvalId:String(pushData.approvalId),
+       device:String(pushData.device||"Browser"),
+       browser:String(pushData.browser||"Browser"),
+       city:String(pushData.city||""),
+       country:String(pushData.country||"")
+      }}));
+     }
      try{
       if(localNotifications)await localNotifications.schedule({notifications:[{id:Math.floor(Date.now()%2147483000),title:String(notification?.title||"Numelixa"),body:String(notification?.body||""),channelId:"numelixa",sound:"default",extra:notification?.data||{}}]});
      }catch(error){console.warn("[NUMELIXA FOREGROUND NOTIFICATION]",error);}
