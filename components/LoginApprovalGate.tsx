@@ -3,9 +3,23 @@ import {useEffect,useState} from "react";
 export default function LoginApprovalGate(){
  const[request,setRequest]=useState<any>(null),[busy,setBusy]=useState(false);
  useEffect(()=>{
+  const consume=(d:any)=>{
+   if(d?.type==="login_approval"&&d.approvalId){
+    setRequest(d);
+    try{localStorage.setItem("numelixa_pending_login_approval",JSON.stringify(d));}catch{}
+   }
+  };
+  try{
+   const raw=localStorage.getItem("numelixa_pending_login_approval");
+   if(raw)consume(JSON.parse(raw));
+  }catch{}
+  try{
+   const id=new URLSearchParams(window.location.search).get("approvalId");
+   if(id)consume({type:"login_approval",approvalId:id});
+  }catch{}
   const handler=(event:any)=>{
    const d=event?.detail||{};
-   if(d?.type==="login_approval"&&d.approvalId)setRequest(d);
+   consume(d);
   };
   window.addEventListener("numelixa-login-approval",handler as EventListener);
   return()=>window.removeEventListener("numelixa-login-approval",handler as EventListener);
@@ -16,9 +30,9 @@ export default function LoginApprovalGate(){
   try{
    const r=await fetch("/api/auth/login/approval",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({approvalId:request.approvalId,approve:value})});
    const d=await r.json();
-   if(d.ok){setRequest(null);return}
+   if(d.ok){setRequest(null);try{localStorage.removeItem("numelixa_pending_login_approval")}catch{};return}
    alert(d.error||"This login request is no longer available.");
-   setRequest(null);
+   setRequest(null);try{localStorage.removeItem("numelixa_pending_login_approval")}catch{};
   }catch{alert("Unable to respond to the login request. Please try again.");}
   finally{setBusy(false)}
  };
