@@ -20,7 +20,7 @@ export default function AdminNotifications(){
  const[usersWithEmail,setUsersWithEmail]=useState(0);
  const[registerBusy,setRegisterBusy]=useState(false);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
- const[busy,setBusy]=useState(false);
+ const[busy,setBusy]=useState(false),[testBusy,setTestBusy]=useState(false);
  const[result,setResult]=useState("");
 
  async function load(){
@@ -60,6 +60,17 @@ export default function AdminNotifications(){
   finally{setRegisterBusy(false);}
  }
 
+ async function testCurrentDevice(){
+  setTestBusy(true);setResult("");
+  try{
+   const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"test_current_device"})});
+   const d=await r.json();
+   if(!d.ok){setResult("❌ "+(d.error||"Push test failed."));return}
+   setResult(Number(d.sent)>0?"✅ Firebase test notification sent to this device.":"❌ Firebase did not accept the device notification."+((d.errors||[])[0]?.message?" "+(d.errors||[])[0].message:""));
+  }catch{setResult("❌ Unable to run the Firebase device test.");}
+  finally{setTestBusy(false);}
+ }
+
  async function send(e:React.FormEvent){
   e.preventDefault();
   setBusy(true);
@@ -94,7 +105,7 @@ export default function AdminNotifications(){
      (d.errors?.[0]?.message?" FCM: "+d.errors[0].message:" Please reopen the latest Numelixa app so its FCM token can be registered again.")
     );
    }else{
-    setResult("✅ Push sent to "+d.sent+" devices · email sent to "+Number(d.emailSent||0)+" users · saved for "+d.recipients+" users");
+    setResult("✅ Native push sent to "+d.sent+" devices · saved for "+d.recipients+" users");
    }
 
    setTitle("");
@@ -113,10 +124,10 @@ export default function AdminNotifications(){
     <div className="metric"><span>Email users</span><strong>{usersWithEmail}</strong><small>accounts with email</small></div>
     <div className="metric"><span>Email registered</span><strong>{emailRegisteredCount}</strong><small>notification recipients</small></div>
    </div>
-   <div className="admin-card" style={{marginBottom:16}}><h2>Notification registration</h2><p className="admin-help">Registering users here enables email notification delivery for their saved account email. Native phone push still requires the Numelixa Android app to register an FCM device.</p><button className="secondary-btn" disabled={registerBusy||!usersWithEmail} onClick={registerAll}>{registerBusy?"Registering…":"Register All Users with Email"}</button></div>
+   <div className="admin-card" style={{marginBottom:16}}><h2>Native notification diagnostics</h2><p className="admin-help">Push notifications are sent only to registered Numelixa Android devices. Email is not used as a substitute for app push.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="secondary-btn" disabled={testBusy} onClick={testCurrentDevice}>{testBusy?"Testing…":"🔔 Test this admin device"}</button><button className="secondary-btn" disabled={registerBusy||!usersWithEmail} onClick={registerAll}>{registerBusy?"Syncing…":"Sync users with email"}</button></div></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
-   <p>Send a real native phone notification to all users, Gmail users, users without Gmail, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
+   <p>Send a real native Firebase notification to every registered app device, Gmail users, non-Gmail users, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
