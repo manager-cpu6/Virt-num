@@ -56,7 +56,7 @@ export async function POST(req:Request){
       }
     }
 
-    return NextResponse.json({ok:true,registered:true,linked:true});
+    const response=NextResponse.json({ok:true,registered:true,linked:true});\n    response.cookies.set("numelixa_device_token",token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*365});\n    return response;
   }catch(error){
     const message=error instanceof Error?error.message:String(error);
     const status=message==="AUTH_REQUIRED"?401:500;
