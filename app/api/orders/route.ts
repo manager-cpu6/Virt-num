@@ -1,5 +1,6 @@
-import {NextResponse,after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {notifyUser} from "@/lib/notifications";import {watchOrderForPush} from "@/lib/order-watcher";
-export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
+import {notifyUser} from "@/lib/notifications";
+export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
   let walletDebited=false;
@@ -25,17 +26,16 @@ export async function POST(req:Request){
     }
 
     const settings=await getSettings();
-    // Provider/operator selection is an internal Numelixa setting.
-    // Never accept or expose an upstream operator choice through the public API.
-    const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
+    const requestedOperator=String(b.operator||"").trim().toLowerCase();
+    const operator=requestedOperator||String(settings.providerOperator||"any").trim().toLowerCase()||"any";
 
     // Always obtain a fresh provider quote immediately before debiting.
     const quote=await getPrice(country,service,operator);
     if(!quote.count||!quote.cost){
       return NextResponse.json(
         {ok:false,error:operator==="any"
-          ?"No availiable Numbers"
-          :"No availiable Numbers"},
+          ?"This service/country is currently out of stock."
+          :"The selected 5SIM operator is currently out of stock for this service/country."},
         {status:409}
       );
     }
@@ -152,11 +152,32 @@ export async function POST(req:Request){
         throw new Error("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:"+providerOrderId+":"+number);
       }
 
-      // Push the purchase event immediately, then keep a short server-side
-      // watcher alive after the response so an SMS can trigger a native push
-      // without waiting for the 5-minute scheduled worker.
+      // The activation is durable. Email is best-effort so SMTP issues can never
+      // turn a successful 5SIM purchase into a failed purchase.
       try{
+        const base=new URL(req.url).origin;
+        const buyerName=String(fresh.name||"there");
+        await sendEmail(
+          String(fresh.email||u.email||""),
+          "Number secured — Numelixa purchase complete",
+          purchaseSuccessEmail(
+            buyerName,
+            service,
+            country,
+            number,
+            price,
+            base+"/get-code/"+id
+          )
+        );
+      }catch(emailError){
+        console.error("[PURCHASE EMAIL]",{
+          orderId:id,
+          userId:u.id,
+          message:emailError instanceof Error?emailError.message:String(emailError)
+        });
+      }
 
+      try{
         await notifyUser(
           String(u.id),
           "📱 Number ready",
@@ -166,8 +187,6 @@ export async function POST(req:Request){
       }catch(error){
         console.error("[ORDER PUSH]", error);
       }
-
-      after(async()=>{await watchOrderForPush(id,String(u.id));});
 
       // The actual order is now durable. Ledger logging is secondary and
       // must never turn a successful provider purchase into a fake failure.
@@ -195,6 +214,8 @@ export async function POST(req:Request){
           id,
           number,
           price,
+          providerCost:Number(p.providerCost||quote.cost),
+          operator:String(p.operator||operator),
           expiresIn:Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000)),
           stockAfter:Math.max(0,Number(quote.count)-1)
         }
@@ -212,6 +233,8 @@ export async function POST(req:Request){
               id:String(existing._id),
               number:String(existing.phoneNumber||""),
               price:Number(existing.priceCoins||price),
+              providerCost:Number(existing.providerCostUsd||quote.cost),
+              operator:String(existing.providerOperator||operator),
               expiresIn:Math.max(0,Math.floor((new Date(existing.expiresAt).getTime()-Date.now())/1000)),
               stockAfter:Math.max(0,Number(quote.count)-1)
             }
@@ -257,27 +280,25 @@ export async function POST(req:Request){
     if(m==="EMAIL_VERIFICATION_REQUIRED")
       return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
     if(m==="PROVIDER_BALANCE_TOO_LOW")
-      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try again."},{status:503});
+      return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
     if(m==="PRICE_CHANGED")
-      return NextResponse.json({ok:false,error:"The number price changed before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
+      return NextResponse.json({ok:false,error:"5SIM changed the number price before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
     if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
-      return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
+      return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
     if(/not enough user balance/i.test(m))
-      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try again."},{status:503});
+      return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
     if(/not enough rating/i.test(m))
-      return NextResponse.json({ok:false,error:"The selected number is temporarily unavailable. Please try another service or country."},{status:503});
-    if(m==="INVALID_COUNTRY"||/bad country|country is incorrect/i.test(m))
-      return NextResponse.json({ok:false,code:"INVALID_COUNTRY",error:"Country is not supported. Use a country code listed by Numelixa."},{status:400});
-    if(m==="INVALID_SERVICE")
-      return NextResponse.json({ok:false,code:"INVALID_SERVICE",error:"Service is not supported. Use a service ID listed by Numelixa."},{status:400});
+      return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
+    if(/bad country/i.test(m))
+      return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
     if(/bad operator/i.test(m))
-      return NextResponse.json({ok:false,code:"INVALID_OPERATOR",error:"Operator is not available for this service and country."},{status:400});
+      return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
     if(/no product/i.test(m))
-      return NextResponse.json({ok:false,error:"No availiable Numbers"},{status:409});
+      return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
     if(/server offline/i.test(m))
-      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again shortly."},{status:503});
+      return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
     if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
-      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again shortly."},{status:503});
+      return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
     if(m==="ORDER_SAVE_FAILED_REFUNDED")
       return NextResponse.json({ok:false,error:"The number service could not be saved, so your coins were refunded. Please try again."},{status:502});
     if(m.startsWith("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:")){
@@ -285,13 +306,13 @@ export async function POST(req:Request){
       return NextResponse.json({
         ok:false,
         code:"ACTIVATION_RECOVERY_REQUIRED",
-        error:"A number was issued but could not be saved safely. Do not buy another number. Contact Numelixa support with recovery ID "+(parts[1]||"unknown")+"."
+        error:"5SIM issued a number, but Numelixa could not save the order. Do not buy another number. Contact support with activation ID "+(parts[1]||"unknown")+"."
       },{status:503});
     }
     if(m==="PROVIDER_ORDER_CONFLICT")
       return NextResponse.json({ok:false,error:"The provider activation could not be safely attached to this account. Please contact support."},{status:409});
 
-    return NextResponse.json({ok:false,error:"Number purchase failed. Your wallet is protected; please try again."},{status:502});
+    return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
   }
 }
 export async function DELETE(req:Request){try{
