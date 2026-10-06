@@ -20,10 +20,10 @@ export async function GET(req:Request){
   return NextResponse.json({
    ok:true,
    orders:rows.map((o:any)=>({
-    id:String(o._id),providerOrderId:o.providerOrderId,service:o.service,
+    id:String(o._id),service:o.service,
     country:o.country,countryCode:o.countryCode,phone:o.phoneNumber,
     price:Number(o.priceCoins||0),status:o.status,code:o.code||null,
-    fullSms:o.fullSms||null,operator:o.providerOperator||"any",
+    fullSms:o.fullSms||null,
     expiresAt:o.expiresAt,createdAt:o.createdAt,completedAt:o.completedAt||null
    })),
    count:rows.length
