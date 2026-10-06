@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection,mongoId} from "@/lib/mongo";
-import {createSession,passwordHash,tokenHash} from "@/lib/auth";
+import {createSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {issueApiKey} from "@/lib/api-key";
 import {sendEmail,verificationEmail} from "@/lib/mailer";
@@ -18,7 +18,7 @@ export async function POST(req:Request){
   await issueApiKey(id,"Production API key");
   const code=String(Math.floor(100000+Math.random()*900000));
   await (await collection("emailTokens")).insertOne({_id:mongoId(),tokenHash:tokenHash(code),userId:id,type:"email_verify_code",expiresAt:new Date(Date.now()+10*60*1000),createdAt:new Date()});
-  await createSession(id);
+  await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
   try{await sendEmail(email,"Verify your Numelixa email",verificationEmail(code))}catch(e){console.error("[SIGNUP EMAIL]",e)}
   return NextResponse.json({ok:true,verificationRequired:true});
