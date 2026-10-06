@@ -25,7 +25,23 @@ function makeTransporter(config:SmtpConfig){const key="__numelixa_mailer_"+confi
  return transporter;}
 async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,replyTo:config.from,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
 function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
-export async function sendEmail(to:string,subject:string,html:string){const config=smtpConfig();try{await sendWithConfig(config,to,subject,html);}catch(error){if(config.port===465&&isSocketTlsError(error)){try{await sendWithConfig({...config,port:587},to,subject,html);return;}catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Private Email SMTP error: "+message);}}const message=error instanceof Error?error.message:String(error);throw new Error("Private Email SMTP error: "+message);}}
+export async function sendEmail(to:string,subject:string,html:string){
+ const config=smtpConfig();
+ try{
+  await sendWithConfig(config,to,subject,html);
+ }catch(error){
+  if(config.port===465&&isSocketTlsError(error)){
+   try{await sendWithConfig({...config,port:587},to,subject,html);return;}
+   catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Private Email SMTP error: "+message);}
+  }
+  if(isSocketTlsError(error)){
+   await new Promise(resolve=>setTimeout(resolve,350));
+   try{await sendWithConfig(config,to,subject,html);return;}catch{}
+  }
+  const message=error instanceof Error?error.message:String(error);
+  throw new Error("Private Email SMTP error: "+message);
+ }
+}
 
 const shell=(content:string,preheader:string)=>{
  const logo='<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto"><tr><td align="center" valign="middle" style="width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#58e6cf,#0c777a);color:#031d25;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:46px;text-align:center;vertical-align:middle;box-shadow:0 10px 28px rgba(39,218,190,.25)">N</td></tr></table>';
