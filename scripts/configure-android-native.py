@@ -358,6 +358,8 @@ public class NumelixaUpdaterPlugin extends Plugin {
 
 (JAVA_DIR / "NumelixaPushTokenPlugin.java").write_text(r'''package com.numelixa.app;
 
+import android.os.Handler;
+import android.os.Looper;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -368,69 +370,62 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 @CapacitorPlugin(name = "NumelixaPushToken")
 public class NumelixaPushTokenPlugin extends Plugin {
+    private static final int MAX_ATTEMPTS = 5;
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
     @PluginMethod
     public void getToken(PluginCall call) {
         try {
-            try { FirebaseApp.getInstance(); }
-            catch (IllegalStateException e) { FirebaseApp.initializeApp(getContext()); }
+            FirebaseApp app;
+            try { app = FirebaseApp.getInstance(); }
+            catch (IllegalStateException missingDefaultApp) { app = FirebaseApp.initializeApp(getContext()); }
+            if (app == null) {
+                call.reject("Firebase initialization failed: google-services.json was not loaded for com.numelixa.app");
+                return;
+            }
+            FirebaseMessaging.getInstance().setAutoInitEnabled(true);
+            requestToken(call, 1);
         } catch (Exception e) {
-            call.reject("Firebase initialization failed: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
-            return;
+            String message = e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage();
+            call.reject("Firebase initialization failed: " + message, e);
         }
+    }
+
+    private void requestToken(PluginCall call, int attempt) {
         FirebaseMessaging.getInstance().getToken()
             .addOnSuccessListener(token -> {
+                String value = token == null ? "" : token.trim();
+                if (value.isEmpty()) { retryOrReject(call, attempt, "Firebase returned an empty FCM token"); return; }
                 JSObject result = new JSObject();
-                result.put("token", token);
+                result.put("token", value);
                 call.resolve(result);
             })
-            .addOnFailureListener(error ->
-                call.reject("Unable to get Firebase token", error)
-            );
+            .addOnFailureListener(error -> {
+                String message = error == null || error.getMessage() == null ? "Unable to get Firebase token" : error.getMessage();
+                retryOrReject(call, attempt, message);
+            });
+    }
+
+    private void retryOrReject(PluginCall call, int attempt, String message) {
+        if (attempt >= MAX_ATTEMPTS) {
+            call.reject(message + " (after " + MAX_ATTEMPTS + " attempts)");
+            return;
+        }
+        handler.postDelayed(() -> requestToken(call, attempt + 1), 2000L);
     }
 }
-
 ''', encoding="utf-8")
 
 (JAVA_DIR / "MainActivity.java").write_text(r'''package com.numelixa.app;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
-    private static final int NOTIFICATION_PERMISSION_REQUEST = 7001;
-
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
         registerPlugin(NumelixaPushTokenPlugin.class);
         super.onCreate(savedInstanceState);
-
-        // Android owns the real system notification permission dialog.
-        // Numelixa never renders a custom notification permission screen.
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(
-                new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                NOTIFICATION_PERMISSION_REQUEST
-            );
-        }
-    }
-
-    @Override public void onRequestPermissionsResult(
-        int requestCode, String[] permissions, int[] grantResults
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
-            boolean granted = grantResults.length > 0 &&
-                grantResults[0] == PackageManager.PERMISSION_GRANTED;
-
-            // If permission is denied, keep the app usable. The web layer can
-            // retry registration later and Android Settings remains available
-            // for re-enabling notifications.
-        }
     }
 }
 ''', encoding="utf-8")
