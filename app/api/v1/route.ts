@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
 import {getUser} from "@/lib/auth";
-import {providerConfigured} from "@/lib/fivesim";
 import {getSettings} from "@/lib/settings";
 
 export const runtime="nodejs";
@@ -27,7 +26,6 @@ export async function GET(){
     status:"operational",
     authenticated:Boolean(u),
     authentication:"Bearer nx_live_* or x-api-key",
-    provider:providerConfigured()?"available":"temporarily_unavailable",
     currency:"coins",
     coinsPerUsd:Number(settings?.coinsPerUsd||100),
     endpoints:{
