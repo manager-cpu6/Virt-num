@@ -62,6 +62,8 @@ function firebaseApp():App|null{
   }
 }
 
+export function isFirebaseConfigured(){ return Boolean(firebaseApp()); }
+
 export type PushSendResult={
   configured:boolean;
   successCount:number;
