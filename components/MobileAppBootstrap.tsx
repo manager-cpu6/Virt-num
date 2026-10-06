@@ -124,20 +124,24 @@ export default function MobileAppBootstrap(){
     }catch(error){console.warn("[NUMELIXA LOCAL NOTIFICATIONS]",error);}
 
     // Native fallback: obtain the Firebase token directly from Android.
-    // This bypasses timing issues where Capacitor's registration event can
-    // fire before the WebView/auth lifecycle is ready.
-    try{
-      const {registerPlugin}=await import("@capacitor/core");
-      const NativePushToken:any=registerPlugin("NumelixaPushToken");
-      const nativeToken=await NativePushToken.getToken();
-      const value=String(nativeToken?.token||"").trim();
-      if(value && value!==lastNativeToken){
-       lastNativeToken=value;
-       await syncToken(value);
+    // IMPORTANT: request notification permission first. On a fresh Android 13+
+    // install, asking Firebase for a token before POST_NOTIFICATIONS is granted
+    // can fail and leave the server with no registered device.
+    const readNativeToken=async(force=false)=>{
+      try{
+        const {registerPlugin}=await import("@capacitor/core");
+        const NativePushToken:any=registerPlugin("NumelixaPushToken");
+        const nativeToken=await NativePushToken.getToken();
+        const value=String(nativeToken?.token||"").trim();
+        if(value && (force || value!==lastNativeToken)){
+          lastNativeToken=value;
+          return await syncToken(value,true);
+        }
+      }catch(error){
+        console.warn("[NUMELIXA NATIVE FCM TOKEN]",error);
       }
-    }catch(error){
-      console.warn("[NUMELIXA NATIVE FCM TOKEN]",error);
-    }
+      return false;
+    };
 
     if(Capacitor.getPlatform()==="android"){
      try{
@@ -221,26 +225,17 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",retryAfterAuth);
     });
 
-    // Register FCM immediately. This works even before login.
-    // After login, the same token is rebound to the user's account.
+    // Register only after the listeners are installed, then read the native
+    // Firebase token again. This covers both Capacitor registration events and
+    // the direct native Firebase token path.
     await ensurePushPermission();
-    await syncStoredToken();
+    await readNativeToken(true);
+    await syncStoredToken(true);
 
     const heartbeat=window.setInterval(async()=>{
      void ensurePushPermission();
-     void syncStoredToken();
-     // Re-read Firebase's current native token so token rotation is repaired
-     // even if the Capacitor registration event is missed.
-     try{
-      const {registerPlugin}=await import("@capacitor/core");
-      const NativePushToken:any=registerPlugin("NumelixaPushToken");
-      const nativeToken=await NativePushToken.getToken();
-      const value=String(nativeToken?.token||"").trim();
-      if(value && value!==lastNativeToken){
-       lastNativeToken=value;
-       await syncToken(value);
-      }
-     }catch{}
+     void readNativeToken(true);
+     void syncStoredToken(true);
     },6*60*60*1000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){
