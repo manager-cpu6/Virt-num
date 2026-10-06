@@ -13,23 +13,15 @@ export default function AdminNotifications(){
  const[users,setUsers]=useState<{id:string;name:string;email:string}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0);
- const[claimedDeviceCount,setClaimedDeviceCount]=useState(0);
- const[verifiedGmailDeviceCount,setVerifiedGmailDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
- const[busy,setBusy]=useState(false),[testBusy,setTestBusy]=useState(false);
+ const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
 
  async function load(){
   try{
    const r=await fetch("/api/admin/notifications",{cache:"no-store"});
    const d=await r.json();
-   if(d.ok){
- setHistory(d.notifications||[]);
- setDeviceCount(Number(d.deviceCount||0));
- setClaimedDeviceCount(Number(d.claimedDeviceCount||0));
- setVerifiedGmailDeviceCount(Number(d.verifiedGmailDeviceCount||0));
-  setServerPushConfigured(Boolean(d.serverPushConfigured));
-}
+   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
   }catch{}
  }
 
@@ -40,17 +32,6 @@ export default function AdminNotifications(){
    .then(d=>{if(d.ok)setUsers(d.users||[])})
    .catch(()=>{});
  },[]);
-
- async function testCurrentDevice(){
-  setTestBusy(true);setResult("");
-  try{
-   const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"test_current_device"})});
-   const d=await r.json();
-   if(!d.ok){setResult("❌ "+(d.error||"Push test failed."));return}
-   setResult(Number(d.sent)>0?"✅ Firebase test notification sent to this device.":"❌ Firebase did not accept the device notification."+((d.errors||[])[0]?.message?" "+(d.errors||[])[0].message:""));
-  }catch{setResult("❌ Unable to run the Firebase device test.");}
-  finally{setTestBusy(false);}
- }
 
  async function send(e:React.FormEvent){
   e.preventDefault();
@@ -82,11 +63,10 @@ export default function AdminNotifications(){
     );
    }else if(Number(d.failed||0)>0){
     setResult(
-     "⚠️ Sent to "+d.sent+" devices, but "+d.failed+" devices failed."+
-     (d.errors?.[0]?.message?" FCM: "+d.errors[0].message:" Please reopen the latest Numelixa app so its FCM token can be registered again.")
+     "⚠️ Sent to "+d.sent+" devices, but "+d.failed+" devices failed."
     );
    }else{
-    setResult("✅ Native push sent to "+d.sent+" devices · saved for "+d.recipients+" users");
+    setResult("✅ Sent to "+d.sent+" app devices · saved for "+d.recipients+" users");
    }
 
    setTitle("");
@@ -98,21 +78,14 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered device{deviceCount===1?"":"s"} · <b>{claimedDeviceCount}</b> linked · <b>{deviceCount-claimedDeviceCount}</b> unlinked.</p></div>
-   <div className="admin-grid admin-grid-wide" style={{marginBottom:16}}>
-    <div className="metric"><span>Registered devices</span><strong>{deviceCount}</strong><small>FCM tokens</small></div>
-    <div className="metric"><span>Linked devices</span><strong>{claimedDeviceCount}</strong><small>ready for user push</small></div>
-    <div className="metric"><span>Unlinked devices</span><strong>{Math.max(0,deviceCount-claimedDeviceCount)}</strong><small>need app login</small></div>
-    <div className="metric"><span>Gmail app devices</span><strong>{verifiedGmailDeviceCount}</strong><small>verified Gmail accounts</small></div>
-   </div>
-   <div className="admin-card" style={{marginBottom:16}}><h2>Native notification diagnostics</h2><p className="admin-help">Push notifications are sent only to registered Numelixa Android devices. Email is not used as a substitute for app push.</p><div style={{display:"flex",gap:10,flexWrap:"wrap"}}><button className="secondary-btn" disabled={testBusy} onClick={testCurrentDevice}>{testBusy?"Testing…":"🔔 Test this admin device"}</button> </div></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered app device{deviceCount===1?"":"s"}</p></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
-   <p>Send a real native Firebase notification to every registered app device, Gmail users, non-Gmail users, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
+   <p>Send a real native phone notification to every user or one specific user. Numelixa does not use an in-app notification inbox.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
-      <option value="all">All users — Gmail + non-Gmail</option><option value="gmail">Gmail users only</option><option value="non_gmail">Non-Gmail users only</option>
+      <option value="all">All users</option>
       {users.map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email}</option>)}
      </select>
     </label>
