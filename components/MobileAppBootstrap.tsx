@@ -109,13 +109,8 @@ export default function MobileAppBootstrap(){
      await syncCurrentToken();
      return true;
     }
-    const result=await push.requestPermissions();
-    if(result.receive==="granted"){
-     document.getElementById("numelixa-notification-gate")?.remove();
-     await push.register();
-     await syncCurrentToken();
-     return true;
-    }
+    // MainActivity is the single startup permission owner. Avoid a second
+    // simultaneous Android permission request from the web layer.
     showPermissionGate();
     return false;
    }catch(error){
@@ -168,6 +163,7 @@ export default function MobileAppBootstrap(){
 
     // Permission is requested when the APK opens. The token is only linked
     // to an account after /api/me confirms an authenticated email account.
+    await new Promise(resolve=>setTimeout(resolve,1200));
     await ensurePushPermission();
     await syncCurrentToken();
 
