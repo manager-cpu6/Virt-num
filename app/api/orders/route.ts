@@ -191,8 +191,6 @@ export async function POST(req:Request){
           id,
           number,
           price,
-          providerCost:Number(p.providerCost||quote.cost),
-          operator:String(p.operator||operator),
           expiresIn:Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000)),
           stockAfter:Math.max(0,Number(quote.count)-1)
         }
@@ -210,8 +208,6 @@ export async function POST(req:Request){
               id:String(existing._id),
               number:String(existing.phoneNumber||""),
               price:Number(existing.priceCoins||price),
-              providerCost:Number(existing.providerCostUsd||quote.cost),
-              operator:String(existing.providerOperator||operator),
               expiresIn:Math.max(0,Math.floor((new Date(existing.expiresAt).getTime()-Date.now())/1000)),
               stockAfter:Math.max(0,Number(quote.count)-1)
             }
