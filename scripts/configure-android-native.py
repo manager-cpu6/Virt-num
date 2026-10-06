@@ -393,7 +393,6 @@ import com.getcapacitor.BridgeActivity;
 
 public class MainActivity extends BridgeActivity {
     private static final int NOTIFICATION_PERMISSION_REQUEST = 7001;
-    private boolean notificationPermissionRequestPending = false;
 
     @Override public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
@@ -404,7 +403,6 @@ public class MainActivity extends BridgeActivity {
         // Numelixa never renders a custom notification permission screen.
         if (Build.VERSION.SDK_INT >= 33 &&
             checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            notificationPermissionRequestPending = true;
             requestPermissions(
                 new String[]{Manifest.permission.POST_NOTIFICATIONS},
                 NOTIFICATION_PERMISSION_REQUEST
@@ -418,15 +416,12 @@ public class MainActivity extends BridgeActivity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
         if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
-            notificationPermissionRequestPending = false;
             boolean granted = grantResults.length > 0 &&
                 grantResults[0] == PackageManager.PERMISSION_GRANTED;
 
-            // Numelixa requires push permission. Denying the Android
-            // permission closes the app immediately.
-            if (!granted) {
-                finishAndRemoveTask();
-            }
+            // If permission is denied, keep the app usable. The web layer can
+            // retry registration later and Android Settings remains available
+            // for re-enabling notifications.
         }
     }
 
