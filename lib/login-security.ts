@@ -56,6 +56,7 @@ export async function getLoginApproval(approvalId:string){
  }
  return {
    id:String(row.approvalId),
+   userId:String(row.userId||""),
    status:row.status as LoginApprovalStatus,
    createdAt:row.createdAt,
    expiresAt:row.expiresAt,
