@@ -105,7 +105,7 @@ jobs:
 
   signed-release:
     name: Build signed production APK
-    if: github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: debug-apk
     runs-on: ubuntu-latest
     steps:
