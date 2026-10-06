@@ -1,6 +1,7 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { getUser } from "@/lib/auth";
+import AccountSessions from "@/components/AccountSessions";
 
 export default async function AccountPage(){
  const user=await getUser();
@@ -33,6 +34,7 @@ export default async function AccountPage(){
     <Link href="/wallet" className="account-action-card"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
     <Link href="/developers" className="account-action-card"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
    </section>
+   <AccountSessions/>
    {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
    <form action="/api/auth/logout" method="post" className="account-logout-form"><button type="submit">Sign out <span>↗</span></button></form>
   </main>
