@@ -202,7 +202,7 @@ export async function POST(req:Request){
           createdAt:now
         });
       }catch(e){
-        console.error("[5SIM ORDER LEDGER]",{
+        console.error("[NUMBER ORDER LEDGER]",{
           orderId:id,providerOrderId,userId,
           message:e instanceof Error?e.message:String(e)
         });
@@ -273,32 +273,32 @@ export async function POST(req:Request){
     }
   }catch(e){
     const m=e instanceof Error?e.message:"Order failed";
-    console.error("[5SIM ORDER]",{message:m,service,country,userId,providerOrderId});
+    console.error("[NUMBER ORDER]",{message:m,service,country,userId,providerOrderId});
 
     if(m==="AUTH_REQUIRED")
       return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
     if(m==="EMAIL_VERIFICATION_REQUIRED")
       return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:m},{status:403});
     if(m==="PROVIDER_BALANCE_TOO_LOW")
-      return NextResponse.json({ok:false,error:"The 5SIM provider balance is too low for this number. Please add more balance to the 5SIM account."},{status:502});
+      return NextResponse.json({ok:false,error:"The SMS inventory service is temporarily unavailable for this purchase."},{status:502});
     if(m==="PRICE_CHANGED")
-      return NextResponse.json({ok:false,error:"5SIM changed the number price before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
+      return NextResponse.json({ok:false,error:"The number price changed before purchase. Your coins were not charged. Please refresh and try again."},{status:409});
     if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM has no free number available for this service/country right now. Please refresh and try again."},{status:409});
+      return NextResponse.json({ok:false,error:"No number is available for this service/country right now. Please refresh and try again."},{status:409});
     if(/not enough user balance/i.test(m))
       return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
     if(/not enough rating/i.test(m))
       return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
     if(/bad country/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM rejected this country code. The selected country is not accepted by the provider."},{status:502});
+      return NextResponse.json({ok:false,error:"The selected country is temporarily unavailable."},{status:502});
     if(/bad operator/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM rejected the operator selection for this service."},{status:502});
+      return NextResponse.json({ok:false,error:"The selected number configuration is temporarily unavailable."},{status:502});
     if(/no product/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM does not currently offer this service in the selected country."},{status:409});
+      return NextResponse.json({ok:false,error:"This service is currently unavailable in the selected country."},{status:409});
     if(/server offline/i.test(m))
-      return NextResponse.json({ok:false,error:"5SIM is temporarily offline for this purchase. Please try again shortly."},{status:503});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again shortly."},{status:503});
     if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM New Protocol API key is invalid or not authorized for purchases."},{status:502});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again later."},{status:502});
     if(m==="ORDER_SAVE_FAILED_REFUNDED")
       return NextResponse.json({ok:false,error:"The number service could not be saved, so your coins were refunded. Please try again."},{status:502});
     if(m.startsWith("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:")){
@@ -306,7 +306,7 @@ export async function POST(req:Request){
       return NextResponse.json({
         ok:false,
         code:"ACTIVATION_RECOVERY_REQUIRED",
-        error:"5SIM issued a number, but Numelixa could not save the order. Do not buy another number. Contact support with activation ID "+(parts[1]||"unknown")+"."
+        error:"A number was issued but could not be saved safely. Do not buy another number. Contact Numelixa support with activation ID "+(parts[1]||"unknown")+"."
       },{status:503});
     }
     if(m==="PROVIDER_ORDER_CONFLICT")
