@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import AdminNotifications from "@/components/AdminNotifications";
 import AdminAppUpdate from "@/components/AdminAppUpdate";
+import AdminSecurity from "@/components/AdminSecurity";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[]};providers:{name:string;status:string;balance?:any}[]};
@@ -47,7 +48,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","app update"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","app update","security"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
@@ -56,6 +57,7 @@ export default function AdminPanel(){
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="app update"&&<AdminAppUpdate/>}
+  {tab==="security"&&<AdminSecurity/>}
  </div>
 }
 
