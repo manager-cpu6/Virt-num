@@ -109,10 +109,18 @@ export default function MobileAppBootstrap(){
      await syncCurrentToken();
      return true;
     }
-    // MainActivity is the single startup permission owner. Avoid a second
-    // simultaneous Android permission request from the web layer.
-    showPermissionGate();
-    return false;
+    // Capacitor is the single owner of the Android runtime permission.
+    // MainActivity must not request it at the same time, otherwise the
+    // permission result can race with PushNotifications.register().
+    const requested=await push.requestPermissions();
+    if(requested.receive!=="granted"){
+     showPermissionGate();
+     return false;
+    }
+    document.getElementById("numelixa-notification-gate")?.remove();
+    await push.register();
+    await syncCurrentToken();
+    return true;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
     showPermissionGate();
@@ -161,11 +169,10 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",refresh);
     });
 
-    // Permission is requested when the APK opens. The token is only linked
+    // Capacitor owns the Android permission request. The token is only linked
     // to an account after /api/me confirms an authenticated email account.
     await new Promise(resolve=>setTimeout(resolve,1200));
     await ensurePushPermission();
-    await syncCurrentToken();
 
     const heartbeat=window.setInterval(()=>{void syncCurrentToken()},30000);
     cleanups.push(()=>window.clearInterval(heartbeat));
