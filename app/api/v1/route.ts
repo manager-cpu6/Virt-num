@@ -35,9 +35,9 @@ export async function GET(){
       balance:"GET /api/v1/balance",
       services:"GET /api/v1/services",
       countries:"GET /api/v1/countries?service=whatsapp",
-      stock:"GET /api/v1/stock?country=us&service=whatsapp&operator=any",
+      stock:"GET /api/v1/stock?country=us&service=whatsapp",
       orders:"GET|POST /api/v1/orders",
-      code:"POST /api/v1/orders/code",
+      code:"POST /api/v1/orders/code",\n      cancel:"POST /api/v1/orders/cancel",
       transactions:"GET /api/v1/transactions"
     }
   },{headers});
