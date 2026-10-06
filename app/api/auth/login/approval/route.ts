@@ -10,7 +10,8 @@ export async function GET(req:Request){
   if(!id)return NextResponse.json({ok:false,error:"Approval ID is required."},{status:400});
   const approval=await getLoginApproval(id);
   if(!approval)return NextResponse.json({ok:false,error:"Login request not found."},{status:404});
-  return NextResponse.json({ok:true,approval});
+  const {userId: _userId, ...publicApproval}=approval;
+  return NextResponse.json({ok:true,approval:publicApproval});
  }catch{return NextResponse.json({ok:false,error:"Unable to read login request."},{status:500})}
 }
 
