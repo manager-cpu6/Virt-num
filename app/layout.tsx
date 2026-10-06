@@ -5,6 +5,7 @@ import {headers} from "next/headers";
 import BottomNav from "@/components/BottomNav";
 import MobileAppBootstrap from "@/components/MobileAppBootstrap";
 import AppUpdateGate from "@/components/AppUpdateGate";
+import LoginApprovalGate from "@/components/LoginApprovalGate";
 
 export const metadata:Metadata={
  metadataBase:new URL("https://numelixa.com"),
@@ -21,5 +22,5 @@ export const metadata:Metadata={
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
- return <html lang="en"><body><MobileAppBootstrap/><AppUpdateGate/><div className={isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isDocsHost?"page-shell docs-host-page":"page-shell"}>{children}</main>{!isDocsHost&&<><BottomNav/><footer style={{padding:"28px 18px 100px",textAlign:"center",color:"#6f9192",fontSize:11}}><div style={{display:"flex",justifyContent:"center",gap:14,flexWrap:"wrap"}}><a href="/rules" style={{color:"#72dfce"}}>Rules</a><a href="/faq" style={{color:"#72dfce"}}>FAQ</a><a href="/terms" style={{color:"#72dfce"}}>Terms</a><a href="/privacy" style={{color:"#72dfce"}}>Privacy</a><a href="/developers" style={{color:"#72dfce"}}>Developers</a></div><div style={{marginTop:10}}>© 2026 Numelixa</div></footer></>}</div></body></html>;
+ return <html lang="en"><body><MobileAppBootstrap/><LoginApprovalGate/><AppUpdateGate/><div className={isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isDocsHost?"page-shell docs-host-page":"page-shell"}>{children}</main>{!isDocsHost&&<><BottomNav/><footer style={{padding:"28px 18px 100px",textAlign:"center",color:"#6f9192",fontSize:11}}><div style={{display:"flex",justifyContent:"center",gap:14,flexWrap:"wrap"}}><a href="/rules" style={{color:"#72dfce"}}>Rules</a><a href="/faq" style={{color:"#72dfce"}}>FAQ</a><a href="/terms" style={{color:"#72dfce"}}>Terms</a><a href="/privacy" style={{color:"#72dfce"}}>Privacy</a><a href="/developers" style={{color:"#72dfce"}}>Developers</a></div><div style={{marginTop:10}}>© 2026 Numelixa</div></footer></>}</div></body></html>;
 }
