@@ -363,12 +363,20 @@ import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 @CapacitorPlugin(name = "NumelixaPushToken")
 public class NumelixaPushTokenPlugin extends Plugin {
     @PluginMethod
     public void getToken(PluginCall call) {
+        try {
+            try { FirebaseApp.getInstance(); }
+            catch (IllegalStateException e) { FirebaseApp.initializeApp(getContext()); }
+        } catch (Exception e) {
+            call.reject("Firebase initialization failed: " + (e.getMessage() == null ? e.getClass().getSimpleName() : e.getMessage()), e);
+            return;
+        }
         FirebaseMessaging.getInstance().getToken()
             .addOnSuccessListener(token -> {
                 JSObject result = new JSObject();
