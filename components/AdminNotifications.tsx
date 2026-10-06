@@ -14,9 +14,7 @@ export default function AdminNotifications(){
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0);
  const[claimedDeviceCount,setClaimedDeviceCount]=useState(0);
- const[verifiedGmailUsers,setVerifiedGmailUsers]=useState(0);
  const[verifiedGmailDeviceCount,setVerifiedGmailDeviceCount]=useState(0);
- const[registerBusy,setRegisterBusy]=useState(false);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false),[testBusy,setTestBusy]=useState(false);
  const[result,setResult]=useState("");
@@ -29,7 +27,6 @@ export default function AdminNotifications(){
  setHistory(d.notifications||[]);
  setDeviceCount(Number(d.deviceCount||0));
  setClaimedDeviceCount(Number(d.claimedDeviceCount||0));
- setVerifiedGmailUsers(Number(d.verifiedGmailUsers||0));
  setVerifiedGmailDeviceCount(Number(d.verifiedGmailDeviceCount||0));
   setServerPushConfigured(Boolean(d.serverPushConfigured));
 }
