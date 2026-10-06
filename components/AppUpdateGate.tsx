@@ -54,10 +54,6 @@ export default function AppUpdateGate(){
 
     let native={version:"0.0.0",versionCode:0};
     try{native=await NumelixaUpdater.getAppVersion()}catch{}
-    const firstInstallTime=Number((native as {firstInstallTime?:number}).firstInstallTime||0);
-    const publishedAtMs=u.publishedAt?new Date(String(u.publishedAt)).getTime():0;
-    if(firstInstallTime>0&&publishedAtMs>0&&firstInstallTime>publishedAtMs)return;
-
     const serverCode=Number(u.versionCode||0);
     const installedCode=Number(native.versionCode||0);
     const newerByCode=serverCode>0&&installedCode>0&&serverCode>installedCode;
@@ -66,11 +62,11 @@ export default function AppUpdateGate(){
     const newerByName=(b[0]||0)>(a[0]||0)||
       ((b[0]||0)===(a[0]||0)&&((b[1]||0)>(a[1]||0)||
       ((b[1]||0)===(a[1]||0)&&(b[2]||0)>(a[2]||0))));
-    const sameVersionNewRelease=Boolean(releaseId)&&(
-      (serverCode>0&&installedCode>0&&serverCode===installedCode) ||
-      serverCode===0
-    );
-    if(newerByCode||newerByName||sameVersionNewRelease){
+    // The server already filters releases for the user's account creation
+    // date. On the device, only a genuinely newer version should be shown.
+    // Never treat a newly-created release with the same version as an update;
+    // that was the cause of fresh installs repeatedly seeing old updates.
+    if(newerByCode||newerByName){
       setUpdate(u);setVisible(true);
     }
    }catch{}
