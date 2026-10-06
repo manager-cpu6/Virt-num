@@ -26,16 +26,14 @@ export async function POST(req:Request){
     }
 
     const settings=await getSettings();
-    const requestedOperator=String(b.operator||"").trim().toLowerCase();
-    const operator=requestedOperator||String(settings.providerOperator||"any").trim().toLowerCase()||"any";
+    // Operator selection is internal only. Public API clients never choose it.
+    const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
 
     // Always obtain a fresh provider quote immediately before debiting.
     const quote=await getPrice(country,service,operator);
     if(!quote.count||!quote.cost){
       return NextResponse.json(
-        {ok:false,error:operator==="any"
-          ?"This service/country is currently out of stock."
-          :"The selected 5SIM operator is currently out of stock for this service/country."},
+        {ok:false,error:"This service/country is currently out of stock."},
         {status:409}
       );
     }
@@ -61,7 +59,7 @@ export async function POST(req:Request){
     walletDebited=true;
 
     try{
-      // IMPORTANT: purchase() is the only place that talks to 5SIM.
+      // The purchase service is the only place that talks to the upstream number network.
       // If 5SIM does not return an activation, no order is created.
       const p=await purchase(country,service,Number(quote.cost),operator);
       providerOrderId=String(p.order_id||"");
@@ -214,8 +212,6 @@ export async function POST(req:Request){
           id,
           number,
           price,
-          providerCost:Number(p.providerCost||quote.cost),
-          operator:String(p.operator||operator),
           expiresIn:Math.max(0,Math.floor((expiresAt.getTime()-Date.now())/1000)),
           stockAfter:Math.max(0,Number(quote.count)-1)
         }
@@ -233,8 +229,6 @@ export async function POST(req:Request){
               id:String(existing._id),
               number:String(existing.phoneNumber||""),
               price:Number(existing.priceCoins||price),
-              providerCost:Number(existing.providerCostUsd||quote.cost),
-              operator:String(existing.providerOperator||operator),
               expiresIn:Math.max(0,Math.floor((new Date(existing.expiresAt).getTime()-Date.now())/1000)),
               stockAfter:Math.max(0,Number(quote.count)-1)
             }
@@ -286,9 +280,9 @@ export async function POST(req:Request){
     if(m==="NO_FREE_PHONES"||/no free phones/i.test(m))
       return NextResponse.json({ok:false,error:"No number is available for this service/country right now. Please refresh and try again."},{status:409});
     if(/not enough user balance/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM provider account does not have enough balance for this purchase."},{status:502});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable for this purchase."},{status:502});
     if(/not enough rating/i.test(m))
-      return NextResponse.json({ok:false,error:"The 5SIM provider account rating is too low to purchase this number."},{status:502});
+      return NextResponse.json({ok:false,error:"The number service is temporarily unavailable for this purchase."},{status:502});
     if(/bad country/i.test(m))
       return NextResponse.json({ok:false,error:"The selected country is temporarily unavailable."},{status:502});
     if(/bad operator/i.test(m))
@@ -310,7 +304,7 @@ export async function POST(req:Request){
       },{status:503});
     }
     if(m==="PROVIDER_ORDER_CONFLICT")
-      return NextResponse.json({ok:false,error:"The provider activation could not be safely attached to this account. Please contact support."},{status:409});
+      return NextResponse.json({ok:false,error:"The activation could not be safely attached to this account. Please contact Numelixa support."},{status:409});
 
     return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
   }
