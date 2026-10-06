@@ -52,6 +52,7 @@ export default function MobileAppBootstrap(){
     });
 
     if(response.ok){
+     localStorage.setItem(TOKEN_SYNC_KEY,String(Date.now()));
      registrationAttempts=0;
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
