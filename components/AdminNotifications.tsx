@@ -12,7 +12,7 @@ export default function AdminNotifications(){
  const[target,setTarget]=useState("all");
  const[users,setUsers]=useState<{id:string;name:string;email:string}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
- const[deviceCount,setDeviceCount]=useState(0);
+ const[deviceCount,setDeviceCount]=useState(0),[linkedDeviceCount,setLinkedDeviceCount]=useState(0),[unlinkedDeviceCount,setUnlinkedDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
@@ -21,7 +21,7 @@ export default function AdminNotifications(){
   try{
    const r=await fetch("/api/admin/notifications",{cache:"no-store"});
    const d=await r.json();
-   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
+   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setLinkedDeviceCount(Number(d.linkedDeviceCount||0));setUnlinkedDeviceCount(Number(d.unlinkedDeviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
   }catch{}
  }
 
@@ -32,6 +32,15 @@ export default function AdminNotifications(){
    .then(d=>{if(d.ok)setUsers(d.users||[])})
    .catch(()=>{});
  },[]);
+
+ async function testCurrentDevice(){
+  setBusy(true);setResult("");
+  try{
+   const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"test_current_device"})});
+   const d=await r.json();
+   setResult(d.ok?"✅ Test notification sent to this admin device.":"❌ "+(d.error||"Native push test failed."));
+  }catch{setResult("❌ Unable to run the native push test.")}finally{setBusy(false)}
+ }
 
  async function send(e:React.FormEvent){
   e.preventDefault();
@@ -78,7 +87,7 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered app device{deviceCount===1?"":"s"}</p></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase credentials missing"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>\n   <button type="button" className="secondary-btn full" onClick={testCurrentDevice} disabled={busy}>🔔 Test this admin device</button>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
    <p>Send a real native phone notification to every user or one specific user. Numelixa does not use an in-app notification inbox.</p>
