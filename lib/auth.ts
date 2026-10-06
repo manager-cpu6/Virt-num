@@ -92,8 +92,20 @@ export async function requireAdmin(){await ensureAdmin();const u=await requireUs
 
 export async function logout(){
  const raw=(await cookies()).get(COOKIE)?.value;
- if(raw)await (await collection("sessions")).deleteOne({tokenHash:hash(raw)});
+ if(raw){
+  await (await collection("sessions")).deleteOne({tokenHash:hash(raw)});
+  try{
+   const deviceToken=String((await cookies()).get("numelixa_device_token")?.value||"").trim();
+   if(deviceToken){
+    await (await collection("deviceTokens")).updateOne(
+     {token:deviceToken},
+     {$set:{userId:null,updatedAt:new Date()}}
+    );
+   }
+  }catch(error){console.error("[NOTIFICATION DEVICE UNLINK]",error)}
+ }
  (await cookies()).delete(COOKIE);
+ (await cookies()).delete("numelixa_device_token");
 }
 
 export async function listUserSessions(userId:string){
