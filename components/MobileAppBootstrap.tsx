@@ -21,7 +21,9 @@ export default function MobileAppBootstrap(){
   const isAuthenticated=async()=>{
    try{
     const r=await fetch("/api/me",{cache:"no-store",credentials:"include"});
-    return r.ok;
+    if(!r.ok)return false;
+    const data=await r.json().catch(()=>null);
+    return Boolean(data?.user?.id);
    }catch{return false}
   };
 
