@@ -91,12 +91,15 @@ export async function POST(req:Request){
       }
 
       return NextResponse.json({
-        ok:true,
+        ok:result.successCount>0,
         sent:result.successCount,
         failed:result.failureCount,
         configured:result.configured,
-        errors:result.errors||[]
-      });
+        errors:result.errors||[],
+        message:result.successCount>0
+          ?"Native Firebase notification sent to this Android device."
+          :"Native Firebase notification could not be delivered to this Android device."
+      },{status:result.successCount>0?200:502});
     }
 
     const title=String(body.title||"").trim().slice(0,80);
