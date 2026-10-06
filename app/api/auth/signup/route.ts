@@ -16,11 +16,29 @@ export async function POST(req:Request){
   const id=mongoId();
   await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:new Date()});
   await issueApiKey(id,"Production API key");
-  const code=String(Math.floor(100000+Math.random()*900000));
-  await (await collection("emailTokens")).insertOne({_id:mongoId(),tokenHash:tokenHash(code),userId:id,type:"email_verify_code",expiresAt:new Date(Date.now()+10*60*1000),createdAt:new Date()});
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
-  try{await sendEmail(email,"Verify your Numelixa email",verificationEmail(code))}catch(e){console.error("[SIGNUP EMAIL]",e)}
+
+  const now=new Date();
+  const code=String(Math.floor(100000+Math.random()*900000));
+  await users.updateOne({_id:id},{$set:{verificationEmailLastAttemptAt:now}});
+
+  // Do not save a verification code until the mail provider accepts it.
+  // Otherwise a failed SMTP send would leave the user with an unseen code.
+  try{
+   await sendEmail(email,"Your Numelixa verification code",verificationEmail(code));
+   await (await collection("emailTokens")).insertOne({
+    _id:mongoId(),
+    tokenHash:tokenHash(code),
+    userId:id,
+    type:"email_verify_code",
+    expiresAt:new Date(Date.now()+10*60*1000),
+    createdAt:now
+   });
+  }catch(e){
+   console.error("[SIGNUP EMAIL]",e instanceof Error?e.message:String(e));
+  }
+
   return NextResponse.json({ok:true,verificationRequired:true});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Signup failed"},{status:500})}
 }
