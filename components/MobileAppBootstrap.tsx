@@ -2,7 +2,8 @@
 import {useEffect} from "react";
 import {Capacitor} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token_v2_7_0";
+const TOKEN_KEY="numelixa_fcm_token_v3_0_0";
+const TOKEN_SYNC_KEY="numelixa_fcm_token_last_sync";
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -28,13 +29,16 @@ export default function MobileAppBootstrap(){
    retryTimer=setTimeout(()=>{
     retryTimer=null;
     void ensurePushPermission();
-    void syncStoredToken();
+    void syncStoredToken(true);
    },5000);
   };
 
-  const syncToken=async(token:string)=>{
+  const syncToken=async(token:string,force=false)=>{
    const clean=String(token||"").trim();
    if(!clean||clean.length<20||stopped||syncInFlight)return false;
+   const previous=localStorage.getItem(TOKEN_KEY)||"";
+   const lastSync=Number(localStorage.getItem(TOKEN_SYNC_KEY)||"0");
+   if(!force&&previous===clean&&Date.now()-lastSync<6*60*60*1000)return true;
 
    localStorage.setItem(TOKEN_KEY,clean);
    syncInFlight=true;
@@ -65,10 +69,10 @@ export default function MobileAppBootstrap(){
    }
   };
 
-  const syncStoredToken=async()=>{
+  const syncStoredToken=async(force=false)=>{
    try{
     const token=localStorage.getItem(TOKEN_KEY);
-    if(token)await syncToken(token);
+    if(token)await syncToken(token,force);
    }catch(error){
     console.error("[NUMELIXA PUSH STORED TOKEN]",error);
    }
@@ -103,10 +107,9 @@ export default function MobileAppBootstrap(){
 
   const retryAfterAuth=()=>{
    void ensurePushPermission();
-   void syncStoredToken();
-   window.setTimeout(()=>void syncStoredToken(),500);
-   window.setTimeout(()=>void syncStoredToken(),1500);
-   window.setTimeout(()=>void syncStoredToken(),5000);
+   void syncStoredToken(true);
+   window.setTimeout(()=>void syncStoredToken(true),1000);
+   window.setTimeout(()=>void syncStoredToken(true),3000);
   };
 
   (async()=>{
@@ -237,7 +240,7 @@ export default function MobileAppBootstrap(){
        await syncToken(value);
       }
      }catch{}
-    },10000);
+    },6*60*60*1000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){
     console.error("[NUMELIXA PUSH]",error);
