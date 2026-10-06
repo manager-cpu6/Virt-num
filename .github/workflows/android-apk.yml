@@ -1,5 +1,4 @@
 name: Numelixa Android APK
-# Native in-app updater + Firebase push build
 
 on:
   push:
@@ -32,45 +31,102 @@ jobs:
         run: |
           npx cap add android
           npx cap sync android
-      - name: Configure native updater, background download service and installer
-        run: python scripts/configure-android-native.py
+      - name: Add Numelixa native updater bridge
+        run: |
+          mkdir -p android/app/src/main/java/com/numelixa/app
+          cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
+          package com.numelixa.app;
+          import android.app.DownloadManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Environment;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          @CapacitorPlugin(name = "NumelixaUpdater")
+          public class NumelixaUpdaterPlugin extends Plugin {
+              @PluginMethod public void installApk(PluginCall call) {
+                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk");
+                  if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
+                  try{
+                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
+                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
+                      request.setMimeType("application/vnd.android.package-archive");
+                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                      request.setAllowedOverMetered(true);
+                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
+                      long id=manager.enqueue(request);
+                      android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+                      handler.post(new Runnable(){public void run(){
+                          android.database.Cursor cursor=manager.query(new DownloadManager.Query().setFilterById(id));
+                          if(cursor==null){call.reject("Update download could not be checked");return;}
+                          try{
+                              if(!cursor.moveToFirst()){call.reject("Update download disappeared");return;}
+                              int status=cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                              if(status==DownloadManager.STATUS_SUCCESSFUL){
+                                  Uri uri=manager.getUriForDownloadedFile(id);
+                                  if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                                  Intent intent=new Intent(Intent.ACTION_VIEW); intent.setDataAndType(uri,"application/vnd.android.package-archive");
+                                  intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION); getActivity().startActivity(intent);
+                                  JSObject result=new JSObject(); result.put("started",true); call.resolve(result);
+                              }else if(status==DownloadManager.STATUS_FAILED){call.reject("Update download failed");}
+                              else handler.postDelayed(this,700);
+                          }finally{cursor.close();}
+                      }});
+                  }catch(Exception e){call.reject("Unable to start update download",e);}
+              }
+          }
+          JAVA
+          cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
+          package com.numelixa.app;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+          }
+          JAVA
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
+          if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
+              s=s.replace("    <application", '    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\\n\\n    <application', 1)
+          p.write_text(s)
+          PY
       - name: Configure Firebase push messaging
         run: |
           cp google-services.json android/app/google-services.json
           python - <<'PY'
           from pathlib import Path
+          
           root = Path("android/build.gradle")
           app = Path("android/app/build.gradle")
+          
           root_text = root.read_text()
           app_text = app.read_text()
+          
+          # Capacitor generates the Android project during CI, so Firebase's
+          # Google Services plugin must be attached after cap add android.
           if "com.google.gms:google-services:" not in root_text:
               marker = "dependencies {"
               if marker not in root_text:
                   raise SystemExit("Could not locate root Gradle dependencies block")
-              root_text = root_text.replace(marker, marker + "\n        classpath 'com.google.gms:google-services:4.5.0'", 1)
+              root_text = root_text.replace(
+                  marker,
+                  marker + "\n        classpath 'com.google.gms:google-services:4.5.0'",
+                  1
+              )
+          
           if "com.google.gms.google-services" not in app_text:
               app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
-          if "firebase-bom:34.19.0" not in app_text:
-              marker = "dependencies {"
-              if marker not in app_text:
-                  raise SystemExit("Could not locate app Gradle dependencies block")
-              app_text = app_text.replace(
-                  marker,
-                  marker + "\n    implementation platform('com.google.firebase:firebase-bom:34.19.0')\n    implementation 'com.google.firebase:firebase-messaging'",
-                  1
-              )
-          if "firebase-bom:34.19.0" not in app_text:
-              marker = "dependencies {"
-              if marker not in app_text:
-                  raise SystemExit("Could not locate app Gradle dependencies block")
-              app_text = app_text.replace(
-                  marker,
-                  marker + "\n    implementation platform('com.google.firebase:firebase-bom:34.19.0')\n    implementation 'com.google.firebase:firebase-messaging'",
-                  1
-              )
+          
           root.write_text(root_text)
           app.write_text(app_text)
           PY
+          echo "Firebase Android configuration and Google Services plugin installed."
       - name: Generate Numelixa launcher icons
         run: |
           python -m pip install --quiet pillow
@@ -84,23 +140,23 @@ jobs:
         working-directory: android
         run: ./gradlew assembleDebug
       - name: Prepare downloadable APK
-        run: cp android/app/build/outputs/apk/debug/app-debug.apk Numelixa-test.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Numelixa.apk
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
           name: Numelixa-Android-test
-          path: Numelixa-test.apk
+          path: Numelixa.apk
           if-no-files-found: error
           retention-days: 14
-      - name: Publish test APK
+      - name: Publish latest installable APK
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: android-test
-          name: Numelixa Android App (Test)
-          prerelease: true
-          make_latest: false
-          files: Numelixa-test.apk
+          tag_name: android-latest
+          name: Numelixa Android App (Latest)
+          prerelease: false
+          make_latest: true
+          files: Numelixa.apk
           generate_release_notes: false
 
   signed-release:
@@ -133,33 +189,94 @@ jobs:
           npm install
           npx cap add android
           npx cap sync android
-      - name: Configure native updater, background download service and installer
-        run: python scripts/configure-android-native.py
+      - name: Add Numelixa native updater bridge
+        run: |
+          mkdir -p android/app/src/main/java/com/numelixa/app
+          cat > android/app/src/main/java/com/numelixa/app/NumelixaUpdaterPlugin.java <<'JAVA'
+          package com.numelixa.app;
+          import android.app.DownloadManager;
+          import android.content.Context;
+          import android.content.Intent;
+          import android.net.Uri;
+          import android.os.Environment;
+          import com.getcapacitor.JSObject;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          @CapacitorPlugin(name = "NumelixaUpdater")
+          public class NumelixaUpdaterPlugin extends Plugin {
+              @PluginMethod public void installApk(PluginCall call) {
+                  String url=call.getString("url"); String fileName=call.getString("fileName","Numelixa-update.apk");
+                  if(url==null||!url.startsWith("https://")){call.reject("Invalid update URL");return;}
+                  try{
+                      DownloadManager manager=(DownloadManager)getContext().getSystemService(Context.DOWNLOAD_SERVICE);
+                      DownloadManager.Request request=new DownloadManager.Request(Uri.parse(url));
+                      request.setTitle("Numelixa update"); request.setDescription("Downloading the latest Numelixa app");
+                      request.setMimeType("application/vnd.android.package-archive");
+                      request.setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);
+                      request.setAllowedOverMetered(true);
+                      request.setDestinationInExternalFilesDir(getContext(),Environment.DIRECTORY_DOWNLOADS,fileName);
+                      long id=manager.enqueue(request);
+                      android.os.Handler handler=new android.os.Handler(android.os.Looper.getMainLooper());
+                      handler.post(new Runnable(){public void run(){
+                          android.database.Cursor cursor=manager.query(new DownloadManager.Query().setFilterById(id));
+                          if(cursor==null){call.reject("Update download could not be checked");return;}
+                          try{
+                              if(!cursor.moveToFirst()){call.reject("Update download disappeared");return;}
+                              int status=cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS));
+                              if(status==DownloadManager.STATUS_SUCCESSFUL){
+                                  Uri uri=manager.getUriForDownloadedFile(id);
+                                  if(uri==null){call.reject("Downloaded update file is unavailable");return;}
+                                  Intent intent=new Intent(Intent.ACTION_VIEW); intent.setDataAndType(uri,"application/vnd.android.package-archive");
+                                  intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK|Intent.FLAG_GRANT_READ_URI_PERMISSION); getActivity().startActivity(intent);
+                                  JSObject result=new JSObject(); result.put("started",true); call.resolve(result);
+                              }else if(status==DownloadManager.STATUS_FAILED){call.reject("Update download failed");}
+                              else handler.postDelayed(this,700);
+                          }finally{cursor.close();}
+                      }});
+                  }catch(Exception e){call.reject("Unable to start update download",e);}
+              }
+          }
+          JAVA
+          cat > android/app/src/main/java/com/numelixa/app/MainActivity.java <<'JAVA'
+          package com.numelixa.app;
+          import android.os.Bundle;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+              @Override public void onCreate(Bundle savedInstanceState){registerPlugin(NumelixaUpdaterPlugin.class);super.onCreate(savedInstanceState);}
+          }
+          JAVA
+          python - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml"); s=p.read_text()
+          if "android.permission.REQUEST_INSTALL_PACKAGES" not in s:
+              s=s.replace("    <application","    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />\n\n    <application",1)
+          p.write_text(s)
+          PY
       - name: Configure Firebase push messaging
         run: |
           cp google-services.json android/app/google-services.json
           python - <<'PY'
           from pathlib import Path
+          
           root = Path("android/build.gradle")
           app = Path("android/app/build.gradle")
           root_text = root.read_text()
           app_text = app.read_text()
+          
           if "com.google.gms:google-services:" not in root_text:
               marker = "dependencies {"
               if marker not in root_text:
                   raise SystemExit("Could not locate root Gradle dependencies block")
-              root_text = root_text.replace(marker, marker + "\n        classpath 'com.google.gms:google-services:4.5.0'", 1)
-          if "com.google.gms.google-services" not in app_text:
-              app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
-          if "firebase-bom:34.19.0" not in app_text:
-              marker = "dependencies {"
-              if marker not in app_text:
-                  raise SystemExit("Could not locate app Gradle dependencies block")
-              app_text = app_text.replace(
+              root_text = root_text.replace(
                   marker,
-                  marker + "\n    implementation platform('com.google.firebase:firebase-bom:34.19.0')\n    implementation 'com.google.firebase:firebase-messaging'",
+                  marker + "\n        classpath 'com.google.gms:google-services:4.5.0'",
                   1
               )
+          if "com.google.gms.google-services" not in app_text:
+              app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
+          
           root.write_text(root_text)
           app.write_text(app_text)
           PY
@@ -203,30 +320,14 @@ jobs:
               raise SystemExit("Could not locate Android buildTypes for release signing")
           s = s.replace(marker, block + marker, 1)
           s = s.replace("buildTypes {\n        release {", "buildTypes {\n        release {\n            signingConfig signingConfigs.release", 1)
-          provider='''\n        <provider\n            android:name="androidx.core.content.FileProvider"\n            android:authorities="${applicationId}.fileprovider"\n            android:exported="false"\n            android:grantUriPermissions="true">\n            <meta-data\n                android:name="android.support.FILE_PROVIDER_PATHS"\n                android:resource="@xml/numelixa_file_paths" />\n        </provider>'''
-          if "androidx.core.content.FileProvider" not in s:
-              s=s.replace("</application>", provider+"\n    </application>", 1)
           p.write_text(s)
-          xml=Path("android/app/src/main/res/xml/numelixa_file_paths.xml")
-          xml.parent.mkdir(parents=True, exist_ok=True)
-          xml.write_text('''<?xml version="1.0" encoding="utf-8"?>\n<paths xmlns:android="http://schemas.android.com/apk/res/android">\n    <external-files-path name="update_files" path="Download/" />\n</paths>''')
           PY
       - name: Build signed release APK
         working-directory: android
         run: ./gradlew assembleRelease
       - name: Rename release APK
         run: cp android/app/build/outputs/apk/release/app-release.apk Numelixa.apk
-      - name: Publish signed production APK
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: android-latest
-          name: Numelixa Android App (Latest Signed)
-          prerelease: false
-          make_latest: true
-          files: Numelixa.apk
-          generate_release_notes: false
-      - name: Publish versioned signed release
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Publish APK release
         uses: softprops/action-gh-release@v2
         with:
           name: Numelixa Android ${{ github.ref_name }}
