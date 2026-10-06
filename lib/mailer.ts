@@ -4,6 +4,22 @@ const DEFAULT_HOST="mail.privateemail.com";
 const DEFAULT_PORT=465;
 type SmtpConfig={host:string;port:number;user:string;pass:string;from:string};
 
+function isRateLimitedError(error:unknown){
+ const text=String(error instanceof Error?error.message:error||"").toLowerCase();
+ return text.includes("too many messages")||text.includes("rate limit")||text.includes("rate limited")||text.includes("5.7.1");
+}
+
+function fallbackConfig():SmtpConfig|null{
+ const user=String(process.env.PRIVATE_EMAIL_FALLBACK_USER||"").trim();
+ const pass=String(process.env.PRIVATE_EMAIL_FALLBACK_PASSWORD||"");
+ if(!user||!pass)return null;
+ const host=String(process.env.PRIVATE_EMAIL_FALLBACK_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env.PRIVATE_EMAIL_FALLBACK_PORT||DEFAULT_PORT);
+ const from=String(process.env.PRIVATE_EMAIL_FALLBACK_FROM||user).trim();
+ if(!host||!Number.isFinite(port)||!from.includes("@"))return null;
+ return{host,port,user,pass,from};
+}
+
 function smtpConfig():SmtpConfig{
  const host=(process.env.PRIVATE_EMAIL_SMTP_HOST||DEFAULT_HOST).trim();
  const port=Number(process.env.PRIVATE_EMAIL_SMTP_PORT||DEFAULT_PORT);
@@ -13,7 +29,7 @@ function smtpConfig():SmtpConfig{
  if(!user)throw new Error("Private Email SMTP username is missing.");
  if(!pass)throw new Error("Private Email SMTP password is missing.");
  if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Private Email SMTP port.");
- if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
+ if(!from||!from.includes("@"))throw new Error("Private Email sender address is missing or invalid.");
  return{host,port,user,pass,from};
 }
 function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|h3|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim();}
@@ -29,18 +45,38 @@ export async function sendEmail(to:string,subject:string,html:string){
  const config=smtpConfig();
  try{
   await sendWithConfig(config,to,subject,html);
+  return;
  }catch(error){
-  if(config.port===465&&isSocketTlsError(error)){
+  // A TLS/socket failure is safe to retry once. A provider rate limit is not:
+  // hammering the same mailbox makes the block last longer.
+  if(!isRateLimitedError(error)&&config.port===465&&isSocketTlsError(error)){
    try{await sendWithConfig({...config,port:587},to,subject,html);return;}
-   catch(fallbackError){const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);throw new Error("Private Email SMTP error: "+message);}
+   catch(fallbackError){
+    if(isRateLimitedError(fallbackError)){
+     const fallback=fallbackConfig();
+     if(fallback){await sendWithConfig(fallback,to,subject,html);return;}
+    }
+    const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
+    throw new Error("Private Email SMTP error: "+message);
+   }
   }
-  if(isSocketTlsError(error)){
+  if(!isRateLimitedError(error)&&isSocketTlsError(error)){
    await new Promise(resolve=>setTimeout(resolve,350));
    try{await sendWithConfig(config,to,subject,html);return;}catch{}
   }
+  if(isRateLimitedError(error)){
+   const fallback=fallbackConfig();
+   if(fallback){
+    try{await sendWithConfig(fallback,to,subject,html);return;}catch(fallbackError){
+     const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
+     throw new Error("EMAIL_RATE_LIMITED: "+message);
+    }
+   }
+   throw new Error("EMAIL_RATE_LIMITED: Your Numelixa mail server has temporarily limited outgoing messages. Please wait a little before requesting another code.");
+  }
   const message=error instanceof Error?error.message:String(error);
   throw new Error("Private Email SMTP error: "+message);
- }
+ } 
 }
 
 const shell=(content:string,preheader:string)=>{
