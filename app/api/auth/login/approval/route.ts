@@ -24,9 +24,9 @@ export async function POST(req:Request){
   const approval=await getLoginApproval(id);
   if(!approval)return NextResponse.json({ok:false,error:"Login request not found."},{status:404});
 
+  if(approval.userId && approval.userId!==String(u.id))return NextResponse.json({ok:false,error:"This login request belongs to another account."},{status:403});
   const resolved=await resolveLoginApproval(id,approve);
   if(!resolved.ok)return NextResponse.json({ok:false,status:resolved.status,error:"This login request has expired or was already resolved."},{status:409});
-  if(resolved.userId!==String(u.id))return NextResponse.json({ok:false,error:"This login request belongs to another account."},{status:403});
 
   return NextResponse.json({ok:true,status:resolved.status});
  }catch(e){
