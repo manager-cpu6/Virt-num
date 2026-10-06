@@ -12,8 +12,6 @@ export async function GET(){
     await requireAdmin();
     const deviceTokens = await collection<any>("deviceTokens");
     const users = await collection<any>("users");
-    const emailSubscriptions = await collection<any>("notificationEmailSubscriptions");
-    const emailRegisteredCount = await emailSubscriptions.countDocuments({enabled:true});
     const usersWithEmail = await users.countDocuments({email:{$exists:true,$ne:""}});
     const deviceCount = await deviceTokens.countDocuments({});
     const claimedDeviceCount = await deviceTokens.countDocuments({userId:{$nin:[null,""]}});
@@ -50,7 +48,6 @@ export async function GET(){
       unclaimedDeviceCount,
       verifiedGmailUsers:verifiedGmailUsers.length,
       verifiedGmailDeviceCount,
-      emailRegisteredCount,
       usersWithEmail,
       serverPushConfigured:isFirebaseConfigured()
     });
