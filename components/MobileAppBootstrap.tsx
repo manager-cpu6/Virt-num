@@ -189,6 +189,7 @@ export default function MobileAppBootstrap(){
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event:any)=>{
      const data=event?.notification?.data||{};
      if(String(data?.type||"")==="login_approval"&&data?.approvalId){
+      try{localStorage.setItem("numelixa_pending_login_approval",JSON.stringify({type:"login_approval",approvalId:String(data.approvalId),device:String(data.device||"Browser"),browser:String(data.browser||"Browser"),city:String(data.city||""),country:String(data.country||"")}));}catch{}
       window.dispatchEvent(new CustomEvent("numelixa-login-approval",{detail:{
        type:"login_approval",
        approvalId:String(data.approvalId),
