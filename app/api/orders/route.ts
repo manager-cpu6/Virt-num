@@ -1,5 +1,5 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {notifyUser} from "@/lib/notifications";
-export const runtime="nodejs";export const dynamic="force-dynamic";
+import {NextResponse,after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {notifyUser} from "@/lib/notifications";import {watchOrderForPush} from "@/lib/order-watcher";
+export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
   let walletDebited=false;
@@ -152,10 +152,11 @@ export async function POST(req:Request){
         throw new Error("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:"+providerOrderId+":"+number);
       }
 
-      // Purchases are delivered through the in-app notification system.
-      // Do not send a purchase email; the user's number and SMS status stay inside Numelixa.
-
+      // Push the purchase event immediately, then keep a short server-side
+      // watcher alive after the response so an SMS can trigger a native push
+      // without waiting for the 5-minute scheduled worker.
       try{
+
         await notifyUser(
           String(u.id),
           "📱 Number ready",
@@ -165,6 +166,8 @@ export async function POST(req:Request){
       }catch(error){
         console.error("[ORDER PUSH]", error);
       }
+
+      after(async()=>{await watchOrderForPush(id,String(u.id));});
 
       // The actual order is now durable. Ledger logging is secondary and
       // must never turn a successful provider purchase into a fake failure.
