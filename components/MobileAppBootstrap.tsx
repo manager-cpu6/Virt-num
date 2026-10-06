@@ -133,9 +133,12 @@ export default function MobileAppBootstrap(){
         const NativePushToken:any=registerPlugin("NumelixaPushToken");
         const nativeToken=await NativePushToken.getToken();
         const value=String(nativeToken?.token||"").trim();
-        if(value && (force || value!==lastNativeToken)){
+        console.info("[NUMELIXA NATIVE FCM TOKEN] Native Firebase token acquired",{length:value.length,force});
+        if(value){
           lastNativeToken=value;
-          return await syncToken(value,true);
+          const ok=await syncToken(value,true);
+          if(!ok) window.setTimeout(()=>void syncToken(value,true),1500);
+          return ok;
         }
       }catch(error){
         console.warn("[NUMELIXA NATIVE FCM TOKEN]",error);
