@@ -16,6 +16,9 @@ export default function AdminNotifications(){
  const[claimedDeviceCount,setClaimedDeviceCount]=useState(0);
  const[verifiedGmailUsers,setVerifiedGmailUsers]=useState(0);
  const[verifiedGmailDeviceCount,setVerifiedGmailDeviceCount]=useState(0);
+ const[emailRegisteredCount,setEmailRegisteredCount]=useState(0);
+ const[usersWithEmail,setUsersWithEmail]=useState(0);
+ const[registerBusy,setRegisterBusy]=useState(false);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
@@ -30,6 +33,8 @@ export default function AdminNotifications(){
  setClaimedDeviceCount(Number(d.claimedDeviceCount||0));
  setVerifiedGmailUsers(Number(d.verifiedGmailUsers||0));
  setVerifiedGmailDeviceCount(Number(d.verifiedGmailDeviceCount||0));
+ setEmailRegisteredCount(Number(d.emailRegisteredCount||0));
+ setUsersWithEmail(Number(d.usersWithEmail||0));
  setServerPushConfigured(Boolean(d.serverPushConfigured));
 }
   }catch{}
@@ -42,6 +47,18 @@ export default function AdminNotifications(){
    .then(d=>{if(d.ok)setUsers(d.users||[])})
    .catch(()=>{});
  },[]);
+
+ async function registerAll(){
+  if(!usersWithEmail)return;
+  setRegisterBusy(true);setResult("");
+  try{
+   const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"register_all"})});
+   const d=await r.json();
+   setResult(d.ok?"✅ Registered "+d.registered+" user email"+(Number(d.registered)===1?"":"s")+" for notification delivery.":"❌ "+(d.error||"Unable to register users."));
+   await load();
+  }catch{setResult("❌ Unable to register users right now.");}
+  finally{setRegisterBusy(false);}
+ }
 
  async function send(e:React.FormEvent){
   e.preventDefault();
@@ -77,7 +94,7 @@ export default function AdminNotifications(){
      (d.errors?.[0]?.message?" FCM: "+d.errors[0].message:" Please reopen the latest Numelixa app so its FCM token can be registered again.")
     );
    }else{
-    setResult("✅ Sent to "+d.sent+" app devices · saved for "+d.recipients+" users");
+    setResult("✅ Push sent to "+d.sent+" devices · email sent to "+Number(d.emailSent||0)+" users · saved for "+d.recipients+" users");
    }
 
    setTitle("");
@@ -89,7 +106,14 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push status: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered device{deviceCount===1?"":"s"} · <b>{claimedDeviceCount}</b> linked to accounts · <b>{verifiedGmailDeviceCount}</b> devices on {verifiedGmailUsers} verified Gmail user{verifiedGmailUsers===1?"":"s"}</p></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase server credentials missing"}</b> · <b>{deviceCount}</b> registered device{deviceCount===1?"":"s"} · <b>{claimedDeviceCount}</b> linked · <b>{deviceCount-claimedDeviceCount}</b> unlinked.</p></div>
+   <div className="admin-grid admin-grid-wide" style={{marginBottom:16}}>
+    <div className="metric"><span>Registered devices</span><strong>{deviceCount}</strong><small>FCM tokens</small></div>
+    <div className="metric"><span>Linked devices</span><strong>{claimedDeviceCount}</strong><small>ready for user push</small></div>
+    <div className="metric"><span>Email users</span><strong>{usersWithEmail}</strong><small>accounts with email</small></div>
+    <div className="metric"><span>Email registered</span><strong>{emailRegisteredCount}</strong><small>notification recipients</small></div>
+   </div>
+   <div className="admin-card" style={{marginBottom:16}}><h2>Notification registration</h2><p className="admin-help">Registering users here enables email notification delivery for their saved account email. Native phone push still requires the Numelixa Android app to register an FCM device.</p><button className="secondary-btn" disabled={registerBusy||!usersWithEmail} onClick={registerAll}>{registerBusy?"Registering…":"Register All Users with Email"}</button></div>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
    <p>Send a real native phone notification to all users, Gmail users, users without Gmail, or one specific user. The message is also saved in the Numelixa notification inbox.</p>
