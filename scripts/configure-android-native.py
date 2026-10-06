@@ -280,9 +280,9 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
 
-        new Handler(Looper.getMainLooper()).postDelayed(
-            this::requestNotificationPermissionIfNeeded, 900L
-        );
+        // Capacitor PushNotifications is the single owner of the Android
+        // runtime notification permission. This avoids a permission-result
+        // race with push.register().
     }
 
     private void createNotificationChannel() {
@@ -300,16 +300,6 @@ public class MainActivity extends BridgeActivity {
         }
     }
 
-    private void requestNotificationPermissionIfNeeded() {
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
-                != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(
-                new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                NOTIFICATION_PERMISSION_REQUEST
-            );
-        }
-    }
 }
 ''')
 
