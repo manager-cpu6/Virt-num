@@ -391,3 +391,108 @@ body:after{width:420px;height:420px;right:-180px;bottom:40px;background:rgba(28,
 }
 
 .payment-provider-card{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px;border:1px solid rgba(91,151,224,.12);border-radius:17px;background:rgba(4,25,50,.45);margin-bottom:9px}.payment-provider-card>b,.payment-provider-card>div>b{display:block;color:#eaf7ff;font-size:12px}.payment-provider-card small,.payment-provider-card>div>small{display:block;margin-top:4px;color:#688bb3;font-size:9px}.admin-help{color:#6c8eaf;font-size:9px;line-height:1.55;margin:12px 0 0}.payment-provider-card button{white-space:nowrap}
+
+
+/* =========================================================
+   Email verification — premium OTP experience
+   ========================================================= */
+.verify-modern-card{
+  width:100%;
+  max-width:520px;
+  margin:24px auto 0;
+  padding:30px 24px 22px;
+  text-align:center;
+  border-radius:30px;
+  background:linear-gradient(145deg,rgba(6,39,48,.96),rgba(3,24,31,.98));
+  border:1px solid rgba(121,246,229,.13);
+  box-shadow:0 28px 80px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.05);
+  color:#edfffb;
+}
+.verify-modern-card .eyebrow{display:block;color:#61dfca;margin-top:8px}
+.verify-modern-card h2{margin:9px 0 8px;font-size:29px;letter-spacing:-.055em;color:#f1fffc}
+.verify-lead{margin:0 auto 25px;max-width:390px;color:#86aaad;font-size:12px;line-height:1.65}
+.verify-lead strong{color:#d9f8f2;font-weight:800}
+.verify-mail-icon{
+  position:relative;
+  width:72px;height:72px;margin:0 auto 17px;
+  border-radius:23px;
+  display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(24,204,177,.20),rgba(8,88,88,.25));
+  border:1px solid rgba(100,235,211,.20);
+  box-shadow:0 16px 36px rgba(0,0,0,.20);
+}
+.verify-mail-icon span{font-size:30px;color:#68e6d0;line-height:1}
+.verify-mail-icon i{
+  position:absolute;right:9px;top:9px;width:9px;height:9px;border-radius:50%;
+  background:#62e6cf;box-shadow:0 0 0 5px rgba(98,230,207,.08);
+  animation:verifyPulse 1.8s ease-in-out infinite;
+}
+@keyframes verifyPulse{0%,100%{transform:scale(.8);opacity:.65}50%{transform:scale(1.15);opacity:1}}
+.verify-code-header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 2px 10px;text-align:left}
+.verify-code-header span{font-size:9px;font-weight:950;letter-spacing:.16em;color:#6e999b}
+.verify-code-header small{font-size:9px;color:#6f9b9d;font-weight:800}
+.verify-code-inputs{display:grid;grid-template-columns:repeat(6,1fr);gap:9px;margin-bottom:14px}
+.verify-code-inputs input{
+  width:100%;height:58px;margin:0!important;padding:0!important;text-align:center;
+  border-radius:17px!important;border:1px solid rgba(121,246,229,.13)!important;
+  background:rgba(1,19,25,.74)!important;color:#f0fffc!important;
+  font-size:24px;font-weight:950;letter-spacing:0;outline:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+  transition:border-color .18s,box-shadow .18s,transform .18s,background .18s;
+}
+.verify-code-inputs input:focus{
+  border-color:rgba(93,232,208,.55)!important;
+  box-shadow:0 0 0 4px rgba(72,215,194,.09),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  background:rgba(4,35,42,.92)!important;
+  transform:translateY(-1px);
+}
+.verify-code-inputs input:disabled{opacity:.58}
+.verify-processing{
+  min-height:38px;display:flex;align-items:center;justify-content:center;gap:8px;
+  color:#8ab6b5;font-size:11px;font-weight:750;margin:3px 0 10px;
+}
+.verify-spinner{width:14px;height:14px;border-radius:50%;border:2px solid rgba(98,230,207,.18);border-top-color:#62e6cf;animation:verifySpin .75s linear infinite}
+@keyframes verifySpin{to{transform:rotate(360deg)}}
+.verify-message{padding:11px 12px;border-radius:13px;text-align:left;font-size:11px;line-height:1.45;margin:8px 0}
+.verify-message.success{background:rgba(61,211,177,.08);border:1px solid rgba(61,211,177,.14);color:#76e4cf}
+.verify-message.error{background:rgba(255,88,88,.07);border:1px solid rgba(255,102,102,.13);color:#ff9d9d}
+.verify-expiry{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  margin:10px 0 13px;padding:11px 12px;border-radius:14px;
+  background:rgba(2,23,29,.55);border:1px solid rgba(121,246,229,.08);
+  text-align:left;
+}
+.verify-expiry span{font-size:9px;font-weight:900;color:#68b0a8}
+.verify-expiry span.urgent{color:#f0b66b}
+.verify-expiry small{font-size:8px;color:#567f82;text-align:right}
+.verify-resend{min-height:47px!important;background:rgba(255,255,255,.045)!important;border-color:rgba(121,246,229,.10)!important;color:#b7d9d5!important;font-size:11px!important}
+.verify-resend:disabled{opacity:.55}
+.verify-security-note{margin:16px 0 0;color:#5d8588;font-size:9px;line-height:1.55}
+.verify-security-note span{margin-right:5px}
+.verify-success-card{padding-top:38px;padding-bottom:28px}
+.verify-success-icon{
+  width:76px;height:76px;margin:0 auto 17px;border-radius:50%;
+  display:grid;place-items:center;font-size:35px;font-weight:950;color:#042820;
+  background:linear-gradient(145deg,#72efd8,#32c9ae);
+  box-shadow:0 18px 42px rgba(48,214,183,.20);
+  animation:verifySuccess .45s ease-out;
+}
+@keyframes verifySuccess{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.verify-success-card h2{font-size:31px}
+.verify-success-card>p{margin:0 auto 21px;color:#83aeb0;font-size:12px;line-height:1.6}
+.verify-success-line{
+  display:flex;align-items:center;gap:9px;margin:7px auto;max-width:310px;
+  padding:10px 12px;border-radius:13px;background:rgba(61,211,177,.055);
+  border:1px solid rgba(61,211,177,.09);text-align:left;color:#9cc2bf;font-size:10px;
+}
+.verify-success-line span{color:#65e2cb;font-weight:950}
+.verify-success-card .primary-btn{margin-top:18px;min-height:49px;background:linear-gradient(135deg,#62e5cf,#27bda5);color:#03221f;box-shadow:0 13px 28px rgba(46,203,175,.16)}
+@media(max-width:430px){
+ .verify-modern-card{padding:25px 16px 19px;border-radius:25px}
+ .verify-code-inputs{gap:6px}
+ .verify-code-inputs input{height:54px;border-radius:15px!important;font-size:22px}
+ .verify-mail-icon{width:66px;height:66px;border-radius:21px}
+ .verify-modern-card h2{font-size:27px}
+ .verify-expiry{display:block}
+ .verify-expiry small{display:block;margin-top:5px;text-align:left}
+}
