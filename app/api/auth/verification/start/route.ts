@@ -19,10 +19,24 @@ export async function POST(req:Request){
 
   const tokens=await collection<any>("emailTokens");
   const now=new Date();
+
+  const lastAttempt=new Date(fresh?.verificationEmailLastAttemptAt||0).getTime();
+  const attemptAge=now.getTime()-lastAttempt;
   const latest=await tokens.findOne(
    {userId:u.id,type:"email_verify_code"},
    {sort:{createdAt:-1}}
   );
+
+  // A recent successful/failed send attempt should not be hammered by
+  // repeated taps. If a valid token exists, the page can simply reuse it.
+  if(resend&&attemptAge>=0&&attemptAge<60*1000){
+   const retryAfter=Math.ceil((60*1000-attemptAge)/1000);
+   return NextResponse.json({
+    ok:false,
+    error:"Please wait "+retryAfter+" seconds before requesting another code.",
+    retryAfter
+   },{status:429,headers:{"Retry-After":String(retryAfter)}});
+  }
 
   // Opening the verification page must never invalidate a code that was
   // already sent by signup.
@@ -55,6 +69,8 @@ export async function POST(req:Request){
   // Send first. Only replace the stored token after the provider accepts the
   // message. This prevents an SMTP failure from leaving the user with a code
   // that was never delivered.
+  await (await collection<any>("users")).updateOne({_id:u.id},{$set:{verificationEmailLastAttemptAt:now}});
+
   try{
    await sendEmail(u.email,"Your Numelixa verification code",verificationEmail(code));
   }catch(error){
