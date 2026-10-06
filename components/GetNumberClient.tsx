@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 type Props={service:string;country:string;countryName?:string};
-type Stock={count:number;sellCoins:number;usdPrice:number;providerCost:number;coinsPerUsd:number;rate?:number;operator?:string};
+type Stock={count:number;sellCoins:number;usdPrice:number;coinsPerUsd:number};
 const common:Record<string,string>={whatsapp:"WhatsApp",telegram:"Telegram",google:"Google",facebook:"Facebook",instagram:"Instagram/Threads",tiktok:"TikTok",twitter:"X / Twitter",x:"X",snapchat:"Snapchat",viber:"Viber",discord:"Discord",amazon:"Amazon",microsoft:"Microsoft",apple:"Apple",signal:"Signal",wechat:"WeChat",yahoo:"Yahoo",openai:"OpenAI/ChatGPT",claudeai:"Claude AI/Anthropic"};
 function nameOf(s:string){return common[s.toLowerCase()]||s.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function friendlyError(value:string){const x=value.toLowerCase();if(x.includes("no free")||x.includes("no stock")||x.includes("out of stock"))return "No free Numbers";if(x.includes("not enough user balance")||x.includes("balance"))return "Service unavailable";if(x.includes("price_changed")||x.includes("price changed")||x.includes("maxprice"))return "Price changed";if(x.includes("bad country")||x.includes("bad operator")||x.includes("no product"))return "Service unavailable";if(x.includes("server offline")||x.includes("temporarily unavailable")||x.includes("timeout"))return "Service temporarily unavailable";if(x.includes("provider")||x.includes("5sim"))return "Unable to get number";return value.replace(/5SIM[^:]*:\s*/ig,"").trim()||"Unable to reserve a number."}
