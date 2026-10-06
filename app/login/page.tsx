@@ -2,6 +2,7 @@
 import {useEffect,useState} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
+import {Capacitor} from "@capacitor/core";
 
 export default function Login(){
  const[email,setEmail]=useState(""),[secret,setSecret]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false),[next,setNext]=useState(""),[approval,setApproval]=useState<any>(null),router=useRouter();
@@ -16,7 +17,7 @@ export default function Login(){
  async function go(){
   setError("");if(!email.trim()||!secret){setError("Enter your email and password.");return}setLoading(true);
   try{
-   const d=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({email,password:secret})}).then(x=>x.json());
+   const d=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json","X-Numelixa-Client":Capacitor.isNativePlatform()?"android-app":"browser"},credentials:"include",body:JSON.stringify({email,password:secret})}).then(x=>x.json());
    if(d.approvalRequired){setApproval(d);setLoading(false);return}
    if(!d.ok){setError(d.error||"Login failed");return}
    window.dispatchEvent(new Event("numelixa-auth-ready"));router.push(next&&next.startsWith("/")?next:"/");
