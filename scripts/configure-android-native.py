@@ -424,8 +424,7 @@ public class MainActivity extends BridgeActivity {
             // for re-enabling notifications.
         }
     }
-
-
+}
 ''', encoding="utf-8")
 
 manifest = Path("android/app/src/main/AndroidManifest.xml")
