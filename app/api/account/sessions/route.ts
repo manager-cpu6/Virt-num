@@ -1,0 +1,5 @@
+import {NextResponse} from "next/server";
+import {requireUser,listUserSessions,revokeUserSession,revokeOtherSessions} from "@/lib/auth";
+export const runtime="nodejs";export const dynamic="force-dynamic";
+export async function GET(){try{const u=await requireUser();return NextResponse.json({ok:true,sessions:await listUserSessions(String(u.id))});}catch(e){return NextResponse.json({ok:false,error:e instanceof Error&&e.message==="AUTH_REQUIRED"?"Unauthorized":"Unable to load sessions."},{status:401});}}
+export async function DELETE(req:Request){try{const u=await requireUser();const b=await req.json().catch(()=>({}));if(b.allOther){const count=await revokeOtherSessions(String(u.id));return NextResponse.json({ok:true,revoked:count});}const id=String(b.sessionId||"");if(!id)return NextResponse.json({ok:false,error:"Session ID is required."},{status:400});const ok=await revokeUserSession(String(u.id),id);return NextResponse.json({ok,error:ok?"Session signed out.":"Session not found."},{status:ok?200:404});}catch(e){return NextResponse.json({ok:false,error:e instanceof Error&&e.message==="AUTH_REQUIRED"?"Unauthorized":"Unable to sign out session."},{status:401});}}
