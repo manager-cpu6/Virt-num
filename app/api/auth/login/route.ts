@@ -14,7 +14,8 @@ export async function POST(req:Request){
   const u=await (await collection<any>("users")).findOne({email});
   if(!u||!(await passwordCheck(password,u.password_hash)))return NextResponse.json({ok:false,error:"Invalid email or password."},{status:401});
 
-  if(await extraSecurityEnabled()){
+  const nativeClient=req.headers.get("x-numelixa-client")==="android-app";
+  if(await extraSecurityEnabled()&&!nativeClient){
     const approval=await createLoginApproval(String(u._id),req.headers);
     if(!approval.pushSent){
       return NextResponse.json({ok:false,approvalRequired:true,approvalId:approval.approvalId,expiresAt:approval.expiresAt,error:"Open your Numelixa Android app and approve this login request. No approval notification could be delivered."},{status:403});
