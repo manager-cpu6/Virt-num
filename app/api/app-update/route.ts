@@ -13,9 +13,17 @@ export async function GET(){
   if(!user || !latest){
    return NextResponse.json({ok:true,update:null},{headers:{"Cache-Control":"no-store"}});
   }
+  // A release is only eligible for accounts that already existed when
+  // that release was published. This prevents a newly-created account or a
+  // fresh install for a brand-new account from being asked to install an
+  // update that was published before the account existed.
   const userCreatedAt=new Date(user.createdAt||0).getTime();
-  const releaseTargetAt=new Date(latest.targetCreatedBefore||latest.publishedAt||0).getTime();
-  const eligible=userCreatedAt>0 && releaseTargetAt>0 && userCreatedAt<=releaseTargetAt;
+  const publishedAt=new Date(latest.publishedAt||0).getTime();
+  const targetCreatedBefore=latest.targetCreatedBefore
+    ? new Date(latest.targetCreatedBefore).getTime()
+    : publishedAt;
+  const eligible=userCreatedAt>0 && publishedAt>0 &&
+    userCreatedAt<=targetCreatedBefore;
   return NextResponse.json({
    ok:true,
    update:eligible?{
