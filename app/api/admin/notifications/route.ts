@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";
+import {NextResponse} from "next/server";\nimport {cookies} from "next/headers";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export async function GET(){
   try{
     await requireAdmin();
-    const deviceCount = await (await collection<any>("deviceTokens")).countDocuments({});
+    const deviceTokens=await collection<any>("deviceTokens");\n    const deviceCount = await deviceTokens.countDocuments({});\n    const linkedDeviceCount = await deviceTokens.countDocuments({userId:{$type:"string",$ne:""}});\n    const unlinkedDeviceCount = Math.max(0,deviceCount-linkedDeviceCount);
     const rows = await (await collection<any>("notifications"))
       .find({adminSent:true})
       .sort({createdAt:-1})
@@ -52,6 +52,23 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"Invalid JSON body."},{status:400});
     }
 
+    if(String(body.action||"")==="test_current_device"){
+      const token=String((await cookies()).get("numelixa_device_token")?.value||"").trim();
+      if(token.length<20){
+        return NextResponse.json({ok:false,error:"This admin device has no registered native push token. Open the Android app while signed in and allow notifications."},{status:400});
+      }
+      const test=await sendPush(
+        [token],
+        "🔔 Numelixa notification test",
+        "Native push is working on this Android device.",
+        {type:"push_test",url:"/"}
+      );
+      if(test.invalidTokens?.length){
+        await (await collection<any>("deviceTokens")).deleteMany({token:{$in:test.invalidTokens}});
+      }
+      return NextResponse.json({ok:test.successCount>0,sent:test.successCount,failed:test.failureCount,configured:test.configured,error:test.errors?.[0]?.message||null});
+    }
+
     const title = String(body.title||"").trim().slice(0,80);
     const message = String(body.message||"").trim().slice(0,500);
     const target = String(body.target||"all").trim();
@@ -72,7 +89,7 @@ export async function POST(req:Request){
 
     const users = await collection<any>("users");
     const userIds = target==="all"
-      ? await users.find({}, {projection:{_id:1}}).toArray()
+      ? await users.find({email:{$type:"string",$regex:/\\S/}}, {projection:{_id:1}}).toArray()
       : await users.findOne(
           {_id:target.slice(5)},
           {projection:{_id:1}}
