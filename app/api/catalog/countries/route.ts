@@ -18,7 +18,7 @@ export async function GET(req:Request){
     const result=countries.map((c:any)=>{
       const p=prices[String(c.id)];
       const cost=Number(p?.cost||0),count=Number(p?.count||0),coins=cost>0?sellCoins(cost,settings):0;
-      return {...c,flag:flag(c.iso),stock:{count,physicalCount:count,providerCost:cost,rate:Number(p?.rate||0),sellCoins:coins,usdPrice:coins/settings.coinsPerUsd}};
+      return {...c,flag:flag(c.iso),stock:{count,physicalCount:count,sellCoins:coins,usdPrice:coins/settings.coinsPerUsd}};
     });
     return NextResponse.json({ok:true,live:true,countryCount:result.length,countries:result});
   }catch(e){
