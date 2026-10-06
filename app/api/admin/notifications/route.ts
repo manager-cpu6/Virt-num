@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
+import {sendEmail,emailTemplate} from "@/lib/mailer";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,9 @@ export async function GET(){
     await requireAdmin();
     const deviceTokens = await collection<any>("deviceTokens");
     const users = await collection<any>("users");
+    const emailSubscriptions = await collection<any>("notificationEmailSubscriptions");
+    const emailRegisteredCount = await emailSubscriptions.countDocuments({enabled:true});
+    const usersWithEmail = await users.countDocuments({email:{$exists:true,$ne:""}});
     const deviceCount = await deviceTokens.countDocuments({});
     const claimedDeviceCount = await deviceTokens.countDocuments({userId:{$nin:[null,""]}});
     const unclaimedDeviceCount = await deviceTokens.countDocuments({$or:[{userId:null},{userId:""}]});
@@ -46,6 +50,8 @@ export async function GET(){
       unclaimedDeviceCount,
       verifiedGmailUsers:verifiedGmailUsers.length,
       verifiedGmailDeviceCount,
+      emailRegisteredCount,
+      usersWithEmail,
       serverPushConfigured:Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY))
     });
   }catch(error){
@@ -68,6 +74,19 @@ export async function POST(req:Request){
       body = await req.json();
     }catch{
       return NextResponse.json({ok:false,error:"Invalid JSON body."},{status:400});
+    }
+
+    const action = String(body.action||"").trim();
+    if(action==="register_all" || action==="register_email"){
+      const users = await collection<any>("users");
+      const subs = await collection<any>("notificationEmailSubscriptions");
+      const query = action==="register_all" ? {email:{$exists:true,$ne:""}} : {_id:String(body.userId||"")};
+      const rows = await users.find(query,{projection:{_id:1,email:1,name:1}}).toArray();
+      const valid = rows.filter((u:any)=>String(u.email||"").trim().includes("@"));
+      if(!valid.length)return NextResponse.json({ok:false,error:"No users with valid email addresses found."},{status:404});
+      const now=new Date();
+      await subs.bulkWrite(valid.map((u:any)=>({updateOne:{filter:{userId:String(u._id)},update:{$set:{userId:String(u._id),email:String(u.email).trim().toLowerCase(),name:String(u.name||""),enabled:true,registeredByAdmin:true,updatedAt:now},$setOnInsert:{createdAt:now}},upsert:true}})));
+      return NextResponse.json({ok:true,registered:valid.length});
     }
 
     const title = String(body.title||"").trim().slice(0,80);
@@ -157,6 +176,19 @@ export async function POST(req:Request){
       console.error("[ADMIN NOTIFICATIONS PUSH]", pushError);
     }
 
+    const emailSubs = await (await collection<any>("notificationEmailSubscriptions")).find({userId:{$in:ids},enabled:true}).toArray();
+    let emailSent=0;
+    let emailFailed=0;
+    await Promise.all(emailSubs.map(async (sub:any)=>{
+      try{
+        await sendEmail(String(sub.email),title,emailTemplate(title,message,undefined,"Numelixa notification"));
+        emailSent++;
+      }catch(error){
+        emailFailed++;
+        console.error("[ADMIN NOTIFICATION EMAIL]",{email:sub.email,error:error instanceof Error?error.message:String(error)});
+      }
+    }));
+
     if(pushResult.invalidTokens?.length){
       await (await collection<any>("deviceTokens")).deleteMany({token:{$in:pushResult.invalidTokens}});
     }
@@ -183,6 +215,9 @@ export async function POST(req:Request){
       failed:pushResult.failureCount,
       pushConfigured:pushResult.configured,
       errors:pushResult.errors||[],
+      emailRecipients:emailSubs.length,
+      emailSent,
+      emailFailed,
       pushError
     });
   }catch(error){
