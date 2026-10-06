@@ -79,6 +79,7 @@ function makeMessage(token:string,title:string,body:string,data:Record<string,st
     data:{url:data.url||"/",...data},
     android:{
       priority:"high",
+      ttl:2419200*1000,
       notification:{
         channelId:"numelixa",
         sound:"default",
