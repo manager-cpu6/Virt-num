@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
-import {sendPush} from "@/lib/push";
+import {sendPush,isFirebaseConfigured} from "@/lib/push";
 import {sendEmail,emailTemplate} from "@/lib/mailer";
 
 export const runtime = "nodejs";
@@ -52,7 +52,7 @@ export async function GET(){
       verifiedGmailDeviceCount,
       emailRegisteredCount,
       usersWithEmail,
-      serverPushConfigured:Boolean(process.env.FIREBASE_SERVICE_ACCOUNT_JSON || (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_CLIENT_EMAIL && process.env.FIREBASE_PRIVATE_KEY))
+      serverPushConfigured:isFirebaseConfigured()
     });
   }catch(error){
     console.error("[ADMIN NOTIFICATIONS GET]", error);
