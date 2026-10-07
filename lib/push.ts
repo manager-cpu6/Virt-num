@@ -32,7 +32,27 @@ const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
  const app=firebaseApp();
- if(!app||!tokens.length)return {configured:Boolean(app),successCount:0,failureCount:0,invalidTokens:[],errors:[]};
+ if(!app){
+  const hasServiceJson=Boolean(String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||process.env.FIREBASE_SERVICE_ACCOUNT||"").trim());
+  const hasParts=Boolean(
+   String(process.env.FIREBASE_PROJECT_ID||"").trim() &&
+   String(process.env.FIREBASE_CLIENT_EMAIL||"").trim() &&
+   String(process.env.FIREBASE_PRIVATE_KEY||"").trim()
+  );
+  return {
+   configured:false,
+   successCount:0,
+   failureCount:tokens.length,
+   invalidTokens:[],
+   errors:[{
+    code:"firebase-config-missing",
+    message:hasServiceJson||hasParts
+     ?"Firebase Admin credentials could not be initialized."
+     :"Firebase Admin credentials are incomplete. Configure FIREBASE_SERVICE_ACCOUNT_JSON or FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY."
+   }]
+  };
+ }
+ if(!tokens.length)return {configured:true,successCount:0,failureCount:0,invalidTokens:[],errors:[]};
 
  const unique=[...new Set(tokens.map(String).map(x=>x.trim()).filter(x=>x.length>=20))];
  let successCount=0,failureCount=0;
