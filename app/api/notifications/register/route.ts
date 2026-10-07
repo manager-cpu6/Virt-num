@@ -8,13 +8,37 @@ export const dynamic="force-dynamic";
 
 export async function POST(req:Request){
   try{
-    const user=await requireUser();
     const body=await req.json().catch(()=>null);
     const token=String(body?.token||"").trim();
     const platform=String(body?.platform||"unknown").trim().toLowerCase();
 
     if(!token||token.length<20){
       return NextResponse.json({ok:false,error:"Invalid device token."},{status:400});
+    }
+
+    const user=await (async()=>{
+      try{return await requireUser()}catch(error){
+        if(error instanceof Error&&error.message==="AUTH_REQUIRED")return null;
+        throw error;
+      }
+    })();
+
+    // Keep the current FCM token in a short server-side handoff cookie even
+    // before login. It is NOT linked to any account until authentication
+    // succeeds. This closes the login/signup timing gap.
+    if(!user){
+      const response=NextResponse.json(
+        {ok:false,registered:false,linked:false,error:"AUTH_REQUIRED",pending:true},
+        {status:401}
+      );
+      response.cookies.set("numelixa_device_token_pending",token,{
+        httpOnly:true,
+        secure:process.env.NODE_ENV==="production",
+        sameSite:"lax",
+        path:"/",
+        maxAge:60*10
+      });
+      return response;
     }
 
     const devices=await collection<any>("deviceTokens");
