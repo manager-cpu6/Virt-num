@@ -73,62 +73,11 @@ jobs:
           ANDROID_VERSION_CODE: ${{ github.run_number }}
           ANDROID_VERSION_NAME: ${{ github.ref_name }}
         run: python scripts/set-android-version.py
-      - name: Require stable Android signing secrets
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          test -n "$KEYSTORE_BASE64" || (echo "Missing ANDROID_KEYSTORE_BASE64 repository secret" && exit 1)
-          test -n "$KEY_ALIAS" || (echo "Missing ANDROID_KEY_ALIAS repository secret" && exit 1)
-          test -n "$KEYSTORE_PASSWORD" || (echo "Missing ANDROID_KEYSTORE_PASSWORD repository secret" && exit 1)
-          test -n "$KEY_PASSWORD" || (echo "Missing ANDROID_KEY_PASSWORD repository secret" && exit 1)
-      - name: Configure stable signing for installable APK
-        env:
-          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > android/numelixa-release.jks
-          cat >> android/gradle.properties <<EOF
-          NUMELIXA_STORE_FILE=../numelixa-release.jks
-          NUMELIXA_KEY_ALIAS=$KEY_ALIAS
-          NUMELIXA_STORE_PASSWORD=$KEYSTORE_PASSWORD
-          NUMELIXA_KEY_PASSWORD=$KEY_PASSWORD
-          EOF
-          python - <<'PY'
-          from pathlib import Path
-          p = Path("android/app/build.gradle")
-          s = p.read_text()
-          marker = "    buildTypes {"
-          block = """    signingConfigs {
-                  release {
-                      storeFile file(project.property("NUMELIXA_STORE_FILE"))
-                      storePassword project.property("NUMELIXA_STORE_PASSWORD")
-                      keyAlias project.property("NUMELIXA_KEY_ALIAS")
-                      keyPassword project.property("NUMELIXA_KEY_PASSWORD")
-                  }
-              }
-
-          """
-          if marker not in s:
-              raise SystemExit("Could not locate Android buildTypes for signing")
-          if "signingConfigs.release" not in s:
-              s = s.replace(marker, block + marker, 1)
-          s = s.replace(
-              "buildTypes {\n        release {",
-              "buildTypes {\n        release {\n            signingConfig signingConfigs.release",
-              1
-          )
-          p.write_text(s)
-          PY
-      - name: Build signed installable APK
+      - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleDebug
       - name: Prepare downloadable APK
-        run: cp android/app/build/outputs/apk/release/app-release.apk Numelixa.apk
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Numelixa.apk
       - name: Upload installable test APK
         uses: actions/upload-artifact@v4
         with:
