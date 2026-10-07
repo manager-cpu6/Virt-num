@@ -8,7 +8,7 @@ export const dynamic="force-dynamic";
 export default async function DashboardPage(){
  const user=await getUser().catch(()=>null);
  if(!user)redirect("/login");
- return <div>
+ return <div className="reference-dashboard">
   <TopBar/>
   <section className="hero-card home-hero-refresh">
    <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Numbers, without the noise.</h1><p>Choose a service, pick a country and get a live SMS number in a few taps. Your wallet, orders and codes stay in one clean place.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
