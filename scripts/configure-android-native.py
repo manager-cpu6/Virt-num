@@ -118,6 +118,7 @@ public class NumelixaPushTokenPlugin extends Plugin {
                 call.reject("Firebase is not initialized. Check google-services.json.");
                 return;
             }
+
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
             request(call, 1);
         } catch (Exception e) {
@@ -134,34 +135,27 @@ public class NumelixaPushTokenPlugin extends Plugin {
                     return;
                 }
 
-                // Register the token directly from the native layer as a
-                // fallback. This deliberately works before login too, so the
-                // server can count the device as registered even if the
-                // WebView/session is still booting. The JS layer will later
-                // claim/link the same token to the signed-in user.
+                getContext().getSharedPreferences("numelixa_push", 0)
+                    .edit()
+                    .putString("fcm_token", value)
+                    .putString("fcm_token_error", "")
+                    .apply();
+
                 NumelixaPushTransport.registerToken(getContext(), value);
 
                 JSObject out = new JSObject();
                 out.put("token", value);
                 call.resolve(out);
             })
-            .addOnFailureListener(error -> retry(call, attempt, safe(error)));
-    }
-
-                int status = connection.getResponseCode();
-                android.util.Log.d(
-                    "NUMELIXA_PUSH",
-                    "Native token registration HTTP " + status
-                );
-            } catch (Exception error) {
-                android.util.Log.e(
-                    "NUMELIXA_PUSH",
-                    "Native token registration failed: " + safe(error)
-                );
-            } finally {
-                if (connection != null) connection.disconnect();
-            }
-        }, "numelixa-fcm-register").start();
+            .addOnFailureListener(error -> {
+                String message = safe(error);
+                getContext().getSharedPreferences("numelixa_push", 0)
+                    .edit()
+                    .putString("fcm_token_error", message)
+                    .putLong("fcm_token_error_at", System.currentTimeMillis())
+                    .apply();
+                retry(call, attempt, message);
+            });
     }
 
     private void retry(PluginCall call, int attempt, String message) {
@@ -170,6 +164,25 @@ public class NumelixaPushTokenPlugin extends Plugin {
             return;
         }
         handler.postDelayed(() -> request(call, attempt + 1), 1500L);
+    }
+
+    @PluginMethod
+    public void getStatus(PluginCall call) {
+        android.content.SharedPreferences prefs =
+            getContext().getSharedPreferences("numelixa_push", 0);
+        JSObject out = new JSObject();
+        out.put("tokenPresent", !String.valueOf(
+            prefs.getString("fcm_token", "")).trim().isEmpty());
+        out.put("tokenLength", String.valueOf(
+            prefs.getString("fcm_token", "")).trim().length());
+        out.put("tokenError", prefs.getString("fcm_token_error", ""));
+        out.put("registrationStatus",
+            prefs.getString("last_registration_status", ""));
+        out.put("registrationResponse",
+            prefs.getString("last_registration_response", ""));
+        out.put("registrationAt",
+            prefs.getLong("last_registration_at", 0L));
+        call.resolve(out);
     }
 
     private static String safe(Throwable t) {
@@ -221,6 +234,7 @@ public final class NumelixaPushTransport {
                 JSONObject body = new JSONObject();
                 body.put("token", value);
                 body.put("platform", "android");
+
                 byte[] payload = body.toString().getBytes(
                     java.nio.charset.StandardCharsets.UTF_8
                 );
