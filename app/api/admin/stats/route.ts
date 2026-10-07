@@ -21,9 +21,12 @@ export async function GET(){
       orders.aggregate([{$group:{_id:"$status",count:{$sum:1}}},{$sort:{count:-1}}]).toArray(),
       orders.aggregate([{$group:{_id:"$service",count:{$sum:1},coins:{$sum:{$convert:{input:"$priceCoins",to:"double",onError:0,onNull:0}}}}},{$sort:{count:-1}},{$limit:8}]).toArray()
     ]);
+    const settings=await getSettings();
     const activeProviderName=await providerName();
-    let sms:any={name:activeProviderName,status:await configured()?"configured":"missing"};
-    if(await configured()){try{sms.balance=await balance()}catch{sms.status="error"}}
+    let sms:any={name:"5SIM",status:settings.provider5simEnabled?(activeProviderName==="5SIM"?"active":"standby"):"disabled",enabled:settings.provider5simEnabled};
+    let tiger:any={name:"Tiger SMS",status:settings.providerTigerEnabled?(activeProviderName==="Tiger SMS"?"active":"standby"):"disabled",enabled:settings.providerTigerEnabled};
+    if(settings.provider5simEnabled && activeProviderName==="5SIM"){try{sms.balance=await balance()}catch{sms.status="error"}}
+    if(settings.providerTigerEnabled && activeProviderName==="Tiger SMS"){try{tiger.balance=await balance()}catch{tiger.status="error"}}
     return NextResponse.json({
       ok:true,
       users:uc,
@@ -34,8 +37,8 @@ export async function GET(){
       walletCoins:Number(wallet[0]?.total||0),
       orderStatuses:orderStatuses.map((x:any)=>({status:String(x._id||"unknown"),count:Number(x.count||0)})),
       topServices:topServices.map((x:any)=>({service:String(x._id||"unknown"),count:Number(x.count||0),coins:Number(x.coins||0)})),
-      settings:await getSettings(),
-      providers:[sms,{name:activeProviderName==="5SIM"?"Tiger SMS":"5SIM",status:"standby"},
+      settings,
+      providers:[sms,tiger,
         {name:"Cryptomus",status:(process.env.CRYPTOMUS_PAYMENT_API_KEY||process.env.CRYPTOMUS_API_KEY)?"configured":"missing"},
         {name:"Spacemail",status:process.env.SPACEMAIL_SMTP_USER?"configured":"missing"}
       ]
@@ -49,6 +52,17 @@ export async function POST(req:Request){
   try{
     await requireAdmin();
     const b=await req.json();
+    if(b.providerControl===true){
+      const next5=b.provider5simEnabled===true;
+      const nextTiger=b.providerTigerEnabled===true;
+      if(!next5&&!nextTiger)return NextResponse.json({ok:false,error:"At least one SMS provider must remain enabled."},{status:400});
+      const selected=b.smsProvider==="tiger"?"tiger":"5sim";
+      if(selected==="5sim"&&!next5)return NextResponse.json({ok:false,error:"Enable 5SIM before making it active."},{status:400});
+      if(selected==="tiger"&&!nextTiger)return NextResponse.json({ok:false,error:"Enable Tiger SMS before making it active."},{status:400});
+      const current=await getSettings();
+      await (await collection<any>("settings")).updateOne({_id:"pricing"},{$set:{provider5simEnabled:next5,providerTigerEnabled:nextTiger,smsProvider:selected,updatedAt:new Date()}},{upsert:true});
+      return NextResponse.json({ok:true,settings:await getSettings()});
+    }
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
     const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
     const smsProvider=b.smsProvider==="tiger"?"tiger":"5sim";
@@ -78,7 +92,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:smsProvider==="5sim"?true:undefined,providerTigerEnabled:smsProvider==="tiger"?true:undefined,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
