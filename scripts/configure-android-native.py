@@ -133,11 +133,61 @@ public class NumelixaPushTokenPlugin extends Plugin {
                     retry(call, attempt, "Firebase returned an empty token");
                     return;
                 }
+
+                // Register the token directly from the native layer as a
+                // fallback. This deliberately works before login too, so the
+                // server can count the device as registered even if the
+                // WebView/session is still booting. The JS layer will later
+                // claim/link the same token to the signed-in user.
+                registerTokenWithServer(value);
+
                 JSObject out = new JSObject();
                 out.put("token", value);
                 call.resolve(out);
             })
             .addOnFailureListener(error -> retry(call, attempt, safe(error)));
+    }
+
+    private void registerTokenWithServer(String token) {
+        new Thread(() -> {
+            java.net.HttpURLConnection connection = null;
+            try {
+                java.net.URL url = new java.net.URL(
+                    "https://numelixa.com/api/notifications/register"
+                );
+                connection = (java.net.HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(8000);
+                connection.setReadTimeout(8000);
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Accept", "application/json");
+
+                org.json.JSONObject body = new org.json.JSONObject();
+                body.put("token", token);
+                body.put("platform", "android");
+                byte[] payload = body.toString().getBytes(
+                    java.nio.charset.StandardCharsets.UTF_8
+                );
+
+                try (java.io.OutputStream out = connection.getOutputStream()) {
+                    out.write(payload);
+                }
+
+                int status = connection.getResponseCode();
+                android.util.Log.d(
+                    "NUMELIXA_PUSH",
+                    "Native token registration HTTP " + status
+                );
+            } catch (Exception error) {
+                android.util.Log.e(
+                    "NUMELIXA_PUSH",
+                    "Native token registration failed: " + safe(error)
+                );
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }, "numelixa-fcm-register").start();
     }
 
     private void retry(PluginCall call, int attempt, String message) {
