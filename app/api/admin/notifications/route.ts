@@ -43,32 +43,46 @@ export async function GET(){
 
 export async function POST(req:Request){
  try{
-  await requireAdmin();
+  const admin=await requireAdmin();
   const body=await req.json().catch(()=>null);
   if(!body)return NextResponse.json({ok:false,error:"Invalid JSON body."},{status:400});
 
   if(String(body.action||"")==="test_current_device"){
-   const token=String((await cookies()).get("numelixa_device_token")?.value||"").trim();
-   if(token.length<20){
+   const devices=await collection<any>("deviceTokens");
+   const adminId=String(admin.id||"").trim();
+   const rows=adminId
+    ?await devices.find({userId:adminId},{projection:{token:1,platform:1,updatedAt:1,lastSeenAt:1}}).sort({updatedAt:-1}).toArray()
+    :[];
+   const tokens=[...new Set(rows.map(x=>String(x.token||"").trim()).filter(x=>x.length>=20))];
+
+   // The admin dashboard is normally opened in a browser, while the push
+   // token belongs to the Android app session. Therefore the test must target
+   // the admin account's linked Android device(s), not a browser cookie.
+   if(!tokens.length){
     return NextResponse.json({
      ok:false,
-     error:"This admin device has no registered native push token. Open the Android app while signed in and allow notifications."
+     error:"No Android push device is linked to the admin account. Open Numelixa on the Android device, sign in to the admin account, and allow notifications."
     },{status:400});
    }
+
    const test=await sendPush(
-    [token],
+    tokens,
     "🔔 Numelixa notification test",
     "Native push is working on this Android device.",
     {type:"push_test",url:"/"}
    );
+
    if(test.invalidTokens?.length){
-    await (await collection<any>("deviceTokens")).deleteMany({token:{$in:test.invalidTokens}});
+    await devices.deleteMany({token:{$in:test.invalidTokens}});
    }
+
    return NextResponse.json({
     ok:test.successCount>0,
     sent:test.successCount,
     failed:test.failureCount,
+    devices:tokens.length,
     configured:test.configured,
+    errors:test.errors||[],
     error:test.errors?.[0]?.message||null
    });
   }
@@ -140,10 +154,10 @@ export async function POST(req:Request){
  }catch(error){
   console.error("[ADMIN NOTIFICATIONS POST]",error);
   const message=error instanceof Error?error.message:String(error);
-  const status=message==="AUTH_REQUIRED"||message==="ADMIN_REQUIRED"?401:500;
+  const status=message==="AUTH_REQUIRED"||message==="ADMIN_REQUIRED"?401:message.startsWith("MongoDB is not configured")?503:500;
   return NextResponse.json({
    ok:false,
-   error:status===401?"Unauthorized":"Notification send failed. Check the server logs."
+   error:status===401?"Unauthorized":status===503?"Server database is not configured. Add MONGODB_URI in Vercel and redeploy.":"Notification send failed. Check the server logs."
   },{status});
  }
 }
