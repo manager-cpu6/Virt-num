@@ -727,3 +727,261 @@ body:after{width:390px;height:390px;right:-190px;bottom:60px;background:rgba(97,
 @media(prefers-reduced-motion:reduce){
   *,*:before,*:after{scroll-behavior:auto!important;animation-duration:.001ms!important;transition-duration:.001ms!important}
 }
+
+
+/* =========================================================
+   NUMELIXA 2026 — GLOBAL PREMIUM UI / PERFORMANCE LAYER
+   Shared by Web + Capacitor Android
+   ========================================================= */
+:root{
+  --nx-bg:#f4f7f9;
+  --nx-ink:#071619;
+  --nx-muted:#65757a;
+  --nx-teal:#0aa58d;
+  --nx-teal-dark:#075e60;
+  --nx-mint:#74ead5;
+  --nx-card:rgba(255,255,255,.78);
+  --nx-card-solid:#fff;
+  --nx-border:rgba(8,63,67,.09);
+  --nx-shadow:0 18px 55px rgba(8,47,52,.10);
+  --nx-shadow-lg:0 30px 90px rgba(4,55,58,.14);
+  --nx-radius:24px;
+  --nx-fast:100ms;
+}
+
+/* crisp rendering + instant mobile taps */
+html{-webkit-text-size-adjust:100%;text-rendering:optimizeLegibility;scroll-behavior:smooth}
+body{-webkit-tap-highlight-color:transparent;overscroll-behavior-x:none}
+button,a,input,[role="button"]{touch-action:manipulation}
+button,a{ -webkit-user-select:none;user-select:none }
+a,button,.primary-btn,.secondary-btn,.service-card,.country-row,.number-row,.quick-card,.coin-pack,.nav-item{
+  transition-duration:var(--nx-fast)!important;
+}
+button:active,.primary-btn:active,.secondary-btn:active,.service-card:active,.country-row:active,.number-row:active,.quick-card:active,.coin-pack:active,.nav-item:active{
+  transform:scale(.985)!important;
+}
+:focus-visible{outline:3px solid rgba(10,165,141,.28);outline-offset:3px}
+::selection{background:rgba(10,165,141,.18);color:var(--nx-ink)}
+input::placeholder{color:#91a0a4}
+
+/* premium page background */
+html{background:
+ radial-gradient(900px 500px at 12% -5%,rgba(116,234,213,.16),transparent 60%),
+ radial-gradient(800px 500px at 100% 25%,rgba(82,157,189,.10),transparent 60%),
+ linear-gradient(180deg,#f7fafb 0%,#eef3f5 100%)}
+body{background:transparent}
+body:before{width:420px;height:420px;left:-210px;top:12%;background:rgba(116,234,213,.10);filter:blur(100px)}
+body:after{width:420px;height:420px;right:-220px;bottom:8%;background:rgba(96,154,190,.08);filter:blur(100px)}
+
+.page-shell{width:min(100%,1120px);padding:16px 22px 150px}
+.topbar{height:66px;margin:-3px 0 18px}
+.topbar-inner{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:16px}
+.topbar-detail .topbar-inner{grid-template-columns:44px minmax(0,1fr) auto}
+.brand-logo{width:44px;height:44px;border-radius:15px;background:linear-gradient(145deg,#13bca2,#066b70);box-shadow:0 12px 28px rgba(6,107,112,.20);font-size:21px}
+.brand-copy b{font-size:18px;color:#092023}
+.brand-copy small{color:#718084}
+.coin-pill{height:40px;min-width:104px;border-radius:14px;background:linear-gradient(135deg,#062d31,#0a5558);border-color:rgba(116,234,213,.20);box-shadow:0 10px 25px rgba(5,67,69,.16)}
+.icon-btn{width:44px;height:44px;border-radius:15px;background:rgba(255,255,255,.78);border-color:rgba(8,63,67,.08);box-shadow:0 8px 25px rgba(8,47,52,.07)}
+.home-menu-btn{background:rgba(255,255,255,.70)}
+
+.top-menu{
+  position:absolute;right:0;top:58px;z-index:200;min-width:230px;padding:8px;
+  border:1px solid rgba(255,255,255,.9);border-radius:20px;
+  background:rgba(255,255,255,.92);box-shadow:var(--nx-shadow-lg);
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
+}
+.top-menu a{display:flex;align-items:center;min-height:44px;padding:0 13px;border-radius:13px;font-size:13px;font-weight:750;color:#173033}
+.top-menu a:hover,.top-menu a:active{background:rgba(10,165,141,.09);color:#087d75}
+
+/* universal cards */
+.hero-card,.market-hero,.orders-hero,.account-profile-card,.account-wallet-card,.wallet-hero,.balance-banner{
+  border-radius:30px!important;box-shadow:var(--nx-shadow-lg)!important
+}
+.hero-card{min-height:410px;padding:44px;background:
+ radial-gradient(420px 260px at 85% 12%,rgba(116,234,213,.20),transparent 65%),
+ linear-gradient(135deg,#061b20 0%,#0a3539 55%,#082428 100%)}
+.hero-card h1{font-size:clamp(42px,6vw,72px);letter-spacing:-.075em;max-width:700px}
+.hero-card p{font-size:15px;color:#b7c9cc;max-width:610px}
+.hero-card .primary-btn{border-radius:15px;background:#eafff9;color:#063337}
+.hero-orb{width:142px;height:142px;border-radius:43px;background:linear-gradient(145deg,rgba(234,255,249,.96),rgba(112,219,203,.20));box-shadow:inset 0 1px 0 #fff,0 25px 55px rgba(0,0,0,.22)}
+
+.primary-btn,.secondary-btn{min-height:52px;border-radius:15px;padding:0 20px}
+.primary-btn{background:linear-gradient(135deg,#075e60,#087d75);box-shadow:0 12px 28px rgba(5,101,96,.16)}
+.secondary-btn{background:rgba(255,255,255,.74);border-color:rgba(8,63,67,.08)}
+
+.quick-card,.service-card,.list-card,.purchase-card,.code-card,.form-card,.admin-card,.transaction-list{
+  border-color:var(--nx-border)!important;background:var(--nx-card)!important;box-shadow:var(--nx-shadow)!important
+}
+.quick-card,.service-card{border-radius:21px!important}
+.quick-card>span,.service-icon,.flag,.number-icon{border-color:rgba(8,63,67,.07);box-shadow:0 5px 16px rgba(8,47,52,.06)}
+.service-card{min-height:94px}
+.service-card:hover{box-shadow:0 20px 42px rgba(8,47,52,.12)!important}
+.service-card b{color:#102a2d}
+.service-card small{color:#718286}
+.service-icon{background:linear-gradient(145deg,#ffffff,#eaf2f3)}
+.service-icon img{width:23px;height:23px;object-fit:contain}
+
+.service-search-box,.country-search,.service-search{
+  border:1px solid rgba(8,63,67,.08)!important;
+  background:rgba(255,255,255,.82)!important;
+  box-shadow:0 12px 30px rgba(8,47,52,.07)!important;
+  border-radius:18px!important;
+}
+.service-search-box input,.country-search input,.service-search input{font-size:14px!important}
+.search-icon{color:#087d75!important}
+
+.section-head{margin-top:34px}
+.section-head h2,.page-intro h1{color:#0a2225}
+.eyebrow{letter-spacing:.18em;font-weight:900;color:#6b7b80}
+.market-hero{min-height:300px;padding:30px;background:
+ radial-gradient(260px 200px at 82% 30%,rgba(116,234,213,.18),transparent 68%),
+ linear-gradient(135deg,#063f43,#087d75 56%,#0ca58f)}
+.market-hero h1{font-size:clamp(34px,5vw,54px)}
+.market-stats span{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.16)}
+.catalog-trust{background:rgba(235,251,248,.85);border-color:rgba(10,165,141,.10)}
+
+.orders-hero{
+  background:linear-gradient(135deg,#061b20,#0a4b50 60%,#087d75)!important;
+  color:#fff;padding:28px!important
+}
+.orders-hero h1{font-size:clamp(34px,5vw,50px);letter-spacing:-.065em}
+.orders-hero p{color:#bad0d2}
+.orders-stat-strip,.orders-tabs{border-color:rgba(8,63,67,.08)!important}
+.order-card{border:1px solid rgba(8,63,67,.08)!important;background:rgba(255,255,255,.82)!important;border-radius:23px!important;box-shadow:var(--nx-shadow)!important}
+.order-card:hover{transform:translateY(-2px);box-shadow:0 22px 48px rgba(8,47,52,.12)!important}
+.order-code-box{background:linear-gradient(135deg,#ecfffa,#dff7f2)!important;border-color:rgba(10,165,141,.12)!important}
+
+.wallet-hero,.balance-banner{
+  background:
+   radial-gradient(240px 180px at 85% 15%,rgba(116,234,213,.16),transparent 68%),
+   linear-gradient(135deg,#061b20,#0a3c40 58%,#075e60)!important
+}
+.wallet-hero strong,.balance-banner strong{font-size:48px}
+.coin-pack{background:rgba(255,255,255,.80);border-color:rgba(8,63,67,.08);border-radius:18px}
+.coin-pack:hover{box-shadow:0 15px 32px rgba(8,47,52,.10)}
+
+.account-profile-card{
+ background:
+  radial-gradient(280px 180px at 90% 5%,rgba(116,234,213,.16),transparent 70%),
+  linear-gradient(135deg,#061b20,#0a3d41 58%,#075e60)!important
+}
+.account-profile-card h1,.account-profile-card p{color:#fff}
+.account-member-pill{background:rgba(116,234,213,.12)!important;color:#a5fff0!important;border-color:rgba(116,234,213,.18)!important}
+.account-wallet-card{background:linear-gradient(135deg,#ffffff,#effaf8)!important}
+.account-action-card{border-radius:21px!important;border-color:rgba(8,63,67,.08)!important;box-shadow:var(--nx-shadow)!important}
+.account-action-card.primary{background:linear-gradient(135deg,#075e60,#0a9a86)!important;color:#fff!important}
+
+.bottom-nav{
+  width:min(calc(100% - 24px),760px);bottom:12px;padding:7px;
+  border-radius:24px;background:rgba(255,255,255,.84);
+  border-color:rgba(255,255,255,.96);box-shadow:0 22px 65px rgba(8,47,52,.16)
+}
+.nav-item{border-radius:18px;padding:8px 4px}
+.nav-item.selected{background:linear-gradient(180deg,#effdfa,#dff6f1);color:#075e60;box-shadow:0 6px 18px rgba(8,47,52,.08)}
+.nav-item span{font-size:19px}.nav-item small{font-size:9px}
+
+.global-footer{color:#718084!important}
+.global-footer a:hover{color:#087d75!important}
+
+/* public landing — premium product-site treatment */
+.public-landing{color:#0a2225}
+.landing-nav{
+  position:sticky!important;top:12px;z-index:100;margin:12px auto 0!important;
+  width:min(calc(100% - 30px),1180px)!important;
+  border:1px solid rgba(255,255,255,.82)!important;border-radius:20px!important;
+  background:rgba(255,255,255,.76)!important;box-shadow:0 16px 50px rgba(8,47,52,.09)!important;
+  backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important;
+}
+.landing-logo{background:linear-gradient(145deg,#13bca2,#066b70)!important;box-shadow:0 10px 25px rgba(6,107,112,.18)!important}
+.landing-start,.landing-primary{background:linear-gradient(135deg,#075e60,#0aa58d)!important;box-shadow:0 14px 32px rgba(5,101,96,.18)!important}
+.landing-hero{width:min(1180px,calc(100% - 30px))!important;margin:0 auto!important;padding:90px 0 70px!important}
+.landing-copy h1{font-size:clamp(52px,7vw,92px)!important;letter-spacing:-.085em!important}
+.landing-copy h1 em,.landing-section-head h2 em{color:#087d75!important}
+.landing-badge{border-color:rgba(10,165,141,.12)!important;background:rgba(10,165,141,.06)!important;color:#087d75!important}
+.landing-visual{filter:drop-shadow(0 35px 80px rgba(4,55,58,.14))}
+.phone-mock{border-color:rgba(255,255,255,.75)!important;box-shadow:0 35px 90px rgba(4,55,58,.20)!important}
+.phone-front .phone-screen{background:linear-gradient(160deg,#f8fffd,#e7f6f2)!important}
+.mock-balance{background:linear-gradient(135deg,#075e60,#0aa58d)!important}
+.mock-copy{background:#075e60!important}
+.landing-stats,.landing-feature-grid article,.landing-steps article,.security-panel,.landing-security{
+  border-color:rgba(8,63,67,.08)!important
+}
+.landing-stats{background:rgba(255,255,255,.70)!important;box-shadow:var(--nx-shadow)!important}
+.landing-feature-grid article{background:rgba(255,255,255,.68)!important;box-shadow:0 15px 40px rgba(8,47,52,.06)!important;border-radius:24px!important}
+.landing-feature-grid article>div{background:linear-gradient(135deg,#e7faf5,#d8f3ee)!important}
+.landing-security{background:linear-gradient(135deg,#061b20,#0a4549 60%,#075e60)!important}
+.landing-final{background:linear-gradient(135deg,#075e60,#0aa58d)!important;box-shadow:var(--nx-shadow-lg)!important}
+.landing-footer{border-top-color:rgba(8,63,67,.08)!important}
+
+/* app download / native-facing surfaces */
+.app-download-cta{border-color:rgba(10,165,141,.12)!important;background:
+ radial-gradient(250px 180px at 85% 0,rgba(116,234,213,.18),transparent 70%),
+ linear-gradient(135deg,#061b20,#0a4448)!important;box-shadow:var(--nx-shadow-lg)!important}
+.app-download-cta-btn{background:#eafff9!important;color:#063337!important}
+
+/* Native Android: reduce expensive GPU blur/shadows and eliminate perceived tap lag. */
+.numelixa-native html,.numelixa-native body{background:#f4f7f9}
+.numelixa-native .bottom-nav,
+.numelixa-native .top-menu,
+.numelixa-native .secondary-btn,
+.numelixa-native .icon-btn,
+.numelixa-native .quick-card,
+.numelixa-native .service-card,
+.numelixa-native .form-card,
+.numelixa-native .list-card,
+.numelixa-native .purchase-card,
+.numelixa-native .code-card,
+.numelixa-native .admin-card,
+.numelixa-native .transaction-list{
+  -webkit-backdrop-filter:none!important;backdrop-filter:none!important;
+}
+.numelixa-native .bottom-nav{background:rgba(255,255,255,.97)}
+.numelixa-native .top-menu{background:#fff}
+.numelixa-native .service-card,.numelixa-native .quick-card{box-shadow:0 10px 25px rgba(8,47,52,.07)!important}
+.numelixa-native .page-shell{padding-bottom:125px}
+.numelixa-native a,.numelixa-native button{transition:none!important}
+.numelixa-native .nav-item:active,.numelixa-native .service-card:active,.numelixa-native .primary-btn:active,.numelixa-native .secondary-btn:active{transform:scale(.985)!important}
+.numelixa-native .topbar{margin-bottom:10px}
+.numelixa-native .hero-card{min-height:330px}
+.numelixa-native .hero-card h1{font-size:40px}
+
+/* loading stability */
+.skeleton,.service-loading,.country-loading{animation:none!important}
+img{content-visibility:auto}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* responsive */
+@media(min-width:900px){
+ .page-shell{padding-top:28px}
+ .service-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+ .quick-grid{grid-template-columns:repeat(4,1fr)}
+ .landing-feature-grid{grid-template-columns:repeat(4,1fr)}
+}
+@media(max-width:700px){
+ .page-shell{padding-left:15px;padding-right:15px}
+ .landing-nav{width:calc(100% - 18px)!important}
+ .landing-nav nav{display:none!important}
+ .landing-hero{padding-top:54px!important}
+ .landing-visual{margin-top:30px}
+ .hero-card{padding:28px!important;min-height:350px}
+ .hero-orb{width:92px;height:92px;border-radius:30px}
+ .market-hero{min-height:270px}
+}
+@media(max-width:480px){
+ .topbar{height:58px}
+ .brand-logo{width:40px;height:40px}.brand-copy b{font-size:17px}
+ .coin-pill{min-width:90px;height:38px}
+ .page-shell{padding-left:12px;padding-right:12px}
+ .hero-card h1{font-size:38px}
+ .hero-card p{font-size:13px}
+ .hero-orb{display:none}
+ .service-grid{gap:8px}
+ .service-card{padding:12px;border-radius:17px!important}
+ .service-card b{font-size:12.5px}
+ .service-card small{font-size:10px}
+ .bottom-nav{width:calc(100% - 16px);bottom:7px}
+ .landing-copy h1{font-size:50px!important}
+ .landing-hero{width:calc(100% - 24px)!important}
+}
