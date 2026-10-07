@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/fivesim";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
+import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
 import {notifyUser} from "@/lib/notifications";
 import {watchOrderForPush} from "@/lib/order-watcher";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
