@@ -456,3 +456,93 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 @media(max-width:520px){
  .reference-dashboard .quick-grid{grid-template-columns:1fr!important}
 }
+
+
+/* =========================================================
+   DASHBOARD REFERENCE LOCK — bdee1265c1a1731924306f3f55632ebc61e38c22
+   The authenticated dashboard uses the original reference palette/layout.
+   ========================================================= */
+html:has(.reference-dashboard){
+  background:linear-gradient(135deg,#edf0f6 0%,#f8f9fc 48%,#e9edf5 100%)!important;
+}
+body:has(.reference-dashboard){
+  background:linear-gradient(135deg,#edf0f6 0%,#f8f9fc 48%,#e9edf5 100%)!important;
+  color:#10131b!important;
+}
+body:has(.reference-dashboard):before{width:260px;height:260px;left:-100px;top:90px;background:rgba(255,255,255,.82)!important;filter:blur(70px)!important}
+body:has(.reference-dashboard):after{width:300px;height:300px;right:-130px;bottom:80px;background:rgba(207,216,232,.7)!important;filter:blur(70px)!important}
+body:has(.reference-dashboard) .page-shell{width:min(100%,820px)!important;margin:0 auto!important;padding:12px 18px 150px!important}
+.reference-dashboard{color:#10131b!important;background:transparent!important;border-radius:0!important}
+.reference-dashboard .topbar{
+  height:58px!important;display:grid!important;grid-template-columns:1fr auto!important;
+  align-items:center!important;margin:-2px 0 18px!important;padding:0!important;
+  background:transparent!important;border:0!important;backdrop-filter:none!important;
+}
+.reference-dashboard .topbar-inner{min-height:58px!important}
+.reference-dashboard .brand-logo{
+  width:42px!important;height:42px!important;border-radius:14px!important;
+  background:linear-gradient(145deg,#12b69a,#087d75)!important;color:#fff!important;
+  box-shadow:0 10px 24px rgba(8,125,117,.18)!important;
+}
+.reference-dashboard .brand-copy b{font-size:18px!important;line-height:20px!important;color:#10131b!important}
+.reference-dashboard .brand-copy small{font-size:9px!important;color:#747b8c!important}
+.reference-dashboard .coin-pill{
+  height:36px!important;min-width:96px!important;background:rgba(5,31,39,.78)!important;
+  color:#dffcf8!important;border:1px solid rgba(121,246,229,.18)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.18)!important;
+}
+.reference-dashboard .icon-btn,.reference-dashboard .home-menu-btn{
+  width:42px!important;height:42px!important;border-radius:15px!important;
+  border:1px solid rgba(255,255,255,.72)!important;background:rgba(255,255,255,.62)!important;
+  color:#10131b!important;box-shadow:0 10px 34px rgba(24,31,48,.07)!important;
+}
+.reference-dashboard .hero-card.home-hero-refresh{
+  min-height:350px!important;border:1px solid rgba(255,255,255,.22)!important;
+  border-radius:34px!important;padding:32px!important;color:#fff!important;
+  background:linear-gradient(135deg,#0d1118,#242a35 62%,#11151c)!important;
+  box-shadow:0 30px 80px rgba(15,19,28,.20)!important;
+}
+.reference-dashboard .hero-card:before{background:none!important}
+.reference-dashboard .hero-card .eyebrow{color:#aab1bf!important}
+.reference-dashboard .hero-card h1{font-size:clamp(38px,7vw,58px)!important;color:#fff!important}
+.reference-dashboard .hero-card p{color:#b8bfca!important}
+.reference-dashboard .hero-card .primary-btn{
+  background:rgba(255,255,255,.95)!important;color:#11151c!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.14)!important;
+}
+.reference-dashboard .hero-orb{
+  width:118px!important;height:118px!important;border-radius:38px!important;
+  background:linear-gradient(145deg,rgba(255,255,255,.85),rgba(150,158,174,.32))!important;
+  color:#171b23!important;border-color:rgba(255,255,255,.42)!important;
+}
+.reference-dashboard .quick-grid{grid-template-columns:1fr 1fr!important;gap:12px!important;margin-top:14px!important}
+.reference-dashboard .quick-card{
+  min-height:88px!important;background:rgba(255,255,255,.62)!important;
+  color:#10131b!important;border:1px solid rgba(255,255,255,.72)!important;
+  border-radius:22px!important;padding:16px!important;box-shadow:0 10px 34px rgba(24,31,48,.07)!important;
+}
+.reference-dashboard .quick-card>span{
+  width:40px!important;height:40px!important;border-radius:14px!important;
+  background:rgba(255,255,255,.72)!important;border:1px solid rgba(255,255,255,.72)!important;color:#10131b!important;
+}
+.reference-dashboard .quick-card b{font-size:13px!important;color:#10131b!important}
+.reference-dashboard .quick-card small{font-size:11px!important;color:#747b8c!important}
+.reference-dashboard .quick-card i{color:#8d93a0!important}
+.reference-dashboard .section-head{margin:32px 2px 15px!important}
+.reference-dashboard .section-head h2{font-size:25px!important;color:#10131b!important}
+.reference-dashboard .section-head .eyebrow{color:#747b8c!important}
+.reference-dashboard .bottom-nav{
+  background:rgba(255,255,255,.64)!important;border:1px solid rgba(255,255,255,.9)!important;
+  box-shadow:0 20px 60px rgba(24,31,48,.16)!important;
+}
+.reference-dashboard .nav-item{color:#8b919d!important}
+.reference-dashboard .nav-item.selected{color:#11151c!important;background:rgba(255,255,255,.72)!important}
+@media(max-width:760px){
+ body:has(.reference-dashboard) .page-shell{padding-left:14px!important;padding-right:14px!important}
+ .reference-dashboard .hero-card.home-hero-refresh{min-height:330px!important}
+}
+@media(max-width:480px){
+ body:has(.reference-dashboard) .page-shell{padding-left:11px!important;padding-right:11px!important}
+ .reference-dashboard .hero-card.home-hero-refresh{border-radius:25px!important}
+ .reference-dashboard .quick-grid{grid-template-columns:1fr!important}
+}
