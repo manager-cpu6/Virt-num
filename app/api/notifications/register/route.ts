@@ -16,6 +16,16 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"Invalid device token."},{status:400});
     }
 
+    // Device registration is deliberately independent from login, but it
+    // still requires the same MongoDB storage used by accounts and sessions.
+    // Fail explicitly instead of silently leaving the admin dashboard at zero.
+    if(!String(process.env.MONGODB_URI||"").trim()){
+      return NextResponse.json(
+        {ok:false,error:"PUSH_STORAGE_NOT_CONFIGURED",message:"Notification device storage is not configured on the server."},
+        {status:503}
+      );
+    }
+
     const user=await (async()=>{
       try{return await requireUser()}catch(error){
         if(error instanceof Error&&error.message==="AUTH_REQUIRED")return null;
