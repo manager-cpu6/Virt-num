@@ -1,9 +1,9 @@
 import Link from "next/link";
-import {getUser} from "@/lib/auth";
+import {getUser} from "@/lib/auth";import {redirect} from "next/navigation";
 export const dynamic="force-dynamic";
 export default async function LandingPage(){
  const user=await getUser().catch(()=>null);
- if(user) return <meta httpEquiv="refresh" content="0;url=/dashboard"/>;
+ if(user) redirect("/dashboard");
  return <div className="public-landing">
   <header className="landing-nav"><Link href="/" className="landing-brand"><span className="landing-logo">N</span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link><nav><a href="#features">Features</a><a href="#how">How it works</a><a href="#security">Security</a></nav><div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div></header>
   <main>
