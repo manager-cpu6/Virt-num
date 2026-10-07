@@ -53,6 +53,24 @@ provider='''        <provider
 if 'com.numelixa.app.fileprovider' not in m:
     pos=m.rfind('</application>')
     m=m[:pos]+provider+m[pos:]
+
+service_decl='''        <service
+            android:name=".NumelixaFirebaseMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="numelixa" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@android:drawable/ic_dialog_info" />
+'''
+if 'NumelixaFirebaseMessagingService' not in m:
+    pos=m.rfind('</application>')
+    m=m[:pos]+service_decl+m[pos:]
 manifest.write_text(m)
 
 (XML/"numelixa_file_paths.xml").write_text('''<?xml version="1.0" encoding="utf-8"?>
@@ -126,6 +144,60 @@ public class NumelixaPushTokenPlugin extends Plugin {
         if (t == null) return "Unknown Firebase error";
         return t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage();
     }
+}
+''')
+
+(JAVA/"NumelixaFirebaseMessagingService.java").write_text(r'''package com.numelixa.app;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.os.Build;
+import android.text.TextUtils;
+import com.google.firebase.messaging.FirebaseMessagingService;
+import com.google.firebase.messaging.RemoteMessage;
+
+public class NumelixaFirebaseMessagingService extends FirebaseMessagingService {
+ public static final String CHANNEL_ID="numelixa";
+ @Override public void onNewToken(String token){
+  super.onNewToken(token);
+  if(token!=null&&!token.trim().isEmpty())
+   getSharedPreferences("numelixa_push",MODE_PRIVATE).edit().putString("fcm_token",token.trim()).apply();
+ }
+ @Override public void onMessageReceived(RemoteMessage message){
+  super.onMessageReceived(message); ensureChannel();
+  String title=message.getNotification()!=null?message.getNotification().getTitle():null;
+  String body=message.getNotification()!=null?message.getNotification().getBody():null;
+  if(TextUtils.isEmpty(title))title=message.getData().get("title");
+  if(TextUtils.isEmpty(body))body=message.getData().get("body");
+  if(TextUtils.isEmpty(title))title="Numelixa";
+  if(TextUtils.isEmpty(body))body="You have a new Numelixa notification.";
+  Intent launch=getPackageManager().getLaunchIntentForPackage(getPackageName());
+  if(launch==null)return;
+  launch.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
+  for(java.util.Map.Entry<String,String> e:message.getData().entrySet())launch.putExtra(e.getKey(),e.getValue());
+  int flags=PendingIntent.FLAG_UPDATE_CURRENT;
+  if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M)flags|=PendingIntent.FLAG_IMMUTABLE;
+  PendingIntent pending=PendingIntent.getActivity(this,1001,launch,flags);
+  android.app.Notification.Builder b=Build.VERSION.SDK_INT>=Build.VERSION_CODES.O
+   ?new android.app.Notification.Builder(this,CHANNEL_ID):new android.app.Notification.Builder(this);
+  b.setSmallIcon(android.R.drawable.ic_dialog_info).setContentTitle(title).setContentText(body)
+   .setStyle(new android.app.Notification.BigTextStyle().bigText(body)).setAutoCancel(true)
+   .setContentIntent(pending).setPriority(android.app.Notification.PRIORITY_HIGH)
+   .setCategory(android.app.Notification.CATEGORY_MESSAGE).setDefaults(android.app.Notification.DEFAULT_ALL);
+  NotificationManager manager=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+  if(manager!=null)manager.notify((int)(System.currentTimeMillis()&0x7fffffff),b.build());
+ }
+ private void ensureChannel(){
+  if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.O){
+   NotificationManager m=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+   if(m!=null){
+    NotificationChannel c=new NotificationChannel(CHANNEL_ID,"Numelixa",NotificationManager.IMPORTANCE_HIGH);
+    c.setDescription("SMS codes, purchases, wallet activity and important alerts");
+    c.enableVibration(true); c.setShowBadge(true); m.createNotificationChannel(c);
+   }
+  }
+ }
 }
 ''')
 
