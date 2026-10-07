@@ -6,6 +6,14 @@ import TopBar from "@/components/TopBar";
 type S={id:string;code:string;name:string};
 
 const popular=["whatsapp","telegram","google","facebook","instagram","tiktok","twitter","snapchat","viber","discord","amazon","microsoft","apple","openai","signal"];
+const popularAliases:Record<string,string[]>={
+ whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],google:["google","go"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],tiktok:["tiktok","tt"],twitter:["twitter","x","tw"],snapchat:["snapchat","sn"],viber:["viber"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt","op"],signal:["signal"]
+};
+function popularRank(x:S){
+ const raw=(x.id+" "+x.name).toLowerCase().replace(/[\\s_/-]+/g,"");
+ for(let i=0;i<popular.length;i++) if((popularAliases[popular[i]]||[popular[i]]).some(v=>raw.includes(v))) return i;
+ return 9999;
+}
 
 function AppLogo({id,name}:{id:string;name:string}){
  const[hasLogo,setHasLogo]=useState(true);
@@ -27,9 +35,10 @@ export default function ServicesPage(){
  const filtered=useMemo(()=>{
    const query=q.trim().toLowerCase();
    if(query)return s.filter(x=>(x.name+" "+x.id).toLowerCase().includes(query));
-   if(showAll)return s;
-   const p=s.filter(x=>popular.includes(x.id.toLowerCase()));
-   return p.length?p:s.slice(0,16)
+   const ranked=[...s].sort((a,b)=>popularRank(a)-popularRank(b)||a.name.localeCompare(b));
+   if(showAll)return ranked;
+   const p=ranked.filter(x=>popularRank(x)<9999);
+   return p.length?p.slice(0,16):ranked.slice(0,16)
  },[s,q,showAll]);
 
  return <div className="services-page">
