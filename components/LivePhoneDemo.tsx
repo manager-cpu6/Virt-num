@@ -20,7 +20,8 @@ export default function LivePhoneDemo(){
         const candidates=demos.map((_,i)=>i).filter(i=>i!==v && !seenRef.current.includes(i));
         const next=candidates.length ? candidates[Math.floor(Math.random()*candidates.length)] : demos.map((_,i)=>i).filter(i=>i!==v)[Math.floor(Math.random()*(demos.length-1))];
         seenRef.current=[...seenRef.current,next].slice(-3);
-        return next;\n      });
+        return next;
+      });
       setTick(v=>v+1);
     },2600);
     return ()=>window.clearInterval(id);
