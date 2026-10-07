@@ -85,7 +85,9 @@ export async function POST(req:Request){
 
   const users=await collection<any>("users");
   const userIds=target==="all"
-   ?await users.find({email:{$type:"string",$regex:/\\S/}},{projection:{_id:1}}).toArray()
+   // "All users" means every real account. Do not require a particular
+   // email shape here; deviceTokens are the final push target filter.
+   ?await users.find({},{projection:{_id:1}}).toArray()
    :await users.findOne({_id:target.slice(5)},{projection:{_id:1}}).then(u=>u?[u]:[]);
 
   if(!userIds.length)
