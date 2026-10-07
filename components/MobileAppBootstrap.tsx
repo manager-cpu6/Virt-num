@@ -2,8 +2,8 @@
 import {useEffect} from "react";
 import {Capacitor,registerPlugin} from "@capacitor/core";
 
-const TOKEN_KEY="numelixa_fcm_token_v4";
-const NativePushToken=registerPlugin<{getToken():Promise<{token?:string}>}>("NumelixaPushToken");
+const TOKEN_KEY="numelixa_fcm_token_v5";
+const NativePushToken=registerPlugin<{getToken():Promise<{token?:string}>}>( "NumelixaPushToken");
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -29,13 +29,12 @@ export default function MobileAppBootstrap(){
 
   const scheduleRetry=()=>{
    if(stopped||retryTimer)return;
-   retryTimer=setTimeout(()=>{retryTimer=null;void syncCurrentToken()},5000);
+   retryTimer=setTimeout(()=>{retryTimer=null;void syncCurrentToken()},2500);
   };
 
   const saveAndRegister=async(token:string)=>{
    token=String(token||"").trim();
    if(token.length<20||stopped||tokenInFlight)return false;
-   if(!(await isAuthenticated()))return false;
    tokenInFlight=true;
    try{
     localStorage.setItem(TOKEN_KEY,token);
@@ -48,7 +47,10 @@ export default function MobileAppBootstrap(){
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
-    if(response.status!==401)scheduleRetry();
+    // A 401 is expected for the short window before login/session cookies are
+    // ready. The server now stores the device as unlinked, and we keep retrying
+    // so the same token becomes linked as soon as the account is authenticated.
+    scheduleRetry();
     return false;
    }catch(error){
     console.error("[NUMELIXA PUSH REGISTER]",error);
@@ -109,18 +111,11 @@ export default function MobileAppBootstrap(){
      await syncCurrentToken();
      return true;
     }
-    // Capacitor is the single owner of the Android runtime permission.
-    // MainActivity must not request it at the same time, otherwise the
-    // permission result can race with PushNotifications.register().
-    const requested=await push.requestPermissions();
-    if(requested.receive!=="granted"){
-     showPermissionGate();
-     return false;
-    }
-    document.getElementById("numelixa-notification-gate")?.remove();
-    await push.register();
-    await syncCurrentToken();
-    return true;
+    // The Android MainActivity requests POST_NOTIFICATIONS at startup. We only
+    // request through Capacitor after a user explicitly taps the fallback gate,
+    // preventing two permission dialogs from racing each other.
+    showPermissionGate();
+    return false;
    }catch(error){
     console.error("[NUMELIXA PUSH PERMISSION]",error);
     showPermissionGate();
@@ -169,28 +164,22 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",refresh);
     });
 
-    // Do not rely only on the auth-ready event. Login/signup can finish while
-    // the native bridge is still initializing, so keep checking until the
-    // authenticated account has the current FCM token linked.
+    // Keep syncing both before and after login. The backend accepts an
+    // authenticated token immediately and also stores an unlinked token when
+    // the session is not ready yet.
     const authPoll=window.setInterval(async()=>{
      if(stopped)return;
      try{
-      if(await isAuthenticated()){
-       await getNativeToken();
-       await syncCurrentToken();
-      }
+      await getNativeToken();
+      if(await isAuthenticated())await syncCurrentToken();
      }catch(error){console.error("[NUMELIXA PUSH AUTH SYNC]",error)}
     },2500);
     cleanups.push(()=>window.clearInterval(authPoll));
 
-    // Start permission + token initialization immediately. A permission that was
-    // already granted in Android Settings must never block FCM token retrieval.
-    // getToken() is the authoritative native path; PushNotifications.register()
-    // is still called so Capacitor's registration event stays in sync.
-    await Promise.allSettled([
-     ensurePushPermission(),
-     getNativeToken(),
-    ]);
+    // Token retrieval is independent from the permission dialog. If permission
+    // was already granted in Android Settings, FCM getToken() runs immediately.
+    await getNativeToken();
+    await ensurePushPermission();
     await syncCurrentToken();
 
     const heartbeat=window.setInterval(()=>{void syncCurrentToken()},15000);
