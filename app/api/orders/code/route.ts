@@ -6,8 +6,9 @@ export async function POST(req:Request){try{const u=await requireUser(),id=Strin
  if(o.code)return NextResponse.json({ok:true,code:o.code,fullSms:o.fullSms,status:"received"});
  if(o.status==="refunded"||o.status==="cancelled")return NextResponse.json({ok:false,error:"This order was refunded.",status:o.status},{status:409});
  const age=Date.now()-new Date(o.createdAt).getTime();
+ const provider=o.provider==="tiger"?"tiger":"5sim";
  if(age>=10*60*1000){try{await cancel(String(o.providerOrderId),provider)}catch{}await refund(o);return NextResponse.json({ok:false,error:"10 minutes passed without an SMS. Your coins have been refunded.",status:"refunded"},{status:409})}
- const provider=o.provider==="tiger"?"tiger":"5sim"; const p=await check(String(o.providerOrderId),provider);
+ const p=await check(String(o.providerOrderId),provider);
  if(Number(p.status)===3){const code=String(p.sms||"");try{await finalize(String(o.providerOrderId),provider)}catch{}const changed=await orders.findOneAndUpdate(
    {_id:id,userId:u.id,status:"waiting"},
    {$set:{code,fullSms:String((p as any).fullSms||code),status:"received",completedAt:new Date(),codeNotifiedAt:new Date()}},
