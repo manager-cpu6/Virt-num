@@ -41,6 +41,34 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        <section className="landing-live-strip" aria-label="Numelixa live activity">
+          <div className="landing-live-panel">
+            <span className="eyebrow">Live network</span>
+            <h3>Numbers changing. Messages arriving.</h3>
+            <p>A visual snapshot of the Numelixa experience, with fresh activity designed to feel like a live control room.</p>
+            <div className="live-feed-list">
+              <div className="live-feed-row"><b>🇺🇸 +1 ••• ••• 4198</b><span>SMS RECEIVED · 2s</span></div>
+              <div className="live-feed-row"><b>🇬🇧 +44 •••• 123 681</b><span>NUMBER READY · NOW</span></div>
+              <div className="live-feed-row"><b>🇩🇪 +49 ••• ••• 276</b><span>CODE DELIVERED · NOW</span></div>
+            </div>
+          </div>
+          <div className="landing-video-panel">
+            <span className="eyebrow">Product preview</span>
+            <div className="video-screen"><span className="video-live">LIVE PREVIEW</span></div>
+            <h3>See it in motion.</h3>
+            <p>Fast number selection, live SMS status and a clean verification workflow.</p>
+          </div>
+          <div className="landing-people-panel">
+            <span className="eyebrow">Loved worldwide</span>
+            <h3>Built for people who need speed.</h3>
+            <p>Use a polished workspace across web and Android, wherever you work.</p>
+            <div className="people-row">
+              <div className="person">A</div><div className="person">M</div><div className="person">S</div><div className="person">J</div>
+              <span><b>Global users</b><small>Secure verification, simplified.</small></span>
+            </div>
+          </div>
+        </section>
+
         <section id="how" className="landing-how">
           <div className="landing-section-head"><span>HOW IT WORKS</span><h2>From sign up to code<br /><em>in three simple steps.</em></h2></div>
           <div className="landing-steps">
