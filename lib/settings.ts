@@ -10,6 +10,8 @@ export type PricingSettings={
   providerOperator:string;
   providerOperators:string[];
   smsProvider:"5sim"|"tiger";
+  provider5simEnabled:boolean;
+  providerTigerEnabled:boolean;
 };
 
 const defaults:PricingSettings={
