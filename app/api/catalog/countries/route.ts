@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {listCountries,providerConfigured,servicePrices} from "@/lib/fivesim";
+import {listCountries,providerConfigured,servicePrices} from "@/lib/sms-provider";
 import {getSettings,sellCoins} from "@/lib/settings";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
