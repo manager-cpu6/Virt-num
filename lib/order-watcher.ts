@@ -18,7 +18,7 @@ export async function watchOrderForPush(orderId:string,userId:string){
   }
 
   try{
-   const result=await check(String(order.providerOrderId));
+   const result=await check(String(order.providerOrderId),order.provider==="tiger"?"tiger":"5sim");
 
    if(Number(result.status)===3){
     const code=String(result.sms||"");
@@ -36,7 +36,7 @@ export async function watchOrderForPush(orderId:string,userId:string){
     );
 
     if(changed){
-     try{await finalize(String(order.providerOrderId))}catch(error){
+     try{await finalize(String(order.providerOrderId),order.provider==="tiger"?"tiger":"5sim")}catch(error){
       console.error("[ORDER WATCHER FINALIZE]",error);
      }
      await notifyUser(
