@@ -3,13 +3,55 @@ import {collection,mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
 
 export async function claimDeviceTokenForUser(userId:string){
- const token=String((await cookies()).get("numelixa_device_token")?.value||"").trim();
+ const jar=await cookies();
+ const token=String(
+  jar.get("numelixa_device_token")?.value||
+  jar.get("numelixa_device_token_pending")?.value||
+  ""
+ ).trim();
  if(token.length<20)return false;
- const result=await (await collection<any>("deviceTokens")).updateOne(
+
+ const devices=await collection<any>("deviceTokens");
+ const users=await collection<any>("users");
+ const now=new Date();
+
+ await devices.updateOne(
   {token},
-  {$set:{userId:String(userId),updatedAt:new Date(),lastSeenAt:new Date()}}
+  {$set:{token,userId:String(userId),updatedAt:now,lastSeenAt:now},$setOnInsert:{createdAt:now}},
+  {upsert:true}
  );
- return result.matchedCount>0||result.modifiedCount>0;
+
+ // Convert the pending handoff into the normal authenticated device cookie.
+ try{
+  jar.set("numelixa_device_token",token,{
+   httpOnly:true,
+   secure:process.env.NODE_ENV==="production",
+   sameSite:"lax",
+   path:"/",
+   maxAge:60*60*24*365
+  });
+  jar.delete("numelixa_device_token_pending");
+ }catch{}
+
+ // Send the first-device welcome from the authenticated server path. This
+ // also works when the login happens before the browser event fires.
+ const account=await users.findOne({_id:String(userId)},{projection:{pushWelcomeSentAt:1}});
+ if(!account?.pushWelcomeSentAt){
+  try{
+   const result=await sendPush(
+    [token],
+    "👋 Welcome to Numelixa",
+    "Your Numelixa notifications are now active. We will alert you about SMS codes, purchases, wallet activity and important updates.",
+    {type:"welcome",url:"/"}
+   );
+   if(result.successCount>0){
+    await users.updateOne({_id:String(userId)},{$set:{pushWelcomeSentAt:new Date()}});
+   }
+  }catch(error){
+   console.error("[WELCOME PUSH CLAIM]",error);
+  }
+ }
+ return true;
 }
 
 export async function notifyUser(
