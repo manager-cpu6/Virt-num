@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {providerConfigured,balance} from "@/lib/fivesim";
+import {configured,balance,providerName} from "@/lib/sms-provider";
 import {getSettings} from "@/lib/settings";
 
 export const runtime="nodejs";
@@ -21,8 +21,9 @@ export async function GET(){
       orders.aggregate([{$group:{_id:"$status",count:{$sum:1}}},{$sort:{count:-1}}]).toArray(),
       orders.aggregate([{$group:{_id:"$service",count:{$sum:1},coins:{$sum:{$convert:{input:"$priceCoins",to:"double",onError:0,onNull:0}}}}},{$sort:{count:-1}},{$limit:8}]).toArray()
     ]);
-    let sms:any={name:"5SIM",status:providerConfigured()?"configured":"missing"};
-    if(providerConfigured()){try{sms.balance=await balance()}catch{sms.status="error"}}
+    const active=await providerName();
+    let sms:any={name:active,status:await configured()?"configured":"missing"};
+    if(await configured()){try{sms.balance=await balance()}catch{sms.status="error"}}
     return NextResponse.json({
       ok:true,
       users:uc,
@@ -34,7 +35,7 @@ export async function GET(){
       orderStatuses:orderStatuses.map((x:any)=>({status:String(x._id||"unknown"),count:Number(x.count||0)})),
       topServices:topServices.map((x:any)=>({service:String(x._id||"unknown"),count:Number(x.count||0),coins:Number(x.coins||0)})),
       settings:await getSettings(),
-      providers:[sms,
+      providers:[sms,{name:active==="5SIM"?"Tiger SMS":"5SIM",status:"standby"},
         {name:"Cryptomus",status:(process.env.CRYPTOMUS_PAYMENT_API_KEY||process.env.CRYPTOMUS_API_KEY)?"configured":"missing"},
         {name:"Spacemail",status:process.env.SPACEMAIL_SMTP_USER?"configured":"missing"}
       ]
@@ -50,6 +51,7 @@ export async function POST(req:Request){
     const b=await req.json();
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
     const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
+    const smsProvider=b.smsProvider==="tiger"?"tiger":"5sim";
     const providerOperators=Array.from(new Set((Array.isArray(b.providerOperators)?b.providerOperators:[]).map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean).concat("any"))).slice(0,50);
     if(!providerOperators.includes(providerOperator))return NextResponse.json({ok:false,error:"Selected 5SIM operator must be in the operator list."},{status:400});
     if(!Number.isFinite(markupPercent)||markupPercent<0||markupPercent>1000)return NextResponse.json({ok:false,error:"Invalid markup percent."},{status:400});
@@ -74,7 +76,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
