@@ -169,6 +169,20 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",refresh);
     });
 
+    // Do not rely only on the auth-ready event. Login/signup can finish while
+    // the native bridge is still initializing, so keep checking until the
+    // authenticated account has the current FCM token linked.
+    const authPoll=window.setInterval(async()=>{
+     if(stopped)return;
+     try{
+      if(await isAuthenticated()){
+       await getNativeToken();
+       await syncCurrentToken();
+      }
+     }catch(error){console.error("[NUMELIXA PUSH AUTH SYNC]",error)}
+    },2500);
+    cleanups.push(()=>window.clearInterval(authPoll));
+
     // Capacitor owns the Android permission request. The token is only linked
     // to an account after /api/me confirms an authenticated email account.
     await new Promise(resolve=>setTimeout(resolve,1200));
