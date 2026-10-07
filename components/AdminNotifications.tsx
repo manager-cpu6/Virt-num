@@ -14,15 +14,34 @@ export default function AdminNotifications(){
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0),[linkedDeviceCount,setLinkedDeviceCount]=useState(0),[unlinkedDeviceCount,setUnlinkedDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
+ const[databaseConfigured,setDatabaseConfigured]=useState(true);
+ const[backendError,setBackendError]=useState("");
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
 
  async function load(){
+  setBackendError("");
   try{
+   const health=await fetch("/api/notifications/health",{cache:"no-store"}).then(r=>r.json()).catch(()=>null);
+   if(health?.ok){
+    setDatabaseConfigured(Boolean(health.databaseConfigured));
+    setServerPushConfigured(Boolean(health.firebaseAdminConfigured));
+   }
+
    const r=await fetch("/api/admin/notifications",{cache:"no-store"});
-   const d=await r.json();
-   if(d.ok){setHistory(d.notifications||[]);setDeviceCount(Number(d.deviceCount||0));setLinkedDeviceCount(Number(d.linkedDeviceCount||0));setUnlinkedDeviceCount(Number(d.unlinkedDeviceCount||0));setServerPushConfigured(Boolean(d.serverPushConfigured));}
-  }catch{}
+   const d=await r.json().catch(()=>null);
+   if(d?.ok){
+    setHistory(d.notifications||[]);
+    setDeviceCount(Number(d.deviceCount||0));
+    setLinkedDeviceCount(Number(d.linkedDeviceCount||0));
+    setUnlinkedDeviceCount(Number(d.unlinkedDeviceCount||0));
+    setServerPushConfigured(Boolean(d.serverPushConfigured));
+   }else{
+    setBackendError(d?.error||"Unable to load notification status.");
+   }
+  }catch{
+   setBackendError("Unable to reach the notification backend.");
+  }
  }
 
  useEffect(()=>{
