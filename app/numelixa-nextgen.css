@@ -1,14 +1,14 @@
 /* Numelixa Next-Gen 2026 — global visual system and touch-performance layer */
 :root{
-  --nx-teal:#087d75;--nx-mint:#10b99a;--nx-ink:#062a2e;--nx-soft:#edf8f6;
-  --nx-glass:rgba(255,255,255,.78);--nx-border:rgba(7,77,79,.09);
-  --nx-shadow:0 18px 55px rgba(6,54,58,.09);--nx-shadow-lg:0 30px 90px rgba(5,61,65,.14);
+  --nx-teal:#13c9ad;--nx-mint:#28e0bd;--nx-ink:#e9fffb;--nx-soft:#102c30;
+  --nx-glass:rgba(11,30,34,.78);--nx-border:rgba(91,255,222,.12);
+  --nx-shadow:0 18px 55px rgba(0,0,0,.28);--nx-shadow-lg:0 30px 90px rgba(0,0,0,.42);
 }
 html{scroll-behavior:smooth}
 body{background:
  radial-gradient(900px 520px at 10% -10%,rgba(31,191,163,.09),transparent 65%),
  radial-gradient(700px 500px at 100% 30%,rgba(44,148,198,.06),transparent 65%),
- linear-gradient(135deg,#f3f8f8 0%,#f8fafb 48%,#eef6f5 100%);
+ linear-gradient(135deg,#06181b 0%,#0a2428 48%,#061417 100%);
 }
 button,a,[role="button"],input,select,textarea{-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid rgba(16,185,154,.22);outline-offset:2px}
@@ -56,15 +56,15 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
  background:rgba(16,185,154,.10);filter:blur(12px);pointer-events:none;
 }
 .home-trust-row{margin-top:16px!important;display:grid!important;grid-template-columns:repeat(3,1fr);gap:10px}
-.home-trust-item{padding:14px 15px;border:1px solid var(--nx-border);border-radius:18px;background:rgba(255,255,255,.62);box-shadow:0 10px 30px rgba(6,54,58,.05)}
+.home-trust-item{padding:14px 15px;border:1px solid var(--nx-border);border-radius:18px;background:rgba(12,37,42,.72);box-shadow:0 10px 30px rgba(6,54,58,.05)}
 .home-trust-item b,.home-trust-item small{display:block}.home-trust-item b{font-size:10px;color:var(--nx-ink)}.home-trust-item small{margin-top:4px;font-size:8px;color:#759092}
 
 .bottom-nav{
  bottom:max(8px,env(safe-area-inset-bottom));
  padding:8px!important;border-radius:25px!important;
- background:rgba(255,255,255,.90)!important;
+ background:rgba(7,25,29,.94)!important;
  box-shadow:0 22px 65px rgba(5,47,52,.16)!important;
- border:1px solid rgba(255,255,255,.96)!important;
+ border:1px solid rgba(80,232,205,.14)!important;
 }
 .nav-item{min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
 .nav-item span{line-height:20px}
@@ -76,19 +76,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .public-landing{background:
  radial-gradient(850px 550px at 80% 10%,rgba(16,185,154,.15),transparent 65%),
  radial-gradient(700px 500px at 5% 55%,rgba(47,160,204,.08),transparent 65%),
- linear-gradient(180deg,#f7fcfb 0%,#edf8f6 48%,#f8fbfb 100%)!important;
+ linear-gradient(180deg,#061719 0%,#0a2529 48%,#061417 100%)!important;
 }
 .landing-nav{top:10px!important}
 .landing-brand b{color:#062a2e}
-.landing-brand small,.landing-nav nav,.landing-login{color:#668487}
-.landing-copy h1{color:#062a2e!important}
-.landing-copy>p{color:#607c80!important}
-.landing-proof{color:#68878a!important}
+.landing-brand small,.landing-nav nav,.landing-login{color:#9cb9b7}
+.landing-copy h1{color:#eafff9!important}
+.landing-copy>p{color:#9cb9b7!important}
+.landing-proof{color:#8db0ac!important}
 .landing-visual{perspective:1200px}
 .phone-mock{transform-style:preserve-3d}
 .phone-back{box-shadow:0 40px 100px rgba(4,65,69,.18)!important}
 .landing-stats{border-radius:24px!important;overflow:hidden}
-.landing-section,.landing-how,.landing-security{border-top-color:rgba(8,63,67,.08)!important}
+.landing-section,.landing-how,.landing-security{border-top-color:rgba(104,255,226,.10)!important}
 .landing-security{border-radius:30px;padding:55px!important;overflow:hidden}
 .landing-final{border-radius:32px;margin:0 18px 30px;padding:90px 18px!important}
 .landing-footer{padding-bottom:40px}
@@ -114,3 +114,11 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(prefers-reduced-motion:reduce){
  .brand-logo:after,.landing-logo:after{animation:none}
 }
+
+/* Deep-luxe company-grade surface treatment */
+body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;background:radial-gradient(700px 420px at 12% 8%,rgba(25,224,190,.12),transparent 70%),radial-gradient(650px 500px at 88% 30%,rgba(45,120,255,.09),transparent 72%),radial-gradient(500px 400px at 50% 100%,rgba(0,255,214,.06),transparent 70%)}
+.quick-card,.service-card,.list-card,.purchase-card,.code-card,.form-card,.admin-card,.transaction-list,.country-row,.number-row,.home-command-card{background:linear-gradient(145deg,rgba(14,42,47,.88),rgba(7,25,29,.88))!important;color:#dff8f3;border-color:rgba(91,255,222,.10)!important}
+.quick-card h3,.service-card h3,.list-card h3,.purchase-card h3,.code-card h3,.form-card h3,.admin-card h3{color:#effffb}
+.home-trust-item{background:rgba(11,34,39,.72)!important;border-color:rgba(91,255,222,.10)!important}.home-trust-item b{color:#dff8f3}.home-trust-item small{color:#7fa6a2}
+.section-head h2,.page-intro h1{color:#effffb}.topbar,.landing-nav{background:rgba(5,20,24,.72)!important;border-color:rgba(91,255,222,.10)!important;backdrop-filter:blur(20px)}
+.hero-card,.market-hero,.home-live-card,.wallet-hero,.balance-banner{background:linear-gradient(135deg,rgba(9,47,52,.94),rgba(5,25,29,.94))!important}.primary-btn,.landing-primary,.landing-start{box-shadow:0 10px 35px rgba(16,201,173,.22)}
