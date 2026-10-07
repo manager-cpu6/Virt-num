@@ -1,5 +1,6 @@
 import "./globals.css";
 import "./numelixa-polish.css";
+import "./numelixa-nextgen.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
