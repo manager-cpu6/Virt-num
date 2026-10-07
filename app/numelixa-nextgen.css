@@ -378,7 +378,7 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
   width:44px;height:44px;border-radius:15px;display:grid;place-items:center;
   color:#fff;font-size:17px;font-weight:950;box-shadow:0 9px 20px rgba(8,47,52,.14)
 }
-.provider-logo.5sim{background:linear-gradient(145deg,#111d25,#4b6670)}
+.provider-logo[class~="5sim"]{background:linear-gradient(145deg,#111d25,#4b6670)}
 .provider-logo.tiger{background:linear-gradient(145deg,#e57b22,#b93c1c)}
 .provider-control-head b{display:block;font-size:14px;color:#102b2e}
 .provider-control-head small{display:block;margin-top:3px;color:#6d8384;font-size:8px;font-weight:900;letter-spacing:.12em}
