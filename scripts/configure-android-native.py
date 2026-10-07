@@ -71,6 +71,14 @@ service_decl='''        <service
 if 'NumelixaFirebaseMessagingService' not in m:
     pos=m.rfind('</application>')
     m=m[:pos]+service_decl+m[pos:]
+
+if 'firebase_messaging_auto_init_enabled' not in m:
+    meta='''        <meta-data
+            android:name="firebase_messaging_auto_init_enabled"
+            android:value="true" />
+'''
+    pos=m.rfind('</application>')
+    m=m[:pos]+meta+m[pos:]
 manifest.write_text(m)
 
 (XML/"numelixa_file_paths.xml").write_text('''<?xml version="1.0" encoding="utf-8"?>
@@ -352,9 +360,24 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
 
-        // Capacitor PushNotifications is the single owner of the Android
-        // runtime notification permission. This avoids a permission-result
-        // race with push.register().
+        // Android 13+ requires an explicit runtime POST_NOTIFICATIONS request.
+        // This native request is the first-line startup path; the web layer
+        // has a Capacitor fallback button if the user previously denied it.
+        new Handler(Looper.getMainLooper()).postDelayed(
+            this::requestNotificationPermissionIfNeeded,
+            900L
+        );
+    }
+
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(
+                new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                NOTIFICATION_PERMISSION_REQUEST
+            );
+        }
     }
 
     private void createNotificationChannel() {
@@ -364,14 +387,15 @@ public class MainActivity extends BridgeActivity {
                 "Numelixa",
                 NotificationManager.IMPORTANCE_HIGH
             );
-            channel.setDescription("SMS codes, purchases, wallet activity and important Numelixa alerts");
+            channel.setDescription(
+                "SMS codes, purchases, wallet activity and important Numelixa alerts"
+            );
             channel.enableVibration(true);
             channel.setShowBadge(true);
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) manager.createNotificationChannel(channel);
         }
     }
-
 }
 ''')
 
