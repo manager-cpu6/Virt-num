@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {listServices,providerConfigured} from "@/lib/fivesim";
+import {listServices,providerConfigured} from "@/lib/sms-provider";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(){
