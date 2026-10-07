@@ -9,6 +9,7 @@ export type PricingSettings={
   coinPackages:CoinPackage[];
   providerOperator:string;
   providerOperators:string[];
+  smsProvider:"5sim"|"tiger";
 };
 
 const defaults:PricingSettings={
@@ -23,7 +24,8 @@ const defaults:PricingSettings={
     {coins:5000,priceUsd:50}
   ],
   providerOperator:"any",
-  providerOperators:["any"]
+  providerOperators:["any"],
+  smsProvider:"5sim"
 };
 
 export async function getSettings():Promise<PricingSettings>{
@@ -40,7 +42,8 @@ export async function getSettings():Promise<PricingSettings>{
     maxTopupUsd:Number(s?.maxTopupUsd??defaults.maxTopupUsd),
     coinPackages:coinPackages.length?coinPackages:defaults.coinPackages,
     providerOperator:String(s?.providerOperator||defaults.providerOperator).trim()||"any",
-    providerOperators:Array.isArray(s?.providerOperators)&&s.providerOperators.length?s.providerOperators.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):defaults.providerOperators
+    providerOperators:Array.isArray(s?.providerOperators)&&s.providerOperators.length?s.providerOperators.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):defaults.providerOperators,
+    smsProvider:s?.smsProvider==="tiger"?"tiger":"5sim"
   };
 }
 
