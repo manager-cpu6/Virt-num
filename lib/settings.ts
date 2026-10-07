@@ -25,7 +25,9 @@ const defaults:PricingSettings={
   ],
   providerOperator:"any",
   providerOperators:["any"],
-  smsProvider:"5sim"
+  smsProvider:"5sim",
+  provider5simEnabled:true,
+  providerTigerEnabled:true
 };
 
 export async function getSettings():Promise<PricingSettings>{
@@ -43,7 +45,9 @@ export async function getSettings():Promise<PricingSettings>{
     coinPackages:coinPackages.length?coinPackages:defaults.coinPackages,
     providerOperator:String(s?.providerOperator||defaults.providerOperator).trim()||"any",
     providerOperators:Array.isArray(s?.providerOperators)&&s.providerOperators.length?s.providerOperators.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):defaults.providerOperators,
-    smsProvider:s?.smsProvider==="tiger"?"tiger":"5sim"
+    smsProvider:s?.smsProvider==="tiger"?"tiger":"5sim",
+    provider5simEnabled:s?.provider5simEnabled!==false,
+    providerTigerEnabled:s?.providerTigerEnabled!==false
   };
 }
 
