@@ -52,6 +52,8 @@ export async function POST(req:Request){
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
     const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
     const smsProvider=b.smsProvider==="tiger"?"tiger":"5sim";
+    if(smsProvider==="tiger"&&!String(process.env.TIGER_SMS_API_KEY||process.env.TIGERSMS_API_KEY||"").trim())return NextResponse.json({ok:false,error:"Tiger SMS API key is not configured. Add TIGER_SMS_API_KEY in Vercel first."},{status:400});
+    if(smsProvider==="5sim"&&!String(process.env.FIVESIM_API_KEY||process.env.SMSACTIVATE_API_KEY||"").trim())return NextResponse.json({ok:false,error:"5SIM API key is not configured."},{status:400});
     const providerOperators=Array.from(new Set((Array.isArray(b.providerOperators)?b.providerOperators:[]).map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean).concat("any"))).slice(0,50);
     if(!providerOperators.includes(providerOperator))return NextResponse.json({ok:false,error:"Selected 5SIM operator must be in the operator list."},{status:400});
     if(!Number.isFinite(markupPercent)||markupPercent<0||markupPercent>1000)return NextResponse.json({ok:false,error:"Invalid markup percent."},{status:400});
