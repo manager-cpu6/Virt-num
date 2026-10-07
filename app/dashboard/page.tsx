@@ -14,17 +14,26 @@ export default async function DashboardPage(){
  return <div className="dashboard-command-center">
   <TopBar/>
 
-  <section className="hero-card home-hero-refresh">
+  <section className="hero-card home-hero-refresh virtual-hero">
    <div className="hero-copy">
-    <span className="eyebrow">NUMELIXA • GLOBAL NETWORK</span>
-    <h1>Your verification workspace, redesigned for speed.</h1>
-    <p>Choose a service, select a country and get a live number in a few taps. SMS, orders, wallet and account tools are now organized around the things you use most.</p>
+    <div className="virtual-badge"><span className="virtual-dot"/> NUMELIXA VIRTUAL NETWORK <span>LIVE</span></div>
+    <h1>Virtual numbers.<br/><em>Real SMS.</em></h1>
+    <p>Buy a virtual phone number for verification, watch the SMS arrive live, and manage everything from one secure workspace.</p>
     <div className="home-command-actions">
-     <Link className="solid" href="/services">Get a number <span>→</span></Link>
-     <Link className="ghost" href="/numbers">View my orders</Link>
+     <Link className="solid" href="/services">Get a virtual number <span>→</span></Link>
+     <Link className="ghost" href="/numbers">My numbers</Link>
+    </div>
+    <div className="virtual-trust"><span>⚡ Instant activation</span><span>◉ Live SMS</span><span>🔒 Secure wallet</span></div>
+   </div>
+   <div className="virtual-phone" aria-hidden="true">
+    <div className="virtual-phone-speaker"/>
+    <div className="virtual-phone-screen">
+      <div className="phone-status"><span>NUMELIXA</span><b>● LIVE</b></div>
+      <div className="phone-network">VIRTUAL NUMBER</div>
+      <div className="phone-number">+1 202 ••• •481</div>
+      <div className="phone-sms"><small>INCOMING SMS</small><strong>Your verification code</strong><b>482 913</b><span>Just now · Secure</span></div>
     </div>
    </div>
-   <div className="hero-orb" aria-hidden="true"><span>✦</span></div>
   </section>
 
   <div className="home-command-grid" aria-label="Quick actions">
