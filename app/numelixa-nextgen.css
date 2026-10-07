@@ -546,3 +546,11 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,820px)!important;margi
  .reference-dashboard .hero-card.home-hero-refresh{border-radius:25px!important}
  .reference-dashboard .quick-grid{grid-template-columns:1fr!important}
 }
+
+.provider-balance{
+  margin-top:11px!important;padding:10px 11px!important;border-radius:13px!important;
+  background:rgba(8,63,67,.045)!important;border:1px solid rgba(8,63,67,.08)!important;
+  display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;
+}
+.provider-balance span{font-size:8px!important;font-weight:900!important;letter-spacing:.12em!important;color:#6d8384!important}
+.provider-balance strong{font-size:14px!important;color:#087d75!important;font-variant-numeric:tabular-nums!important}
