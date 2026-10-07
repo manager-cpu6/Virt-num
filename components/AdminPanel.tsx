@@ -71,8 +71,8 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  return <Table title="Numelixa pricing & SMS providers">
   <form onSubmit={onSave} className="admin-form">
    <label>Active SMS purchase provider<select name="smsProvider" defaultValue={stats.settings.smsProvider||"5sim"}><option value="5sim">5SIM — New Protocol</option><option value="tiger">Tiger SMS</option></select><small>Switching affects new purchases, prices, countries and services. Existing activations stay pinned to the provider they were purchased from.</small></label>
-   <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>This percentage is added to the live 5SIM provider cost before customer coins are calculated.</small></label>
-   <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses 5SIM's any operator. A named operator is sent directly to the 5SIM buy endpoint.</small></label>
+   <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>This percentage is added to the active provider cost before customer coins are calculated.</small></label>
+   <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses the provider's default operator. Named operators apply only where supported.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
    <label>Coins per $1 USD<input name="coinsPerUsd" type="number" min="1" step="1" defaultValue={stats.settings.coinsPerUsd}/></label>
    <label>Minimum custom top-up USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
@@ -136,7 +136,7 @@ function Providers({stats}:{stats:Stats|null}){
         <button className={active?"primary-btn":"secondary-btn"} disabled={busy||(!enabled&&active)} onClick={()=>apply(id,true)}>{active?"Active":"Make active"}</button>
         <button className="secondary-btn" disabled={busy||!enabled||active} onClick={()=>apply(id,false)}>Turn off</button>
        </div>
-       <small className="provider-balance">{p?.balance!==undefined?"Balance $"+Number(p.balance).toFixed(2):"Server-side API connection"}</small>
+       <div className="provider-balance"><span>LIVE BALANCE</span><strong>{p?.balance!==undefined?"$"+Number(p.balance).toFixed(4):"—"}</strong></div>
       </div>
     })}
    </div>
