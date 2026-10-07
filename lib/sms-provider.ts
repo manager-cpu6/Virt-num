@@ -3,7 +3,12 @@ import * as tiger from "@/lib/tigersms";
 import {getSettings} from "@/lib/settings";
 export type SmsProvider="5sim"|"tiger";
 export async function activeProvider():Promise<SmsProvider>{
- const s=await getSettings(); return s.smsProvider==="tiger"?"tiger":"5sim";
+ const s=await getSettings();
+ if(s.smsProvider==="tiger" && s.providerTigerEnabled) return "tiger";
+ if(s.smsProvider==="5sim" && s.provider5simEnabled) return "5sim";
+ if(s.provider5simEnabled) return "5sim";
+ if(s.providerTigerEnabled) return "tiger";
+ throw new Error("No SMS provider is enabled.");
 }
 export async function providerName(){return (await activeProvider())==="tiger"?"Tiger SMS":"5SIM"}
 export async function providerConfigured(){return (await activeProvider())==="tiger"?tiger.providerConfigured():five.providerConfigured()}
