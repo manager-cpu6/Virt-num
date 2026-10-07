@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {getUser} from "@/lib/auth";import {redirect} from "next/navigation";
+import LivePhoneDemo from "@/components/LivePhoneDemo";
 export const dynamic="force-dynamic";
 export default async function LandingPage(){
  const user=await getUser().catch(()=>null);
@@ -9,12 +10,7 @@ export default async function LandingPage(){
   <main>
    <section className="landing-hero">
     <div className="landing-copy"><div className="landing-badge"><span/> LIVE GLOBAL SMS PLATFORM</div><h1>Virtual numbers.<br/><em>Built for speed.</em></h1><p>Get a real virtual phone number for SMS verification, receive your code in seconds, and manage everything from one secure Numelixa account.</p><div className="landing-cta"><Link href="/signup" className="landing-primary">Get started free <span>→</span></Link><Link href="/login" className="landing-secondary">Sign in</Link></div><div className="landing-proof"><span>✓ Global coverage</span><span>✓ Live SMS</span><span>✓ Secure wallet</span></div></div>
-    <div className="landing-visual">
-      <div className="landing-glow"/>
-      <div className="phone-mock phone-back"><div className="phone-screen"><span className="phone-status">9:41</span><div className="mock-top"><b>Numelixa</b><span>•••</span></div><div className="mock-balance"><small>AVAILABLE BALANCE</small><strong>2,450 <i>coins</i></strong></div><div className="mock-card"><span>🇺🇸</span><div><b>United States</b><small>WhatsApp · Available</small></div><strong>Get number</strong></div><div className="mock-card"><span>🇬🇧</span><div><b>United Kingdom</b><small>Telegram · Available</small></div><strong>Get number</strong></div></div></div>
-      <div className="phone-mock phone-front"><div className="phone-screen"><span className="phone-status">9:41 <b>●●●</b></span><div className="mock-logo">N</div><small className="mock-label">VERIFICATION CODE</small><strong className="mock-code">482 719</strong><div className="mock-number">+1 202 ••• 4198 <span>⧉</span></div><div className="mock-message"><b>WhatsApp</b><span>Your code is 482719</span><small>Just now · SMS received</small></div><div className="mock-copy">Copy code</div></div></div>
-      <div className="country-float"><b>🌍</b><span>Global countries</span><small>Live availability</small></div><div className="secure-float"><b>✓</b><span>Secure</span><small>Protected account</small></div>
-    </div>
+    <LivePhoneDemo/>
    </section>
    <section className="landing-stats"><div><strong>Global</strong><span>Country coverage</span></div><div><strong>24/7</strong><span>Live availability</span></div><div><strong>Fast</strong><span>SMS delivery</span></div><div><strong>Secure</strong><span>Account protection</span></div></section>
    <section id="features" className="landing-section"><div className="landing-section-head"><span>WHY NUMELIXA</span><h2>Everything you need to verify.<br/><em>Nothing you don't.</em></h2></div><div className="landing-feature-grid"><article><div>⚡</div><b>Live numbers</b><p>Pick a service and country from live availability and get your number without waiting.</p></article><article><div>💬</div><b>Instant SMS</b><p>Watch your verification messages arrive in your Numelixa account and mobile app.</p></article><article><div>🌍</div><b>Global coverage</b><p>Explore numbers across a wide range of countries and popular online services.</p></article><article><div>🔐</div><b>Private by design</b><p>Your account, wallet, orders and verification history stay behind your secure login.</p></article></div></section>
@@ -24,4 +20,3 @@ export default async function LandingPage(){
   </main>
   <footer className="landing-footer"><span>© 2026 Numelixa</span><div><Link href="/rules">Rules</Link><Link href="/faq">FAQ</Link><Link href="/terms">Terms</Link><Link href="/privacy">Privacy</Link><Link href="/developers">Developers</Link></div></footer>
  </div>
-}
