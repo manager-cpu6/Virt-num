@@ -106,7 +106,10 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase credentials missing"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase Admin credentials missing"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>
+   {(!databaseConfigured||backendError)&&<div className="error-box" style={{marginTop:10}}>
+    <b>{!databaseConfigured?"Notification storage is not configured. Add MONGODB_URI in Vercel Production.":backendError}</b>
+   </div>}
    <button type="button" className="secondary-btn full" onClick={testCurrentDevice} disabled={busy}>🔔 Test this admin device</button>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
