@@ -10,8 +10,10 @@ const demos = [
 ];
 
 export default function LivePhoneDemo(){
-  const [index,setIndex]=useState(0);
+  const [index,setIndex]=useState(()=>Math.floor(Math.random()*demos.length));
   const [tick,setTick]=useState(0);
+  const [seen,setSeen]=useState<string[]>([]);
+  const pool=[...demos];
 
   useEffect(()=>{
     const id=window.setInterval(()=>{
