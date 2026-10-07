@@ -11,9 +11,10 @@ export async function GET(){
   try{
     await requireAdmin();
     const users=await collection<any>("users"),orders=await collection<any>("orders"),txs=await collection<any>("coinTransactions"),now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    const [uc,verified,today,rev,wallet,orderStatuses,topServices]=await Promise.all([
+    const [uc,verified,active,today,rev,wallet,orderStatuses,topServices]=await Promise.all([
       users.countDocuments(),
       users.countDocuments({verifiedAt:{$ne:null}}),
+      orders.countDocuments({status:"active"}),
       orders.countDocuments({createdAt:{$gte:start}}),
       txs.aggregate([{$match:{type:"credit"}},{$group:{_id:null,total:{$sum:"$amount"}}}]).toArray(),
       users.aggregate([{$group:{_id:null,total:{$sum:{$convert:{input:"$coins",to:"double",onError:0,onNull:0}}}}}]).toArray(),
