@@ -122,3 +122,157 @@ body:before{content:"";position:fixed;inset:0;pointer-events:none;z-index:-1;bac
 .home-trust-item{background:rgba(11,34,39,.72)!important;border-color:rgba(91,255,222,.10)!important}.home-trust-item b{color:#dff8f3}.home-trust-item small{color:#7fa6a2}
 .section-head h2,.page-intro h1{color:#effffb}.topbar,.landing-nav{background:rgba(5,20,24,.72)!important;border-color:rgba(91,255,222,.10)!important;backdrop-filter:blur(20px)}
 .hero-card,.market-hero,.home-live-card,.wallet-hero,.balance-banner{background:linear-gradient(135deg,rgba(9,47,52,.94),rgba(5,25,29,.94))!important}.primary-btn,.landing-primary,.landing-start{box-shadow:0 10px 35px rgba(16,201,173,.22)}
+
+
+/* =========================================================
+   NUMELIXA — INTERNAL APP READABILITY / CONTRAST PASS
+   Keep every authenticated screen readable over the dark luxe UI.
+   ========================================================= */
+.auth-modern{
+  color:#eaf7f5;
+}
+.auth-modern .auth-brand>span{
+  color:#eafff9;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.auth-modern .auth-intro h1,
+.auth-modern .auth-intro p,
+.auth-modern .auth-switch{
+  color:#eaf7f5;
+}
+.auth-modern .auth-intro p,
+.auth-modern .auth-switch{
+  color:#a9c2c1;
+}
+.auth-modern .eyebrow{
+  color:#63d8c4!important;
+}
+.auth-modern .auth-method-switch{
+  background:rgba(7,28,33,.88)!important;
+  border:1px solid rgba(91,255,222,.12)!important;
+  box-shadow:0 12px 35px rgba(0,0,0,.22);
+}
+.auth-modern .auth-method-switch button{
+  color:#a9c2c1!important;
+}
+.auth-modern .auth-method-switch button.active{
+  background:linear-gradient(135deg,#0a756f,#0ba88f)!important;
+  color:#f2fffc!important;
+  box-shadow:0 7px 22px rgba(10,165,141,.18);
+}
+.auth-modern .auth-form,
+.auth-modern .form-card{
+  background:linear-gradient(145deg,rgba(14,42,47,.96),rgba(7,25,29,.96))!important;
+  border:1px solid rgba(91,255,222,.12)!important;
+  color:#eaf7f5!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.28)!important;
+}
+.auth-modern .auth-form label,
+.auth-modern .form-card label{
+  color:#b9cfcd!important;
+}
+.auth-modern .auth-form input,
+.auth-modern .form-card input{
+  background:#102d32!important;
+  color:#f0fffc!important;
+  border:1px solid rgba(143,224,213,.18)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+}
+.auth-modern .auth-form input::placeholder,
+.auth-modern .form-card input::placeholder{
+  color:#789492!important;
+}
+.auth-modern .auth-form input:focus,
+.auth-modern .form-card input:focus{
+  border-color:#39d9c0!important;
+  box-shadow:0 0 0 4px rgba(39,213,184,.12)!important;
+}
+.auth-modern .text-link,
+.auth-modern .auth-switch a{
+  color:#63e2cc!important;
+}
+.auth-modern .auth-note{
+  color:#8eaaa8!important;
+}
+.auth-modern .error-box{
+  background:rgba(127,29,29,.28)!important;
+  border-color:rgba(248,113,113,.24)!important;
+  color:#ffb4b4!important;
+}
+.auth-modern .secondary-btn{
+  background:#18383d!important;
+  color:#eafff9!important;
+  border:1px solid rgba(143,224,213,.14)!important;
+}
+.auth-modern .security-approval-card{
+  background:#102d32!important;
+  border-color:rgba(91,255,222,.12)!important;
+  color:#eafff9!important;
+}
+.auth-modern .security-approval-card span,
+.auth-modern .security-approval-card small,
+.auth-modern .approval-waiting{
+  color:#9eb9b6!important;
+}
+
+/* Authenticated dashboard/catalog: never allow inherited light-theme text
+   to disappear on dark cards. */
+.dashboard-command-center,
+.dashboard-command-center .section-head,
+.dashboard-command-center .page-intro{
+  color:#eaf7f5;
+}
+.dashboard-command-center .section-head h2,
+.dashboard-command-center .page-intro h1,
+.dashboard-command-center .home-command-card h3,
+.dashboard-command-center .home-command-card b{
+  color:#effffb!important;
+}
+.dashboard-command-center .home-command-card{
+  background:linear-gradient(145deg,rgba(14,42,47,.94),rgba(7,25,29,.94))!important;
+  color:#dff8f3!important;
+  border-color:rgba(91,255,222,.12)!important;
+}
+.dashboard-command-center .home-command-card p,
+.dashboard-command-center .home-command-card.dark p{
+  color:#9db9b7!important;
+}
+.dashboard-command-center .home-command-card .kicker,
+.dashboard-command-center .home-command-card.dark .kicker{
+  color:#67dcca!important;
+}
+.dashboard-command-center .home-command-card .ghost{
+  color:#d8eeeb!important;
+  border-color:rgba(143,224,213,.18)!important;
+  background:rgba(255,255,255,.055)!important;
+}
+.dashboard-command-center .home-command-card .solid{
+  color:#03231f!important;
+  background:linear-gradient(135deg,#62e6d0,#22c6ad)!important;
+}
+.dashboard-command-center .home-trust-item{
+  background:rgba(11,34,39,.86)!important;
+  border-color:rgba(91,255,222,.11)!important;
+  color:#dff8f3!important;
+}
+.dashboard-command-center .home-trust-item b{color:#eafff9!important}
+.dashboard-command-center .home-trust-item small{color:#89a9a6!important}
+
+/* All common internal controls: explicit foreground + background pairs. */
+.auth-modern select,
+.dashboard-command-center select,
+.dashboard-command-center input,
+.dashboard-command-center textarea,
+.dashboard-command-center .secondary-btn{
+  color:#eaf7f5;
+  background:#102d32;
+  border-color:rgba(143,224,213,.16);
+}
+.auth-modern input:-webkit-autofill,
+.auth-modern input:-webkit-autofill:hover,
+.auth-modern input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#f0fffc!important;
+  -webkit-box-shadow:0 0 0 1000px #102d32 inset!important;
+  transition:background-color 9999s ease-out 0s;
+}
