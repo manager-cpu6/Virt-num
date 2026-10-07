@@ -6,7 +6,8 @@ export async function activeProvider():Promise<SmsProvider>{
  const s=await getSettings(); return s.smsProvider==="tiger"?"tiger":"5sim";
 }
 export async function providerName(){return (await activeProvider())==="tiger"?"Tiger SMS":"5SIM"}
-export async function configured(){return (await activeProvider())==="tiger"?tiger.providerConfigured():five.providerConfigured()}
+export async function providerConfigured(){return (await activeProvider())==="tiger"?tiger.providerConfigured():five.providerConfigured()}
+export const configured=providerConfigured;
 export async function balance(){return (await activeProvider())==="tiger"?tiger.balance():five.balance()}
 export async function listCountries(){return (await activeProvider())==="tiger"?tiger.listCountries():five.listCountries()}
 export async function listServices(){return (await activeProvider())==="tiger"?tiger.listServices():five.listServices()}
