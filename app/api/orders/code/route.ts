@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {check,cancel,finalize} from "@/lib/fivesim";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {check,cancel,finalize} from "@/lib/sms-provider";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 async function refund(o:any){const orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),changed=await orders.findOneAndUpdate({_id:o._id,userId:o.userId,status:"waiting"},{$set:{status:"refunded",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},{returnDocument:"after"});if(!changed)return false;const refundCoins=Number(o.priceCoins||0),u=await users.findOneAndUpdate({_id:o.userId},{$inc:{coins:refundCoins}},{returnDocument:"after"});await txs.insertOne({_id:mongoId(),userId:o.userId,type:"refund",amount:refundCoins,balanceAfter:Number(u?.coins||0),reference:o._id,description:"Automatic no-SMS refund",createdAt:new Date()});return true}
@@ -6,9 +6,9 @@ export async function POST(req:Request){try{const u=await requireUser(),id=Strin
  if(o.code)return NextResponse.json({ok:true,code:o.code,fullSms:o.fullSms,status:"received"});
  if(o.status==="refunded"||o.status==="cancelled")return NextResponse.json({ok:false,error:"This order was refunded.",status:o.status},{status:409});
  const age=Date.now()-new Date(o.createdAt).getTime();
- if(age>=10*60*1000){try{await cancel(String(o.providerOrderId))}catch{}await refund(o);return NextResponse.json({ok:false,error:"10 minutes passed without an SMS. Your coins have been refunded.",status:"refunded"},{status:409})}
- const p=await check(String(o.providerOrderId));
- if(Number(p.status)===3){const code=String(p.sms||"");try{await finalize(String(o.providerOrderId))}catch{}const changed=await orders.findOneAndUpdate(
+ if(age>=10*60*1000){try{await cancel(String(o.providerOrderId),provider)}catch{}await refund(o);return NextResponse.json({ok:false,error:"10 minutes passed without an SMS. Your coins have been refunded.",status:"refunded"},{status:409})}
+ const provider=o.provider==="tiger"?"tiger":"5sim"; const p=await check(String(o.providerOrderId),provider);
+ if(Number(p.status)===3){const code=String(p.sms||"");try{await finalize(String(o.providerOrderId),provider)}catch{}const changed=await orders.findOneAndUpdate(
    {_id:id,userId:u.id,status:"waiting"},
    {$set:{code,fullSms:String((p as any).fullSms||code),status:"received",completedAt:new Date(),codeNotifiedAt:new Date()}},
    {returnDocument:"after"}
