@@ -1,5 +1,5 @@
 import {collection} from "@/lib/mongo";
-import {check,finalize} from "@/lib/fivesim";
+import {check,finalize} from "@/lib/sms-provider";
 import {notifyUser} from "@/lib/notifications";
 
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
