@@ -17,6 +17,7 @@ export async function balance(){return (await activeProvider())==="tiger"?tiger.
 export async function listCountries(){return (await activeProvider())==="tiger"?tiger.listCountries():five.listCountries()}
 export async function listServices(){return (await activeProvider())==="tiger"?tiger.listServices():five.listServices()}
 export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
+export async function stock(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator)}
 export async function getPrice(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.getPrice(country,service,operator)}
 export async function purchase(country:string,service:string,maxPrice?:number,operator="any"){return (await activeProvider())==="tiger"?tiger.purchase(country,service,maxPrice,operator):five.purchase(country,service,maxPrice,operator)}
 export async function check(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.check(orderid):five.check(orderid)}
