@@ -23,13 +23,31 @@ export async function POST(req:Request){
       }
     })();
 
-    // Keep the current FCM token in a short server-side handoff cookie even
-    // before login. It is NOT linked to any account until authentication
-    // succeeds. This closes the login/signup timing gap.
+    const devices=await collection<any>("deviceTokens");
+    const now=new Date();
+
+    // Register every valid native token even when the web session is still
+    // loading. It is marked unlinked until the user signs in; this makes the
+    // admin device counter truthful and removes the startup/auth race.
     if(!user){
+      await devices.updateOne(
+        {token},
+        {
+          $set:{
+            token,
+            userId:null,
+            platform,
+            updatedAt:now,
+            lastSeenAt:now
+          },
+          $setOnInsert:{createdAt:now}
+        },
+        {upsert:true}
+      );
+
       const response=NextResponse.json(
-        {ok:false,registered:false,linked:false,error:"AUTH_REQUIRED",pending:true},
-        {status:401}
+        {ok:true,registered:true,linked:false,pending:true},
+        {status:200}
       );
       response.cookies.set("numelixa_device_token_pending",token,{
         httpOnly:true,
@@ -41,9 +59,7 @@ export async function POST(req:Request){
       return response;
     }
 
-    const devices=await collection<any>("deviceTokens");
     const users=await collection<any>("users");
-    const now=new Date();
 
     await devices.updateOne(
       {token},
@@ -60,9 +76,6 @@ export async function POST(req:Request){
       {upsert:true}
     );
 
-    // The first successful token registration is the reliable point at which
-    // the account is both authenticated and reachable by native push.
-    // Send the welcome push exactly once per account.
     const account=await users.findOne({_id:String(user.id)},{projection:{pushWelcomeSentAt:1,name:1}});
     if(!account?.pushWelcomeSentAt){
       try{
@@ -82,6 +95,7 @@ export async function POST(req:Request){
 
     const response=NextResponse.json({ok:true,registered:true,linked:true});
     response.cookies.set("numelixa_device_token",token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*365});
+    response.cookies.delete("numelixa_device_token_pending");
     return response;
   }catch(error){
     const message=error instanceof Error?error.message:String(error);
