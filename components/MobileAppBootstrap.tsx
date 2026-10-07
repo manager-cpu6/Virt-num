@@ -30,7 +30,7 @@ export default function MobileAppBootstrap(){
 
   const scheduleRetry=()=>{
    if(stopped||retryTimer)return;
-   retryTimer=setTimeout(()=>{retryTimer=null;void syncCurrentToken()},2500);
+   retryTimer=setTimeout(()=>{retryTimer=null;void syncCurrentToken()},10000);
   };
 
   const saveAndRegister=async(token:string)=>{
@@ -200,7 +200,7 @@ export default function MobileAppBootstrap(){
      console.warn("[NUMELIXA FCM STATUS]",error);
     }
 
-    const heartbeat=window.setInterval(()=>{void syncCurrentToken()},15000);
+    const heartbeat=window.setInterval(()=>{void syncCurrentToken()},30000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){console.error("[NUMELIXA PUSH]",error)}
   })();
