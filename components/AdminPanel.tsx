@@ -7,7 +7,7 @@ import AdminAppUpdate from "@/components/AdminAppUpdate";
 import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods from "@/components/AdminAuthMethods";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
-type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[]};providers:{name:string;status:string;balance?:any}[]};
+type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger"};providers:{name:string;status:string;balance?:any}[]};
 type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
@@ -27,7 +27,7 @@ export default function AdminPanel(){
      priceUsd:Number(f.get("price"+i)),
      popular:f.get("popular")===String(i)
    })).filter(p=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0);
-   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
+   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),smsProvider:String(f.get("smsProvider")||"5sim"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
    const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
    if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
  }
@@ -68,8 +68,9 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  const [newOperator,setNewOperator]=useState("");
  function addOperator(){const v=newOperator.trim().toLowerCase();if(!v||operators.includes(v))return;setOperators([...operators,v]);setNewOperator("")}
  function removeOperator(v:string){if(v==="any")return;const next=operators.filter(x=>x!==v);setOperators(next);}
- return <Table title="Numelixa pricing & 5SIM">
+ return <Table title="Numelixa pricing & SMS providers">
   <form onSubmit={onSave} className="admin-form">
+   <label>Active SMS purchase provider<select name="smsProvider" defaultValue={stats.settings.smsProvider||"5sim"}><option value="5sim">5SIM — New Protocol</option><option value="tiger">Tiger SMS</option></select><small>Switching affects new purchases, prices, countries and services. Existing activations stay pinned to the provider they were purchased from.</small></label>
    <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>This percentage is added to the live 5SIM provider cost before customer coins are calculated.</small></label>
    <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses 5SIM's any operator. A named operator is sent directly to the 5SIM buy endpoint.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
