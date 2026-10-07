@@ -92,7 +92,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:smsProvider==="5sim"?true:undefined,providerTigerEnabled:smsProvider==="tiger"?true:undefined,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:(await getSettings()).provider5simEnabled,providerTigerEnabled:(await getSettings()).providerTigerEnabled,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
