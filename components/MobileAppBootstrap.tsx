@@ -183,12 +183,17 @@ export default function MobileAppBootstrap(){
     },2500);
     cleanups.push(()=>window.clearInterval(authPoll));
 
-    // Capacitor owns the Android permission request. The token is only linked
-    // to an account after /api/me confirms an authenticated email account.
-    await new Promise(resolve=>setTimeout(resolve,1200));
-    await ensurePushPermission();
+    // Start permission + token initialization immediately. A permission that was
+    // already granted in Android Settings must never block FCM token retrieval.
+    // getToken() is the authoritative native path; PushNotifications.register()
+    // is still called so Capacitor's registration event stays in sync.
+    await Promise.allSettled([
+     ensurePushPermission(),
+     getNativeToken(),
+    ]);
+    await syncCurrentToken();
 
-    const heartbeat=window.setInterval(()=>{void syncCurrentToken()},30000);
+    const heartbeat=window.setInterval(()=>{void syncCurrentToken()},15000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){console.error("[NUMELIXA PUSH]",error)}
   })();
