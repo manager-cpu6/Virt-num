@@ -3,6 +3,8 @@ import {requireAdmin} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
 import {configured,balance,providerName} from "@/lib/sms-provider";
 import {getSettings} from "@/lib/settings";
+import * as fiveSim from "@/lib/fivesim";
+import * as tigerSms from "@/lib/tigersms";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -25,8 +27,8 @@ export async function GET(){
     const activeProviderName=await providerName();
     let sms:any={name:"5SIM",status:settings.provider5simEnabled?(activeProviderName==="5SIM"?"active":"standby"):"disabled",enabled:settings.provider5simEnabled};
     let tiger:any={name:"Tiger SMS",status:settings.providerTigerEnabled?(activeProviderName==="Tiger SMS"?"active":"standby"):"disabled",enabled:settings.providerTigerEnabled};
-    if(settings.provider5simEnabled && activeProviderName==="5SIM"){try{sms.balance=await balance()}catch{sms.status="error"}}
-    if(settings.providerTigerEnabled && activeProviderName==="Tiger SMS"){try{tiger.balance=await balance()}catch{tiger.status="error"}}
+    if(settings.provider5simEnabled){try{sms.balance=await fiveSim.balance()}catch{sms.status=sms.status==="active"?"error":sms.status}}
+    if(settings.providerTigerEnabled){try{tiger.balance=await tigerSms.balance()}catch{tiger.status=tiger.status==="active"?"error":tiger.status}}
     return NextResponse.json({
       ok:true,
       users:uc,
