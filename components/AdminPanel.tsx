@@ -7,7 +7,7 @@ import AdminAppUpdate from "@/components/AdminAppUpdate";
 import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods from "@/components/AdminAuthMethods";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
-type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger"};providers:{name:string;status:string;balance?:any}[]};
+type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any}[]};
 type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
@@ -101,7 +101,52 @@ function UsersTable({users,onAdjust}:{users:User[];onAdjust:(u:User,m:"add"|"rem
 function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;active?:boolean}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: {Number(o.price_coins||0).toLocaleString()} coins</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div></div>)}</Table>}
 
 function Table({title,children}:{title:string;children:ReactNode}){return <div className="admin-card"><h2>{title}</h2>{children}</div>}
-function Providers({stats}:{stats:Stats|null}){return <Table title="Integrations">{stats?.providers.map(p=><div className="admin-row" key={p.name}><span><b>{p.name}</b><small>{p.name==="5SIM"&&p.balance!==undefined?"Provider balance: $"+Number(p.balance).toFixed(2):"Server-side integration"}</small></span><small>{p.status}</small></div>)}</Table>}
+function Providers({stats}:{stats:Stats|null}){
+ const [busy,setBusy]=useState(false),[msg,setMsg]=useState("");
+ if(!stats)return <Table title="SMS network control"><div className="country-loading">Loading provider control…</div></Table>;
+ const s=stats.settings;
+ async function apply(provider:"5sim"|"tiger",enabled:boolean){
+  const five=provider==="5sim"?enabled:s.provider5simEnabled!==false;
+  const tiger=provider==="tiger"?enabled:s.providerTigerEnabled!==false;
+  if(!five&&!tiger){setMsg("At least one SMS provider must remain enabled.");return}
+  setBusy(true);setMsg("");
+  try{
+   const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({providerControl:true,smsProvider:smsProviderFor(provider,enabled,five,tiger),provider5simEnabled:five,providerTigerEnabled:tiger})});
+   const d=await r.json();
+   if(!d.ok){setMsg(d.error||"Unable to update provider.");return}
+   window.location.reload();
+  }catch{setMsg("Unable to update provider control.")}
+  finally{setBusy(false)}
+ }
+ function smsProviderFor(provider:"5sim"|"tiger",enabled:boolean,five:boolean,tiger:boolean){
+  if(enabled)return provider;
+  return five?"5sim":"tiger";
+ }
+ return <div className="provider-control-stack">
+  <Table title="SMS Network Control">
+   <div className="provider-control-intro"><span className="provider-control-pulse">●</span><div><b>One control plane</b><small>The active network owns catalog, pricing, stock, number purchase, OTP checks, cancellation and developer API traffic. Existing orders remain pinned to their original provider.</small></div></div>
+   <div className="provider-control-grid">
+    {(["5sim","tiger"] as const).map(id=>{
+      const is5=id==="5sim",enabled=is5?s.provider5simEnabled!==false:s.providerTigerEnabled!==false,active=s.smsProvider===id;
+      const p=stats.providers.find(x=>x.name.toLowerCase().replace(/\s/g,"")===id);
+      return <div className={"provider-control-card "+(active?"is-active ":"")+(enabled?"":"is-disabled")} key={id}>
+       <div className="provider-control-head"><div className={"provider-logo "+id}>{is5?"5":"T"}</div><div><b>{is5?"5SIM":"Tiger SMS"}</b><small>{active?"ACTIVE ROUTING":"STANDBY / OFF"}</small></div><span className={"provider-status "+(enabled?"on":"off")}>{enabled?"ON":"OFF"}</span></div>
+       <div className="provider-control-copy">{active?"This provider currently controls Numelixa's live SMS network.":"Enable this network to make it available for routing."}</div>
+       <div className="provider-control-actions">
+        <button className={active?"primary-btn":"secondary-btn"} disabled={busy||(!enabled&&active)} onClick={()=>apply(id,true)}>{active?"Active":"Make active"}</button>
+        <button className="secondary-btn" disabled={busy||!enabled||active} onClick={()=>apply(id,false)}>Turn off</button>
+       </div>
+       <small className="provider-balance">{p?.balance!==undefined?"Balance $"+Number(p.balance).toFixed(2):"Server-side API connection"}</small>
+      </div>
+    })}
+   </div>
+   {msg&&<div className="error-box">{msg}</div>}
+  </Table>
+  <Table title="Provider services">
+   <div className="admin-cap-grid"><div>Live catalog<small>Countries, services, stock and prices follow the active provider.</small></div><div>Number ordering<small>Customer purchases route through the active provider automatically.</small></div><div>OTP lifecycle<small>Check, finalize and cancel use the provider attached to each order.</small></div><div>Developer API<small>API orders use the same active Numelixa routing layer.</small></div></div>
+  </Table>
+ </div>
+}
 
 
 function AdminPayments(){
