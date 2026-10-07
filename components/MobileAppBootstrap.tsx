@@ -15,6 +15,7 @@ export default function MobileAppBootstrap(){
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
   let permissionInFlight=false;
   let push:any=null;
+  let capacitorToken="";
   let tokenInFlight=false;
   const cleanups:Array<()=>void>=[];
 
@@ -63,13 +64,21 @@ export default function MobileAppBootstrap(){
    try{
     const result=await NativePushToken.getToken();
     const token=String(result?.token||"").trim();
-    if(token)await saveAndRegister(token);
-    return token;
+    if(token){await saveAndRegister(token);return token;}
    }catch(error){
     console.error("[NUMELIXA NATIVE FCM TOKEN]",error);
-    scheduleRetry();
-    return "";
    }
+
+   // Capacitor's official registration callback is a second client-side
+   // path. If the custom native bridge is unavailable, the callback token can
+   // still reach the same backend endpoint.
+   if(capacitorToken.length>=20){
+    await saveAndRegister(capacitorToken);
+    return capacitorToken;
+   }
+
+   scheduleRetry();
+   return "";
   };
 
   const syncCurrentToken=async()=>{
@@ -129,7 +138,7 @@ export default function MobileAppBootstrap(){
     push=PushNotifications;
 
     const registration=await PushNotifications.addListener("registration",(event)=>{
-     if(event?.value)void saveAndRegister(event.value);
+     if(event?.value){capacitorToken=String(event.value).trim();void saveAndRegister(capacitorToken);}
     });
     cleanups.push(()=>registration.remove());
 
@@ -178,9 +187,18 @@ export default function MobileAppBootstrap(){
 
     // Token retrieval is independent from the permission dialog. If permission
     // was already granted in Android Settings, FCM getToken() runs immediately.
+    // Start permission/token synchronization immediately. Token
+    // retrieval is retried independently so a temporary Firebase/Play
+    // Services startup delay does not permanently leave the device unregistered.
     await getNativeToken();
     await ensurePushPermission();
     await syncCurrentToken();
+    try{
+     const status=await NativePushToken.getStatus();
+     console.log("[NUMELIXA FCM STATUS]",status);
+    }catch(error){
+     console.warn("[NUMELIXA FCM STATUS]",error);
+    }
 
     const heartbeat=window.setInterval(()=>{void syncCurrentToken()},15000);
     cleanups.push(()=>window.clearInterval(heartbeat));
