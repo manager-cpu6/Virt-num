@@ -65,6 +65,7 @@ export async function POST(req:Request){
     }
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
     const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
+    const currentSettings=await getSettings();
     const smsProvider=b.smsProvider==="tiger"?"tiger":"5sim";
     if(smsProvider==="tiger"&&!String(process.env.TIGER_SMS_API_KEY||process.env.TIGERSMS_API_KEY||"").trim())return NextResponse.json({ok:false,error:"Tiger SMS API key is not configured. Add TIGER_SMS_API_KEY in Vercel first."},{status:400});
     if(smsProvider==="5sim"&&!String(process.env.FIVESIM_API_KEY||process.env.SMSACTIVATE_API_KEY||"").trim())return NextResponse.json({ok:false,error:"5SIM API key is not configured."},{status:400});
@@ -92,7 +93,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:(await getSettings()).provider5simEnabled,providerTigerEnabled:(await getSettings()).providerTigerEnabled,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:smsProvider==="5sim"?true:currentSettings.provider5simEnabled,providerTigerEnabled:smsProvider==="tiger"?true:currentSettings.providerTigerEnabled,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
