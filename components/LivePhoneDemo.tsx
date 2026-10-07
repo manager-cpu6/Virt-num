@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect, useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 const demos = [
   {country:"United States", flag:"🇺🇸", number:"+1 202 555 4198", app:"WhatsApp", code:"482719"},
@@ -12,12 +12,11 @@ const demos = [
 export default function LivePhoneDemo(){
   const [index,setIndex]=useState(()=>Math.floor(Math.random()*demos.length));
   const [tick,setTick]=useState(0);
-  const [seen,setSeen]=useState<string[]>([]);
-  const pool=[...demos];
+  const seenRef=useRef<number[]>([]);
 
   useEffect(()=>{
     const id=window.setInterval(()=>{
-      setIndex(v=>(v+1)%demos.length);
+      setIndex(v=>{\n        const candidates=demos.map((_,i)=>i).filter(i=>i!==v && !seenRef.current.includes(i));\n        const next=candidates.length ? candidates[Math.floor(Math.random()*candidates.length)] : demos.map((_,i)=>i).filter(i=>i!==v)[Math.floor(Math.random()*(demos.length-1))];\n        seenRef.current=[...seenRef.current,next].slice(-3);\n        return next;\n      });
       setTick(v=>v+1);
     },2600);
     return ()=>window.clearInterval(id);
