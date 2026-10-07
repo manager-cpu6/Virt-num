@@ -139,7 +139,7 @@ public class NumelixaPushTokenPlugin extends Plugin {
                 // server can count the device as registered even if the
                 // WebView/session is still booting. The JS layer will later
                 // claim/link the same token to the signed-in user.
-                registerTokenWithServer(value);
+                NumelixaPushTransport.registerToken(getContext(), value);
 
                 JSObject out = new JSObject();
                 out.put("token", value);
@@ -147,32 +147,6 @@ public class NumelixaPushTokenPlugin extends Plugin {
             })
             .addOnFailureListener(error -> retry(call, attempt, safe(error)));
     }
-
-    private void registerTokenWithServer(String token) {
-        new Thread(() -> {
-            java.net.HttpURLConnection connection = null;
-            try {
-                java.net.URL url = new java.net.URL(
-                    "https://numelixa.com/api/notifications/register"
-                );
-                connection = (java.net.HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setConnectTimeout(8000);
-                connection.setReadTimeout(8000);
-                connection.setDoOutput(true);
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestProperty("Accept", "application/json");
-
-                org.json.JSONObject body = new org.json.JSONObject();
-                body.put("token", token);
-                body.put("platform", "android");
-                byte[] payload = body.toString().getBytes(
-                    java.nio.charset.StandardCharsets.UTF_8
-                );
-
-                try (java.io.OutputStream out = connection.getOutputStream()) {
-                    out.write(payload);
-                }
 
                 int status = connection.getResponseCode();
                 android.util.Log.d(
@@ -205,6 +179,116 @@ public class NumelixaPushTokenPlugin extends Plugin {
 }
 ''')
 
+(JAVA/"NumelixaPushTransport.java").write_text(r'''package com.numelixa.app;
+
+import android.content.Context;
+import android.os.Build;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import org.json.JSONObject;
+
+public final class NumelixaPushTransport {
+    private static final String TAG = "NUMELIXA_PUSH";
+    private static final String REGISTER_URL =
+        "https://numelixa.com/api/notifications/register";
+
+    private NumelixaPushTransport() {}
+
+    public static void registerToken(Context context, String token) {
+        final String value = token == null ? "" : token.trim();
+        if (value.length() < 20) return;
+
+        new Thread(() -> {
+            HttpURLConnection connection = null;
+            try {
+                URL url = new URL(REGISTER_URL);
+                connection = (HttpURLConnection) url.openConnection();
+                connection.setRequestMethod("POST");
+                connection.setConnectTimeout(10000);
+                connection.setReadTimeout(10000);
+                connection.setDoOutput(true);
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setRequestProperty("Accept", "application/json");
+                connection.setRequestProperty("Cache-Control", "no-cache");
+                connection.setRequestProperty(
+                    "User-Agent",
+                    "Numelixa-Android/" + Build.VERSION.SDK_INT
+                );
+
+                JSONObject body = new JSONObject();
+                body.put("token", value);
+                body.put("platform", "android");
+                byte[] payload = body.toString().getBytes(
+                    java.nio.charset.StandardCharsets.UTF_8
+                );
+
+                try (OutputStream out = connection.getOutputStream()) {
+                    out.write(payload);
+                    out.flush();
+                }
+
+                int status = connection.getResponseCode();
+                String response = readResponse(connection, status);
+                String safeResponse =
+                    response.length() > 300 ? response.substring(0, 300) : response;
+
+                context.getSharedPreferences("numelixa_push", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("last_registration_status", String.valueOf(status))
+                    .putString("last_registration_response", safeResponse)
+                    .putLong("last_registration_at", System.currentTimeMillis())
+                    .apply();
+
+                android.util.Log.d(
+                    TAG,
+                    "FCM token registration HTTP " + status +
+                    " response=" + safeResponse
+                );
+            } catch (Exception error) {
+                String message = error.getMessage() == null
+                    ? error.getClass().getSimpleName()
+                    : error.getMessage();
+
+                context.getSharedPreferences("numelixa_push", Context.MODE_PRIVATE)
+                    .edit()
+                    .putString("last_registration_status", "error")
+                    .putString("last_registration_response", message)
+                    .putLong("last_registration_at", System.currentTimeMillis())
+                    .apply();
+
+                android.util.Log.e(
+                    TAG,
+                    "FCM token registration failed: " + message,
+                    error
+                );
+            } finally {
+                if (connection != null) connection.disconnect();
+            }
+        }, "numelixa-fcm-register").start();
+    }
+
+    private static String readResponse(HttpURLConnection connection, int status) {
+        try {
+            java.io.InputStream stream =
+                status >= 400 ? connection.getErrorStream() : connection.getInputStream();
+            if (stream == null) return "";
+            try (BufferedReader reader =
+                     new BufferedReader(new InputStreamReader(stream))) {
+                StringBuilder result = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) result.append(line);
+                return result.toString();
+            }
+        } catch (Exception ignored) {
+            return "";
+        }
+    }
+}
+''')
+
 (JAVA/"NumelixaFirebaseMessagingService.java").write_text(r'''package com.numelixa.app;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -219,8 +303,11 @@ public class NumelixaFirebaseMessagingService extends FirebaseMessagingService {
  public static final String CHANNEL_ID="numelixa";
  @Override public void onNewToken(String token){
   super.onNewToken(token);
-  if(token!=null&&!token.trim().isEmpty())
-   getSharedPreferences("numelixa_push",MODE_PRIVATE).edit().putString("fcm_token",token.trim()).apply();
+  if(token!=null&&!token.trim().isEmpty()){
+   String value=token.trim();
+   getSharedPreferences("numelixa_push",MODE_PRIVATE).edit().putString("fcm_token",value).apply();
+   NumelixaPushTransport.registerToken(this,value);
+  }
  }
  @Override public void onMessageReceived(RemoteMessage message){
   super.onMessageReceived(message); ensureChannel();
