@@ -11,18 +11,17 @@ export async function GET(){
   try{
     await requireAdmin();
     const users=await collection<any>("users"),orders=await collection<any>("orders"),txs=await collection<any>("coinTransactions"),now=new Date(),start=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-    const [uc,verified,active,today,rev,wallet,orderStatuses,topServices]=await Promise.all([
+    const [uc,verified,today,rev,wallet,orderStatuses,topServices]=await Promise.all([
       users.countDocuments(),
       users.countDocuments({verifiedAt:{$ne:null}}),
-      orders.countDocuments({status:"waiting"}),
       orders.countDocuments({createdAt:{$gte:start}}),
       txs.aggregate([{$match:{type:"credit"}},{$group:{_id:null,total:{$sum:"$amount"}}}]).toArray(),
       users.aggregate([{$group:{_id:null,total:{$sum:{$convert:{input:"$coins",to:"double",onError:0,onNull:0}}}}}]).toArray(),
       orders.aggregate([{$group:{_id:"$status",count:{$sum:1}}},{$sort:{count:-1}}]).toArray(),
       orders.aggregate([{$group:{_id:"$service",count:{$sum:1},coins:{$sum:{$convert:{input:"$priceCoins",to:"double",onError:0,onNull:0}}}}},{$sort:{count:-1}},{$limit:8}]).toArray()
     ]);
-    const active=await providerName();
-    let sms:any={name:active,status:await configured()?"configured":"missing"};
+    const activeProviderName=await providerName();
+    let sms:any={name:activeProviderName,status:await configured()?"configured":"missing"};
     if(await configured()){try{sms.balance=await balance()}catch{sms.status="error"}}
     return NextResponse.json({
       ok:true,
@@ -35,7 +34,7 @@ export async function GET(){
       orderStatuses:orderStatuses.map((x:any)=>({status:String(x._id||"unknown"),count:Number(x.count||0)})),
       topServices:topServices.map((x:any)=>({service:String(x._id||"unknown"),count:Number(x.count||0),coins:Number(x.coins||0)})),
       settings:await getSettings(),
-      providers:[sms,{name:active==="5SIM"?"Tiger SMS":"5SIM",status:"standby"},
+      providers:[sms,{name:activeProviderName==="5SIM"?"Tiger SMS":"5SIM",status:"standby"},
         {name:"Cryptomus",status:(process.env.CRYPTOMUS_PAYMENT_API_KEY||process.env.CRYPTOMUS_API_KEY)?"configured":"missing"},
         {name:"Spacemail",status:process.env.SPACEMAIL_SMTP_USER?"configured":"missing"}
       ]
