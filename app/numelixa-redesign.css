@@ -102,3 +102,5 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padd
 .admin-panel input,.admin-panel select,.admin-panel textarea,.admin-page input,.admin-page select,.admin-page textarea,.admin-shell input,.admin-shell select,.admin-shell textarea{background:#041b28!important;color:#f1fbff!important;border-color:rgba(117,209,225,.3)!important}
 .admin-panel input::placeholder,.admin-page input::placeholder,.admin-shell input::placeholder{color:#829eac!important}
 .admin-panel option,.admin-page option,.admin-shell option{background:#071f2d!important;color:#f1fbff!important}
+
+.provider-balance-error{display:block!important;color:#ffb8a9!important;font-size:10px!important;line-height:1.45!important;margin-top:6px!important;overflow-wrap:anywhere!important}
