@@ -46,7 +46,8 @@ export default async function LandingPage() {
             <span className="eyebrow">Live network</span>
             <h3>Numbers changing. Messages arriving.</h3>
             <p>A preview of the workflow. Your real orders and incoming messages appear after sign-in.</p>
-            <div className="live-feed-list"><div className="live-feed-row"><b>Real order activity</b><span>AVAILABLE AFTER SIGN-IN</span></div></div>         </div>
+            <div className="live-feed-list"><div className="live-feed-row"><b>Real order activity</b><span>AVAILABLE AFTER SIGN-IN</span></div></div>
+          </div>
           <div className="landing-video-panel">
             <span className="eyebrow">Product preview</span>
             <div className="video-screen"><span className="video-live">LIVE PREVIEW</span></div>
