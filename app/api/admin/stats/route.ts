@@ -27,8 +27,8 @@ export async function GET(){
     const activeProviderName=await providerName();
     let sms:any={name:"5SIM",status:settings.provider5simEnabled?(activeProviderName==="5SIM"?"active":"standby"):"disabled",enabled:settings.provider5simEnabled};
     let tiger:any={name:"Tiger SMS",status:settings.providerTigerEnabled?(activeProviderName==="Tiger SMS"?"active":"standby"):"disabled",enabled:settings.providerTigerEnabled};
-    if(settings.provider5simEnabled){try{sms.balance=await fiveSim.balance()}catch{sms.status=sms.status==="active"?"error":sms.status}}
-    if(settings.providerTigerEnabled){try{tiger.balance=await tigerSms.balance()}catch{tiger.status=tiger.status==="active"?"error":tiger.status}}
+    if(settings.provider5simEnabled){try{sms.balance=await fiveSim.balance();sms.balanceError=""}catch(e){sms.status=sms.status==="active"?"error":sms.status;sms.balanceError=e instanceof Error?e.message:"Unable to read 5SIM balance"}}
+    if(settings.providerTigerEnabled){try{tiger.balance=await tigerSms.balance();tiger.balanceError=""}catch(e){tiger.status=tiger.status==="active"?"error":tiger.status;tiger.balanceError=e instanceof Error?e.message:"Unable to read Tiger SMS balance"}}
     return NextResponse.json({
       ok:true,
       users:uc,
