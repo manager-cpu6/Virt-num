@@ -95,7 +95,7 @@ export default function HomeLiveBoard(){
     </div>
 
     <div className="live-number-list">
-     {liveNumbers.map((n:{country:string;flag:string;number:string;service:string},i:number)=><div className="live-number-item" key={n.number+i}>
+     {liveNumbers.map((n:{country:string;flag:string;number:string;service:string;status:string},i:number)=><div className="live-number-item" key={n.number+i}>
        <span className="live-number-flag">{n.flag}</span>
        <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
        <span className="live-number-state"><i/>{n.status==="waiting"?"Waiting for SMS":"Active"}</span>
