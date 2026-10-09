@@ -1,0 +1,51 @@
+/* Numelixa 2026 premium system — consistent contrast across dashboard, catalog, wallet and admin */
+:root{--nx-bg:#04111d;--nx-panel:#071d2c;--nx-panel-2:#0b293a;--nx-line:rgba(83,224,219,.19);--nx-text:#f3fbff;--nx-muted:#aac4d4;--nx-mint:#19dfc0;--nx-blue:#2388ff}
+html,body{background:#04111d!important;color:#f3fbff}
+body{background:radial-gradient(900px 520px at 82% -10%,rgba(15,174,168,.15),transparent 60%),radial-gradient(700px 500px at 0% 40%,rgba(31,108,200,.10),transparent 68%),linear-gradient(145deg,#04111d,#061b2a 56%,#04121f)!important}
+.topbar{background:rgba(4,18,30,.92)!important;border-color:rgba(94,224,221,.15)!important;color:#f3fbff!important;backdrop-filter:blur(22px)!important}
+.topbar .brand-copy b,.topbar .top-title,.topbar .brand-copy small,.topbar .top-menu a{color:#f3fbff!important}
+.topbar .brand-copy small{color:#9db8ca!important}
+.topbar .coin-pill{background:linear-gradient(135deg,#063c45,#07565b)!important;border:1px solid rgba(83,238,218,.36)!important;color:#eafffb!important;box-shadow:0 8px 28px rgba(0,0,0,.2)!important}
+.topbar .coin-pill small{color:#a9e8e2!important}
+.topbar .coin-icon{color:#70f2df!important}
+.topbar .icon-btn,.topbar .home-menu-btn{background:linear-gradient(145deg,#123b4c,#0a2938)!important;color:#bdf8f1!important;border:1px solid rgba(93,228,218,.2)!important}
+.topbar .top-menu{background:#071d2c!important;border:1px solid var(--nx-line)!important;box-shadow:0 20px 60px rgba(0,0,0,.38)!important}
+.topbar .top-menu a:hover{background:#0d3444!important}
+.page-shell,.services-page,.countries-page,.support-page,.wallet-page,.numbers-page,.account-page,.orders-page{color:var(--nx-text)!important}
+.hero-card,.market-hero,.country-banner,.service-search-box,.form-card,.helper-card,.service-card,.country-card,.quick-card,.home-live-card,.live-board,.section-card,.wallet-card,.order-card,.account-card,.admin-card,.admin-section,.stat-card,.provider-card{background:linear-gradient(145deg,rgba(9,37,54,.97),rgba(5,23,36,.98))!important;border-color:var(--nx-line)!important;color:var(--nx-text)!important;box-shadow:0 18px 46px rgba(0,0,0,.16)!important}
+h1,h2,h3,h4,.section-head h2,.hero-card h1,.market-hero h1,.country-banner b,.service-card b,.country-card b,.quick-card b,.admin-card h2,.admin-section h2{color:#f4fbff!important}
+p,.hero-card p,.market-hero p,.service-card small,.country-card small,.quick-card small,.section-head p,.helper-card span,.muted,.subtle{color:#b2c9d8!important}
+.eyebrow,.section-head .eyebrow{color:#65e7d6!important}
+input,textarea,select{background:#041824!important;color:#f4fbff!important;border-color:rgba(133,202,218,.24)!important}
+input::placeholder,textarea::placeholder{color:#7596a8!important}
+button{color:inherit}
+.primary-btn,.support-submit,.admin-primary-btn{background:linear-gradient(110deg,#18dfc0,#4cdded)!important;color:#03262d!important;border:0!important;box-shadow:0 10px 26px rgba(25,221,195,.15)!important}
+.service-card:hover,.country-card:hover,.quick-card:hover{border-color:rgba(47,235,209,.52)!important;transform:translateY(-2px)}
+.service-card .service-icon,.country-banner .service-icon,.country-card .country-flag{box-shadow:0 8px 24px rgba(0,0,0,.2)}
+.reference-dashboard{color:#f3fbff!important}
+html:has(.reference-dashboard),body:has(.reference-dashboard){background:#04111d!important}
+body:has(.reference-dashboard){background:radial-gradient(900px 520px at 82% -10%,rgba(15,174,168,.15),transparent 60%),linear-gradient(145deg,#04111d,#061b2a 56%,#04121f)!important;color:#f3fbff!important}
+body:has(.reference-dashboard):before,body:has(.reference-dashboard):after{background:rgba(10,180,167,.08)!important}
+body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padding:12px 20px 130px!important}
+.reference-dashboard .topbar{background:transparent!important;border:0!important}
+.reference-dashboard .brand-copy b{color:#f4fbff!important}
+.reference-dashboard .brand-copy small{color:#9bb9ca!important}
+.reference-dashboard .coin-pill{background:linear-gradient(135deg,#063c45,#07565b)!important;color:#eafffb!important;border-color:rgba(83,238,218,.36)!important}
+.reference-dashboard .icon-btn,.reference-dashboard .home-menu-btn{background:linear-gradient(145deg,#123b4c,#0a2938)!important;color:#bdf8f1!important;border-color:rgba(93,228,218,.2)!important}
+.reference-dashboard .hero-card.home-hero-refresh{min-height:350px!important;border-radius:28px!important;border:1px solid rgba(79,231,216,.24)!important;background:radial-gradient(circle at 88% 12%,rgba(52,218,199,.18),transparent 32%),linear-gradient(125deg,#071a27,#073b3d 56%,#061e2a)!important;box-shadow:0 26px 70px rgba(0,0,0,.23)!important}
+.reference-dashboard .hero-card h1{color:#f6fffe!important}
+.reference-dashboard .hero-card p{color:#b6d1d5!important}
+.reference-dashboard .hero-card .eyebrow{color:#73e9d8!important}
+.reference-dashboard .hero-card .primary-btn{background:linear-gradient(110deg,#19dfc0,#c3fff3)!important;color:#03262d!important}
+.reference-dashboard .hero-orb{background:linear-gradient(145deg,rgba(101,237,220,.4),rgba(11,61,74,.6))!important;color:#d9fffa!important;border:1px solid rgba(142,255,241,.4)!important}
+.reference-dashboard .quick-card{background:linear-gradient(145deg,#0b293a,#071d2c)!important;border-color:var(--nx-line)!important;color:#f3fbff!important}
+.reference-dashboard .quick-card>span{background:linear-gradient(145deg,#0f8f88,#0b5f68)!important;color:#eafffb!important;border-color:rgba(98,238,218,.25)!important}
+.reference-dashboard .quick-card b,.reference-dashboard .section-head h2{color:#f4fbff!important}
+.reference-dashboard .quick-card small,.reference-dashboard .section-head .eyebrow{color:#a8c4d2!important}
+.reference-dashboard .bottom-nav{background:rgba(4,21,33,.94)!important;border-color:rgba(93,226,216,.22)!important;box-shadow:0 18px 48px rgba(0,0,0,.38)!important}
+.reference-dashboard .nav-item{color:#8eafc0!important}
+.reference-dashboard .nav-item.selected{color:#e9fffb!important;background:rgba(25,221,192,.12)!important}
+.admin-panel,.admin-page,.admin-shell{color:#f3fbff!important}
+.admin-panel label,.admin-page label,.admin-shell label{color:#c5dbe5!important}
+.admin-panel input,.admin-panel select,.admin-panel textarea,.admin-page input,.admin-page select,.admin-page textarea{background:#041824!important;color:#f4fbff!important;border-color:rgba(133,202,218,.24)!important}
+@media(max-width:600px){.reference-dashboard .hero-card.home-hero-refresh{padding:25px!important;min-height:325px!important}.reference-dashboard .hero-card h1{font-size:clamp(34px,9vw,46px)!important}body:has(.reference-dashboard) .page-shell{padding:10px 12px 125px!important}}
