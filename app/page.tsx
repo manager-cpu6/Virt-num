@@ -44,13 +44,13 @@ export default async function LandingPage() {
         <section className="landing-live-strip" aria-label="Numelixa live activity">
           <div className="landing-live-panel">
             <span className="eyebrow">Live network</span>
-            <h3>Numbers changing. Messages arriving.</h3>
+            <h3>Your numbers and messages, in one place.</h3>
             <p>A preview of the workflow. Your real orders and incoming messages appear after sign-in.</p>
             <div className="live-feed-list"><div className="live-feed-row"><b>Real order activity</b><span>AVAILABLE AFTER SIGN-IN</span></div></div>
           </div>
           <div className="landing-video-panel">
             <span className="eyebrow">Product preview</span>
-            <div className="video-screen"><span className="video-live">LIVE PREVIEW</span></div>
+            <div className="video-screen"><span className="video-live">APP PREVIEW</span></div>
             <h3>See it in motion.</h3>
             <p>Fast number selection, live SMS status and a clean verification workflow.</p>
           </div>
