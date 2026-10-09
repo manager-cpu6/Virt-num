@@ -33,23 +33,30 @@ function countryIso(name:string){
 }
 
 export async function balance(){
- // Tiger returns either JSON ({ balance: 12.34 }) or the legacy
- // ACCESS_BALANCE:12.3400 text response depending on account/API version.
- let p:any;
- try{p=await request("getBalance",{format:"json"})}catch(jsonError){
-  // Some Tiger accounts ignore format=json; retry the documented plain-text form.
-  p=await request("getBalance");
- }
- const candidate=p&&typeof p==="object"?(p.balance??p.data?.balance??p.result?.balance):null;
- let value=Number(candidate);
- if(candidate===null||candidate===undefined||!Number.isFinite(value)){
+ // The documented default response is plain text: ACCESS_BALANCE:12.3400.
+ // Prefer it because it is stable across Tiger account/API versions, then fall
+ // back to the optional JSON response if the plain-text request fails.
+ const parseBalance=(p:any):number=>{
+  const candidate=p&&typeof p==="object"?(p.balance??p.data?.balance??p.result?.balance??p.data?.data?.balance):null;
+  if(candidate!==null&&candidate!==undefined){
+   const n=Number(candidate);
+   if(Number.isFinite(n)&&n>=0)return n;
+  }
   const raw=String(p??"").trim();
   const match=raw.match(/(?:ACCESS_BALANCE\s*:\s*)?(-?\d+(?:\.\d+)?)/i);
-  if(!match)throw new Error("Tiger SMS returned an unreadable balance response.");
-  value=Number(match[1]);
+  if(match){
+   const n=Number(match[1]);
+   if(Number.isFinite(n)&&n>=0)return n;
+  }
+  throw new Error("Tiger SMS returned an unreadable balance response: "+raw.slice(0,160));
+ };
+ try{return parseBalance(await request("getBalance"))}
+ catch(plainError){
+  try{return parseBalance(await request("getBalance",{format:"json"}))}
+  catch(jsonError){
+   throw new Error("Tiger SMS balance request failed. "+(jsonError instanceof Error?jsonError.message:plainError instanceof Error?plainError.message:"Unknown response"));
+  }
  }
- if(!Number.isFinite(value)||value<0)throw new Error("Tiger SMS returned an invalid balance value.");
- return value;
 }
 
 export async function listCountries(){
@@ -80,9 +87,12 @@ function parsePriceTree(raw:any,service:string){
  const add=(country:any,node:any)=>{
   const p=node?.[service]??node;
   if(!p||typeof p!=="object")return;
-  const cost=Number(p.cost??p.price??p.saleAveragePrice??0);
+  // getPricesV3's `price` is Tiger's dynamic recommended max price;
+  // getPrices V1's `cost` is the legacy recommended max price. Prefer V3
+  // price over cost/saleAveragePrice when both are present.
+  const cost=Number(p.price??p.cost??p.saleAveragePrice??0);
   const count=Number(p.count??p.numbersCount??p.numberCount??0);
-  if(cost>0||count>0)out[String(country)]={cost,count,rate:100};
+  if(Number.isFinite(cost)&&cost>0&&Number.isFinite(count)&&count>=0)out[String(country)]={cost,count,rate:100};
  };
  for(const [country,node] of Object.entries(raw||{}) as any[]){
   if(node&&typeof node==="object"&&service in node)add(country,node);
@@ -137,17 +147,36 @@ export async function getPrice(country:string,service:string,_operator="any"){
 export async function purchase(country:string,service:string,maxPrice?:number,_operator="any"){
  const q=await getPrice(country,service);
  if(!q.count||!q.cost)throw new Error("NO_FREE_PHONES");
- const ceiling=Number(maxPrice||q.cost);
+ // maxPrice from the checkout quote can be stale if Tiger's offer floor moves.
+ // Always start at the live Tiger quote and retry once at the explicit min
+ // price returned in WRONG_MAX_PRICE.details/info.min.
+ let ceiling=Math.max(Number(q.cost)||0,Number(maxPrice)||0);
+ if(!Number.isFinite(ceiling)||ceiling<=0)throw new Error("Tiger SMS returned an invalid purchase price.");
+ const buy=()=>request("getNumberV2",{service,country,maxPrice:ceiling.toFixed(4)});
  let p:any;
  try{
-  p=await request("getNumberV2",{service,country,maxPrice:String(ceiling)});
+  p=await buy();
  }catch(error){
   const message=error instanceof Error?error.message:String(error);
-  if(/NO_NUMBERS|NO_FREE_PHONES/i.test(message))throw new Error("NO_FREE_PHONES");
-  if(/NO_BALANCE/i.test(message))throw new Error("PROVIDER_BALANCE_TOO_LOW");
-  if(/BAD_COUNTRY/i.test(message))throw new Error("BAD_COUNTRY");
-  if(/BAD_SERVICE/i.test(message))throw new Error("BAD_SERVICE");
-  throw error;
+  const parsedMin=message.match(/(?:\\"min\\"|\\bmin\\b)\\s*[:=]\\s*([0-9]+(?:\\.[0-9]+)?)/i);
+  const minPrice=parsedMin?Number(parsedMin[1]):NaN;
+  if(/WRONG_MAX_PRICE/i.test(message)&&Number.isFinite(minPrice)&&minPrice>ceiling){
+   ceiling=minPrice;
+   try{p=await buy()}catch(retryError){
+    const retryMessage=retryError instanceof Error?retryError.message:String(retryError);
+    if(/NO_NUMBERS|NO_FREE_PHONES/i.test(retryMessage))throw new Error("NO_FREE_PHONES");
+    if(/NO_BALANCE/i.test(retryMessage))throw new Error("PROVIDER_BALANCE_TOO_LOW");
+    if(/BAD_COUNTRY/i.test(retryMessage))throw new Error("BAD_COUNTRY");
+    if(/BAD_SERVICE/i.test(retryMessage))throw new Error("BAD_SERVICE");
+    throw retryError;
+   }
+  }else{
+   if(/NO_NUMBERS|NO_FREE_PHONES/i.test(message))throw new Error("NO_FREE_PHONES");
+   if(/NO_BALANCE/i.test(message))throw new Error("PROVIDER_BALANCE_TOO_LOW");
+   if(/BAD_COUNTRY/i.test(message))throw new Error("BAD_COUNTRY");
+   if(/BAD_SERVICE/i.test(message))throw new Error("BAD_SERVICE");
+   throw error;
+  }
  }
  const payload=p?.data??p?.activation??p?.result??p;
  if(p?.success===false||String(p?.status||"").toLowerCase()==="error"||p?.error||p?.errorCode){
