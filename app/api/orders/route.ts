@@ -5,6 +5,7 @@ import {watchOrderForPush} from "@/lib/order-watcher";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
+  let smsProviderUsed:"5sim"|"tiger"="5sim";
   let walletDebited=false;
 
   try{
@@ -29,6 +30,7 @@ export async function POST(req:Request){
 
     const settings=await getSettings();
     const smsProvider=await activeProvider();
+    smsProviderUsed=smsProvider;
     // Operator selection is internal only. Public API clients never choose it.
     const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
 
@@ -250,7 +252,7 @@ export async function POST(req:Request){
       if(walletDebited){
         let cancelled=false;
         if(providerOrderId){
-          try{await cancel(providerOrderId);cancelled=true}catch{}
+          try{await cancel(providerOrderId,smsProviderUsed);cancelled=true}catch{}
         }
 
         if(cancelled||!providerOrderId){
@@ -358,7 +360,7 @@ export async function DELETE(req:Request){
   if(!changed)return NextResponse.json({ok:false,error:"Cancellation was accepted but order sync needs support review."},{status:503});
   const refund=Math.max(0,Number(o.priceCoins||0));
   const updated=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:refund}},{returnDocument:"after"});
-  await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});
+  try{await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});}catch(error){console.error("[CANCEL REFUND LEDGER]",error)}
   return NextResponse.json({ok:true,refundedCoins:refund});
  }catch(error){
   console.error("[ORDER CANCEL]",error);
