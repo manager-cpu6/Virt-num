@@ -1,6 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 import TopBar from "@/components/TopBar";
+import "./support.css";
 
 type Ticket={id:string;subject:string;status:string;createdAt:string;reviewUntil:string;canSubmit:boolean};
 export default function SupportPage(){
