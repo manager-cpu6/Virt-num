@@ -8,7 +8,7 @@ import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods f
 import AdminSupport from "@/components/AdminSupport";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
-type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any}[]};
+type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
 type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
@@ -138,7 +138,7 @@ function Providers({stats}:{stats:Stats|null}){
         <button className={active?"primary-btn":"secondary-btn"} disabled={busy||(!enabled&&active)} onClick={()=>apply(id,true)}>{active?"Active":"Make active"}</button>
         <button className="secondary-btn" disabled={busy||!enabled||active} onClick={()=>apply(id,false)}>Turn off</button>
        </div>
-       <div className="provider-balance"><span>LIVE BALANCE</span><strong>{p?.balance!==undefined?"$"+Number(p.balance).toFixed(4):"—"}</strong></div>
+       <div className="provider-balance"><span>LIVE BALANCE</span><strong>{p?.balance!==undefined?"$"+Number(p.balance).toFixed(4):"Balance unavailable"}</strong>{p?.balanceError&&<small className="provider-balance-error">{p.balanceError}</small>}</div>
       </div>
     })}
    </div>
