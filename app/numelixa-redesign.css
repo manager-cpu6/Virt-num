@@ -557,3 +557,23 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,900px)!important;paddi
 .notification-empty strong{display:block;margin:12px 0 5px;color:#f5f8ff}
 .notification-empty p{margin:0;color:#a8b8d3;font-size:.88rem}
 @media(max-width:520px){.notifications-heading{align-items:flex-start;flex-direction:column}.notifications-mark-read{align-self:flex-start}.topbar .topbar-inner{gap:7px}.topbar .brand-copy small{display:none}.topbar .topbar-actions{gap:6px}.topbar .coin-pill{gap:4px;padding:7px 8px!important}.topbar .notification-btn,.topbar .account-avatar-trigger{width:34px!important;height:34px!important;flex-basis:34px!important}}
+
+/* Native-style bottom navigation applies to every authenticated screen */
+.bottom-nav{
+ position:fixed!important;z-index:100!important;left:50%!important;
+ bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;transform:translateX(-50%)!important;
+ width:min(calc(100% - 20px),520px)!important;padding:8px 7px!important;
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;
+ border-radius:22px!important;background:rgba(3,10,29,.92)!important;
+ border:1px solid rgba(8,123,255,.34)!important;
+ box-shadow:0 14px 42px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.045)!important;
+ backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important;
+}
+.bottom-nav .nav-item{min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:7px 2px!important;border-radius:14px!important;color:#8194b5!important;text-decoration:none!important}
+.bottom-nav .nav-item>span{font-size:19px!important;line-height:1.05!important}
+.bottom-nav .nav-item small{font-size:10px!important;font-weight:650!important;color:inherit!important}
+.bottom-nav .nav-item.selected{background:linear-gradient(130deg,rgba(8,123,255,.22),rgba(112,60,255,.2))!important;color:#e8fbff!important;box-shadow:inset 0 0 0 1px rgba(0,217,255,.23)!important}
+@media(max-width:600px){
+ .bottom-nav .nav-item>span{font-size:18px!important}
+ .bottom-nav .nav-item small{font-size:9px!important}
+}
