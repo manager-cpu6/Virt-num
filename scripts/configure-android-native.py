@@ -510,6 +510,7 @@ public class MainActivity extends BridgeActivity {
         try {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
+        routeNotificationIntent(getIntent());
 
         // Android 13+ requires an explicit runtime POST_NOTIFICATIONS request.
         // This native request is the first-line startup path; the web layer
@@ -518,6 +519,30 @@ public class MainActivity extends BridgeActivity {
             this::requestNotificationPermissionIfNeeded,
             900L
         );
+    }
+
+    @Override
+    protected void onNewIntent(android.content.Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        routeNotificationIntent(intent);
+    }
+
+    private void routeNotificationIntent(android.content.Intent intent) {
+        if (intent == null) return;
+        String path = intent.getStringExtra("url");
+        if (path == null || !path.startsWith("/") || path.startsWith("//") || path.contains("\\")) return;
+        final String target = path;
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            try {
+                if (getBridge() != null && getBridge().getWebView() != null) {
+                    String quoted = org.json.JSONObject.quote(target);
+                    getBridge().getWebView().evaluateJavascript(
+                        "window.location.href=" + quoted + ";", null
+                    );
+                }
+            } catch (Exception ignored) {}
+        }, 1200L);
     }
 
     private void requestNotificationPermissionIfNeeded() {
