@@ -72,3 +72,6 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padd
 .countries-page .country-price b{color:#65e8d5!important}.countries-page .country-price small{color:#a2c2ce!important}
 .countries-page .country-row.country-unavailable{opacity:.58}
 @media(max-width:560px){.services-page .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}.services-page .service-card{min-height:91px!important;padding:12px!important;gap:10px!important}.services-page .service-card .service-icon{width:43px!important;height:43px!important;min-width:43px!important;border-radius:13px!important}.services-page .service-card .service-icon img{width:23px!important;height:23px!important}.services-page .service-card b{font-size:12px!important}.countries-page .country-row{padding:11px 12px!important}}
+
+.topbar .coin-icon{display:grid!important;place-items:center!important;width:25px!important;height:25px!important;flex:0 0 25px!important;border-radius:50%!important;background:linear-gradient(145deg,#ffe27b,#f3a914 68%,#c77705)!important;border:1px solid rgba(255,239,157,.8)!important;color:#4a2b00!important;font-size:15px!important;box-shadow:inset 0 1px 2px rgba(255,255,255,.65),0 3px 10px rgba(243,169,20,.2)!important}
+.topbar .coin-pill{gap:7px!important}
