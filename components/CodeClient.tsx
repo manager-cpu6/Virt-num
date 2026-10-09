@@ -55,7 +55,8 @@ export default function CodeClient({orderId,phoneNumber,service,country,provider
  useEffect(()=>{getCode();const t=setInterval(()=>{if(!code&&status==="waiting")getCode()},5000);return()=>clearInterval(t)},[orderId,code,status]);
  useEffect(()=>{if(status!=="waiting")return;const t=setInterval(()=>setSeconds(s=>Math.max(0,s-1)),1000);return()=>clearInterval(t)},[status]);
  useEffect(()=>{const updateAge=()=>setOrderAgeSeconds(Math.max(0,Math.floor((Date.now()-new Date(createdAt).getTime())/1000)));updateAge();const t=setInterval(updateAge,1000);return()=>clearInterval(t)},[createdAt]);
- const tigerCancelReady=provider==="tiger"&&orderAgeSeconds>=360;
+ const tigerCancelSecondsRemaining=cancelAvailableAt?Math.max(0,Math.ceil((new Date(cancelAvailableAt).getTime()-Date.now())/1000)):Math.max(0,360-orderAgeSeconds);
+ const tigerCancelReady=provider==="tiger"&&tigerCancelSecondsRemaining===0;
  const otherCancelReady=provider!=="tiger"&&orderAgeSeconds<=300;
  const m=Math.floor(seconds/60),s=seconds%60;
  return <div className="code-area">
@@ -84,7 +85,7 @@ export default function CodeClient({orderId,phoneNumber,service,country,provider
 
    {copied&&<div className="copy-toast">✓ {copied==="number"?"Number":"Code"} copied</div>}
    {status==="waiting"&&(tigerCancelReady||otherCancelReady)&&<button className="secondary-btn full cancel-number-btn" onClick={cancelOrder} disabled={loading}>Cancel & refund</button>}
-   {status==="waiting"&&provider==="tiger"&&!tigerCancelReady&&<div className="waiting-dot">Cancel & refund available in {Math.floor((360-orderAgeSeconds)/60)}:{String(Math.max(0,360-orderAgeSeconds)%60).padStart(2,"0")}</div>}
+   {status==="waiting"&&provider==="tiger"&&!tigerCancelReady&&<div className="waiting-dot">Cancel & refund available in {Math.floor(tigerCancelSecondsRemaining/60)}:{String(tigerCancelSecondsRemaining%60).padStart(2,"0")}</div>}
    {error&&<div className={status==="cancelled"||status==="refunded"?"success-box":"error-box"}>{friendlyError(error)}</div>}
  </div>
 }
