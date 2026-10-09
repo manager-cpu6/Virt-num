@@ -533,3 +533,27 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,900px)!important;paddi
  .reference-dashboard .nav-item small{font-size:9px!important}
 }
 @media(prefers-reduced-motion:reduce){.reference-dashboard .nx-earth-illustration *{animation:none!important;transition:none!important}}
+
+/* Header controls and notification center */
+.topbar .notification-btn{position:relative!important;display:grid!important;place-items:center!important;flex:0 0 38px!important}
+.topbar .notification-btn svg{width:19px!important;height:19px!important}
+.topbar .notification-count{position:absolute;right:-4px;top:-5px;min-width:17px;height:17px;padding:0 4px;border-radius:9px;display:grid;place-items:center;background:#087bff;color:#fff;font-size:10px;font-weight:800;border:1px solid #020718;box-shadow:0 0 10px rgba(8,123,255,.4)}
+.topbar .account-avatar-trigger{position:relative!important;width:38px!important;height:38px!important;display:grid!important;place-items:center!important;border-radius:50%!important;background:linear-gradient(140deg,#087bff,#703cff)!important;border:1px solid rgba(0,217,255,.48)!important;color:#fff!important}
+.topbar .account-avatar-trigger svg{display:none!important}
+.topbar .topbar-avatar-initial{display:grid;place-items:center;width:100%;height:100%;font-size:13px;font-weight:850;color:#fff}
+.notifications-page{max-width:760px;margin:0 auto;padding:10px 0 30px;color:#f5f8ff}
+.notifications-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:8px 0 20px}
+.notifications-heading h1{font-size:clamp(1.6rem,4vw,2.1rem);margin:5px 0;color:#f5f8ff}
+.notifications-heading p{margin:0;color:#a8b8d3;font-size:.9rem}
+.notifications-mark-read{border:1px solid rgba(0,217,255,.28);border-radius:12px;background:rgba(8,123,255,.12);color:#dffaff;padding:10px 12px;font-size:.78rem;font-weight:750;white-space:nowrap}
+.notification-list{display:grid;gap:10px}
+.notification-item{display:grid;grid-template-columns:42px minmax(0,1fr);gap:12px;padding:15px;border:1px solid rgba(8,123,255,.23);border-radius:17px;background:linear-gradient(145deg,#071630,#040c20);color:#f5f8ff}
+.notification-item.unread{border-color:rgba(0,217,255,.4);background:linear-gradient(145deg,rgba(8,123,255,.13),#071630 60%,#040c20)}
+.notification-item-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:linear-gradient(145deg,rgba(8,123,255,.25),rgba(112,60,255,.25));color:#bdf7ff;border:1px solid rgba(0,217,255,.22);font-size:18px}
+.notification-item h3{margin:1px 0 5px;font-size:.96rem;color:#f5f8ff}
+.notification-item p{margin:0;color:#b2c0d9;font-size:.86rem;line-height:1.55;overflow-wrap:anywhere}
+.notification-item time{display:block;margin-top:9px;color:#7187aa;font-size:.72rem}
+.notification-empty{padding:32px 18px;text-align:center;border:1px dashed rgba(8,123,255,.28);border-radius:20px;background:rgba(7,22,48,.45)}
+.notification-empty strong{display:block;margin:12px 0 5px;color:#f5f8ff}
+.notification-empty p{margin:0;color:#a8b8d3;font-size:.88rem}
+@media(max-width:520px){.notifications-heading{align-items:flex-start;flex-direction:column}.notifications-mark-read{align-self:flex-start}.topbar .topbar-inner{gap:7px}.topbar .brand-copy small{display:none}.topbar .topbar-actions{gap:6px}.topbar .coin-pill{gap:4px;padding:7px 8px!important}.topbar .notification-btn,.topbar .account-avatar-trigger{width:34px!important;height:34px!important;flex-basis:34px!important}}
