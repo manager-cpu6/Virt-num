@@ -158,8 +158,21 @@ export async function purchase(country:string,service:string,maxPrice?:number,_o
   p=await buy();
  }catch(error){
   const message=error instanceof Error?error.message:String(error);
-  const parsedMin=message.match(/(?:\\"min\\"|\\bmin\\b)\\s*[:=]\\s*([0-9]+(?:\\.[0-9]+)?)/i);
-  const minPrice=parsedMin?Number(parsedMin[1]):NaN;
+  let minPrice=NaN;
+  // HTTP 400 responses include a JSON body such as
+  // {"title":"WRONG_MAX_PRICE","info":{"min":0.405}}.
+  const jsonStart=message.indexOf("{");
+  if(jsonStart>=0){
+   try{
+    const errorBody=JSON.parse(message.slice(jsonStart));
+    const candidate=errorBody?.info?.min??errorBody?.details?.min??errorBody?.minPrice??errorBody?.min_price;
+    if(candidate!==undefined)minPrice=Number(candidate);
+   }catch{}
+  }
+  if(!Number.isFinite(minPrice)){
+   const parsedMin=message.match(/\bmin\b[^0-9]*([0-9]+(?:\.[0-9]+)?)/i);
+   if(parsedMin)minPrice=Number(parsedMin[1]);
+  }
   if(/WRONG_MAX_PRICE/i.test(message)&&Number.isFinite(minPrice)&&minPrice>ceiling){
    ceiling=minPrice;
    try{p=await buy()}catch(retryError){
