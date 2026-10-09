@@ -35,7 +35,7 @@ export default function ServicesPage(){
  const filtered=useMemo(()=>{
    const query=q.trim().toLowerCase();
    if(query)return s.filter(x=>(x.name+" "+x.id).toLowerCase().includes(query));
-   const ranked=[...s].sort((a,b)=>popularRank(a)-popularRank(b)||a.name.localeCompare(b));
+   const ranked=[...s].sort((a,b)=>popularRank(a)-popularRank(b)||a.name.localeCompare(b.name));
    if(showAll)return ranked;
    const p=ranked.filter(x=>popularRank(x)<9999);
    return p.length?p.slice(0,16):ranked.slice(0,16)
