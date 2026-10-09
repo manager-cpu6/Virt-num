@@ -397,3 +397,139 @@ hr,.divider{border-color:rgba(167,198,255,.14)!important}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+
+/* Numelixa ultra-premium mobile refresh — visual-only layer */
+:root{
+ --nx-bg:#020718;
+ --nx-panel:#071630;
+ --nx-panel-2:#0a1d3b;
+ --nx-line:rgba(8,123,255,.28);
+ --nx-text:#f5f8ff;
+ --nx-muted:#a8b8d3;
+ --nx-blue:#087bff;
+ --nx-cyan:#00d9ff;
+ --nx-violet:#703cff;
+}
+html,body{background:#020718!important;color:#f5f8ff}
+body{
+ background:
+ radial-gradient(ellipse 75% 42% at 90% -8%,rgba(8,123,255,.18),transparent 70%),
+ radial-gradient(ellipse 52% 35% at -8% 24%,rgba(112,60,255,.10),transparent 72%),
+ linear-gradient(160deg,#020718 0%,#040c20 52%,#020718 100%)!important;
+}
+.topbar{
+ background:rgba(2,7,24,.88)!important;
+ border-color:rgba(8,123,255,.20)!important;
+ color:#f5f8ff!important;
+ box-shadow:0 10px 34px rgba(0,0,0,.15)!important;
+}
+.topbar .brand-logo{background:linear-gradient(145deg,#087bff,#703cff)!important;box-shadow:0 0 22px rgba(8,123,255,.25)!important}
+.topbar .coin-pill{background:linear-gradient(115deg,rgba(8,123,255,.22),rgba(112,60,255,.2))!important;border:1px solid rgba(0,217,255,.32)!important;color:#f5f8ff!important}
+.topbar .coin-pill small{color:#b7c8e5!important}
+.topbar .icon-btn,.topbar .home-menu-btn{background:rgba(7,22,48,.92)!important;border:1px solid rgba(8,123,255,.28)!important;color:#d8e9ff!important}
+.topbar .top-menu{background:#071630!important;border:1px solid rgba(8,123,255,.28)!important}
+.page-shell,.services-page,.countries-page,.support-page,.wallet-page,.numbers-page,.account-page,.orders-page{color:#f5f8ff!important}
+.hero-card,.market-hero,.country-banner,.service-search-box,.form-card,.helper-card,.service-card,.country-card,.quick-card,.home-live-card,.live-board,.section-card,.wallet-card,.order-card,.account-card,.admin-card,.admin-section,.stat-card,.provider-card{
+ background:linear-gradient(145deg,rgba(7,22,48,.98),rgba(4,12,32,.98))!important;
+ border-color:rgba(8,123,255,.23)!important;
+ color:#f5f8ff!important;
+ box-shadow:0 16px 40px rgba(0,0,0,.20)!important;
+}
+h1,h2,h3,h4,.section-head h2,.hero-card h1,.market-hero h1,.country-banner b,.service-card b,.country-card b,.quick-card b,.admin-card h2,.admin-section h2{color:#f5f8ff!important}
+p,.hero-card p,.market-hero p,.service-card small,.country-card small,.quick-card small,.section-head p,.helper-card span,.muted,.subtle{color:#a8b8d3!important}
+.eyebrow,.section-head .eyebrow{color:#00d9ff!important}
+input,textarea,select{background:#030b20!important;color:#f5f8ff!important;border-color:rgba(8,123,255,.32)!important}
+input::placeholder,textarea::placeholder{color:#7487a9!important}
+.primary-btn,.support-submit,.admin-primary-btn{background:linear-gradient(105deg,#087bff,#703cff)!important;color:#fff!important;border:1px solid rgba(0,217,255,.26)!important;box-shadow:0 9px 26px rgba(8,123,255,.2)!important}
+.secondary-btn,.view-all-btn{background:rgba(7,22,48,.95)!important;color:#dceaff!important;border:1px solid rgba(8,123,255,.32)!important}
+.service-card:hover,.country-card:hover,.quick-card:hover{border-color:rgba(0,217,255,.6)!important;box-shadow:0 12px 36px rgba(8,123,255,.10)!important}
+.reference-dashboard{color:#f5f8ff!important}
+html:has(.reference-dashboard),body:has(.reference-dashboard){background:#020718!important}
+body:has(.reference-dashboard){background:radial-gradient(ellipse 70% 36% at 85% -5%,rgba(8,123,255,.15),transparent 72%),linear-gradient(160deg,#020718,#040c20 58%,#020718)!important}
+body:has(.reference-dashboard):before,body:has(.reference-dashboard):after{background:rgba(8,123,255,.035)!important}
+body:has(.reference-dashboard) .page-shell{width:min(100%,900px)!important;padding:10px 16px calc(112px + env(safe-area-inset-bottom,0px))!important}
+.reference-dashboard .hero-card.home-hero-refresh{
+ position:relative!important;isolation:isolate!important;overflow:hidden!important;
+ min-height:290px!important;padding:24px!important;border-radius:26px!important;
+ border:1px solid rgba(8,123,255,.36)!important;
+ background:radial-gradient(ellipse at 82% 40%,rgba(8,123,255,.13),transparent 42%),linear-gradient(135deg,#071630 0%,#06122b 65%,#090f2a 100%)!important;
+ box-shadow:inset 0 1px rgba(255,255,255,.04),0 22px 60px rgba(0,0,0,.28)!important;
+}
+.reference-dashboard .hero-copy{position:relative;z-index:2;max-width:57%;min-width:0}
+.reference-dashboard .hero-card h1{font-size:clamp(1.65rem,4.5vw,2.5rem)!important;line-height:1.12!important;letter-spacing:-.045em!important;max-width:430px}
+.reference-dashboard .hero-card p{font-size:.94rem!important;line-height:1.65!important;color:#b0bfd9!important;max-width:430px}
+.reference-dashboard .hero-card .eyebrow{color:#00d9ff!important;letter-spacing:.16em!important;font-weight:750!important}
+.reference-dashboard .hero-card .primary-btn{background:linear-gradient(105deg,#087bff,#703cff)!important;color:white!important}
+.reference-dashboard .nx-earth-illustration{position:absolute;z-index:1;right:-2%;top:50%;width:min(47%,300px);aspect-ratio:1;transform:translateY(-50%);pointer-events:none}
+.reference-dashboard .nx-earth-globe{
+ position:absolute;inset:8%;overflow:hidden;border-radius:50%;
+ border:1px solid rgba(0,217,255,.6);
+ background:
+ radial-gradient(ellipse at 33% 32%,rgba(0,217,255,.2),transparent 23%),
+ radial-gradient(ellipse at 66% 70%,rgba(8,123,255,.35),transparent 38%),
+ repeating-linear-gradient(0deg,transparent 0 21px,rgba(0,217,255,.13) 22px,transparent 23px),
+ repeating-linear-gradient(90deg,transparent 0 24px,rgba(0,217,255,.11) 25px,transparent 26px),
+ radial-gradient(circle at 36% 30%,#124a85 0%,#08254c 48%,#02091d 76%);
+ box-shadow:inset -18px -5px 36px rgba(0,0,0,.65),inset 9px 3px 25px rgba(0,217,255,.2),0 0 24px rgba(8,123,255,.2),0 0 65px rgba(8,123,255,.12);
+}
+.reference-dashboard .nx-earth-globe:before{
+ content:"";position:absolute;inset:0;border-radius:50%;
+ background:
+ radial-gradient(ellipse 17% 9% at 31% 31%,rgba(0,217,255,.88) 0 40%,transparent 45%),
+ radial-gradient(ellipse 12% 17% at 45% 43%,rgba(8,123,255,.95) 0 42%,transparent 49%),
+ radial-gradient(ellipse 16% 8% at 63% 26%,rgba(0,217,255,.72) 0 40%,transparent 48%),
+ radial-gradient(ellipse 9% 18% at 70% 46%,rgba(8,123,255,.92) 0 42%,transparent 49%),
+ radial-gradient(ellipse 11% 16% at 57% 65%,rgba(0,217,255,.55) 0 40%,transparent 48%);
+ filter:drop-shadow(0 0 7px rgba(0,217,255,.38));
+}
+.reference-dashboard .nx-earth-globe:after{
+ content:"";position:absolute;inset:-6%;border:1px solid rgba(0,217,255,.45);border-radius:50%;
+ transform:rotate(-24deg) scaleX(.44);box-shadow:0 0 10px rgba(0,217,255,.14);
+}
+.reference-dashboard .nx-earth-orbit{position:absolute;inset:0;border:1px solid rgba(8,123,255,.5);border-radius:50%;transform:rotate(-24deg) scaleY(.32);box-shadow:0 0 18px rgba(8,123,255,.14)}
+.reference-dashboard .nx-earth-orbit:after{content:"";position:absolute;left:16%;top:5%;width:7px;height:7px;border-radius:50%;background:#00d9ff;box-shadow:0 0 13px #00d9ff}
+.reference-dashboard .nx-earth-satellite{position:absolute;right:11%;top:18%;width:7px;height:7px;border-radius:50%;background:#703cff;box-shadow:0 0 16px #703cff}
+.reference-dashboard .quick-grid{gap:12px!important}
+.reference-dashboard .quick-card{border-radius:17px!important;padding:15px!important;min-height:78px!important}
+.reference-dashboard .quick-card>span{background:linear-gradient(140deg,rgba(8,123,255,.28),rgba(112,60,255,.26))!important;color:#c8f7ff!important;border:1px solid rgba(0,217,255,.2)!important}
+.reference-dashboard .section-head{margin-top:24px!important}
+.reference-dashboard .bottom-nav{
+ position:fixed!important;z-index:100!important;left:50%!important;bottom:calc(8px + env(safe-area-inset-bottom,0px))!important;transform:translateX(-50%)!important;
+ width:min(calc(100% - 20px),520px)!important;padding:8px 7px!important;
+ display:grid!important;grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:3px!important;
+ border-radius:22px!important;background:rgba(3,10,29,.92)!important;
+ border:1px solid rgba(8,123,255,.34)!important;box-shadow:0 14px 42px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.045)!important;
+ backdrop-filter:blur(22px)!important;-webkit-backdrop-filter:blur(22px)!important;
+}
+.reference-dashboard .nav-item{min-width:0!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:4px!important;padding:7px 2px!important;border-radius:14px!important;color:#8194b5!important}
+.reference-dashboard .nav-item>span{font-size:19px!important;line-height:1.05!important}
+.reference-dashboard .nav-item small{font-size:10px!important;font-weight:650!important;color:inherit!important}
+.reference-dashboard .nav-item.selected{background:linear-gradient(130deg,rgba(8,123,255,.22),rgba(112,60,255,.2))!important;color:#e8fbff!important;box-shadow:inset 0 0 0 1px rgba(0,217,255,.23)!important}
+.reference-dashboard .home-live-board-v2{margin-top:20px!important}
+.account-premium-page,.account-premium-shell{color:#f5f8ff!important}
+.account-profile-card,.account-security-card,.account-action-card,.account-admin-card{background:linear-gradient(145deg,#071630,#040c20)!important;border-color:rgba(8,123,255,.24)!important;color:#f5f8ff!important}
+.account-wallet-card{background:radial-gradient(ellipse at 90% 0%,rgba(112,60,255,.28),transparent 45%),linear-gradient(120deg,#07357b,#342078 90%)!important;border:1px solid rgba(0,217,255,.3)!important}
+.account-wallet-copy strong,.account-wallet-copy span,.account-wallet-copy small{color:#fff!important}
+.account-wallet-action{background:#f5f8ff!important;color:#06132b!important}
+.wallet-hero,.wallet-hero-new{background:radial-gradient(ellipse at 90% 0%,rgba(112,60,255,.27),transparent 45%),linear-gradient(125deg,#07357b,#27175e)!important;border:1px solid rgba(0,217,255,.3)!important}
+.wallet-balance-copy strong,.wallet-balance-copy span,.wallet-balance-copy small{color:#fff!important}
+.coin-store-card{background:linear-gradient(145deg,#071630,#040c20)!important;border-color:rgba(8,123,255,.24)!important;color:#f5f8ff!important}
+.coin-store-card.selected{border-color:#00d9ff!important;box-shadow:0 0 0 1px rgba(0,217,255,.25),0 14px 32px rgba(8,123,255,.12)!important}
+.orders-tabs button.selected{background:linear-gradient(120deg,rgba(8,123,255,.25),rgba(112,60,255,.22))!important;color:#fff!important;border-color:rgba(0,217,255,.32)!important}
+.order-card,.number-box,.otp-panel{background:linear-gradient(145deg,#071630,#040c20)!important;border-color:rgba(8,123,255,.25)!important;color:#f5f8ff!important}
+.otp-panel .otp-row strong,.number-box strong{color:#fff!important}
+.error-box{background:rgba(255,67,104,.1)!important;color:#ffc4d0!important;border-color:rgba(255,67,104,.35)!important}
+.success-box{background:rgba(8,123,255,.12)!important;color:#d2f5ff!important;border-color:rgba(0,217,255,.3)!important}
+@media(max-width:600px){
+ body:has(.reference-dashboard) .page-shell{padding:8px 12px calc(105px + env(safe-area-inset-bottom,0px))!important}
+ .reference-dashboard .hero-card.home-hero-refresh{min-height:245px!important;padding:19px 17px!important;border-radius:22px!important}
+ .reference-dashboard .hero-copy{max-width:66%}
+ .reference-dashboard .hero-card h1{font-size:1.7rem!important;max-width:240px}
+ .reference-dashboard .hero-card p{font-size:.82rem!important;line-height:1.5!important;max-width:240px}
+ .reference-dashboard .nx-earth-illustration{right:-13%;width:48%;opacity:.86}
+ .reference-dashboard .hero-card .primary-btn{font-size:.85rem!important;padding:11px 13px!important}
+ .reference-dashboard .nav-item>span{font-size:18px!important}
+ .reference-dashboard .nav-item small{font-size:9px!important}
+}
+@media(prefers-reduced-motion:reduce){.reference-dashboard .nx-earth-illustration *{animation:none!important;transition:none!important}}
