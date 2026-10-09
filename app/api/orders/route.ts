@@ -95,7 +95,8 @@ export async function POST(req:Request){
         createdAt:now,
         cancelledAt:null,
         completedAt:null,
-        refundCoins:0
+        refundCoins:0,
+        cancelAvailableAt:smsProvider==="tiger"?new Date(now.getTime()+6*60*1000):null
       };
 
       // Provider purchase succeeded. Persist the actual activation BEFORE
@@ -319,10 +320,48 @@ export async function POST(req:Request){
     return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
   }
 }
-export async function DELETE(req:Request){try{
- const u=await requireUser(),b=await req.json(),id=String(b.orderId||""),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),o=await orders.findOne({_id:id,userId:u.id});
- if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
- const age=Date.now()-new Date(o.createdAt).getTime();if(age>5*60*1000)return NextResponse.json({ok:false,error:"Cancel is available only during the first 5 minutes."},{status:409});
- await cancel(String(o.providerOrderId),o.provider==="tiger"?"tiger":"5sim");const changed=await orders.findOneAndUpdate({_id:id,userId:u.id,status:"waiting"},{$set:{status:"cancelled",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},{returnDocument:"after"});if(!changed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
- const refund=Number(o.priceCoins||0),updated=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:refund}},{returnDocument:"after"});await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});return NextResponse.json({ok:true,refundedCoins:refund});
-}catch{return NextResponse.json({ok:false,error:"Cancellation failed. Please try again."},{status:500})}}
+export async function DELETE(req:Request){
+ try{
+  const u=await requireUser(),b=await req.json(),id=String(b.orderId||"");
+  if(!id)return NextResponse.json({ok:false,error:"Order ID is required."},{status:400});
+  const orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions");
+  const o=await orders.findOne({_id:id,userId:u.id});
+  if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});
+  if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
+  const now=Date.now(),createdAt=new Date(o.createdAt).getTime(),isTiger=String(o.provider||"")==="tiger";
+  if(!Number.isFinite(createdAt))return NextResponse.json({ok:false,error:"Order timestamp is invalid."},{status:409});
+  if(isTiger){
+   const eligibleAt=o.cancelAvailableAt?new Date(o.cancelAvailableAt).getTime():createdAt+6*60*1000;
+   if(now<eligibleAt)return NextResponse.json({ok:false,code:"CANCEL_TIMER_ACTIVE",cancelAvailableAt:new Date(eligibleAt).toISOString(),error:"Tiger SMS cancellation and refund become available after 6 minutes."},{status:409});
+  }else if(now-createdAt>5*60*1000){
+   return NextResponse.json({ok:false,error:"Cancellation is available only during the first 5 minutes for this provider."},{status:409});
+  }
+  // Claim the cancellation atomically so repeated taps cannot trigger duplicate refunds.
+  const claimed=await orders.findOneAndUpdate(
+   {_id:id,userId:u.id,status:"waiting"},
+   {$set:{status:"cancelling",cancellationRequestedAt:new Date()}},
+   {returnDocument:"after"}
+  );
+  if(!claimed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
+  try{
+   await cancel(String(o.providerOrderId),isTiger?"tiger":"5sim");
+  }catch(error){
+   await orders.updateOne({_id:id,userId:u.id,status:"cancelling"},{$set:{status:"waiting"},$unset:{cancellationRequestedAt:""}});
+   console.error("[ORDER CANCEL PROVIDER]",error);
+   return NextResponse.json({ok:false,error:"The provider has not confirmed cancellation. No refund was issued; please try again."},{status:502});
+  }
+  const changed=await orders.findOneAndUpdate(
+   {_id:id,userId:u.id,status:"cancelling"},
+   {$set:{status:"cancelled",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},
+   {returnDocument:"after"}
+  );
+  if(!changed)return NextResponse.json({ok:false,error:"Cancellation was accepted but order sync needs support review."},{status:503});
+  const refund=Math.max(0,Number(o.priceCoins||0));
+  const updated=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:refund}},{returnDocument:"after"});
+  await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});
+  return NextResponse.json({ok:true,refundedCoins:refund});
+ }catch(error){
+  console.error("[ORDER CANCEL]",error);
+  return NextResponse.json({ok:false,error:"Cancellation failed. Please try again."},{status:500});
+ }
+}
