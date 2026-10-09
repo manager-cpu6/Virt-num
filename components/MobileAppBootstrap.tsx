@@ -15,7 +15,9 @@ export default function MobileAppBootstrap(){
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
   let permissionInFlight=false;
   let push:any=null;
+  let localNotifications:any=null;
   let channelReady=false;
+  const seenForegroundPushes=new Set<string>();
   let capacitorToken="";
   let tokenInFlight=false;
   const cleanups:Array<()=>void>=[];
@@ -122,6 +124,16 @@ export default function MobileAppBootstrap(){
      sound:"default",
      visibility:1
     });
+    if(localNotifications){
+     await localNotifications.createChannel({
+      id:"numelixa",
+      name:"Numelixa Notifications",
+      description:"SMS codes, number orders, wallet activity and account security",
+      importance:5,
+      sound:"default",
+      visibility:1
+     });
+    }
     channelReady=true;
    }catch(error){
     // Some Android/Capacitor versions do not expose channel management.
@@ -157,7 +169,9 @@ export default function MobileAppBootstrap(){
   (async()=>{
    try{
     const {PushNotifications}=await import("@capacitor/push-notifications");
+    const {LocalNotifications}=await import("@capacitor/local-notifications");
     push=PushNotifications;
+    localNotifications=LocalNotifications;
 
     const registration=await PushNotifications.addListener("registration",(event)=>{
      if(event?.value){capacitorToken=String(event.value).trim();void saveAndRegister(capacitorToken);}
@@ -170,10 +184,36 @@ export default function MobileAppBootstrap(){
     });
     cleanups.push(()=>registrationError.remove());
 
-    const received=await PushNotifications.addListener("pushNotificationReceived",()=>{
+    const received=await PushNotifications.addListener("pushNotificationReceived",async(event)=>{
      window.dispatchEvent(new Event("numelixa-notification"));
+     // Android FCM notification payloads are displayed by the system while
+     // backgrounded. Only this foreground callback schedules a local alert.
+     const title=String(event?.title||"Numelixa");
+     const body=String(event?.body||"").trim();
+     const data=event?.data||{};
+     const pushKey=String(event?.id||[title,body,data.url||""].join("|"));
+     if(!body||seenForegroundPushes.has(pushKey))return;
+     seenForegroundPushes.add(pushKey);
+     window.setTimeout(()=>seenForegroundPushes.delete(pushKey),60000);
+     try{
+      const rawId=String(event?.id||"").replace(/\D/g,"").slice(-8);
+      const notificationId=Number(rawId)||Math.max(1,Date.now()%2147483647);
+      await localNotifications.schedule({notifications:[{
+       id:notificationId,title,body,channelId:"numelixa",
+       schedule:{at:new Date(Date.now()+250)},
+       extra:{...data,url:String(data.url||"/")}
+      }]});
+     }catch{
+      // In-app notification events still fire if local alert presentation fails.
+     }
     });
     cleanups.push(()=>received.remove());
+
+    const localAction=await LocalNotifications.addListener("localNotificationActionPerformed",(event)=>{
+     const url=String(event?.notification?.extra?.url||"/");
+     window.location.href=url.startsWith("/")&&!url.startsWith("//")&&!url.includes("\\")?url:"/";
+    });
+    cleanups.push(()=>localAction.remove());
 
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{
      const url=String(event.notification?.data?.url||"/");
