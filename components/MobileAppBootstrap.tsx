@@ -219,7 +219,7 @@ export default function MobileAppBootstrap(){
      const url=String(event.notification?.data?.url||"/");
      // Accept only same-origin relative app paths; do not let payload data
      // turn a notification tap into an external redirect.
-     window.location.href=url.startsWith("/")&&!url.startsWith("//")&&!url.includes("\\\\")?url:"/";
+     window.location.href=url.startsWith("/")&&!url.startsWith("//")&&!url.includes("\\")?url:"/";
     });
     cleanups.push(()=>action.remove());
 
