@@ -108,12 +108,16 @@ export async function servicePrices(service:string,countries:any[]=[]){
   const raw=await request("getPricesV3",{service});
   parsed=parsePriceTree(raw,service);
  }catch{}
- if(!Object.keys(parsed).length){
-  try{
-   const raw=await request("getPrices",{service});
-   parsed=parsePriceTree(raw,service);
-  }catch{}
- }
+ // Merge the legacy catalog only for country/service pairs omitted by V3.
+ // V3 prices remain authoritative wherever present; V1 cost is the documented
+ // recommended maxPrice fallback for pairs without V3 price data.
+ try{
+  const raw=await request("getPrices",{service});
+  const legacy=parsePriceTree(raw,service);
+  for(const [countryId,entry] of Object.entries(legacy)){
+   if(!parsed[countryId])parsed[countryId]=entry;
+  }
+ }catch{}
  // Tiger's stock-count endpoint is the authoritative list of country IDs that
  // currently have inventory. Merge its counts without discarding live prices.
  try{
