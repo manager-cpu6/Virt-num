@@ -45,13 +45,8 @@ export default async function LandingPage() {
           <div className="landing-live-panel">
             <span className="eyebrow">Live network</span>
             <h3>Numbers changing. Messages arriving.</h3>
-            <p>A visual snapshot of the Numelixa experience, with fresh activity designed to feel like a live control room.</p>
-            <div className="live-feed-list">
-              <div className="live-feed-row"><b>🇺🇸 +1 ••• ••• 4198</b><span>SMS RECEIVED · 2s</span></div>
-              <div className="live-feed-row"><b>🇬🇧 +44 •••• 123 681</b><span>NUMBER READY · NOW</span></div>
-              <div className="live-feed-row"><b>🇩🇪 +49 ••• ••• 276</b><span>CODE DELIVERED · NOW</span></div>
-            </div>
-          </div>
+            <p>A preview of the workflow. Your real orders and incoming messages appear after sign-in.</p>
+            <div className="live-feed-list"><div className="live-feed-row"><b>Real order activity</b><span>AVAILABLE AFTER SIGN-IN</span></div></div>         </div>
           <div className="landing-video-panel">
             <span className="eyebrow">Product preview</span>
             <div className="video-screen"><span className="video-live">LIVE PREVIEW</span></div>
