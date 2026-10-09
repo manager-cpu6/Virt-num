@@ -9,13 +9,21 @@ export function providerConfigured(){return configured()}
 function humanize(v:string){return String(v||"").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
 
 async function request(action:string,params:Record<string,string>={}){
- if(!key())throw new Error("TIGER_SMS_API_KEY is not configured.");
- const q=new URLSearchParams({action,api_key:key(),...params});
+ const apiKey=key();
+ if(!apiKey)throw new Error("TIGER_SMS_API_KEY is not configured.");
+ const q=new URLSearchParams({action,api_key:apiKey,...params});
  const r=await fetch(BASE+"?"+q.toString(),{cache:"no-store",headers:{"Accept":"application/json","User-Agent":"Numelixa/1.0"}});
- const text=await r.text();
- if(!r.ok)throw new Error("Tiger SMS HTTP "+r.status+": "+text.slice(0,300));
- if(text.startsWith("NO_")||text.startsWith("BAD_")||text.startsWith("ERROR")||text.startsWith("WRONG_"))throw new Error("Tiger SMS "+text.trim());
- try{return JSON.parse(text)}catch{return text}
+ const text=(await r.text()).trim();
+ let parsed:any=text;
+ try{parsed=JSON.parse(text)}catch{}
+ const nestedError=parsed&&typeof parsed==="object"?(parsed.error??parsed.errors??parsed.message??parsed.errorMessage??parsed.error_code??parsed.errorCode):null;
+ const status=String(parsed&&typeof parsed==="object"?(parsed.status??""):"").toLowerCase();
+ const failedEnvelope=!!(parsed&&typeof parsed==="object"&&(status==="error"||parsed.success===false||parsed.ok===false||parsed.errorCode||parsed.error_code));
+ if(!r.ok||failedEnvelope||typeof parsed==="string"&&/^(NO_|BAD_|ERROR|WRONG_|ACCESS_ERROR|AUTH_ERROR)/i.test(parsed)){
+  const detail=typeof nestedError==="string"?nestedError:nestedError&&typeof nestedError==="object"?JSON.stringify(nestedError):typeof parsed==="string"?parsed:JSON.stringify(parsed);
+  throw new Error("Tiger SMS "+(r.ok?"API error":"HTTP "+r.status)+": "+String(detail||text||"Unknown upstream error").slice(0,300));
+ }
+ return parsed;
 }
 
 function countryIso(name:string){
@@ -25,8 +33,23 @@ function countryIso(name:string){
 }
 
 export async function balance(){
- const p=await request("getBalance",{format:"json"});
- return Number(p?.balance??(String(p).match(/([0-9.]+)/)?.[1]||0))
+ // Tiger returns either JSON ({ balance: 12.34 }) or the legacy
+ // ACCESS_BALANCE:12.3400 text response depending on account/API version.
+ let p:any;
+ try{p=await request("getBalance",{format:"json"})}catch(jsonError){
+  // Some Tiger accounts ignore format=json; retry the documented plain-text form.
+  p=await request("getBalance");
+ }
+ const candidate=p&&typeof p==="object"?(p.balance??p.data?.balance??p.result?.balance):null;
+ let value=Number(candidate);
+ if(candidate===null||candidate===undefined||!Number.isFinite(value)){
+  const raw=String(p??"").trim();
+  const match=raw.match(/(?:ACCESS_BALANCE\\s*:\\s*)?(-?\\d+(?:\\.\\d+)?)/i);
+  if(!match)throw new Error("Tiger SMS returned an unreadable balance response.");
+  value=Number(match[1]);
+ }
+ if(!Number.isFinite(value)||value<0)throw new Error("Tiger SMS returned an invalid balance value.");
+ return value;
 }
 
 export async function listCountries(){
@@ -115,8 +138,24 @@ export async function purchase(country:string,service:string,maxPrice?:number,_o
  const q=await getPrice(country,service);
  if(!q.count||!q.cost)throw new Error("NO_FREE_PHONES");
  const ceiling=Number(maxPrice||q.cost);
- const p=await request("getNumberV2",{service,country,maxPrice:String(ceiling)});
- const payload=p?.data??p?.activation??p;
+ let p:any;
+ try{
+  p=await request("getNumberV2",{service,country,maxPrice:String(ceiling)});
+ }catch(error){
+  const message=error instanceof Error?error.message:String(error);
+  if(/NO_NUMBERS|NO_FREE_PHONES/i.test(message))throw new Error("NO_FREE_PHONES");
+  if(/NO_BALANCE/i.test(message))throw new Error("PROVIDER_BALANCE_TOO_LOW");
+  if(/BAD_COUNTRY/i.test(message))throw new Error("BAD_COUNTRY");
+  if(/BAD_SERVICE/i.test(message))throw new Error("BAD_SERVICE");
+  throw error;
+ }
+ const payload=p?.data??p?.activation??p?.result??p;
+ if(p?.success===false||String(p?.status||"").toLowerCase()==="error"||p?.error||p?.errorCode){
+  const errorCode=String(p?.errorCode??p?.error_code??p?.error?.code??p?.code??"");
+  if(/NO_NUMBERS|NO_FREE_PHONES/i.test(errorCode))throw new Error("NO_FREE_PHONES");
+  if(/NO_BALANCE/i.test(errorCode))throw new Error("PROVIDER_BALANCE_TOO_LOW");
+  throw new Error("Tiger SMS purchase failed: "+String(p?.error?.message??p?.message??errorCode??"Unknown provider error"));
+ }
  const id=String(payload?.activationId??payload?.id??payload?.activation_id??"");
  const number=String(payload?.phoneNumber??payload?.phone??payload?.number??"");
  if(!id||!number)throw new Error("Tiger SMS did not return an activation number.");
