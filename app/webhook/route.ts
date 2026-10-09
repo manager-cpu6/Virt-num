@@ -52,7 +52,7 @@ async function handleTigerSmsWebhook(body: any, rawBody: string, request: NextRe
   const activationId = String(body?.activationId ?? body?.activation_id ?? body?.id ?? "").trim();
   const fullSms = String(body?.text ?? body?.sms ?? body?.code ?? "").trim();
   const suppliedCode = String(body?.code ?? "").trim();
-  const extractedCode = fullSms.match(/\\b\\d{4,8}\\b/)?.[0] || "";
+  const extractedCode = fullSms.match(/\b\d{4,8}\b/)?.[0] || "";
   const code = suppliedCode || extractedCode;
   if (!activationId || (!code && !fullSms)) {
     return NextResponse.json({ ok: false, error: "Invalid Tiger SMS webhook payload." }, { status: 400 });
