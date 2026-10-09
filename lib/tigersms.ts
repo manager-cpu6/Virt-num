@@ -18,7 +18,7 @@ async function request(action:string,params:Record<string,string>={}){
  try{parsed=JSON.parse(text)}catch{}
  const nestedError=parsed&&typeof parsed==="object"?(parsed.error??parsed.errors??parsed.message??parsed.errorMessage??parsed.error_code??parsed.errorCode):null;
  const status=String(parsed&&typeof parsed==="object"?(parsed.status??""):"").toLowerCase();
- const failedEnvelope=!!(parsed&&typeof parsed==="object"&&(status==="error"||parsed.success===false||parsed.ok===false||parsed.errorCode||parsed.error_code));
+ const failedEnvelope=!!(parsed&&typeof parsed==="object"&&(status==="error"||parsed.success===false||parsed.ok===false||parsed.error||parsed.errors||parsed.errorCode||parsed.error_code));
  if(!r.ok||failedEnvelope||typeof parsed==="string"&&/^(NO_|BAD_|ERROR|WRONG_|ACCESS_ERROR|AUTH_ERROR)/i.test(parsed)){
   const detail=typeof nestedError==="string"?nestedError:nestedError&&typeof nestedError==="object"?JSON.stringify(nestedError):typeof parsed==="string"?parsed:JSON.stringify(parsed);
   throw new Error("Tiger SMS "+(r.ok?"API error":"HTTP "+r.status)+": "+String(detail||text||"Unknown upstream error").slice(0,300));
