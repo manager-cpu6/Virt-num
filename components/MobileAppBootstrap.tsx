@@ -15,6 +15,7 @@ export default function MobileAppBootstrap(){
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
   let permissionInFlight=false;
   let push:any=null;
+  let channelReady=false;
   let capacitorToken="";
   let tokenInFlight=false;
   const cleanups:Array<()=>void>=[];
@@ -100,6 +101,7 @@ export default function MobileAppBootstrap(){
     try{
      const result=await push.requestPermissions();
      if(result.receive==="granted"){
+      await ensureAndroidChannel();
       gate.remove();
       await push.register();
       await syncCurrentToken();
@@ -109,12 +111,32 @@ export default function MobileAppBootstrap(){
    });
   };
 
+  const ensureAndroidChannel=async()=>{
+   if(channelReady||!push||Capacitor.getPlatform()!=="android")return;
+   try{
+    await push.createChannel({
+     id:"numelixa",
+     name:"Numelixa Notifications",
+     description:"SMS codes, number orders, wallet activity and account security",
+     importance:5,
+     sound:"default",
+     visibility:1
+    });
+    channelReady=true;
+   }catch(error){
+    // Some Android/Capacitor versions do not expose channel management.
+    // Keep registration running; FCM may fall back to the default channel.
+    console.warn("[NUMELIXA NOTIFICATION CHANNEL] unavailable");
+   }
+  };
+
   const ensurePushPermission=async()=>{
    if(!push||stopped||permissionInFlight)return false;
    permissionInFlight=true;
    try{
     const current=await push.checkPermissions();
     if(current.receive==="granted"){
+     await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
      await push.register();
      await syncCurrentToken();
@@ -155,7 +177,9 @@ export default function MobileAppBootstrap(){
 
     const action=await PushNotifications.addListener("pushNotificationActionPerformed",(event)=>{
      const url=String(event.notification?.data?.url||"/");
-     window.location.href=url.startsWith("/")?url:"/";
+     // Accept only same-origin relative app paths; do not let payload data
+     // turn a notification tap into an external redirect.
+     window.location.href=url.startsWith("/")&&!url.startsWith("//")&&!url.includes("\\\\")?url:"/";
     });
     cleanups.push(()=>action.remove());
 
@@ -195,7 +219,7 @@ export default function MobileAppBootstrap(){
     await syncCurrentToken();
     try{
      const status=await NativePushToken.getStatus();
-     console.log("[NUMELIXA FCM STATUS]",status);
+     console.log("[NUMELIXA FCM STATUS]",{tokenPresent:Boolean(status.tokenPresent),tokenLength:status.tokenLength,registrationStatus:status.registrationStatus});
     }catch(error){
      console.warn("[NUMELIXA FCM STATUS]",error);
     }
