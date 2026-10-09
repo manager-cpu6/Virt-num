@@ -92,7 +92,7 @@ export default function HomeLiveBoard(){
    <div className="live-v2-numbers-card">
     <div className="live-v2-card-top">
      <div><span className="live-v2-kicker">LIVE NUMBERS</span><h3>Numbers being activated</h3></div>
-     <span className="live-v2-counter"><i/> {data.activity.length} LIVE</span>
+     <span className="live-v2-counter"><i/> {data.activity.length ? `${data.activity.length} LIVE` : "NO LIVE ACTIVITY"}</span>
     </div>
 
     <div className="live-number-list">
