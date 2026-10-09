@@ -5,13 +5,20 @@ import TopBar from "@/components/TopBar";
 
 type S={id:string;code:string;name:string};
 
-const popular=["whatsapp","telegram","google","facebook","instagram","tiktok","twitter","snapchat","viber","discord","amazon","microsoft","apple","openai","signal"];
+const popular=["whatsapp","telegram","tiktok","instagram","facebook","google","twitter","snapchat","discord","viber","signal","openai","microsoft","apple","amazon"];
 const popularAliases:Record<string,string[]>={
  whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],google:["google","go"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],tiktok:["tiktok","tt"],twitter:["twitter","x","tw"],snapchat:["snapchat","sn"],viber:["viber"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt","op"],signal:["signal"]
 };
 function popularRank(x:S){
- const raw=(x.id+" "+x.name).toLowerCase().replace(/[\\s_/-]+/g,"");
- for(let i=0;i<popular.length;i++) if((popularAliases[popular[i]]||[popular[i]]).some(v=>raw.includes(v))) return i;
+ const normalize=(v:string)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+ const id=normalize(x.id),name=normalize(x.name),raw=id+" "+name;
+ for(let i=0;i<popular.length;i++){
+  const aliases=popularAliases[popular[i]]||[popular[i]];
+  if(aliases.some(alias=>{
+   const a=normalize(alias);
+   return id===a||name===a||id.includes(a)||name.includes(a)||raw.includes(a);
+  }))return i;
+ }
  return 9999;
 }
 
