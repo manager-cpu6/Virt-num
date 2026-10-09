@@ -44,7 +44,7 @@ export async function balance(){
  let value=Number(candidate);
  if(candidate===null||candidate===undefined||!Number.isFinite(value)){
   const raw=String(p??"").trim();
-  const match=raw.match(/(?:ACCESS_BALANCE\\s*:\\s*)?(-?\\d+(?:\\.\\d+)?)/i);
+  const match=raw.match(/(?:ACCESS_BALANCE\s*:\s*)?(-?\d+(?:\.\d+)?)/i);
   if(!match)throw new Error("Tiger SMS returned an unreadable balance response.");
   value=Number(match[1]);
  }
