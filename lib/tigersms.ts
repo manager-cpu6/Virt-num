@@ -45,7 +45,8 @@ export async function listServices(){
  if(servicesCache&&Date.now()-servicesCache.at<TTL)return servicesCache.value;
  const raw=await request("getServicesList");
  const arr=Array.isArray(raw?.services)?raw.services:[];
- const out=arr.map((s:any)=>({id:String(s.code),code:String(s.code),name:String(s.name||humanize(s.code))}))
+ const friendly:Record<string,string>={wa:"WhatsApp",whatsapp:"WhatsApp",tg:"Telegram",go:"Google",fb:"Facebook",ig:"Instagram",tt:"TikTok",tw:"X / Twitter",mm:"Microsoft",oi:"OpenAI",am:"Amazon",ap:"Apple",vi:"Viber",ds:"Discord",sn:"Snapchat",ya:"Yahoo",ok:"OK",ub:"Uber"};
+ const out=arr.map((s:any)=>{const id=String(s.code||"").toLowerCase();return {id:String(s.code),code:String(s.code),name:friendly[id]||String(s.name||humanize(s.code))}})
    .filter((s:any)=>s.id&&s.name);
  servicesCache={at:Date.now(),value:out};
  return out;
