@@ -64,10 +64,10 @@ export default function HomeLiveBoard(){
   <div className="live-v2-heading">
    <div>
     <span className="eyebrow">NUMELIXA LIVE NETWORK</span>
-    <h2>See the network moving in real time.</h2>
-    <p>Live numbers, incoming SMS and active services — presented as one simple command center.</p>
+    <h2>Live activity, when it happens.</h2>
+    <p>Only real completed orders and SMS activity are shown here. This feed refreshes automatically.</p>
    </div>
-   <div className="live-v2-status"><i/> LIVE <small>Auto refresh</small></div>
+   <div className="live-v2-status"><i/>{data.activity.length?"LIVE":"WAITING"} <small>Auto refresh</small></div>
   </div>
 
   <div className="live-v2-popular">
@@ -124,11 +124,11 @@ export default function HomeLiveBoard(){
     <div className="ad-phone">
       <div className="ad-phone-speaker"/>
       <div className="ad-phone-screen">
-       <span className="ad-screen-label">NUMELIXA</span>
-       <strong>+1 ••• 4821</strong>
-       <small>WhatsApp verification</small>
+       <span className="ad-screen-label">APP PREVIEW</span>
+       <strong>••• ••• ••••</strong>
+       <small>Verification status</small>
        <div className="ad-code"><i/> •• ••••</div>
-       <span className="ad-secure">✓ SMS received securely</span>
+       <span className="ad-secure">Waiting for SMS</span>
       </div>
     </div>
     <div className="live-v2-ad-copy">
