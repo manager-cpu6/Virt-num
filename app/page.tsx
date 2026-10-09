@@ -21,9 +21,9 @@ export default async function LandingPage() {
         <section className="landing-hero">
           <div className="landing-copy">
             <div className="landing-badge"><span /> LIVE GLOBAL SMS PLATFORM</div>
-            <h1>Virtual numbers.<br /><em>Built for speed.</em></h1>
-            <p>Get a real virtual phone number for SMS verification, receive your code in seconds, and manage everything from one secure Numelixa account.</p>
-            <div className="landing-cta"><Link href="/signup" className="landing-primary">Get started free <span>→</span></Link><Link href="/login" className="landing-secondary">Sign in</Link></div>
+            <h1>Numbers, without the noise.</h1>
+            <p>Get a virtual number for supported services, manage your numbers and keep everything in one place.</p>
+            <div className="landing-cta"><Link href="/signup" className="landing-primary">Get a Number <span>→</span></Link><Link href="/login" className="landing-secondary">Sign in</Link></div>
             <div className="landing-proof"><span>✓ Global coverage</span><span>✓ Live SMS</span><span>✓ Secure wallet</span></div>
           </div>
           <LivePhoneDemo />
