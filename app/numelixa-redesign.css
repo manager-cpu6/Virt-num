@@ -86,3 +86,19 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padd
 .topbar .coin-pill span,.topbar .coin-pill b,.topbar .coin-pill strong{color:#f4fffd!important}
 .topbar .coin-pill small{color:#a9e8e2!important}
 .topbar .home-menu-btn,.topbar .icon-btn{background:linear-gradient(145deg,#123e4e,#092c3b)!important;color:#c8fff6!important;border:1px solid rgba(112,239,224,.28)!important}
+
+/* Admin provider balance and action contrast */
+.admin-tabs .tab{background:#0b2939!important;color:#c7dce7!important;border:1px solid rgba(110,205,224,.24)!important}
+.admin-tabs .tab.active{background:linear-gradient(120deg,#0d9b91,#087c87)!important;color:#fff!important;border-color:#44e4d0!important}
+.admin-panel .primary-btn,.admin-page .primary-btn,.admin-shell .primary-btn,.admin-panel button.primary-btn,.admin-page button.primary-btn,.admin-shell button.primary-btn{background:linear-gradient(120deg,#22d9bd,#69e6e8)!important;color:#03262d!important;border:1px solid #60eadc!important;font-weight:900!important}
+.admin-panel .secondary-btn,.admin-page .secondary-btn,.admin-shell .secondary-btn,.admin-panel button.secondary-btn,.admin-page button.secondary-btn,.admin-shell button.secondary-btn{background:#123344!important;color:#e8f8ff!important;border:1px solid rgba(112,207,224,.36)!important;font-weight:800!important}
+.provider-control-card{background:linear-gradient(145deg,#092b3a,#061c2a)!important;border:1px solid rgba(88,224,216,.25)!important;color:#edfaff!important;box-shadow:0 14px 32px rgba(0,0,0,.18)!important}
+.provider-control-head b,.provider-control-card b{color:#f1fffd!important}
+.provider-control-head small,.provider-control-copy{color:#a9c5d2!important}
+.provider-balance{padding:12px 13px!important;border-radius:14px!important;background:#041823!important;border:1px solid rgba(95,224,215,.22)!important;color:#c8e3ec!important}
+.provider-balance span{display:block!important;color:#9bbdca!important;font-size:10px!important;letter-spacing:.12em!important;font-weight:900!important}
+.provider-balance strong{display:block!important;color:#65f0d5!important;font-size:23px!important;line-height:1.25!important;font-weight:950!important;overflow-wrap:anywhere!important}
+.admin-panel label,.admin-page label,.admin-shell label{color:#d5eaf2!important}
+.admin-panel input,.admin-panel select,.admin-panel textarea,.admin-page input,.admin-page select,.admin-page textarea,.admin-shell input,.admin-shell select,.admin-shell textarea{background:#041b28!important;color:#f1fbff!important;border-color:rgba(117,209,225,.3)!important}
+.admin-panel input::placeholder,.admin-page input::placeholder,.admin-shell input::placeholder{color:#829eac!important}
+.admin-panel option,.admin-page option,.admin-shell option{background:#071f2d!important;color:#f1fbff!important}
