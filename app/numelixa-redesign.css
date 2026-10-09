@@ -75,3 +75,14 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padd
 
 .topbar .coin-icon{display:grid!important;place-items:center!important;width:25px!important;height:25px!important;flex:0 0 25px!important;border-radius:50%!important;background:linear-gradient(145deg,#ffe27b,#f3a914 68%,#c77705)!important;border:1px solid rgba(255,239,157,.8)!important;color:#4a2b00!important;font-size:15px!important;box-shadow:inset 0 1px 2px rgba(255,255,255,.65),0 3px 10px rgba(243,169,20,.2)!important}
 .topbar .coin-pill{gap:7px!important}
+
+/* Topbar contrast repair */
+.topbar,.topbar-inner,.topbar-brand,.topbar-detail{background:#082b38!important;background-image:none!important;color:#f4fffd!important}
+.topbar:before{background:linear-gradient(110deg,#082d39,#0a4650 70%,#082b3a)!important;opacity:1!important}
+.topbar .brand-copy b,.topbar .top-title{color:#f3fffd!important;text-shadow:0 1px 10px rgba(0,0,0,.22)!important}
+.topbar .brand-copy small{color:#9bc4ce!important}
+.topbar .brand-logo{background:linear-gradient(145deg,#18c9b0,#087d75)!important;color:#eafffb!important;border:1px solid rgba(112,255,229,.28)!important}
+.topbar .coin-pill{background:linear-gradient(135deg,#063d45,#07565b)!important;color:#f3fffd!important;border:1px solid rgba(86,240,217,.42)!important}
+.topbar .coin-pill span,.topbar .coin-pill b,.topbar .coin-pill strong{color:#f4fffd!important}
+.topbar .coin-pill small{color:#a9e8e2!important}
+.topbar .home-menu-btn,.topbar .icon-btn{background:linear-gradient(145deg,#123e4e,#092c3b)!important;color:#c8fff6!important;border:1px solid rgba(112,239,224,.28)!important}
