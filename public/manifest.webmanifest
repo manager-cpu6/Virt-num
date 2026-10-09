@@ -5,7 +5,7 @@
  "start_url":"/",
  "scope":"/",
  "display":"standalone",
- "background_color":"#031b22",
- "theme_color":"#031b22",
+ "background_color":"#020718",
+ "theme_color":"#020718",
  "icons":[{"src":"/numelixa-favicon.png","sizes":"512x512","type":"image/png","purpose":"any maskable"}]
 }
