@@ -104,3 +104,68 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,1120px)!important;padd
 .admin-panel option,.admin-page option,.admin-shell option{background:#071f2d!important;color:#f1fbff!important}
 
 .provider-balance-error{display:block!important;color:#ffb8a9!important;font-size:10px!important;line-height:1.45!important;margin-top:6px!important;overflow-wrap:anywhere!important}
+
+
+/* Numelixa premium midnight UI — presentation-only overrides */
+:root{
+ --bg:#050b18;--bg2:#081326;--surface:rgba(14,27,49,.72);--surface-strong:rgba(12,25,46,.94);
+ --ink:#edf6ff;--muted:#9aaec8;--line:rgba(155,194,255,.16);--line-dark:rgba(155,194,255,.14);
+ --accent:#38d8f2;--accent-2:#6678ff;--good:#45e0b2;--danger:#ff728b;
+ --shadow:0 28px 90px rgba(0,0,0,.38);--shadow-soft:0 12px 38px rgba(0,0,0,.25);
+}
+html{background:#050b18!important;color-scheme:dark}
+body{color:#edf6ff!important;background:radial-gradient(ellipse at 12% 0%,rgba(34,107,191,.18),transparent 38%),radial-gradient(ellipse at 92% 18%,rgba(112,65,210,.13),transparent 34%),linear-gradient(160deg,#050b18,#081326 55%,#050a16)!important}
+body:before{background:rgba(34,211,238,.09)!important;filter:blur(95px)!important}
+body:after{background:rgba(99,102,241,.12)!important;filter:blur(100px)!important}
+::selection{background:rgba(56,216,242,.3);color:#fff}
+.page-shell{width:min(100%,980px)!important;padding:16px 20px 150px!important}
+.topbar{margin-bottom:22px!important}
+.topbar-inner,.landing-nav{border:1px solid rgba(155,194,255,.13)!important;background:rgba(7,17,34,.74)!important;backdrop-filter:blur(24px)!important;-webkit-backdrop-filter:blur(24px)!important;box-shadow:0 12px 42px rgba(0,0,0,.2)!important}
+.brand-logo,.brand-mark,.landing-logo{background:linear-gradient(135deg,#35dff2,#6578ff 70%,#9a68ff)!important;color:#03111e!important;box-shadow:0 8px 28px rgba(56,216,242,.23)!important}
+.brand-copy b,.landing-brand b{color:#f3f8ff!important;letter-spacing:-.035em}
+.brand-copy small,.landing-brand small{color:#91a9c7!important}
+.top-title{color:#f1f7ff!important}
+.icon-btn,.coin-pill{background:rgba(16,33,58,.8)!important;border-color:rgba(148,190,255,.2)!important;color:#eaf6ff!important;box-shadow:0 8px 26px rgba(0,0,0,.18)!important}
+.coin-pill .coin-icon{color:#42e6ed!important}
+.top-menu{background:rgba(8,20,40,.97)!important;border:1px solid rgba(148,190,255,.18)!important;box-shadow:0 20px 60px rgba(0,0,0,.4)!important;color:#eef7ff!important;backdrop-filter:blur(22px)!important}
+.hero-card,.glass-card,.panel,.service-card,.country-card,.wallet-card,.auth-card,.code-card,.stat-card,.dashboard-card,.feature-card,.landing-feature-grid article,.landing-stats>div{
+ background:linear-gradient(145deg,rgba(17,37,65,.88),rgba(9,21,41,.82))!important;
+ border:1px solid rgba(151,193,255,.16)!important;
+ box-shadow:0 18px 52px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.035)!important;
+ color:#edf6ff!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important;
+}
+h1,h2,h3,h4,.page-title,.section-title{color:#f3f8ff!important;letter-spacing:-.035em}
+p,.muted,.description,.subtext,.field-hint{color:#a3b6cf}
+input,select,textarea,.input,.select{background:rgba(4,13,28,.76)!important;color:#edf7ff!important;border:1px solid rgba(147,190,255,.22)!important;border-radius:14px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important}
+input::placeholder,textarea::placeholder{color:#7188a7!important}
+input:focus,select:focus,textarea:focus{outline:none!important;border-color:rgba(56,216,242,.72)!important;box-shadow:0 0 0 3px rgba(56,216,242,.11)!important}
+button,.btn,.primary-btn,.landing-primary,.landing-start{transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease,filter .18s ease}
+.primary-btn,.landing-primary,.landing-start,.btn-primary{background:linear-gradient(115deg,#28cce8,#5878ff 72%,#8665f6)!important;color:#04111f!important;border:1px solid rgba(133,225,255,.4)!important;box-shadow:0 10px 28px rgba(52,150,255,.2)!important;font-weight:800!important}
+.primary-btn:hover,.landing-primary:hover,.landing-start:hover,.btn-primary:hover{transform:translateY(-1px);filter:brightness(1.08);box-shadow:0 14px 34px rgba(52,150,255,.3)!important}
+.secondary-btn,.landing-secondary{background:rgba(18,38,66,.7)!important;color:#e3f2ff!important;border:1px solid rgba(151,193,255,.22)!important}
+a:hover{color:#72e9fa}
+button:focus-visible,a:focus-visible{outline:2px solid #43def2!important;outline-offset:3px}
+.badge,.status-pill,.chip{border-color:rgba(129,196,255,.18)!important}
+hr,.divider{border-color:rgba(151,193,255,.13)!important}
+.landing-nav{border-radius:18px!important}
+.landing-hero{gap:clamp(28px,5vw,70px)!important}
+.landing-copy h1{color:#f3f8ff!important;text-wrap:balance}
+.landing-copy h1 em,.landing-section-head h2 em{background:linear-gradient(95deg,#4de6f2,#7c91ff 58%,#c18aff)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+.landing-badge{border:1px solid rgba(62,220,242,.2)!important;background:rgba(24,106,139,.13)!important;color:#75e9f6!important}
+.landing-badge span{box-shadow:0 0 12px rgba(69,229,181,.6)!important}
+.landing-proof{color:#9eb7d5!important}
+.landing-stats>div{border-radius:18px!important}
+.landing-feature-grid article{border-radius:22px!important}
+.landing-feature-grid article>div{background:linear-gradient(135deg,rgba(44,212,235,.16),rgba(105,112,255,.18))!important;border:1px solid rgba(110,196,255,.16)!important}
+.landing-section,.landing-how,.landing-security{color:#eaf5ff!important}
+.landing-section-head>span{color:#5de3f0!important}
+.landing-footer{border-color:rgba(151,193,255,.15)!important;color:#94a9c5!important}
+nav a,.landing-login{color:#c3d4e9!important}
+nav a:hover,.landing-login:hover{color:#55e4f2!important}
+@media(max-width:640px){
+ .page-shell{padding:10px 13px 130px!important}
+ .topbar{margin-bottom:16px!important}
+ .landing-nav{gap:10px!important}
+ .landing-hero{gap:24px!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
