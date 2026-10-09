@@ -3,7 +3,8 @@
 import Link from "next/link";
 import {useEffect,useMemo,useState} from "react";
 
-type Activity={id:string;service:string;country:string;phone:string;type:string;time:string;code?:string;demo?:boolean};
+type Activity={id:string;service:string;country:string;phone:string;type:string;time:string};
+type ActiveNumber={id:string;service:string;country:string;phone:string;status:string;createdAt:string;expiresAt:string|null};
 type Popular={service:string;country:string;label:string;flag:string;available?:boolean};
 
 const promos=[
@@ -28,7 +29,7 @@ function ago(value:string){
 function serviceLetter(name:string){return (name.trim()[0]||"N").toUpperCase()}
 
 export default function HomeLiveBoard(){
- const[data,setData]=useState<{popular:Popular[];activity:Activity[]}>({popular:[],activity:[]});
+ const[data,setData]=useState<{popular:Popular[];activeNumbers:ActiveNumber[];activity:Activity[]}>({popular:[],activeNumbers:[],activity:[]});
  const[promo,setPromo]=useState(0);
  const[stamp,setStamp]=useState(Date.now());
 
@@ -50,15 +51,13 @@ export default function HomeLiveBoard(){
 
  const p=promos[promo];
 
- const liveNumbers=useMemo<Array<{country:string;flag:string;number:string;service:string}>>(()=>{
-  const fromActivity=data.activity.slice(0,3).map(a=>({
-   country:a.country||"LIVE",
-   flag:flagFor(String(a.country||"").toUpperCase()),
-   number:a.phone||"•••• ••••",
-   service:a.service
-  }));
-  return fromActivity;
- },[data.activity]);
+ const liveNumbers=useMemo<Array<{country:string;flag:string;number:string;service:string;status:string}>>(()=>data.activeNumbers.map(n=>({
+  country:n.country||"—",
+  flag:flagFor(String(n.country||"").toUpperCase()),
+  number:n.phone||"••••",
+  service:n.service,
+  status:n.status
+ })),[data.activeNumbers]);
 
  return <section className="home-live-board-v2">
   <div className="live-v2-heading">
@@ -91,15 +90,15 @@ export default function HomeLiveBoard(){
   <div className="live-v2-main-grid">
    <div className="live-v2-numbers-card">
     <div className="live-v2-card-top">
-     <div><span className="live-v2-kicker">LIVE NUMBERS</span><h3>Numbers being activated</h3></div>
-     <span className="live-v2-counter"><i/> {data.activity.length ? `${data.activity.length} LIVE` : "NO LIVE ACTIVITY"}</span>
+     <div><span className="live-v2-kicker">YOUR NUMBERS</span><h3>Active number orders</h3></div>
+     <span className="live-v2-counter"><i/> {liveNumbers.length ? `${liveNumbers.length} ACTIVE` : "NO ACTIVE ORDERS"}</span>
     </div>
 
     <div className="live-number-list">
      {liveNumbers.map((n:{country:string;flag:string;number:string;service:string},i:number)=><div className="live-number-item" key={n.number+i}>
        <span className="live-number-flag">{n.flag}</span>
        <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
-       <span className="live-number-state"><i/> Active</span>
+       <span className="live-number-state"><i/>{n.status==="waiting"?"Waiting for SMS":"Active"}</span>
       </div>)}
     </div>
     <Link href="/services" className="live-v2-card-action">Get a live number <span>→</span></Link>
@@ -115,7 +114,7 @@ export default function HomeLiveBoard(){
        <span className="live-sms-icon">{serviceLetter(a.service)}</span>
        <div><b>{a.service} <em>{a.country}</em></b><small>{a.phone} · {a.type}</small></div>
        <time>{ago(a.time)}</time>
-      </div>):<div className="live-sms-empty"><span className="sms-empty-icon">✦</span><b>Waiting for the next SMS</b><small>New completed verifications will appear here automatically.</small></div>}
+      </div>):<div className="live-sms-empty"><span className="sms-empty-icon">✦</span><b>No recent SMS activity</b><small>Your completed verifications will appear here when available.</small></div>}
     </div>
    </div>
 
