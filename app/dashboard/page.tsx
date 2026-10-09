@@ -11,8 +11,8 @@ export default async function DashboardPage(){
  return <div className="reference-dashboard">
   <TopBar/>
   <section className="hero-card home-hero-refresh">
-   <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Numbers, without the noise.</h1><p>Choose a service, pick a country and get a live SMS number in a few taps. Your wallet, orders and codes stay in one clean place.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
-   <div className="hero-orb"><span>✦</span></div>
+   <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Your global numbers, made simple.</h1><p>Choose a service, select a country, and manage your verification messages in one place.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
+   <div className="nx-earth-illustration" aria-hidden="true"><span className="nx-earth-globe"/><span className="nx-earth-orbit"/><span className="nx-earth-satellite"/></div>
   </section>
   <HomeLiveBoard/>
   <div className="quick-grid">
