@@ -95,11 +95,11 @@ export default function HomeLiveBoard(){
     </div>
 
     <div className="live-number-list">
-     {liveNumbers.map((n:{country:string;flag:string;number:string;service:string;status:string},i:number)=><div className="live-number-item" key={n.number+i}>
+     {liveNumbers.length?liveNumbers.map((n:{country:string;flag:string;number:string;service:string;status:string},i:number)=><div className="live-number-item" key={n.number+i}>
        <span className="live-number-flag">{n.flag}</span>
        <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
        <span className="live-number-state"><i/>{n.status==="waiting"?"Waiting for SMS":"Active"}</span>
-      </div>)}
+      </div>):<div className="live-sms-empty"><span className="sms-empty-icon">＋</span><b>No active number orders</b><small>Numbers you purchase will appear here while waiting for SMS.</small></div>}
     </div>
     <Link href="/services" className="live-v2-card-action">Get a live number <span>→</span></Link>
    </div>
