@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
-import {sendPush} from "@/lib/push";
+import {sendPush,isFirebaseConfigured} from "@/lib/push";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -27,11 +27,7 @@ export async function GET(){
    deviceCount,
    linkedDeviceCount,
    unlinkedDeviceCount,
-   serverPushConfigured:Boolean(
-    process.env.FIREBASE_SERVICE_ACCOUNT_JSON||
-    process.env.FIREBASE_SERVICE_ACCOUNT||
-    (process.env.FIREBASE_PROJECT_ID&&process.env.FIREBASE_CLIENT_EMAIL&&process.env.FIREBASE_PRIVATE_KEY)
-   )
+   serverPushConfigured:isFirebaseConfigured()
   },{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[ADMIN NOTIFICATIONS GET]",error);
