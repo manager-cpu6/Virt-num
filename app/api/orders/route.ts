@@ -33,7 +33,7 @@ export async function POST(req:Request){
     const operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
 
     // Always obtain a fresh provider quote immediately before debiting.
-    const quote=await getPrice(country,service,operator);
+    const quote=await getPrice(country,service,operator,smsProvider);
     if(!quote.count||!quote.cost){
       return NextResponse.json(
         {ok:false,error:"This service/country is currently out of stock."},
@@ -64,7 +64,7 @@ export async function POST(req:Request){
     try{
       // The purchase service is the only place that talks to the upstream number network.
       // If 5SIM does not return an activation, no order is created.
-      const p=await purchase(country,service,Number(quote.cost),operator);
+      const p=await purchase(country,service,Number(quote.cost),operator,smsProvider);
       providerOrderId=String(p.order_id||"");
       const number=String(p.number||"");
       if(!providerOrderId||!number){
@@ -133,7 +133,7 @@ export async function POST(req:Request){
         // refund if cancellation is confirmed.
         let cancelled=false;
         try{
-          await cancel(providerOrderId);
+          await cancel(providerOrderId,smsProvider);
           cancelled=true;
         }catch{}
 
@@ -323,6 +323,6 @@ export async function DELETE(req:Request){try{
  const u=await requireUser(),b=await req.json(),id=String(b.orderId||""),orders=await collection<any>("orders"),users=await collection<any>("users"),txs=await collection<any>("coinTransactions"),o=await orders.findOne({_id:id,userId:u.id});
  if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
  const age=Date.now()-new Date(o.createdAt).getTime();if(age>5*60*1000)return NextResponse.json({ok:false,error:"Cancel is available only during the first 5 minutes."},{status:409});
- await cancel(String(o.providerOrderId));const changed=await orders.findOneAndUpdate({_id:id,userId:u.id,status:"waiting"},{$set:{status:"cancelled",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},{returnDocument:"after"});if(!changed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
+ await cancel(String(o.providerOrderId),o.provider==="tiger"?"tiger":"5sim");const changed=await orders.findOneAndUpdate({_id:id,userId:u.id,status:"waiting"},{$set:{status:"cancelled",cancelledAt:new Date(),refundCoins:Number(o.priceCoins||0)}},{returnDocument:"after"});if(!changed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
  const refund=Number(o.priceCoins||0),updated=await users.findOneAndUpdate({_id:u.id},{$inc:{coins:refund}},{returnDocument:"after"});await txs.insertOne({_id:mongoId(),userId:u.id,type:"refund",amount:refund,balanceAfter:Number(updated?.coins||0),reference:id,description:"Cancelled number refund",createdAt:new Date()});return NextResponse.json({ok:true,refundedCoins:refund});
 }catch{return NextResponse.json({ok:false,error:"Cancellation failed. Please try again."},{status:500})}}
