@@ -45,12 +45,14 @@ export async function POST(req:Request){
         {
           $set:{
             token,
-            userId:null,
             platform,
             updatedAt:now,
             lastSeenAt:now
           },
-          $setOnInsert:{createdAt:now}
+          // Do not unlink a previously authenticated device when the app
+          // starts before its session cookie is restored. New devices remain
+          // unlinked until a real account session is available.
+          $setOnInsert:{createdAt:now,userId:null}
         },
         {upsert:true}
       );
