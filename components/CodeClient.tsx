@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";
 
-type Props={orderId:string;phoneNumber:string;service:string;country:string};
+type Props={orderId:string;phoneNumber:string;service:string;country:string;provider:string;createdAt:string;cancelAvailableAt?:string};
 
 const serviceNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",google:"Google",facebook:"Facebook",instagram:"Instagram",
@@ -22,8 +22,8 @@ function friendlyError(value:string){
  return value.replace(/5SIM[^:]*:\s*/ig,"").trim()||"Unable to complete the request";
 }
 
-export default function CodeClient({orderId,phoneNumber,service,country}:Props){
- const[code,setCode]=useState(""),[status,setStatus]=useState("waiting"),[loading,setLoading]=useState(false),[seconds,setSeconds]=useState(600),[error,setError]=useState(""),[copied,setCopied]=useState("");
+export default function CodeClient({orderId,phoneNumber,service,country,provider,createdAt,cancelAvailableAt}:Props){
+ const[code,setCode]=useState(""),[status,setStatus]=useState("waiting"),[loading,setLoading]=useState(false),[seconds,setSeconds]=useState(600),[error,setError]=useState(""),[copied,setCopied]=useState(""),[orderAgeSeconds,setOrderAgeSeconds]=useState(Math.max(0,Math.floor((Date.now()-new Date(createdAt).getTime())/1000)));
  const name=serviceName(service),slug=service.toLowerCase();
  const [logoLoaded,setLogoLoaded]=useState(true);
 
@@ -54,6 +54,9 @@ export default function CodeClient({orderId,phoneNumber,service,country}:Props){
  }
  useEffect(()=>{getCode();const t=setInterval(()=>{if(!code&&status==="waiting")getCode()},5000);return()=>clearInterval(t)},[orderId,code,status]);
  useEffect(()=>{if(status!=="waiting")return;const t=setInterval(()=>setSeconds(s=>Math.max(0,s-1)),1000);return()=>clearInterval(t)},[status]);
+ useEffect(()=>{const updateAge=()=>setOrderAgeSeconds(Math.max(0,Math.floor((Date.now()-new Date(createdAt).getTime())/1000)));updateAge();const t=setInterval(updateAge,1000);return()=>clearInterval(t)},[createdAt]);
+ const tigerCancelReady=provider==="tiger"&&orderAgeSeconds>=360;
+ const otherCancelReady=provider!=="tiger"&&orderAgeSeconds<=300;
  const m=Math.floor(seconds/60),s=seconds%60;
  return <div className="code-area">
    <div className="order-service-head">
@@ -80,7 +83,8 @@ export default function CodeClient({orderId,phoneNumber,service,country}:Props){
    </div>
 
    {copied&&<div className="copy-toast">✓ {copied==="number"?"Number":"Code"} copied</div>}
-   {status==="waiting"&&seconds>300&&<button className="secondary-btn full cancel-number-btn" onClick={cancelOrder} disabled={loading}>Cancel & refund</button>}
+   {status==="waiting"&&(tigerCancelReady||otherCancelReady)&&<button className="secondary-btn full cancel-number-btn" onClick={cancelOrder} disabled={loading}>Cancel & refund</button>}
+   {status==="waiting"&&provider==="tiger"&&!tigerCancelReady&&<div className="waiting-dot">Cancel & refund available in {Math.floor((360-orderAgeSeconds)/60)}:{String(Math.max(0,360-orderAgeSeconds)%60).padStart(2,"0")}</div>}
    {error&&<div className={status==="cancelled"||status==="refunded"?"success-box":"error-box"}>{friendlyError(error)}</div>}
  </div>
 }
