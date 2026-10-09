@@ -79,14 +79,35 @@ function parsePriceTree(raw:any,service:string){
  return out;
 }
 
-export async function servicePrices(service:string,_countries:any[]=[]){
+export async function servicePrices(service:string,countries:any[]=[]){
+ let parsed:Record<string,{cost:number;count:number;rate:number}>={};
  try{
   const raw=await request("getPricesV3",{service});
-  const parsed=parsePriceTree(raw,service);
-  if(Object.keys(parsed).length)return parsed;
+  parsed=parsePriceTree(raw,service);
  }catch{}
- const raw=await request("getPrices",{service});
- return parsePriceTree(raw,service);
+ if(!Object.keys(parsed).length){
+  try{
+   const raw=await request("getPrices",{service});
+   parsed=parsePriceTree(raw,service);
+  }catch{}
+ }
+ // Tiger's stock-count endpoint is the authoritative list of country IDs that
+ // currently have inventory. Merge its counts without discarding live prices.
+ try{
+  const stock=await request("getServiceNumbersCount",{service});
+  if(Array.isArray(stock)){
+   for(const item of stock){
+    const id=String(item?.countryCode??item?.country_id??item?.id??"");
+    const count=Number(item?.numbersCount??item?.count??0);
+    if(!id||count<=0)continue;
+    const existing=parsed[id];
+    if(existing)parsed[id]={...existing,count};
+   }
+  }
+ }catch{}
+ // Keep catalog keys in the provider's own numeric-ID namespace. Do not map
+ // display names to IDs here; Tiger requires numeric country codes at purchase.
+ return parsed;
 }
 
 export async function getPrice(country:string,service:string,_operator="any"){
