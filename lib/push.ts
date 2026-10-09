@@ -8,7 +8,7 @@ function firebaseApp(){
   try{
    service=JSON.parse(serviceJson);
    if(service.private_key)service.private_key=String(service.private_key).replace(/\\n/g,"\n");
-  }catch(error){console.error("[FIREBASE CONFIG] Invalid service account JSON",error)}
+  }catch{console.error("[FIREBASE CONFIG] Invalid service account JSON")}
  }
  const projectId=service?.project_id||process.env.FIREBASE_PROJECT_ID;
  const clientEmail=service?.client_email||process.env.FIREBASE_CLIENT_EMAIL;
@@ -18,7 +18,10 @@ function firebaseApp(){
  return existing||initializeApp({credential:cert({projectId,clientEmail,privateKey})},"numelixa-fcm");
 }
 
-export function isFirebaseConfigured(){return Boolean(firebaseApp())}
+export function isFirebaseConfigured(){
+ try{return Boolean(firebaseApp())}
+ catch{return false}
+}
 
 export type PushSendResult={
  configured:boolean;
@@ -31,7 +34,11 @@ export type PushSendResult={
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
- const app=firebaseApp();
+ let app:ReturnType<typeof firebaseApp>;
+ try{app=firebaseApp()}
+ catch{
+  return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-config-invalid",message:"Firebase Admin credentials could not be initialized. Check the server-side service-account configuration."}]};
+ }
  if(!app){
   const hasServiceJson=Boolean(String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||process.env.FIREBASE_SERVICE_ACCOUNT||"").trim());
   const hasParts=Boolean(
