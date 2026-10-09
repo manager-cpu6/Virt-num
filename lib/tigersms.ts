@@ -82,6 +82,17 @@ export async function listServices(){
  return out;
 }
 
+function recommendedPrice(p:any){
+ const base=Number(p?.price??p?.cost??p?.saleAveragePrice??0);
+ // V3 exposes live provider bucket prices. Do not pick the cheapest bucket:
+ // choose the upper median active tier and never quote below Tiger's own
+ // recommended price. The provider still charges its actual activation cost.
+ const tiers=Object.values(p?.providers||{}).flatMap((provider:any)=>Array.isArray(provider?.price)?provider.price:[])
+  .map((v:any)=>Number(v)).filter((v:number)=>Number.isFinite(v)&&v>0).sort((a:number,b:number)=>a-b);
+ const middle=tiers.length?tiers[Math.floor(tiers.length/2)]:0;
+ return Math.max(Number.isFinite(base)&&base>0?base:0,middle);
+}
+
 function parsePriceTree(raw:any,service:string){
  const out:Record<string,{cost:number;count:number;rate:number}>={};
  const add=(country:any,node:any)=>{
@@ -90,7 +101,7 @@ function parsePriceTree(raw:any,service:string){
   // getPricesV3's `price` is Tiger's dynamic recommended max price;
   // getPrices V1's `cost` is the legacy recommended max price. Prefer V3
   // price over cost/saleAveragePrice when both are present.
-  const cost=Number(p.price??p.cost??p.saleAveragePrice??0);
+  const cost=recommendedPrice(p);
   const count=Number(p.count??p.numbersCount??p.numberCount??0);
   if(Number.isFinite(cost)&&cost>0&&Number.isFinite(count)&&count>=0)out[String(country)]={cost,count,rate:100};
  };
