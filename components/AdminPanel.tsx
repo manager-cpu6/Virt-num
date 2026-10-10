@@ -3,7 +3,6 @@ import type {FormEvent,ReactNode} from "react";
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import AdminNotifications from "@/components/AdminNotifications";
-import AdminAppUpdate from "@/components/AdminAppUpdate";
 import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods from "@/components/AdminAuthMethods";
 import AdminSupport from "@/components/AdminSupport";
 
@@ -49,7 +48,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
@@ -58,7 +57,6 @@ export default function AdminPanel(){
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="authentication"&&<AdminAuthMethods/>}
-  {tab==="app update"&&<AdminAppUpdate/>}
   {tab==="security"&&<AdminSecurity/>}
   {tab==="support"&&<AdminSupport/>}
  </div>
