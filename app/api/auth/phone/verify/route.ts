@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,requestMeta} from "@/lib/auth";import {getAuthSettings} from "@/lib/auth-methods";import {getAuthSettings} from "@/lib/auth-methods";import {claimDeviceTokenForUser} from "@/lib/notifications";import crypto from "crypto";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,requestMeta} from "@/lib/auth";import {getAuthSettings} from "@/lib/auth-methods";import {claimDeviceTokenForUser} from "@/lib/notifications";import crypto from "crypto";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 export async function POST(req:Request){
