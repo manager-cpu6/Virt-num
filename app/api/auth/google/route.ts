@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {collection,mongoId} from "@/lib/mongo";
 import {createSession,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
-import {issueApiKey} from "@/lib/api-key";
+import {ensureApiKey} from "@/lib/api-key";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -47,6 +47,7 @@ export async function POST(req:Request){
   }
 
   const id=String(user._id);
+  await ensureApiKey(id);
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
   return NextResponse.json({ok:true,role:user.role||"user"});
