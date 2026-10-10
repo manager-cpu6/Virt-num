@@ -49,7 +49,7 @@ export async function POST(req:Request){
   const id=String(user._id);
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
-  return NextResponse.json({ok:true,role:user.role||"user",created:!linked&&!user._id?.createdAt});
+  return NextResponse.json({ok:true,role:user.role||"user"});
  }catch(error){
   console.error("[GOOGLE SIGN IN]",error instanceof Error?error.message:String(error));
   return NextResponse.json({ok:false,error:"Unable to sign in with Google right now."},{status:500});
