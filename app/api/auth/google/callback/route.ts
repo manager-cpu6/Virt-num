@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {collection,mongoId} from "@/lib/mongo";
-import {createSession,requestMeta} from "@/lib/auth";
+import {createSession,requestMeta,ensureAdmin} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {issueApiKey} from "@/lib/api-key";
 export const runtime="nodejs";
@@ -25,6 +25,7 @@ export async function GET(req:Request){
   const profile=await profileResponse.json();
   const email=String(profile.email||"").trim().toLowerCase();
   if(!profileResponse.ok||!email||profile.email_verified!==true)return fail(req,"google_email");
+  if(email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())await ensureAdmin();
   const users=await collection<any>("users");
   let user=await users.findOne({email});
   if(user){
