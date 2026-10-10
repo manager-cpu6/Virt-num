@@ -157,7 +157,22 @@ export async function listServices(){
       }
     }
   }
-  const items=[...seen.values()].sort((a,b)=>a.name.localeCompare(b.name));
+  // Put widely used verification services first, but only if the provider
+  // actually returned them. Never fabricate catalog entries or stock.
+  const popular=[
+    "whatsapp","facebook","telegram","google","instagram","tiktok","twitter",
+    "snapchat","microsoft","apple","discord","amazon","paypal","uber","reddit",
+    "linkedin","signal","viber","tinder","wechat","yahoo","openai"
+  ];
+  const rank=new Map(popular.map((id,index)=>[id,index]));
+  const items=[...seen.values()].sort((a,b)=>{
+    const ar=rank.has(a.id.toLowerCase())?rank.get(a.id.toLowerCase())!:-1;
+    const br=rank.has(b.id.toLowerCase())?rank.get(b.id.toLowerCase())!:-1;
+    if(ar>=0&&br<0)return -1;
+    if(br>=0&&ar<0)return 1;
+    if(ar>=0&&br>=0)return ar-br;
+    return a.name.localeCompare(b.name);
+  });
   servicesCache={at:Date.now(),value:items};
   return items;
 }

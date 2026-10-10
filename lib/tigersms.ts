@@ -78,6 +78,18 @@ export async function listServices(){
  const friendly:Record<string,string>={wa:"WhatsApp",whatsapp:"WhatsApp",tg:"Telegram",go:"Google",fb:"Facebook",ig:"Instagram",tt:"TikTok",tw:"X / Twitter",mm:"Microsoft",oi:"OpenAI",am:"Amazon",ap:"Apple",vi:"Viber",ds:"Discord",sn:"Snapchat",ya:"Yahoo",ok:"OK",ub:"Uber"};
  const out=arr.map((s:any)=>{const id=String(s.code||"").toLowerCase();return {id:String(s.code),code:String(s.code),name:friendly[id]||String(s.name||humanize(s.code))}})
    .filter((s:any)=>s.id&&s.name);
+ // Keep popular apps at the top for Tiger as well as 5SIM, without adding
+ // a service that the currently selected provider does not actually support.
+ const popular=["wa","whatsapp","fb","facebook","tg","telegram","go","google","ig","instagram","tt","tiktok","tw","twitter","sn","snapchat","mm","microsoft","ap","apple","ds","discord","am","amazon","oi","openai","ub","uber","ya","yahoo","vi","viber"];
+ const rank=new Map(popular.map((id,index)=>[id,index]));
+ out.sort((a:any,b:any)=>{
+  const ai=rank.has(String(a.id).toLowerCase())?rank.get(String(a.id).toLowerCase())!:-1;
+  const bi=rank.has(String(b.id).toLowerCase())?rank.get(String(b.id).toLowerCase())!:-1;
+  if(ai>=0&&bi<0)return -1;
+  if(bi>=0&&ai<0)return 1;
+  if(ai>=0&&bi>=0)return ai-bi;
+  return String(a.name).localeCompare(String(b.name));
+ });
  servicesCache={at:Date.now(),value:out};
  return out;
 }
