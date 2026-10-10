@@ -128,11 +128,33 @@ export async function listServices(){
   if(servicesCache&&Date.now()-servicesCache.at<TTL)return servicesCache.value;
   const raw=await guest("/v1/guest/prices");
   const seen=new Map<string,{id:string;code:string;name:string;icon?:string}>();
-  for(const countryTree of Object.values(raw||{}) as any[]){
-    if(!countryTree||typeof countryTree!=="object")continue;
-    for(const product of Object.keys(countryTree)){
-      const id=String(product);
-      if(!seen.has(id))seen.set(id,{id,code:id,name:humanize(id)});
+
+  // The new-protocol price endpoint has appeared in both
+  // { country: { product: { operator: quote } } } and
+  // { product: { country: { operator: quote } } } shapes.
+  // Treat a top-level key as a country only when it matches the live
+  // country catalog; otherwise treat it as a product. This prevents
+  // countries from accidentally being rendered as services.
+  const countries=await listCountries();
+  const countryIds=new Set(countries.map((c:any)=>String(c.id).toLowerCase()));
+  for(const [outerKey,outerValue] of Object.entries(raw||{}) as [string,any][]){
+    if(!outerValue||typeof outerValue!=="object"||Array.isArray(outerValue))continue;
+    const outerIsCountry=countryIds.has(String(outerKey).toLowerCase());
+    if(outerIsCountry){
+      for(const product of Object.keys(outerValue)){
+        const id=String(product).trim().toLowerCase();
+        if(/^[a-z0-9_-]{2,60}$/.test(id)&&!seen.has(id)){
+          seen.set(id,{id,code:id,name:humanize(id)});
+        }
+      }
+    }else{
+      const id=String(outerKey).trim().toLowerCase();
+      // A product node contains country nodes; avoid accidentally treating
+      // a malformed response or metadata field as a service.
+      const hasCountryChildren=Object.keys(outerValue).some(k=>countryIds.has(String(k).toLowerCase()));
+      if(hasCountryChildren&&/^[a-z0-9_-]{2,60}$/.test(id)&&!seen.has(id)){
+        seen.set(id,{id,code:id,name:humanize(id)});
+      }
     }
   }
   const items=[...seen.values()].sort((a,b)=>a.name.localeCompare(b.name));
