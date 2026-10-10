@@ -2,7 +2,7 @@ name: Numelixa Android APK
 
 on:
   push:
-    branches: [main, redesign/android-premium-fcm-audit]
+    branches: [main, redesign/android-premium-fcm-audit, redesign/complete-auth-services-push]
     tags: ["v*"]
   workflow_dispatch:
 
