@@ -20,7 +20,7 @@ export async function POST(req:Request){
    if(existing.verifiedAt)return NextResponse.json({ok:false,error:"This email is already registered. Please sign in."},{status:409});
    if(existing.role==="admin")return NextResponse.json({ok:false,error:"This account cannot be recreated through public sign-up."},{status:409});
    const oldId=String(existing._id);
-   await users.deleteOne({_id:existing._id,verifiedAt:{$in:[null,undefined]}});
+   await users.deleteOne({_id:existing._id,verifiedAt:null});
    await (await collection<any>("sessions")).deleteMany({userId:oldId});
    await (await collection<any>("emailTokens")).deleteMany({userId:oldId});
    await (await collection<any>("apiKeys")).deleteMany({userId:oldId});
