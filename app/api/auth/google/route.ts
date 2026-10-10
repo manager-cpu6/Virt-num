@@ -37,7 +37,6 @@ export async function POST(req:Request){
    const id=mongoId();
    user={_id:id,email,name:String(profile.name||email.split("@")[0]).slice(0,100),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
    await users.insertOne(user);
-   await issueApiKey(id,"Production API key");
   }else{
    await users.updateOne({_id:user._id},{$set:{
     googleId,verifiedAt:user.verifiedAt||now,
