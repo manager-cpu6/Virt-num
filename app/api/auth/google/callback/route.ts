@@ -23,6 +23,7 @@ export async function GET(req:Request){
   if(!profileResponse.ok||!email||profile.email_verified!==true||!profile.sub)return fail(req,"google_email");
   if(email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())await ensureAdmin();
   const users=await collection<any>("users");let user=await users.findOne({email});
+  if(!user&&termsVersion!=="2026-10-10")return fail(req,"terms_required");
   if(user){
    await users.updateOne({_id:user._id},{$set:{emailVerified:true,verifiedAt:user.verifiedAt||new Date(),googleSub:String(profile.sub),authProvider:"google",name:user.name||String(profile.name||email.split("@")[0]),picture:String(profile.picture||"")}});
    user=await users.findOne({_id:user._id});
