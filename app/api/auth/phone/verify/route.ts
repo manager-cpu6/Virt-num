@@ -1,8 +1,9 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,requestMeta} from "@/lib/auth";import {getAuthSettings} from "@/lib/auth-methods";import {claimDeviceTokenForUser} from "@/lib/notifications";import crypto from "crypto";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,requestMeta} from "@/lib/auth";import {getAuthSettings} from "@/lib/auth-methods";import {getAuthSettings} from "@/lib/auth-methods";import {claimDeviceTokenForUser} from "@/lib/notifications";import crypto from "crypto";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 export async function POST(req:Request){
  try{
+  if(!(await getAuthSettings()).phoneEnabled)return NextResponse.json({ok:false,error:"Phone sign in is currently unavailable."},{status:403});
   if(!(await getAuthSettings()).phoneEnabled)return NextResponse.json({ok:false,error:"Phone sign in is currently unavailable."},{status:403});
   const b=await req.json().catch(()=>({})),phone=String(b.phone||"").trim(),code=String(b.code||"").trim(),name=String(b.name||"").trim();
   if(!/^\+[1-9]\d{7,14}$/.test(phone)||!/^[0-9]{6}$/.test(code))return NextResponse.json({ok:false,error:"Enter the phone number and 6-digit code."},{status:400});
