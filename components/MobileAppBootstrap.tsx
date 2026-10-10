@@ -10,6 +10,19 @@ export default function MobileAppBootstrap(){
   if(!Capacitor.isNativePlatform())return;
   document.documentElement.classList.add("numelixa-native");
   document.body.classList.add("numelixa-native");
+
+  // Keep the Android first-run flow app-focused; the public marketing homepage
+  // remains exclusively for browser visitors.
+  if(window.location.pathname==="/" && !window.location.search.includes("native_redirected=1")){
+   void fetch("/api/me",{cache:"no-store",credentials:"include"})
+    .then(r=>r.ok?r.json():null)
+    .then(data=>{
+     if(window.location.pathname!=="/")return;
+     const destination=data?.user?.id?"/dashboard?native_redirected=1":"/login?native_redirected=1";
+     window.location.replace(destination);
+    })
+    .catch(()=>{if(window.location.pathname==="/")window.location.replace("/login?native_redirected=1")});
+  }
   let connectionRecoveryTimer:ReturnType<typeof setTimeout>|null=null;
   const recoverAfterNetworkReturns=()=>{
    if(stopped||!navigator.onLine)return;
