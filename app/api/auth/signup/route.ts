@@ -12,7 +12,19 @@ export async function POST(req:Request){
   const b=await req.json(),name=String(b.name||"").trim(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||"");
   if(name.length<2||!email.includes("@")||password.length<8)return NextResponse.json({ok:false,error:"Enter valid details. Password must be 8+ characters."},{status:400});
   const users=await collection<any>("users");
-  if(await users.findOne({email}))return NextResponse.json({ok:false,error:"Email already registered."},{status:409});
+  const existing=await users.findOne({email});
+  // An account that never verified its email must not permanently reserve it.
+  // Retire the incomplete identity and its authentication artifacts before
+  // creating a fresh account; verified accounts still cannot be duplicated.
+  if(existing){
+   if(existing.verifiedAt)return NextResponse.json({ok:false,error:"This email is already registered. Please sign in."},{status:409});
+   if(existing.role==="admin")return NextResponse.json({ok:false,error:"This account cannot be recreated through public sign-up."},{status:409});
+   const oldId=String(existing._id);
+   await users.deleteOne({_id:existing._id,verifiedAt:{$in:[null,undefined]}});
+   await (await collection<any>("sessions")).deleteMany({userId:oldId});
+   await (await collection<any>("emailTokens")).deleteMany({userId:oldId});
+   await (await collection<any>("apiKeys")).deleteMany({userId:oldId});
+  }
   const id=mongoId();
   await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:new Date()});
   await issueApiKey(id,"Production API key");
