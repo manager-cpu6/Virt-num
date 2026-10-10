@@ -22,11 +22,13 @@ function popularRank(x:S){
  return 9999;
 }
 
+const iconAliases:Record<string,string>={wa:"whatsapp",fb:"facebook",ig:"instagram",threads:"instagram",tg:"telegram",tt:"tiktok",go:"google",tw:"x",sn:"snapchat",ms:"microsoft",op:"openai"};
 function AppLogo({id,name}:{id:string;name:string}){
  const[hasLogo,setHasLogo]=useState(true);
- return <span className={"service-icon service-icon-"+id}>
+ const icon=iconAliases[id.toLowerCase()]||id.toLowerCase();
+ return <span className={"service-icon service-icon-"+icon}>
    {hasLogo
-     ? <img src={"https://cdn.simpleicons.org/"+id} alt="" loading="lazy" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
+     ? <img src={"https://cdn.simpleicons.org/"+icon} alt="" loading="lazy" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
      : <span className="service-letter">{name.slice(0,1).toUpperCase()}</span>}
  </span>
 }
