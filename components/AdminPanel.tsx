@@ -33,6 +33,21 @@ export default function AdminPanel(){
    if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
  }
 
+ async function deleteUser(user:User){
+   if(user.role==="admin"){setError("Administrator accounts cannot be deleted here.");return}
+   if(!confirm("Delete "+(user.email||user.name||"this user")+"? Their login sessions, API key and notification devices will be removed. This cannot be undone."))return;
+   setError("");
+   try{
+    const response=await fetch("/api/admin/users",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id})});
+    const data=await response.json();
+    if(!response.ok||!data.ok){setError(data.error||"Unable to delete user.");return}
+    setUsers(rows=>rows.filter(row=>row.id!==user.id));
+    setSaved("User deleted. Their email can register again.");
+    window.setTimeout(()=>setSaved(""),3000);
+    await loadStats();
+   }catch{setError("Unable to delete user. Please try again.")}
+ }
+
  async function adjustCoins(user:User,mode:"add"|"remove"|"set"){
    const raw=prompt(mode==="set"?"Set exact coin balance:":"Coins to "+mode+":");
    if(raw===null)return;
@@ -51,7 +66,7 @@ export default function AdminPanel(){
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
-  {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
+  {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins} onDelete={deleteUser}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
   {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
   {tab==="providers"&&<Providers stats={stats}/>}\n  {tab==="payments"&&<AdminPayments/>}
@@ -98,7 +113,7 @@ function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
   <Table title="Admin control"><div className="admin-cap-grid"><div>Users & balances<small>Search users and add, remove or set coins.</small></div><div>Orders & OTP<small>Inspect phone, SMS, provider order, status and expiry.</small></div><div>Pricing & operators<small>Control markup, coin rate, packages and 5SIM operators.</small></div><div>Live monitoring<small>Track users, wallet coins, order status and service demand.</small></div></div></Table>
  </>
 }
-function UsersTable({users,onAdjust}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users by coin balance ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button></div></div>)}</Table>}
+function UsersTable({users,onAdjust,onDelete}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users & email verification ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span><strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button>{u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}</div></div>)}</Table>}
 
 function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;active?:boolean}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: {Number(o.price_coins||0).toLocaleString()} coins</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div></div>)}</Table>}
 
