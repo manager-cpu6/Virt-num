@@ -1,0 +1,5 @@
+import Link from "next/link";
+import TopBar from "@/components/TopBar";
+import {version} from "@/package.json";
+export const metadata={title:"About Numelixa",description:"About the Numelixa virtual number service."};
+export default function AboutPage(){return <div className="about-page"><TopBar title="About Numelixa" back/><main className="public-doc-page nx-about-card"><div className="nx-about-logo">N</div><h1>Numelixa</h1><p className="nx-about-tagline">Virtual Numbers, Real Freedom</p><p>Numelixa helps users browse supported virtual-number services, manage their number orders, view available SMS updates and manage wallet payments through one account. Number availability and SMS delivery depend on live provider inventory and supported services.</p><div className="nx-about-version"><span>App version</span><strong>v{version}</strong></div><div className="nx-about-contact"><span>Official support</span><a href="mailto:info@numelixa.com">info@numelixa.com</a></div><Link className="primary-btn full" href="/support">Help &amp; Support →</Link><p><Link href="/terms">Terms &amp; Conditions</Link> · <Link href="/privacy">Privacy Policy</Link></p></main></div>}
