@@ -53,7 +53,8 @@ export default function AdminPanel(){
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
   {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
-  {tab==="providers"&&<Providers stats={stats}/>}\n  {tab==="payments"&&<AdminPayments/>}
+  {tab==="providers"&&<Providers stats={stats}/>}
+  {tab==="payments"&&<AdminPayments/>}
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="authentication"&&<AdminAuthMethods/>}
