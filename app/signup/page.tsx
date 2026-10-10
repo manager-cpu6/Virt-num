@@ -1,5 +1,5 @@
 "use client";
-import {useEffect,useEffect,useState} from "react";import Link from "next/link";import {useRouter} from "next/navigation";import PhoneAuth from "@/components/PhoneAuth";
+import {useEffect,useState} from "react";import Link from "next/link";import {useRouter} from "next/navigation";import PhoneAuth from "@/components/PhoneAuth";
 export default function Signup(){
  const[n,setN]=useState(""),[m,setM]=useState(""),[p,setP]=useState(""),[e,setE]=useState(""),[loading,setLoading]=useState(false),[method,setMethod]=useState<"email"|"phone">("email"),router=useRouter(),[phoneEnabled,setPhoneEnabled]=useState(false);
  useEffect(()=>{fetch("/api/auth/methods",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(d.ok){setPhoneEnabled(Boolean(d.phoneEnabled));if(!d.phoneEnabled)setMethod("email")}}).catch(()=>setPhoneEnabled(false))},[]);
