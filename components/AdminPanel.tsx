@@ -98,7 +98,33 @@ function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
   <Table title="Admin control"><div className="admin-cap-grid"><div>Users & balances<small>Search users and add, remove or set coins.</small></div><div>Orders & OTP<small>Inspect phone, SMS, provider order, status and expiry.</small></div><div>Pricing & operators<small>Control markup, coin rate, packages and 5SIM operators.</small></div><div>Live monitoring<small>Track users, wallet coins, order status and service demand.</small></div></div></Table>
  </>
 }
-function UsersTable({users,onAdjust}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users by coin balance ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button></div></div>)}</Table>}
+function UsersTable({users,onAdjust}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void}){
+ const[q,setQ]=useState(""),[busy,setBusy]=useState(""),[msg,setMsg]=useState("");
+ const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));
+ async function removeUser(u:User){
+  const typed=prompt("Delete "+u.email+" permanently? Type DELETE to confirm.");
+  if(typed!=="DELETE")return;
+  setBusy(u.id);setMsg("");
+  try{
+   const r=await fetch("/api/admin/users",{method:"DELETE",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:u.id})});
+   const d=await r.json();
+   if(!d.ok){setMsg(d.error||"Unable to delete user.");return}
+   setMsg("User deleted. Their email can register again.");
+   window.location.reload();
+  }catch{setMsg("Unable to contact server.")}
+  finally{setBusy("")}
+ }
+ return <Table title={"Users & email verification ("+list.length+")"}>
+  <div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>
+  {msg&&<div className="success-box">{msg}</div>}
+  {list.map(u=><div className="admin-user-row" key={u.id}>
+   <div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><strong>{u.coins.toLocaleString()} coins</strong>
+    <span className={"admin-user-verification "+(u.verified_at?"verified":"unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span>
+   </div>
+   <div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button>{u.role!=="admin"&&<button className="danger-btn" disabled={busy===u.id} onClick={()=>removeUser(u)}>{busy===u.id?"Deleting…":"Delete"}</button>}</div>
+  </div>)}
+ </Table>
+}
 
 function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;active?:boolean}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: {Number(o.price_coins||0).toLocaleString()} coins</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div></div>)}</Table>}
 
