@@ -5,7 +5,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
   try{
-    if(!providerConfigured())return NextResponse.json({ok:false,error:"SMS provider is not configured."},{status:503});
+    if(!(await providerConfigured()))return NextResponse.json({ok:false,error:"SMS provider is not configured."},{status:503});
     const u=new URL(req.url),country=u.searchParams.get("country")||"",service=u.searchParams.get("service")||"";
     if(!country||!service)return NextResponse.json({ok:false,error:"Country and service are required."},{status:400});
     const settings=await getSettings(),operator=String(settings.providerOperator||"any").trim().toLowerCase()||"any";
