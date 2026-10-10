@@ -6,6 +6,7 @@ import "./numelixa-live.css";
 import "./numelixa-redesign.css";
 import "./numelixa-mobile-refresh.css";
 import "./admin-support.css";
+import "./numelixa-native-app.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
