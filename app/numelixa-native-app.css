@@ -1,0 +1,44 @@
+/* Numelixa native Android 2026 — intentionally distinct from the desktop web layout.
+   Scope every rule to the Capacitor runtime so browser users keep the web design. */
+html.numelixa-native,html.numelixa-native body{background:#06111d!important;color:#effaff!important;overscroll-behavior-y:contain}
+html.numelixa-native body{font-family:Inter,Roboto,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+html.numelixa-native body:before,html.numelixa-native body:after{display:none!important}
+html.numelixa-native .page-shell{width:100%!important;max-width:760px!important;padding:12px 15px calc(112px + env(safe-area-inset-bottom))!important}
+html.numelixa-native .topbar{height:54px;margin:0 0 15px!important;background:transparent!important;border:0!important;box-shadow:none!important}
+html.numelixa-native .brand-mark{width:39px;height:39px;border-radius:13px;background:linear-gradient(145deg,#28e3d0,#087f92)!important;color:#05202a!important;box-shadow:0 7px 22px rgba(16,211,196,.18)!important}
+html.numelixa-native .top-title{font-size:15px!important;font-weight:850!important;letter-spacing:-.035em!important}
+html.numelixa-native .icon-btn,html.numelixa-native .topbar .icon-btn,html.numelixa-native .home-menu-btn{width:39px;height:39px;border-radius:13px!important;background:#102434!important;border:1px solid rgba(123,218,229,.14)!important;color:#e6fbff!important;box-shadow:none!important}
+html.numelixa-native .coin-pill{height:34px;min-width:0;padding:0 10px;border-radius:12px!important;background:#0c303b!important;border-color:rgba(63,230,211,.2)!important}
+html.numelixa-native .hero-card,html.numelixa-native .market-hero{min-height:0!important;border-radius:25px!important;padding:24px 21px!important;background:linear-gradient(145deg,#102b3c,#0a1d2c 64%,#092634)!important;border:1px solid rgba(99,220,225,.15)!important;box-shadow:0 14px 36px rgba(0,0,0,.19)!important}
+html.numelixa-native .hero-card h1,html.numelixa-native .market-hero h1{font-size:clamp(32px,8vw,44px)!important;line-height:1.02!important;letter-spacing:-.055em!important}
+html.numelixa-native .hero-card p,html.numelixa-native .market-hero p{font-size:13px!important;line-height:1.55!important;color:#b4ceda!important}
+html.numelixa-native .hero-orb,html.numelixa-native .market-globe{width:68px!important;height:68px!important;border-radius:23px!important;font-size:28px!important;opacity:.9}
+html.numelixa-native .primary-btn{min-height:48px!important;border-radius:15px!important;background:linear-gradient(135deg,#26dcca,#0c9aa8)!important;color:#041820!important;font-weight:850!important;box-shadow:0 8px 22px rgba(15,196,183,.15)!important}
+html.numelixa-native .secondary-btn{min-height:45px!important;border-radius:14px!important;background:#112b3a!important;border:1px solid rgba(123,218,229,.16)!important;color:#e8faff!important}
+html.numelixa-native .quick-grid{gap:10px!important}
+html.numelixa-native .quick-card,html.numelixa-native .service-card,html.numelixa-native .country-card,html.numelixa-native .number-row,html.numelixa-native .code-card,html.numelixa-native .form-card,html.numelixa-native .helper-card{border-radius:19px!important;background:linear-gradient(145deg,rgba(17,43,59,.97),rgba(9,29,43,.97))!important;border:1px solid rgba(123,218,229,.13)!important;box-shadow:0 9px 24px rgba(0,0,0,.12)!important;backdrop-filter:none!important}
+html.numelixa-native .quick-card{min-height:78px;padding:13px!important;gap:10px!important}
+html.numelixa-native .quick-card>span,html.numelixa-native .service-icon,html.numelixa-native .flag,html.numelixa-native .number-icon{background:#18384a!important;border-color:rgba(123,218,229,.14)!important;color:#aaf8ed!important}
+html.numelixa-native .service-card{min-height:78px!important;padding:12px!important;gap:10px!important}
+html.numelixa-native .service-card b,html.numelixa-native .quick-card b,html.numelixa-native .country-card b{color:#f2fbff!important;font-size:13px!important}
+html.numelixa-native .service-card small,html.numelixa-native .quick-card small,html.numelixa-native .page-intro p{color:#a6c0ce!important}
+html.numelixa-native .section-head{margin-top:25px!important}
+html.numelixa-native .section-head h2,html.numelixa-native .page-intro h1{font-size:23px!important;letter-spacing:-.045em!important}
+html.numelixa-native input,html.numelixa-native textarea,html.numelixa-native select{min-height:46px!important;border-radius:13px!important;background:#091e2d!important;color:#f2fbff!important;border:1px solid rgba(139,211,226,.23)!important;box-shadow:none!important}
+html.numelixa-native input::placeholder,html.numelixa-native textarea::placeholder{color:#7898aa!important;opacity:1}
+html.numelixa-native label{color:#d7edf5!important}
+html.numelixa-native .form-card,html.numelixa-native .auth-form{padding:18px!important;gap:14px!important}
+html.numelixa-native .auth-page{padding:22px 17px calc(35px + env(safe-area-inset-bottom))!important}
+html.numelixa-native .auth-intro h1{font-size:32px!important;line-height:1.08!important;letter-spacing:-.055em!important}
+html.numelixa-native .auth-method-switch{padding:4px!important;border-radius:14px!important;background:#091e2d!important;border:1px solid rgba(123,218,229,.13)!important}
+html.numelixa-native .auth-method-switch button{min-height:40px!important;border-radius:10px!important;color:#a9c6d4!important}
+html.numelixa-native .auth-method-switch button.active{background:#1b4c5b!important;color:#e8fffb!important}
+html.numelixa-native .availability-panel{border-radius:17px!important;background:#0a2232!important;border-color:rgba(123,218,229,.13)!important}
+html.numelixa-native .bottom-nav,html.numelixa-native .app-bottom-nav,html.numelixa-native nav[aria-label="Main navigation"]{background:rgba(5,20,31,.96)!important;border-top:1px solid rgba(103,224,225,.16)!important;backdrop-filter:blur(22px)!important;padding-bottom:env(safe-area-inset-bottom)!important}
+html.numelixa-native button,html.numelixa-native a{touch-action:manipulation}
+html.numelixa-native .service-card,html.numelixa-native .quick-card,html.numelixa-native .country-row,html.numelixa-native .number-row{transition:background .16s ease,border-color .16s ease!important}
+html.numelixa-native .service-card:active,html.numelixa-native .quick-card:active,html.numelixa-native .primary-btn:active{transform:scale(.985)!important}
+html.numelixa-native .error-box{border-radius:13px!important;background:rgba(124,35,50,.22)!important;color:#ffc0c8!important;border-color:rgba(255,116,137,.22)!important}
+html.numelixa-native .success-box{border-radius:13px!important;background:rgba(16,128,96,.18)!important;color:#9ff5d4!important;border-color:rgba(75,223,171,.22)!important}
+@media(min-width:600px){html.numelixa-native .page-shell{padding-left:22px!important;padding-right:22px!important}html.numelixa-native .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(prefers-reduced-motion:reduce){html.numelixa-native *,html.numelixa-native *:before,html.numelixa-native *:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
