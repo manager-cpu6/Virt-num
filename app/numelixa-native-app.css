@@ -43,3 +43,173 @@ html.numelixa-native .section-head{margin-top:25px!important}
 html.numelixa-native .section-head h2,html.numelixa-native .page-intro h1,html.numelixa-native h1,html.numelixa-native h2,html.numelixa-native h3{color:#17264b}
 @media(min-width:760px){html.numelixa-native .page-shell{max-width:560px!important}html.numelixa-native .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(prefers-reduced-motion:reduce){html.numelixa-native *{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
+
+
+/* --- Contrast and touch-target correction (Android only) --- */
+html.numelixa-native,
+html.numelixa-native body,
+html.numelixa-native #__next{
+  color:#17264b!important;
+  color-scheme:light;
+}
+html.numelixa-native .page-shell,
+html.numelixa-native .page-shell *:not(svg):not(path):not(.icon):not(i){
+  text-shadow:none;
+}
+html.numelixa-native .page-shell p,
+html.numelixa-native .page-shell label,
+html.numelixa-native .page-shell span,
+html.numelixa-native .page-shell small,
+html.numelixa-native .page-shell strong,
+html.numelixa-native .page-shell b,
+html.numelixa-native .page-shell h1,
+html.numelixa-native .page-shell h2,
+html.numelixa-native .page-shell h3,
+html.numelixa-native .page-shell h4,
+html.numelixa-native .page-shell li,
+html.numelixa-native .page-shell a,
+html.numelixa-native .page-shell button,
+html.numelixa-native .page-shell .service-name,
+html.numelixa-native .page-shell .service-card *,
+html.numelixa-native .page-shell .country-row *,
+html.numelixa-native .page-shell .country-card *{
+  color:inherit;
+}
+html.numelixa-native .page-shell .service-card,
+html.numelixa-native .page-shell .service-card *,
+html.numelixa-native .page-shell .service-name,
+html.numelixa-native .page-shell .service-card b,
+html.numelixa-native .page-shell .service-card span,
+html.numelixa-native .page-shell .service-card small,
+html.numelixa-native .page-shell .country-row,
+html.numelixa-native .page-shell .country-row *,
+html.numelixa-native .page-shell .country-card,
+html.numelixa-native .page-shell .country-card *,
+html.numelixa-native .page-shell .list-card,
+html.numelixa-native .page-shell .list-card *{
+  color:#1b2b50!important;
+}
+html.numelixa-native .page-shell .service-card small,
+html.numelixa-native .page-shell .country-row small,
+html.numelixa-native .page-shell .country-card small,
+html.numelixa-native .page-shell .list-card small,
+html.numelixa-native .page-shell .muted,
+html.numelixa-native .page-shell .hint,
+html.numelixa-native .page-shell .field-hint{
+  color:#667594!important;
+}
+html.numelixa-native input,
+html.numelixa-native input[type="email"],
+html.numelixa-native input[type="text"],
+html.numelixa-native input[type="password"],
+html.numelixa-native input[type="search"],
+html.numelixa-native input[type="number"],
+html.numelixa-native textarea,
+html.numelixa-native select{
+  color:#17264b!important;
+  -webkit-text-fill-color:#17264b!important;
+  caret-color:#3659e8!important;
+  background:#fff!important;
+  border-color:#dce4f3!important;
+}
+html.numelixa-native input::placeholder,
+html.numelixa-native textarea::placeholder{
+  color:#8b96ad!important;
+  -webkit-text-fill-color:#8b96ad!important;
+  opacity:1!important;
+}
+html.numelixa-native input:-webkit-autofill,
+html.numelixa-native input:-webkit-autofill:hover,
+html.numelixa-native input:-webkit-autofill:focus{
+  -webkit-text-fill-color:#17264b!important;
+  box-shadow:0 0 0 1000px #fff inset!important;
+}
+html.numelixa-native input[type="checkbox"],
+html.numelixa-native input[type="radio"],
+html.numelixa-native .terms-checkbox input,
+html.numelixa-native .auth-terms input{
+  width:16px!important;
+  height:16px!important;
+  min-width:16px!important;
+  min-height:16px!important;
+  max-width:16px!important;
+  max-height:16px!important;
+  padding:0!important;
+  margin:2px 7px 0 0!important;
+  flex:0 0 16px!important;
+  accent-color:#315be8!important;
+  border-radius:4px!important;
+  box-shadow:none!important;
+  transform:none!important;
+}
+html.numelixa-native .terms-row,
+html.numelixa-native .auth-terms,
+html.numelixa-native .terms-checkbox,
+html.numelixa-native label:has(input[type="checkbox"]){
+  align-items:flex-start!important;
+  gap:7px!important;
+  font-size:12px!important;
+  line-height:1.5!important;
+}
+html.numelixa-native .auth-modern .form-card,
+html.numelixa-native .auth-modern .form-card *,
+html.numelixa-native .form-card,
+html.numelixa-native .form-card *{
+  color:#1b2b50;
+}
+html.numelixa-native .auth-modern .form-card label,
+html.numelixa-native .form-card label{
+  color:#33466e!important;
+}
+html.numelixa-native .auth-modern .form-card input,
+html.numelixa-native .form-card input{
+  color:#17264b!important;
+  -webkit-text-fill-color:#17264b!important;
+}
+html.numelixa-native .auth-modern .form-card input::placeholder,
+html.numelixa-native .form-card input::placeholder{
+  color:#8b96ad!important;
+  -webkit-text-fill-color:#8b96ad!important;
+}
+html.numelixa-native .page-shell .primary-btn,
+html.numelixa-native .page-shell .landing-primary,
+html.numelixa-native .page-shell button.primary-btn,
+html.numelixa-native .page-shell button[type="submit"]{
+  color:#fff!important;
+}
+html.numelixa-native .page-shell .primary-btn *,
+html.numelixa-native .page-shell .landing-primary *,
+html.numelixa-native .page-shell button.primary-btn *,
+html.numelixa-native .page-shell button[type="submit"] *{
+  color:inherit!important;
+}
+html.numelixa-native .glass-card,
+html.numelixa-native .liquid-card{
+  background:rgba(255,255,255,.78)!important;
+  border:1px solid rgba(255,255,255,.92)!important;
+  box-shadow:0 12px 32px rgba(39,63,129,.09),inset 0 1px 0 rgba(255,255,255,.95)!important;
+  backdrop-filter:blur(22px) saturate(150%)!important;
+  -webkit-backdrop-filter:blur(22px) saturate(150%)!important;
+}
+html.numelixa-native .page-shell .section-head,
+html.numelixa-native .page-shell .page-intro{
+  color:#17264b!important;
+}
+html.numelixa-native .page-shell .section-head p,
+html.numelixa-native .page-shell .page-intro p{
+  color:#687796!important;
+}
+html.numelixa-native .bottom-nav .nav-item,
+html.numelixa-native .bottom-nav .nav-item *{
+  color:#7986a2!important;
+}
+html.numelixa-native .bottom-nav .nav-item.selected,
+html.numelixa-native .bottom-nav .nav-item.selected *{
+  color:#3d52df!important;
+}
+html.numelixa-native .numelixa-notification-gate-card{
+  color:#17264b!important;
+}
+html.numelixa-native .numelixa-notification-gate-card p{
+  color:#647390!important;
+}
