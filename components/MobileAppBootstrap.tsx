@@ -10,6 +10,26 @@ export default function MobileAppBootstrap(){
   if(!Capacitor.isNativePlatform())return;
   document.documentElement.classList.add("numelixa-native");
   document.body.classList.add("numelixa-native");
+  let connectionRecoveryTimer:ReturnType<typeof setTimeout>|null=null;
+  const recoverAfterNetworkReturns=()=>{
+   if(stopped||!navigator.onLine)return;
+   if(connectionRecoveryTimer)clearTimeout(connectionRecoveryTimer);
+   connectionRecoveryTimer=setTimeout(async()=>{
+    connectionRecoveryTimer=null;
+    if(stopped||!navigator.onLine)return;
+    try{
+     const controller=new AbortController();
+     const timeout=window.setTimeout(()=>controller.abort(),5000);
+     const response=await fetch("/api/me?connection_check="+Date.now(),{cache:"no-store",credentials:"include",signal:controller.signal});
+     window.clearTimeout(timeout);
+     if(response.ok)return;
+    }catch{}
+    if(!stopped&&navigator.onLine)window.location.reload();
+   },1200);
+  };
+  window.addEventListener("online",recoverAfterNetworkReturns);
+  window.addEventListener("pageshow",recoverAfterNetworkReturns);
+
 
   let stopped=false;
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
@@ -167,6 +187,9 @@ export default function MobileAppBootstrap(){
     window.addEventListener("focus",refresh);
     document.addEventListener("visibilitychange",refresh);
     cleanups.push(()=>{
+     if(connectionRecoveryTimer)clearTimeout(connectionRecoveryTimer);
+     window.removeEventListener("online",recoverAfterNetworkReturns);
+     window.removeEventListener("pageshow",recoverAfterNetworkReturns);
      window.removeEventListener("numelixa-auth-ready",refresh);
      window.removeEventListener("online",refresh);
      window.removeEventListener("focus",refresh);
