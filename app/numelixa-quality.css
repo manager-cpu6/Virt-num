@@ -49,3 +49,14 @@ button, [role="button"], a { touch-action: manipulation; }
     transition-duration: .01ms !important;
   }
 }
+
+/* Premium, accessible Google OAuth actions and account verification state. */
+.google-auth-btn{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:52px;margin:18px 0 12px;padding:12px 16px;border:1px solid rgba(161,184,220,.28);border-radius:15px;background:rgba(255,255,255,.96);color:#17233b!important;text-decoration:none!important;font-weight:750;box-shadow:0 5px 18px rgba(0,0,0,.12);transition:transform .16s ease,box-shadow .16s ease}
+.google-auth-btn:hover{transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.18)}
+.google-g{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#fff;color:#4285f4;font-size:20px;font-weight:850;font-family:Arial,sans-serif}
+.auth-divider{display:flex;align-items:center;gap:12px;margin:14px 0;color:#92a4c4;font-size:12px;text-align:center}
+.auth-divider:before,.auth-divider:after{content:"";height:1px;flex:1;background:rgba(145,171,212,.2)}
+.admin-user-verification{display:inline-flex;margin-top:7px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:750}
+.admin-user-verification.verified{color:#67e8c2;background:rgba(16,185,129,.12)}
+.admin-user-verification.unverified{color:#fbbf76;background:rgba(245,158,11,.12)}
+.danger-btn{border:1px solid rgba(248,113,113,.35)!important;color:#fecaca!important;background:rgba(127,29,29,.2)!important;border-radius:10px;padding:8px 11px}
