@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";import Link from "next/link";import {useRouter} from "next/navigation";import {Capacitor} from "@capacitor/core";import PhoneAuth from "@/components/PhoneAuth";
 export default function Login(){
  const[email,setEmail]=useState(""),[secret,setSecret]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false),[next,setNext]=useState(""),[approval,setApproval]=useState<any>(null),[method,setMethod]=useState<"email"|"phone">("email"),router=useRouter();
- useEffect(()=>{setNext(new URLSearchParams(window.location.search).get("next")||"")},[]);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);setNext(params.get("next")||"");const issue=params.get("error");if(issue)setError(issue==="google_not_configured"?"Google sign-in is not configured yet. Please try email login or contact support.":issue==="google_state"?"Google sign-in expired. Please try again.":"Google sign-in could not be completed. Please try again.");},[]);
  async function go(){
   setError("");if(!email.trim()||!secret){setError("Enter your email and password.");return}setLoading(true);
   try{const d=await fetch("/api/auth/login",{method:"POST",headers:{"Content-Type":"application/json","X-Numelixa-Client":Capacitor.isNativePlatform()?"android-app":"browser"},credentials:"include",body:JSON.stringify({email,password:secret})}).then(x=>x.json());
