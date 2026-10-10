@@ -5,6 +5,7 @@ declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean
 
 export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  const host=useRef<HTMLDivElement|null>(null);
+ const onSuccessRef=useRef(onSuccess);onSuccessRef.current=onSuccess;
  const[error,setError]=useState("");
  const[loading,setLoading]=useState(false);
  useEffect(()=>{
@@ -24,7 +25,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
       const data=await result.json();
       if(!result.ok||!data.ok)throw new Error(data.error||"Google sign-in failed.");
       window.dispatchEvent(new Event("numelixa-auth-ready"));
-      onSuccess();
+      onSuccessRef.current();
      }catch(e){setError(e instanceof Error?e.message:"Unable to sign in with Google.");}
      finally{if(active)setLoading(false)}
     },
@@ -44,6 +45,6 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   script.addEventListener("load",render);
   script.addEventListener("error",()=>{if(active)setError("Google sign-in could not load. Check your connection and try again.")});
   return()=>{active=false;script?.removeEventListener("load",render)};
- },[onSuccess]);
+ },[]);
  return <div className="google-signin-wrap"><div ref={host} className="google-signin-button"/>{loading&&<div className="google-signin-loading">Signing in with Google…</div>}{error&&<p className="google-signin-error" role="status">{error}</p>}</div>;
 }
