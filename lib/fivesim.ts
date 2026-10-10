@@ -222,9 +222,29 @@ export async function servicePrices(service:string,countries:any[]=[]){
   if(cached&&Date.now()-cached.at<TTL)return cached.value;
   const raw=await guest("/v1/guest/prices?product="+encodeURIComponent(service));
   const out:Record<string,{cost:number;count:number;rate:number}>={};
-  // 5SIM returns /prices?product=... as: { product: { country: { operator: ... } } }
-  const productTree=(raw as any)?.[service] || {};
-  for(const [country,countryTree] of Object.entries(productTree)){ 
+  const productTree=(raw as any)?.[service] || (raw as any)?.[String(service).toLowerCase()] || null;
+
+  // Support both protocol response layouts. A filtered response normally uses
+  // product -> country -> operator, but some responses are country -> product
+  // -> operator. Keep country IDs canonical so the UI can match the catalog.
+  const countryTrees:Array<[string,any]>=[];
+  if(productTree&&typeof productTree==="object"&&!Array.isArray(productTree)){
+    countryTrees.push(...Object.entries(productTree) as [string,any][]);
+  }else{
+    const known=new Set(countries.map(c=>String(c.id).toLowerCase()));
+    for(const [country,tree] of Object.entries(raw||{}) as [string,any][]){
+      if(!tree||typeof tree!=="object"||Array.isArray(tree))continue;
+      const nested=tree[service]||tree[String(service).toLowerCase()];
+      if(nested&&typeof nested==="object"){
+        countryTrees.push([country,nested]);
+      }else if(known.has(String(country).toLowerCase())){
+        // Some APIs omit the product wrapper in a filtered response.
+        countryTrees.push([country,tree]);
+      }
+    }
+  }
+
+  for(const [country,countryTree] of countryTrees){
     const p=bestOperator(countryTree);
     const match=countries.find(c=>String(c.id).toLowerCase()===String(country).toLowerCase());
     const id=String(match?.id||country);
