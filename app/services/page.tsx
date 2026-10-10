@@ -5,19 +5,18 @@ import TopBar from "@/components/TopBar";
 
 type S={id:string;code:string;name:string};
 
-const popular=["whatsapp","telegram","tiktok","instagram","facebook","google","twitter","snapchat","discord","viber","signal","openai","microsoft","apple","amazon"];
+const popular=["whatsapp","facebook","instagram","telegram","tiktok","google","x","snapchat","discord","viber","signal","openai","microsoft","apple","amazon","linkedin","paypal","uber","reddit","wechat","tinder"];
 const popularAliases:Record<string,string[]>={
- whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],google:["google","go"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],tiktok:["tiktok","tt"],twitter:["twitter","x","tw"],snapchat:["snapchat","sn"],viber:["viber"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt","op"],signal:["signal"]
+ whatsapp:["whatsapp","wa"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],telegram:["telegram","tg"],tiktok:["tiktok","tt"],google:["google","go"],x:["twitter","x","tw"],snapchat:["snapchat","sn"],discord:["discord","ds"],viber:["viber","vi"],signal:["signal"],openai:["openai","chatgpt","oi","op"],microsoft:["microsoft","ms","mm"],apple:["apple","ap"],amazon:["amazon","am"],linkedin:["linkedin","li"],paypal:["paypal","pp"],uber:["uber","ub"],reddit:["reddit","rd"],wechat:["wechat","wc"]
 };
 function popularRank(x:S){
  const normalize=(v:string)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
- const id=normalize(x.id),name=normalize(x.name),raw=id+" "+name;
+ const id=normalize(x.id),code=normalize(x.code),name=normalize(x.name);
+ // Only exact service IDs/codes or exact friendly names rank as popular.
+ // Avoid substring collisions such as "x" matching "xworldwallet".
  for(let i=0;i<popular.length;i++){
-  const aliases=popularAliases[popular[i]]||[popular[i]];
-  if(aliases.some(alias=>{
-   const a=normalize(alias);
-   return id===a||name===a||id.includes(a)||name.includes(a)||raw.includes(a);
-  }))return i;
+  const aliases=(popularAliases[popular[i]]||[popular[i]]).map(normalize);
+  if(aliases.some(a=>a&&(id===a||code===a||name===a)))return i;
  }
  return 9999;
 }
