@@ -16,7 +16,8 @@ export async function GET(){
   databaseConfigured:Boolean(String(process.env.MONGODB_URI||"").trim()),
   firebaseAdminConfigured:Boolean(firebaseServiceJson||firebaseParts),
   firebaseAdminMode:firebaseServiceJson?"service_account_json":firebaseParts?"split_credentials":"missing",
-  androidFirebaseClientConfigured:true,
+  androidFirebaseClientConfigured:null,
+  androidFirebaseClientConfig:"Bundled in the Android APK; token registration and real delivery must be verified on a device",
   registrationEndpoint:"/api/notifications/register"
  },{headers:{"Cache-Control":"no-store"}});
 }
