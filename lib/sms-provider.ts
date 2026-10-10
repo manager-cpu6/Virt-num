@@ -15,7 +15,22 @@ export async function providerConfigured(){return (await activeProvider())==="ti
 export const configured=providerConfigured;
 export async function balance(){return (await activeProvider())==="tiger"?tiger.balance():five.balance()}
 export async function listCountries(){return (await activeProvider())==="tiger"?tiger.listCountries():five.listCountries()}
-export async function listServices(){return (await activeProvider())==="tiger"?tiger.listServices():five.listServices()}
+const POPULAR_SERVICE_ORDER=["whatsapp","facebook","instagram","telegram","tiktok","google","snapchat","x","twitter","discord","amazon","microsoft","apple","openai","viber","signal","linkedin","reddit","paypal","uber"] as const;
+const SERVICE_ALIASES:Record<string,string[]>={whatsapp:["whatsapp","wa"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],telegram:["telegram","tg"],tiktok:["tiktok","tt"],google:["google","go"],snapchat:["snapchat","sn"],x:["x","twitter","tw"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt"],viber:["viber"],signal:["signal"],linkedin:["linkedin"],reddit:["reddit"],paypal:["paypal"],uber:["uber"]};
+function serviceRank(service:any){
+ const normalize=(v:any)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+ const id=normalize(service?.id??service?.code),name=normalize(service?.name);
+ for(let rank=0;rank<POPULAR_SERVICE_ORDER.length;rank++){
+  const aliases=SERVICE_ALIASES[POPULAR_SERVICE_ORDER[rank]]||[POPULAR_SERVICE_ORDER[rank]];
+  if(aliases.some(alias=>{const a=normalize(alias);return id===a||name===a||id.startsWith(a)||name.startsWith(a)}))return rank;
+ }
+ return 10000;
+}
+export async function listServices(){
+ const provider=await activeProvider();
+ const services=provider==="tiger"?await tiger.listServices():await five.listServices();
+ return [...services].sort((a:any,b:any)=>serviceRank(a)-serviceRank(b)||String(a.name||a.id).localeCompare(String(b.name||b.id)));
+}
 export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
 export async function stock(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator)}
 export async function getPrice(country:string,service:string,operator="any",provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.getPrice(country,service,operator):five.getPrice(country,service,operator)}
