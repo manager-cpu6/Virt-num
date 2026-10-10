@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection, mongoId} from "@/lib/mongo";
-import {check, cancel, finalize} from "@/lib/fivesim";
+import {check, cancel, finalize, type SmsProvider} from "@/lib/sms-provider";
 import {notifyUser} from "@/lib/notifications";
 
 export const runtime = "nodejs";
@@ -65,10 +65,11 @@ export async function GET(req: Request) {
 
   for (const o of waiting) {
     try {
+      const provider:SmsProvider = o.provider === "tiger" ? "tiger" : "5sim";
       const age = now - new Date(o.createdAt).getTime();
 
       if (age >= 10 * 60 * 1000) {
-        try { await cancel(String(o.providerOrderId)); } catch {}
+        try { await cancel(String(o.providerOrderId), provider); } catch {}
         if (await refundOrder(o)) {
           refunded++;
           await notifyUser(
@@ -103,7 +104,7 @@ export async function GET(req: Request) {
         }
       }
 
-      const p = await check(String(o.providerOrderId));
+      const p = await check(String(o.providerOrderId), provider);
       checked++;
 
       if (Number(p.status) === 3) {
@@ -119,7 +120,7 @@ export async function GET(req: Request) {
           }},
           {returnDocument: "after"}
         );
-        try { await finalize(String(o.providerOrderId)); } catch {}
+        try { await finalize(String(o.providerOrderId), provider); } catch {}
 
         if (changed) {
           received++;
