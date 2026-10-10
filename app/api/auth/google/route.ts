@@ -4,7 +4,8 @@ export const runtime="nodejs";
 export async function GET(req:Request){
  const clientId=String(process.env.GOOGLE_CLIENT_ID||"").trim();
  if(!clientId)return NextResponse.redirect(new URL("/login?error=google_not_configured",req.url));
- const url=new URL(req.url),requested=url.searchParams.get("next")||"/dashboard";
+ const url=new URL(req.url),requested=url.searchParams.get("next")||"/dashboard",isSignup=requested==="/dashboard"&&url.searchParams.get("source")==="signup",termsAccepted=url.searchParams.get("termsAccepted")==="true",termsVersion=url.searchParams.get("termsVersion")||"";
+ if(isSignup&&(!termsAccepted||termsVersion!=="2026-10-10"))return NextResponse.redirect(new URL("/signup?error=terms_required",url.origin));
  const next=requested.startsWith("/")&&!requested.startsWith("//")&&!requested.includes("\\")?requested:"/dashboard";
  const state=crypto.randomBytes(24).toString("hex");
  const redirectUri=String(process.env.GOOGLE_REDIRECT_URI||new URL("/api/auth/google/callback",url.origin).toString()).trim();
@@ -15,5 +16,6 @@ export async function GET(req:Request){
  const response=NextResponse.redirect(google),secure=process.env.NODE_ENV==="production";
  response.cookies.set("numelixa_google_state",state,{httpOnly:true,secure,sameSite:"lax",path:"/",maxAge:600});
  response.cookies.set("numelixa_google_next",next,{httpOnly:true,secure,sameSite:"lax",path:"/",maxAge:600});
+ response.cookies.set("numelixa_google_terms",isSignup&&termsAccepted&&termsVersion==="2026-10-10"?"2026-10-10":"",{httpOnly:true,secure,sameSite:"lax",path:"/",maxAge:600});
  return response;
 }
