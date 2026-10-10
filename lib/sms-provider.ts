@@ -22,7 +22,7 @@ function serviceRank(service:any){
  const id=normalize(service?.id??service?.code),name=normalize(service?.name);
  for(let rank=0;rank<POPULAR_SERVICE_ORDER.length;rank++){
   const aliases=SERVICE_ALIASES[POPULAR_SERVICE_ORDER[rank]]||[POPULAR_SERVICE_ORDER[rank]];
-  if(aliases.some(alias=>{const a=normalize(alias);return id===a||name===a||id.startsWith(a)||name.startsWith(a)}))return rank;
+  if(aliases.some(alias=>{const a=normalize(alias);return id===a||name===a||(a.length>2&&(id.startsWith(a)||name.startsWith(a)))}))return rank;
  }
  return 10000;
 }
