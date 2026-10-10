@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {collection,mongoId} from "@/lib/mongo";
 import {createSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
-import {issueApiKey} from "@/lib/api-key";
+import {ensureApiKey} from "@/lib/api-key";
 import {sendEmail,verificationEmail} from "@/lib/mailer";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -26,8 +26,9 @@ export async function POST(req:Request){
     await (await collection<any>("emailTokens")).deleteMany({userId:id,type:"email_verify_code"});
   }else{
     await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now});
-    await issueApiKey(id,"Production API key");
+
   }
+  await ensureApiKey(id);
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
 
