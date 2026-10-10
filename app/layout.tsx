@@ -8,7 +8,6 @@ import type {Metadata} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
 import MobileAppBootstrap from "@/components/MobileAppBootstrap";
-import AppUpdateGate from "@/components/AppUpdateGate";
 import LoginApprovalGate from "@/components/LoginApprovalGate";
 
 export const metadata:Metadata={
@@ -26,5 +25,5 @@ export const metadata:Metadata={
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
- return <html lang="en"><body><MobileAppBootstrap/><LoginApprovalGate/><AppUpdateGate/><div className={isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main><AppChrome docs={isDocsHost}/></div></body></html>;
+ return <html lang="en"><body><MobileAppBootstrap/><LoginApprovalGate/><div className={isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main><AppChrome docs={isDocsHost}/></div></body></html>;
 }
