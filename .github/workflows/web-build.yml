@@ -2,7 +2,7 @@ name: Numelixa Web Build
 
 on:
   push:
-    branches: [main]
+    branches: [main, redesign/complete-auth-services-push]
   workflow_dispatch:
 
 jobs:

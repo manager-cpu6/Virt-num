@@ -577,3 +577,19 @@ body:has(.reference-dashboard) .page-shell{width:min(100%,900px)!important;paddi
  .bottom-nav .nav-item>span{font-size:18px!important}
  .bottom-nav .nav-item small{font-size:9px!important}
 }
+
+
+/* Google Identity Services + verified account administration */
+.google-signin-section{display:grid;gap:10px;justify-items:center;margin:18px 0 20px}
+.google-signin-section>span{display:flex;align-items:center;gap:10px;width:100%;justify-content:center;color:var(--nx-muted,#aac4d4);font-size:11px;font-weight:700}
+.google-signin-wrap{width:100%;max-width:360px;min-height:42px;display:grid;justify-items:center;gap:8px}
+.google-signin-button{width:100%;display:flex;justify-content:center;min-height:40px}
+.google-signin-button iframe{max-width:100%!important}
+.google-signin-loading{font-size:12px;color:var(--nx-muted,#aac4d4)}
+.google-signin-error{margin:0;color:#ffaaa8;font-size:12px;line-height:1.45;text-align:center}
+.admin-email-verification{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:6px 0 2px;padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;letter-spacing:.01em}
+.admin-email-verification.is-verified{background:rgba(20,184,116,.13);border:1px solid rgba(20,184,116,.3);color:#7bf0b5}
+.admin-email-verification.is-unverified{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#ffd18a}
+.admin-user-row .coin-actions{flex-wrap:wrap}
+.admin-user-row .coin-actions .admin-delete-user{border-color:rgba(255,102,115,.35);color:#ff9ca6;background:rgba(255,80,95,.08)}
+@media(max-width:480px){.google-signin-section{margin:14px 0}.google-signin-wrap{max-width:100%}.admin-user-row{gap:12px}.admin-user-row .coin-actions{justify-content:flex-start}}

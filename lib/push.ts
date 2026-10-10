@@ -29,6 +29,7 @@ export type PushSendResult={
  failureCount:number;
  invalidTokens:string[];
  errors:{code:string;message:string}[];
+ successfulTokens?:string[];
 };
 
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
@@ -64,6 +65,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
  const unique=[...new Set(tokens.map(String).map(x=>x.trim()).filter(x=>x.length>=20))];
  let successCount=0,failureCount=0;
  const invalidTokens:string[]=[];
+ const successfulTokens:string[]=[];
  const errors:{code:string;message:string}[]=[];
 
  for(let i=0;i<unique.length;i+=500){
@@ -97,7 +99,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   successCount+=response.successCount;
   failureCount+=response.failureCount;
   response.responses.forEach((item,index)=>{
-   if(item.success)return;
+   if(item.success){successfulTokens.push(batch[index]);return;}
    const code=String(item.error?.code||"unknown");
    const message=String(item.error?.message||"FCM send failed");
    if(errors.length<20)errors.push({code,message});
@@ -107,5 +109,5 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   });
  }
 
- return {configured:true,successCount,failureCount,invalidTokens,errors};
+ return {configured:true,successCount,failureCount,invalidTokens,errors,successfulTokens};
 }

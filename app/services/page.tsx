@@ -5,7 +5,7 @@ import TopBar from "@/components/TopBar";
 
 type S={id:string;code:string;name:string};
 
-const popular=["whatsapp","telegram","tiktok","instagram","facebook","google","twitter","snapchat","discord","viber","signal","openai","microsoft","apple","amazon"];
+const popular=["whatsapp","facebook","instagram","telegram","tiktok","google","snapchat","twitter","discord","amazon","microsoft","apple","openai","viber","signal"];
 const popularAliases:Record<string,string[]>={
  whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],google:["google","go"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],tiktok:["tiktok","tt"],twitter:["twitter","x","tw"],snapchat:["snapchat","sn"],viber:["viber"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt","op"],signal:["signal"]
 };
@@ -16,17 +16,19 @@ function popularRank(x:S){
   const aliases=popularAliases[popular[i]]||[popular[i]];
   if(aliases.some(alias=>{
    const a=normalize(alias);
-   return id===a||name===a||id.includes(a)||name.includes(a)||raw.includes(a);
+   return id===a||name===a||(a.length>2&&(id.startsWith(a)||name.startsWith(a)));
   }))return i;
  }
  return 9999;
 }
 
+const iconAliases:Record<string,string>={wa:"whatsapp",fb:"facebook",ig:"instagram",threads:"instagram",tg:"telegram",tt:"tiktok",go:"google",tw:"x",sn:"snapchat",ms:"microsoft",op:"openai"};
 function AppLogo({id,name}:{id:string;name:string}){
  const[hasLogo,setHasLogo]=useState(true);
- return <span className={"service-icon service-icon-"+id}>
+ const icon=iconAliases[id.toLowerCase()]||id.toLowerCase();
+ return <span className={"service-icon service-icon-"+icon}>
    {hasLogo
-     ? <img src={"https://cdn.simpleicons.org/"+id} alt="" loading="lazy" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
+     ? <img src={"https://cdn.simpleicons.org/"+icon} alt="" loading="lazy" onLoad={()=>setHasLogo(true)} onError={()=>setHasLogo(false)}/>
      : <span className="service-letter">{name.slice(0,1).toUpperCase()}</span>}
  </span>
 }
