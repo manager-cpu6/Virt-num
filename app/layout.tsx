@@ -4,6 +4,7 @@ import "./numelixa-polish.css";
 import "./numelixa-nextgen.css";
 import "./numelixa-live.css";
 import "./numelixa-redesign.css";
+import "./numelixa-mobile-refresh.css";
 import "./admin-support.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
