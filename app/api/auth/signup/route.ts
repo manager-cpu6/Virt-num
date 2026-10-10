@@ -12,14 +12,25 @@ export async function POST(req:Request){
   const b=await req.json(),name=String(b.name||"").trim(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||"");
   if(name.length<2||!email.includes("@")||password.length<8)return NextResponse.json({ok:false,error:"Enter valid details. Password must be 8+ characters."},{status:400});
   const users=await collection<any>("users");
-  if(await users.findOne({email}))return NextResponse.json({ok:false,error:"Email already registered."},{status:409});
-  const id=mongoId();
-  await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:new Date()});
-  await issueApiKey(id,"Production API key");
+  const existing=await users.findOne({email});
+  if(existing?.verifiedAt)return NextResponse.json({ok:false,error:"This email already has a verified account. Sign in instead."},{status:409});
+  const now=new Date();
+  const id=existing?String(existing._id):mongoId();
+  if(existing){
+    // Reuse the unverified account instead of trapping the address forever.
+    // Keep the stable user ID so the existing account's API key remains valid.
+    await users.updateOne({_id:existing._id},{$set:{
+      name,email,password_hash:await passwordHash(password),role:existing.role||"user",
+      verifiedAt:null,verificationEmailLastAttemptAt:now,updatedAt:now
+    },$unset:{googleId:""}});
+    await (await collection<any>("emailTokens")).deleteMany({userId:id,type:"email_verify_code"});
+  }else{
+    await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now});
+    await issueApiKey(id,"Production API key");
+  }
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
 
-  const now=new Date();
   const code=String(Math.floor(100000+Math.random()*900000));
   await users.updateOne({_id:id},{$set:{verificationEmailLastAttemptAt:now}});
 
