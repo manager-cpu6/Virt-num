@@ -1,7 +1,7 @@
 "use client";
 import {useEffect,useState} from "react";import Link from "next/link";import {useRouter} from "next/navigation";import {Capacitor} from "@capacitor/core";import PhoneAuth from "@/components/PhoneAuth";import GoogleSignIn from "@/components/GoogleSignIn";
 export default function Login(){
- const[email,setEmail]=useState(""),[secret,setSecret]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false),[next,setNext]=useState(""),[approval,setApproval]=useState<any>(null),[method,setMethod]=useState<"email"|"phone">("email"),[phoneEnabled,setPhoneEnabled]=useState(true),router=useRouter();
+ const[email,setEmail]=useState(""),[secret,setSecret]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false),[next,setNext]=useState(""),[approval,setApproval]=useState<any>(null),[method,setMethod]=useState<"email"|"phone">("email"),[phoneEnabled,setPhoneEnabled]=useState(false),router=useRouter();
  useEffect(()=>{setNext(new URLSearchParams(window.location.search).get("next")||"")},[]);
  useEffect(()=>{let active=true;fetch("/api/auth/methods",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(active){const enabled=d.phoneEnabled!==false;setPhoneEnabled(enabled);if(!enabled)setMethod("email")}}).catch(()=>{});return()=>{active=false}},[]);
  async function go(){
