@@ -23,6 +23,7 @@ const config:CapacitorConfig={
   adjustMarginsForEdgeToEdge:"force"
  },
  plugins:{
+  SocialLogin:{providers:{google:true,facebook:false,apple:false,twitter:false}},
   SplashScreen:{
    launchShowDuration:180,
    launchAutoHide:true,
