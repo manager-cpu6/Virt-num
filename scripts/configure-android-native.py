@@ -414,12 +414,19 @@ public class NumelixaUpdaterPlugin extends Plugin {
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginHandle;
+import com.ee.forgr.capacitor.social.login.GoogleProvider;
+import com.ee.forgr.capacitor.social.login.ModifiedMainActivityForSocialLoginPlugin;
+import com.ee.forgr.capacitor.social.login.SocialLoginPlugin;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-public class MainActivity extends BridgeActivity {
+public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -432,6 +439,28 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
     }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode >= GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MIN &&
+            requestCode < GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MAX) {
+            PluginHandle handle = getBridge().getPlugin("SocialLogin");
+            if (handle == null) {
+                Log.i("Google Activity Result", "SocialLogin plugin handle is null");
+                return;
+            }
+            Plugin plugin = handle.getInstance();
+            if (!(plugin instanceof SocialLoginPlugin)) {
+                Log.i("Google Activity Result", "SocialLogin plugin instance is invalid");
+                return;
+            }
+            ((SocialLoginPlugin) plugin).handleGoogleLoginIntent(requestCode, data);
+        }
+    }
+
+    @Override
+    public void IHaveModifiedTheMainActivityForTheUseWithSocialLoginPlugin() {}
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
