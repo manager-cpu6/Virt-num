@@ -65,7 +65,8 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  useEffect(()=>{
   if(isNative)return;
   let active=true;
-  if(!clientId){setError("Google sign-in is not configured. Add NEXT_PUBLIC_GOOGLE_CLIENT_ID in Vercel.");return}
+  if(!configLoaded)return;
+  if(!clientId){setError("Google sign-in is not configured. Set GOOGLE_CLIENT_ID in Vercel.");return}
   const render=()=>{
    if(!active||!host.current||!window.google?.accounts?.id)return;
    host.current.innerHTML="";
