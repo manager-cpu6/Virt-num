@@ -49,8 +49,8 @@ export default function Login(){
    <button className="primary-btn full" onClick={go} disabled={loading}>{loading?"Signing in…":"Sign in →"}</button>
    <Link className="text-link" href="/forgot-password">Forgot password?</Link>
   </div>}
-  <div className="google-signin-section" style={{marginTop:20,display:"flex",flexDirection:"column",alignItems:"stretch",gap:12}}>
-   <div style={{display:"flex",alignItems:"center",gap:12,color:"var(--muted,#7c8999)",fontSize:12,fontWeight:600}}><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/><span>OR CONTINUE WITH</span><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/></div>
+  <div className="google-signin-section" style={{marginTop:20,display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"}}>
+   <div style={{display:"flex",alignItems:"center",gap:12,color:"var(--muted,#7c8999)",fontSize:12,fontWeight:600}}><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/><span>OR</span><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/></div>
    <GoogleSignIn onSuccess={()=>finishLogin("Google sign-in successful.")}/>
   </div>
   <p className="auth-switch">New to Numelixa? <Link href="/signup">Create your account</Link></p>

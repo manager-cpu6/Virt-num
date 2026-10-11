@@ -38,8 +38,8 @@ export default function Signup(){
    <button className="primary-btn full" onClick={go} disabled={loading}>{loading?"Creating your account…":"Create account →"}</button>
    <div className="auth-note">A verification code will be sent to your email.</div>
   </div>}
-  <div className="google-signin-section" style={{marginTop:20,display:"flex",flexDirection:"column",alignItems:"stretch",gap:12}}>
-   <div style={{display:"flex",alignItems:"center",gap:12,color:"var(--muted,#7c8999)",fontSize:12,fontWeight:600}}><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/><span>OR CONTINUE WITH</span><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/></div>
+  <div className="google-signin-section" style={{marginTop:20,display:"flex",flexDirection:"column",alignItems:"center",gap:12,width:"100%"}}>
+   <div style={{display:"flex",alignItems:"center",gap:12,color:"var(--muted,#7c8999)",fontSize:12,fontWeight:600}}><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/><span>OR</span><span style={{height:1,background:"currentColor",opacity:.25,flex:1}}/></div>
    <GoogleSignIn onSuccess={()=>finishSignup("Google verification successful.","/dashboard")}/>
   </div>
   <p className="auth-switch">Already have an account? <Link href="/login">Sign in</Link></p>
