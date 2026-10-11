@@ -154,9 +154,18 @@ export default function MobileAppBootstrap(){
      await syncCurrentToken();
      return true;
     }
-    // The Android MainActivity requests POST_NOTIFICATIONS at startup. We only
-    // request through Capacitor after a user explicitly taps the fallback gate,
-    // preventing two permission dialogs from racing each other.
+    // Request Android's runtime notification permission automatically on first
+    // launch. This is the single permission request path (the native activity
+    // must not race it with a second dialog).
+    const requested=await push.requestPermissions();
+    if(requested.receive==="granted"){
+     await ensureAndroidChannel();
+     document.getElementById("numelixa-notification-gate")?.remove();
+     await push.register();
+     await syncCurrentToken();
+     return true;
+    }
+    // Keep the app covered until the user grants permission or opens Settings.
     showPermissionGate();
     return false;
    }catch(error){

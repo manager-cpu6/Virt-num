@@ -2,7 +2,7 @@ name: Numelixa Android APK
 
 on:
   push:
-    branches: [main, redesign/android-premium-fcm-audit, redesign/complete-auth-services-push]
+    branches: [main, redesign/android-premium-fcm-audit, redesign/complete-auth-services-push, fix/native-google-account-chooser]
     tags: ["v*"]
   workflow_dispatch:
 
@@ -63,6 +63,12 @@ jobs:
           
           if "com.google.gms.google-services" not in app_text:
               app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
+          
+          # capgo social login requests androidx.browser 1.9.0, while the
+          # generated Android Browser Helper pins 1.4.0 with strict consistency.
+          # Force a single compatible version for the generated app and plugins.
+          if "resolutionStrategy.force 'androidx.browser:browser:1.8.0'" not in app_text:
+              app_text = app_text.rstrip() + "\n\nconfigurations.configureEach {\n    resolutionStrategy.force 'androidx.browser:browser:1.8.0'\n}\n"
           
           root.write_text(root_text)
           app.write_text(app_text)
@@ -154,6 +160,10 @@ jobs:
               )
           if "com.google.gms.google-services" not in app_text:
               app_text = app_text.rstrip() + "\n\napply plugin: 'com.google.gms.google-services'\n"
+          
+          # Keep browser dependency compatible with generated AGP 8.7.2 / compileSdk 35.
+          if "resolutionStrategy.force 'androidx.browser:browser:1.8.0'" not in app_text:
+              app_text = app_text.rstrip() + "\n\nconfigurations.configureEach {\n    resolutionStrategy.force 'androidx.browser:browser:1.8.0'\n}\n"
           
           root.write_text(root_text)
           app.write_text(app_text)

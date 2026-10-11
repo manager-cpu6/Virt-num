@@ -42,3 +42,13 @@ html.numelixa-native .error-box{border-radius:13px!important;background:rgba(124
 html.numelixa-native .success-box{border-radius:13px!important;background:rgba(16,128,96,.18)!important;color:#9ff5d4!important;border-color:rgba(75,223,171,.22)!important}
 @media(min-width:600px){html.numelixa-native .page-shell{padding-left:22px!important;padding-right:22px!important}html.numelixa-native .service-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(prefers-reduced-motion:reduce){html.numelixa-native *,html.numelixa-native *:before,html.numelixa-native *:after{scroll-behavior:auto!important;transition:none!important;animation:none!important}}
+
+
+/* Unified header across web and Android; use a real hamburger menu. */
+.topbar,.topbar.topbar-brand,.topbar.topbar-detail{background:#082b32!important;background-image:none!important;color:#f4fffe!important;border-color:#16464c!important;box-shadow:none!important;}
+.topbar .brand-logo,.topbar .brand-mark,.topbar .icon-btn,.topbar .home-menu-btn,.topbar .coin-pill{background:#082b32!important;background-image:none!important;color:#f4fffe!important;box-shadow:none!important;}
+.topbar .brand-copy b,.topbar .top-title{color:#f4fffe!important;}
+.topbar .brand-copy small,.topbar .top-menu a{color:#c1d7d9!important;}
+.topbar .icon-btn,.topbar .home-menu-btn{border-color:rgba(225,255,252,.14)!important;}
+/* Remove the in-app notification shortcut/badge only; native OS push notifications remain enabled. */
+.topbar .notification-btn,.topbar .notification-bell,.topbar .notification-count,.notification-actions,.notification-bell{display:none!important;}
