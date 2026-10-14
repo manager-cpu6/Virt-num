@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {getPaymentSettings,savePaypalCredentials,setActivePaymentProvider,paypalBaseUrl} from "@/lib/payment-settings";
 import {paypalApi} from "@/lib/paypal";
+import {getUsdtDepositInstructions,personalApiConfigured} from "@/lib/binance-personal";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";
 
@@ -30,6 +31,12 @@ export async function GET(){
 export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
+  if(action==="test_binance"){
+    if(!personalApiConfigured())return NextResponse.json({ok:false,error:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy."},{status:400});
+    const info=await getUsdtDepositInstructions();
+    const address=String(info.address||"");
+    return NextResponse.json({ok:true,network:info.networkName||info.network,addressPreview:address.length>12?address.slice(0,6)+"…"+address.slice(-5):address,message:"Binance API connection successful. Deposit address is available."});
+  }
   if(action==="activate"){
     const provider=b.provider==="paypal"?"paypal":b.provider==="binance"?"binance":"nowpayments";const s=await getPaymentSettings();
     if(provider==="paypal"&&!s.paypal.configured)return NextResponse.json({ok:false,error:"Configure PayPal Client ID and Secret Key first."},{status:400});
