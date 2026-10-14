@@ -1,0 +1,17 @@
+import {NextResponse} from "next/server";
+import {requireUser} from "@/lib/auth";
+import {collection} from "@/lib/mongo";
+export const runtime="nodejs";
+export const dynamic="force-dynamic";
+export async function GET(req:Request){
+ try{
+  const user=await requireUser(),orderId=new URL(req.url).searchParams.get("orderId")||"";
+  if(!orderId)return NextResponse.json({ok:false,error:"Payment order is required."},{status:400});
+  const p=await (await collection<any>("payments")).findOne({orderId,provider:"binance_personal",userId:String(user.id)});
+  if(!p)return NextResponse.json({ok:false,error:"Payment request was not found."},{status:404});
+  return NextResponse.json({ok:true,status:String(p.status),coins:Number(p.coins),amount:Number(p.amountCrypto),expiresAt:p.expiresAt||null,paidAt:p.paidAt||null});
+ }catch(e){
+  if(e instanceof Error&&e.message==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in."},{status:401});
+  return NextResponse.json({ok:false,error:"Unable to check deposit status."},{status:500});
+ }
+}
