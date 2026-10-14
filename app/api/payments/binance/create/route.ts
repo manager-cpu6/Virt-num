@@ -70,6 +70,8 @@ export async function POST(req:Request){
     BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance did not return a deposit address. Check that the API key has read access to wallet/deposit information."
   };
   console.error("[BINANCE PERSONAL DEPOSIT CREATE]",m);
-  return NextResponse.json({ok:false,error:messages[m]||"Unable to create the payment request. Check the Binance API permissions and try again."},{status:500});
+  const apiCode=m.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
+  const error=messages[m]||(apiCode?"Binance rejected the request (API code/status "+apiCode+"). Check the Binance API permissions, account eligibility, and enabled deposit network.":"Unable to create the payment request. Check the Binance API permissions and try again.");
+  return NextResponse.json({ok:false,error,diagnosticCode:apiCode||null},{status:500});
  }
 }
