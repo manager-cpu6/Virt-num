@@ -8,13 +8,13 @@ type Me={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
 
 export default function Wallet(){
-  const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);
+  const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);\n  const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
-  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|null>(null);
+  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
-      setU(d.user||null);setPricing(d.pricing||null);setProvider(d.paymentProvider==="paypal"?"paypal":"nowpayments");
+      setU(d.user||null);setPricing(d.pricing||null);setProvider(d.paymentProvider==="paypal"?"paypal":d.paymentProvider==="binance"?"binance":"nowpayments");
       const packs:Array<Pack>=d.pricing?.coinPackages||[];
       if(fixedPacks.length)setSelected(fixedPacks[0].coins);
     }).catch(()=>setError("Unable to load wallet right now.")).finally(()=>setLoaded(true));
@@ -36,6 +36,25 @@ export default function Wallet(){
     finally{setLoading(false)}
   }
 
+  async function copyValue(value:string){
+    try{await navigator.clipboard.writeText(value);setDepositStatus("copied");window.setTimeout(()=>setDepositStatus("waiting"),1800);}
+    catch{setError("Copy failed. Please select and copy the value manually.");}
+  }
+  async function checkDeposit(){
+    if(!deposit?.orderId)return;
+    setCheckingDeposit(true);setError("");
+    try{
+      const d=await fetch("/api/payments/binance/status?orderId="+encodeURIComponent(deposit.orderId),{cache:"no-store"}).then(r=>r.json());
+      if(!d.ok){setError(d.error||"Unable to check deposit.");return}
+      setDepositStatus(d.status);
+      if(d.status==="paid"){
+        const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());
+        if(me.user)setU(me.user);
+      }else if(d.status==="expired")setError("This deposit request expired. Please create a new payment request.");
+    }catch{setError("Unable to check deposit status. Try again.");}
+    finally{setCheckingDeposit(false);}
+  }
+
   return <div>
     <TopBar title="Wallet"/>
     <section className="wallet-hero wallet-hero-new">
@@ -52,6 +71,21 @@ export default function Wallet(){
     {selectedPack&&<section className="wallet-checkout"><div><span className="eyebrow">SELECTED PACKAGE</span><strong>{selectedPack.coins.toLocaleString()} coins</strong><small>{"Payment required: $"+selectedPack.priceUsd.toFixed(2)}</small></div>
       <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":u?provider==="paypal"?"Continue with PayPal":"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
     </section>}
-    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":"Coins are added only after the payment is confirmed."}</p>
+    {deposit&&<section className="wallet-checkout" style={{display:"block",marginTop:20}}>
+      <div style={{display:"grid",gap:12}}>
+        <span className="eyebrow">BINANCE PERSONAL · USDT DEPOSIT</span>
+        <h2 style={{margin:0}}>Send the exact amount</h2>
+        {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. The request expires in about 60 minutes.</p>}
+        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{Number(deposit.amount).toFixed(6)} USDT <button type="button" className="secondary-btn" onClick={()=>copyValue(Number(deposit.amount).toFixed(6))}>Copy amount</button></strong></div>
+        <div><small>Network — must match exactly</small><strong style={{display:"block"}}>{deposit.networkName||deposit.network}</strong></div>
+        <div><small>Binance deposit address</small><div style={{overflowWrap:"anywhere",fontWeight:700}}>{deposit.address}</div><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.address))}>Copy address</button></div>
+        {deposit.memo&&<div><small>Memo / Tag (required)</small><strong>{deposit.memo}</strong><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.memo))}>Copy memo</button></div>}
+        <p className="wallet-footnote">Do not send another coin or use a different network. Send the exact amount, including all decimal digits. Binance Personal API only checks confirmed USDT deposits.</p>
+        <button className="primary-btn" type="button" onClick={checkDeposit} disabled={checkingDeposit||depositStatus==="paid"}>{checkingDeposit?"Checking deposit…":depositStatus==="paid"?"Deposit confirmed ✓":"Check deposit status"}</button>
+        {depositStatus==="waiting"&&<small>Current status: waiting for a confirmed Binance deposit. Automatic checks run periodically.</small>}
+        {depositStatus==="expired"&&<small>This request has expired. Start a new payment from the coin store.</small>}
+      </div>
+    </section>}
+    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":provider==="binance"?"Binance Personal: send USDT to the generated deposit instructions. Coins are added only after a matching deposit is confirmed.":"Coins are added only after the payment is confirmed."}</p>
   </div>
 }
