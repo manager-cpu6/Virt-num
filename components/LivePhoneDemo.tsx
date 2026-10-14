@@ -11,6 +11,7 @@ const demos = [
 
 export default function LivePhoneDemo(){
   const [index,setIndex]=useState(()=>Math.floor(Math.random()*demos.length));
+  // This is a marketing preview only; keep its rotation logic valid TSX and deterministic per render.
   const [tick,setTick]=useState(0);
   const seenRef=useRef<number[]>([]);
 
