@@ -69,6 +69,8 @@ export async function POST(req:Request){
     BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance returned no address. Check wallet/deposit read permissions."
   };
   if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
+  const apiCode=message.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
+  if(apiCode)return NextResponse.json({ok:false,error:"Binance rejected the signed request (API code/status "+apiCode+"). Check the Binance API permissions, account eligibility, and enabled deposit network.",diagnosticCode:apiCode},{status:502});
   const m=e instanceof Error?e.message:"";
   const map:any={PAYPAL_CREDENTIALS_INVALID:"PayPal Client ID or Secret Key is invalid.",PAYPAL_WEBHOOK_CREATE_FAILED:"PayPal credentials are valid but the webhook could not be created."};
   return NextResponse.json({ok:false,error:map[m]||"Unable to update payment settings."},{status:500});
