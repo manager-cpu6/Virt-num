@@ -31,9 +31,10 @@ export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
   if(action==="activate"){
-    const provider=b.provider==="paypal"?"paypal":"nowpayments";const s=await getPaymentSettings();
+    const provider=b.provider==="paypal"?"paypal":b.provider==="binance"?"binance":"nowpayments";const s=await getPaymentSettings();
     if(provider==="paypal"&&!s.paypal.configured)return NextResponse.json({ok:false,error:"Configure PayPal Client ID and Secret Key first."},{status:400});
     if(provider==="nowpayments"&&!s.nowpayments.configured)return NextResponse.json({ok:false,error:"NOWPayments is not configured on the server."},{status:400});
+    if(provider==="binance"&&!s.binance.configured)return NextResponse.json({ok:false,error:"Configure Binance Pay API credentials in Vercel Production environment first."},{status:400});
     await setActivePaymentProvider(provider);return NextResponse.json({ok:true,activeProvider:provider});
   }
   if(action==="save_paypal"){
