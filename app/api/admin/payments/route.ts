@@ -55,6 +55,20 @@ export async function POST(req:Request){
   return NextResponse.json({ok:false,error:"Invalid payment action."},{status:400});
  }catch(e){
   console.error("[ADMIN PAYMENTS]",e);
+  const message=e instanceof Error?e.message:"";
+  const binanceErrors:Record<string,string>={
+    BINANCE_PERSONAL_API_NOT_CONFIGURED:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy.",
+    BINANCE_NETWORK_ERROR:"Could not connect to Binance. Check network access and try again.",
+    "BINANCE_API_AUTH_ERROR_-2015":"Binance rejected the API key. Check read permissions and trusted-IP restrictions; Vercel server IPs may not be fixed.",
+    "BINANCE_API_AUTH_ERROR_-2014":"Binance API key format was rejected. Check the API key.",
+    BINANCE_API_TIMESTAMP_ERROR:"Binance rejected the request timestamp. Retry the test.",
+    BINANCE_API_RATE_LIMIT:"Binance rate-limited the test. Wait briefly and retry.",
+    BINANCE_API_TEMPORARY_ERROR:"Binance is temporarily unavailable.",
+    "BINANCE_API_REQUEST_ERROR_-1022":"Binance signature verification failed. Recheck BINANCE_SECRET_KEY.",
+    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
+    BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance returned no address. Check wallet/deposit read permissions."
+  };
+  if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
   const m=e instanceof Error?e.message:"";
   const map:any={PAYPAL_CREDENTIALS_INVALID:"PayPal Client ID or Secret Key is invalid.",PAYPAL_WEBHOOK_CREATE_FAILED:"PayPal credentials are valid but the webhook could not be created."};
   return NextResponse.json({ok:false,error:map[m]||"Unable to update payment settings."},{status:500});
