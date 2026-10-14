@@ -4,6 +4,9 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){
  try{
   const s=await getPaymentSettings();const body=await req.clone().json();const target=s.activeProvider;
+  if(target==="binance"){
+    const x=await fetch(new URL("/api/payments/binance/create",req.url),{method:"POST",headers:req.headers,body:JSON.stringify(body)});return new NextResponse(await x.text(),{status:x.status,headers:{"Content-Type":"application/json"}});
+  }
   if(target==="paypal"){
     const r=await fetch(new URL("/api/payments/paypal/create",req.url),{method:"POST",headers:req.headers,body:JSON.stringify(body)});return new NextResponse(await r.text(),{status:r.status,headers:{"Content-Type":"application/json"}});
   }
