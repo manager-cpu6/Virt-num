@@ -168,10 +168,16 @@ function Providers({stats}:{stats:Stats|null}){
 
 
 function AdminPayments(){
- const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false);
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null);
  async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
  useEffect(()=>{load()},[]);
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
+ async function testBinance(){
+  setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
+  try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"test_binance"})});const d=await response.json();
+   setBinanceTest(d);setMsg(d.ok?d.message:d.error||"Binance connection test failed.");setMsgError(!d.ok);
+  }catch{setMsg("Unable to contact the Binance test endpoint.");setMsgError(true)}finally{setBusy(false)}
+ }
  async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");setMsgError(false);try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})});const d=await response.json();setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Personal API":"NOWPayments")+".":d.error||"Unable to switch payment method.");setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to reach payment settings. Please try again.");setMsgError(true)}finally{setBusy(false)}}
  if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
  return <div className="admin-two-col">
@@ -181,7 +187,7 @@ function AdminPayments(){
    <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
    {msg&&<div className={msgError?"error-box":"success-box"}>{msg}</div>}
   <div className="payment-provider-card"><div><b>Binance Personal API</b><small>{state.binance?.configured?"API credentials detected · USDT deposit history and automatic wallet credit":"Not configured · add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy"}</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{busy?"Activating…":state.activeProvider==="binance"?"BINANCE PERSONAL ACTIVE":"Activate Binance Personal"}</button></div>
-   <p className="admin-help">Add BINANCE_API_KEY and BINANCE_SECRET_KEY to Vercel Production. Use a read-only API key with IP restrictions where possible; it needs permission to read wallet/deposit history and deposit address information, not withdrawals or trading. Never paste the secret into chat or GitHub. Confirmed USDT deposits are matched to unique pending deposit amounts and credited once.</p>
+   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:12}}><button className="secondary-btn" disabled={busy||!state.binance?.configured} onClick={testBinance}>{busy?"Testing Binance…":"Test Binance API connection"}</button>{binanceTest?.ok&&<small>Network: {binanceTest.network} · Address: {binanceTest.addressPreview}</small>}</div>\n   <p className="admin-help">Add BINANCE_API_KEY and BINANCE_SECRET_KEY to Vercel Production. Use a read-only API key with IP restrictions where possible; it needs permission to read wallet/deposit history and deposit address information, not withdrawals or trading. Never paste the secret into chat or GitHub. Confirmed USDT deposits are matched to unique pending deposit amounts and credited once.</p>
   </Table>
   <Table title="PayPal credentials">
    <div className="admin-form">
