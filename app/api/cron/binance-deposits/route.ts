@@ -17,7 +17,7 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
  let credited:any=null;
  try{
   await session.withTransaction(async()=>{
-   const payments=db.collection("payments"),users=db.collection("users"),txs=db.collection("coinTransactions");
+   const payments=db.collection<any>("payments"),users=db.collection<any>("users"),txs=db.collection<any>("coinTransactions");
    const already=await payments.findOne({provider:"binance_personal",txid:String(deposit.txId)}, {session});
    if(already)return;
    const claimed=await payments.findOneAndUpdate(
