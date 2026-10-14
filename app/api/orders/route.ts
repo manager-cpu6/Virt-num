@@ -296,6 +296,8 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false,error:"The number service is temporarily unavailable for this purchase."},{status:502});
     if(/not enough rating/i.test(m))
       return NextResponse.json({ok:false,error:"The number service is temporarily unavailable for this purchase."},{status:502});
+    if(/Tiger SMS did not return an activation number|Provider did not return a complete activation|activation number/i.test(m))
+      return NextResponse.json({ok:false,error:"No number is available right now. Your balance will be refunded if it was charged. Please try again or choose another country."},{status:409});
     if(/bad country/i.test(m))
       return NextResponse.json({ok:false,error:"The selected country is temporarily unavailable."},{status:502});
     if(/bad operator/i.test(m))
