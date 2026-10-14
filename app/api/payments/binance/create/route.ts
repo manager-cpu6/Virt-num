@@ -52,13 +52,24 @@ export async function POST(req:Request){
   if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
   const messages:Record<string,string>={
     BINANCE_PERSONAL_API_NOT_CONFIGURED:"Binance Personal API is not configured. Please try again later.",
-    BINANCE_PERSONAL_API_KEY_INVALID:"Binance rejected the API credentials. Check the API key, secret, permissions and IP restrictions.",
-    BINANCE_PERSONAL_API_REQUEST_FAILED:"Binance could not be reached. Try again shortly.",
+    BINANCE_PERSONAL_API_KEY_INVALID:"Binance rejected the API credentials. Check that the API key and secret match.",
+    BINANCE_NETWORK_ERROR:"Numelixa could not connect to Binance. Check Binance API availability and try again.",
+    BINANCE_API_AUTH_ERROR_-2015:"Binance rejected this API key. Check API permissions and the trusted-IP allowlist; Vercel server IPs may not be fixed.",
+    BINANCE_API_AUTH_ERROR_-2014:"Binance API key format was rejected. Check that BINANCE_API_KEY is copied correctly.",
+    BINANCE_API_TIMESTAMP_ERROR:"Binance rejected the request timestamp. Please retry shortly.",
+    BINANCE_API_RATE_LIMIT:"Binance rate-limited this request. Please wait a moment and try again.",
+    BINANCE_API_TEMPORARY_ERROR:"Binance is temporarily unavailable. Please try again shortly.",
+    BINANCE_API_PERMISSION_ERROR_-2010:"This Binance API key does not have permission for this wallet operation.",
+    BINANCE_API_PERMISSION_ERROR_-2008:"Binance does not recognize this API key. Check the key and account.",
+    BINANCE_API_REQUEST_ERROR_-1022:"Binance signature verification failed. Check BINANCE_SECRET_KEY for extra spaces or a wrong secret.",
+    BINANCE_API_REQUEST_ERROR_-1102:"Binance rejected a required request parameter. Please contact support.",
+    BINANCE_API_REQUEST_ERROR_-1002:"Binance requires additional API authorization or permissions.",
+    BINANCE_API_REQUEST_FAILED:"Binance API request failed. Check API permissions, trusted-IP settings, and account deposit availability.",
     BINANCE_USDT_NOT_AVAILABLE:"USDT is not available on this Binance account.",
-    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are currently disabled on this Binance account.",
-    BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance did not return a USDT deposit address."
+    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for the available Binance networks. Enable a supported USDT deposit network.",
+    BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance did not return a deposit address. Check that the API key has read access to wallet/deposit information."
   };
   console.error("[BINANCE PERSONAL DEPOSIT CREATE]",m);
-  return NextResponse.json({ok:false,error:messages[m]||"Unable to prepare the USDT deposit. Please try again."},{status:500});
+  return NextResponse.json({ok:false,error:messages[m]||"Unable to create the payment request. Check the Binance API permissions and try again."},{status:500});
  }
 }
