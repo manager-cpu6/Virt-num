@@ -180,7 +180,7 @@ function AdminPayments(){
    <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
    {msg&&<div className="success-box">{msg}</div>}
   <div className="payment-provider-card"><div><b>Binance Pay</b><small>Binance Pay API · signed checkout + verified payment callback</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{state.activeProvider==="binance"?"OPEN BINANCE PAY":"Open Binance Pay"}</button></div>
-   <p className="admin-help">Binance Pay requires merchant API credentials in Vercel Production. Set BINANCE_PAY_API_KEY, BINANCE_PAY_CERT_SERIAL, BINANCE_PAY_PRIVATE_KEY and BINANCE_PAY_PUBLIC_KEY, then redeploy. Never paste private keys into public chat or GitHub.</p>
+   <p className="admin-help">Binance Pay requires merchant API credentials in Vercel Production. Set BINANCE_PAY_API_KEY (or BINANCE_PAY_CERT_SERIAL), BINANCE_PAY_PRIVATE_KEY and BINANCE_PAY_PUBLIC_KEY in Vercel Production, then redeploy. The public key must be the Binance Pay platform verification key used for callbacks, not your merchant private key. Never paste private keys into public chat or GitHub.</p>
   </Table>
   <Table title="PayPal credentials">
    <div className="admin-form">
