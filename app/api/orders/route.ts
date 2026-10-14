@@ -319,7 +319,7 @@ export async function POST(req:Request){
     if(m==="PROVIDER_ORDER_CONFLICT")
       return NextResponse.json({ok:false,error:"The activation could not be safely attached to this account. Please contact Numelixa support."},{status:409});
 
-    return NextResponse.json({ok:false,error:m||"Number purchase failed. Please try again."},{status:502});
+    return NextResponse.json({ok:false,error:"We could not get a number right now. Your balance will be refunded if it was charged. Please try again or choose another country."},{status:502});
   }
 }
 export async function DELETE(req:Request){
@@ -334,9 +334,9 @@ export async function DELETE(req:Request){
   if(!Number.isFinite(createdAt))return NextResponse.json({ok:false,error:"Order timestamp is invalid."},{status:409});
   if(isTiger){
    const eligibleAt=o.cancelAvailableAt?new Date(o.cancelAvailableAt).getTime():createdAt+6*60*1000;
-   if(now<eligibleAt)return NextResponse.json({ok:false,code:"CANCEL_TIMER_ACTIVE",cancelAvailableAt:new Date(eligibleAt).toISOString(),error:"Tiger SMS cancellation and refund become available after 6 minutes."},{status:409});
+   if(now<eligibleAt)return NextResponse.json({ok:false,code:"CANCEL_TIMER_ACTIVE",cancelAvailableAt:new Date(eligibleAt).toISOString(),error:"Cancellation and refund become available after 6 minutes."},{status:409});
   }else if(now-createdAt>5*60*1000){
-   return NextResponse.json({ok:false,error:"Cancellation is available only during the first 5 minutes for this provider."},{status:409});
+   return NextResponse.json({ok:false,error:"Cancellation is available only during the first 5 minutes."},{status:409});
   }
   // Claim the cancellation atomically so repeated taps cannot trigger duplicate refunds.
   const claimed=await orders.findOneAndUpdate(
