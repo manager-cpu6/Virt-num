@@ -171,7 +171,7 @@ function AdminPayments(){
  async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
  useEffect(()=>{load()},[]);
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
- async function activate(provider:"paypal"|"nowpayments"){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})}).then(r=>r.json());setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":"NOWPayments")+".":d.error||"Unable to switch payment method.");if(d.ok)await load();}finally{setBusy(false)}}
+ async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})}).then(r=>r.json());setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Pay":"NOWPayments")+".":d.error||"Unable to switch payment method.");if(d.ok)await load();}finally{setBusy(false)}}
  if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
  return <div className="admin-two-col">
   <Table title="Active payment method">
@@ -179,6 +179,8 @@ function AdminPayments(){
    <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>
    <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
    {msg&&<div className="success-box">{msg}</div>}
+  <div className="payment-provider-card"><div><b>Binance Pay</b><small>Binance Pay API · signed checkout + verified payment callback</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{state.activeProvider==="binance"?"OPEN BINANCE PAY":"Open Binance Pay"}</button></div>
+   <p className="admin-help">Binance Pay requires merchant API credentials in Vercel Production. Set BINANCE_PAY_API_KEY, BINANCE_PAY_CERT_SERIAL, BINANCE_PAY_PRIVATE_KEY and BINANCE_PAY_PUBLIC_KEY, then redeploy. Never paste private keys into public chat or GitHub.</p>
   </Table>
   <Table title="PayPal credentials">
    <div className="admin-form">
