@@ -75,10 +75,10 @@ export default function Wallet(){
     </section>}
     {deposit&&<section className="wallet-checkout" style={{display:"block",marginTop:20}}>
       <div style={{display:"grid",gap:12}}>
-        <span className="eyebrow">BINANCE PERSONAL · USDT DEPOSIT</span>
+        <span className="eyebrow">SECURE USDT PAYMENT</span>
         <h2 style={{margin:0}}>Send the exact amount</h2>
-        {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. The request expires in about 60 minutes.</p>}
-        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{Number(deposit.amount).toFixed(6)} USDT <button type="button" className="secondary-btn" onClick={()=>copyValue(Number(deposit.amount).toFixed(6))}>Copy amount</button></strong></div>
+        {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. This payment request expires in 15 minutes. Payments received after expiry are not accepted.</p>}
+        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{Number(deposit.amount).toFixed(2)} USDT <button type="button" className="secondary-btn" onClick={()=>copyValue(Number(deposit.amount).toFixed(2))}>Copy amount</button></strong></div>
         <div><small>Network — must match exactly</small><strong style={{display:"block"}}>{deposit.networkName||deposit.network}</strong></div>
         <div><small>Binance deposit address</small><div style={{overflowWrap:"anywhere",fontWeight:700}}>{deposit.address}</div><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.address))}>Copy address</button></div>
         {deposit.memo&&<div><small>Memo / Tag (required)</small><strong>{deposit.memo}</strong><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.memo))}>Copy memo</button></div>}
@@ -88,6 +88,6 @@ export default function Wallet(){
         {depositStatus==="expired"&&<small>This request has expired. Start a new payment from the coin store.</small>}
       </div>
     </section>}
-    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":provider==="binance"?"Binance Personal: send USDT to the generated deposit instructions. Coins are added only after a matching deposit is confirmed.":"Coins are added only after the payment is confirmed."}</p>
+    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":provider==="binance"?"Send the exact USDT amount to the displayed address within 15 minutes. Coins are added only after a matching deposit is confirmed.":"Coins are added only after the payment is confirmed."}</p>
   </div>
 }
