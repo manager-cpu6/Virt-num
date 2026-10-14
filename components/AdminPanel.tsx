@@ -69,7 +69,8 @@ export default function AdminPanel(){
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins} onDelete={deleteUser}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
   {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
-  {tab==="providers"&&<Providers stats={stats}/>}\n  {tab==="payments"&&<AdminPayments/>}
+  {tab==="providers"&&<Providers stats={stats}/>}
+  {tab==="payments"&&<AdminPayments/>}
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="authentication"&&<AdminAuthMethods/>}
@@ -167,19 +168,19 @@ function Providers({stats}:{stats:Stats|null}){
 
 
 function AdminPayments(){
- const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState("");
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false);
  async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
  useEffect(()=>{load()},[]);
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
- async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})}).then(r=>r.json());setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Personal API":"NOWPayments")+".":d.error||"Unable to switch payment method.");if(d.ok)await load();}finally{setBusy(false)}}
+ async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");setMsgError(false);try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})});const d=await response.json();setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Personal API":"NOWPayments")+".":d.error||"Unable to switch payment method.");setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to reach payment settings. Please try again.");setMsgError(true)}finally{setBusy(false)}}
  if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
  return <div className="admin-two-col">
   <Table title="Active payment method">
    <div className="payment-provider-card"><div><b>NOWPayments</b><small>Existing crypto payment method</small></div><button className={state.activeProvider==="nowpayments"?"primary-btn":"secondary-btn"} disabled={busy||!state.nowpayments.configured} onClick={()=>activate("nowpayments")}>{state.activeProvider==="nowpayments"?"OPEN NOWPAYMENTS":"Open NOWPayments"}</button></div>
    <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>
    <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
-   {msg&&<div className="success-box">{msg}</div>}
-  <div className="payment-provider-card"><div><b>Binance Personal API</b><small>USDT deposit history · automatic matching and wallet credit</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{state.activeProvider==="binance"?"BINANCE PERSONAL ACTIVE":"Activate Binance Personal"}</button></div>
+   {msg&&<div className={msgError?"error-box":"success-box"}>{msg}</div>}
+  <div className="payment-provider-card"><div><b>Binance Personal API</b><small>{state.binance?.configured?"API credentials detected · USDT deposit history and automatic wallet credit":"Not configured · add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy"}</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{busy?"Activating…":state.activeProvider==="binance"?"BINANCE PERSONAL ACTIVE":"Activate Binance Personal"}</button></div>
    <p className="admin-help">Add BINANCE_API_KEY and BINANCE_SECRET_KEY to Vercel Production. Use a read-only API key with IP restrictions where possible; it needs permission to read wallet/deposit history and deposit address information, not withdrawals or trading. Never paste the secret into chat or GitHub. Confirmed USDT deposits are matched to unique pending deposit amounts and credited once.</p>
   </Table>
   <Table title="PayPal credentials">
