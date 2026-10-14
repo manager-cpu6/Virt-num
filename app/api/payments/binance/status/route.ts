@@ -9,7 +9,12 @@ export async function GET(req:Request){
   if(!orderId)return NextResponse.json({ok:false,error:"Payment order is required."},{status:400});
   const p=await (await collection<any>("payments")).findOne({orderId,provider:"binance_personal",userId:String(user.id)});
   if(!p)return NextResponse.json({ok:false,error:"Payment request was not found."},{status:404});
-  return NextResponse.json({ok:true,status:String(p.status),coins:Number(p.coins),amount:Number(p.amountCrypto),expiresAt:p.expiresAt||null,paidAt:p.paidAt||null});
+  let status=String(p.status);
+  if(status==="pending"&&p.expiresAt&&new Date(p.expiresAt).getTime()<=Date.now()){
+   await (await collection<any>("payments")).updateOne({_id:p._id,provider:"binance_personal",status:"pending",expiresAt:{$lte:new Date()}},{$set:{status:"expired",updatedAt:new Date()}});
+   status="expired";
+  }
+  return NextResponse.json({ok:true,status,coins:Number(p.coins),amount:Number(p.amountCrypto),expiresAt:p.expiresAt||null,paidAt:p.paidAt||null});
  }catch(e){
   if(e instanceof Error&&e.message==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in."},{status:401});
   return NextResponse.json({ok:false,error:"Unable to check deposit status."},{status:500});
