@@ -11,7 +11,7 @@ const demos = [
 
 export default function LivePhoneDemo(){
   const [index,setIndex]=useState(()=>Math.floor(Math.random()*demos.length));
-  // This is a marketing preview only; keep rotation logic valid TSX and avoid repeating recent demo entries.
+  // Marketing preview only (not real SMS). Rotate entries without repeating the recent selections.
   const [tick,setTick]=useState(0);
   const seenRef=useRef<number[]>([]);
 
