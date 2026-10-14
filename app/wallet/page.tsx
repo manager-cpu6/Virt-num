@@ -8,10 +8,12 @@ type Me={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
 
 export default function Wallet(){
-  const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);
+  const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
   const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
   const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null);
+
+  useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(timer)},[]);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
@@ -23,6 +25,8 @@ export default function Wallet(){
 
   const packs=useMemo(()=>fixedPacks,[fixedPacks]);
   const selectedPack=packs.find(p=>p.coins===selected)||null;
+  const secondsLeft=deposit?.expiresAt?Math.max(0,Math.ceil((new Date(deposit.expiresAt).getTime()-clock)/1000)):0;
+  const expiryLabel=String(Math.floor(secondsLeft/60)).padStart(2,"0")+":"+String(secondsLeft%60).padStart(2,"0");
 
   async function pay(){
     if(!u){location.href="/login?next=/wallet";return}
@@ -77,6 +81,7 @@ export default function Wallet(){
       <div style={{display:"grid",gap:12}}>
         <span className="eyebrow">SECURE USDT PAYMENT</span>
         <h2 style={{margin:0}}>Send the exact amount</h2>
+        {depositStatus!=="paid"&&<div className="wallet-expiry-countdown" role="timer" aria-live="polite"><small>TIME LEFT TO PAY</small><strong>{expiryLabel}</strong>{secondsLeft===0&&<span>This payment request has expired. Create a new request to pay.</span>}</div>}
         {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. This payment request expires in 15 minutes. Payments received after expiry are not accepted.</p>}
         <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{Number(deposit.amount).toFixed(2)} USDT <button type="button" className="secondary-btn" onClick={()=>copyValue(Number(deposit.amount).toFixed(2))}>Copy amount</button></strong></div>
         <div><small>Network — must match exactly</small><strong style={{display:"block"}}>{deposit.networkName||deposit.network}</strong></div>
