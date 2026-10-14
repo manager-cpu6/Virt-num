@@ -24,7 +24,7 @@ async function ensurePaypalWebhook(clientId:string,secretKey:string,currentId:st
 }
 
 export async function GET(){
- try{await requireAdmin();const s=await getPaymentSettings();return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId? s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments});}
+ try{await requireAdmin();const s=await getPaymentSettings();return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId? s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance});}
  catch(e){return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});}
 }
 export async function POST(req:Request){
