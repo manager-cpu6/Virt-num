@@ -26,8 +26,8 @@ export async function POST(req:Request){
   let amountCrypto=0,unique=false;
   // Add a small, exact USDT fraction so each pending user request has a distinct amount.
   for(let i=0;i<20;i++){
-    const suffix=101+crypto.randomInt(0,899);
-    const candidate=Number((baseAmount+suffix/1_000_000).toFixed(6));
+    const cents=crypto.randomInt(0,100);
+    const candidate=Number((baseAmount+cents/100).toFixed(2));
     const existing=await payments.findOne({provider:"binance_personal",status:"pending",amountCrypto:candidate});
     if(!existing){amountCrypto=candidate;unique=true;break;}
   }
@@ -39,19 +39,19 @@ export async function POST(req:Request){
     amountUsd:baseAmount,amountCrypto,cryptoCurrency:"USDT",coins,status:"pending",txid:null,
     packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,
     depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,
-    createdAt:now,expiresAt:new Date(now.getTime()+60*60*1000),paidAt:null
+    createdAt:now,expiresAt:new Date(now.getTime()+15*60*1000),paidAt:null
   });
   return NextResponse.json({
     ok:true,depositRequired:true,provider:"binance_personal",orderId,coins,amount:amountCrypto,
     currency:"USDT",address:instructions.address,network:instructions.network,networkName:instructions.networkName,
-    memo:instructions.memo||"",expiresAt:new Date(now.getTime()+60*60*1000).toISOString(),
+    memo:instructions.memo||"",expiresAt:new Date(now.getTime()+15*60*1000).toISOString(),
     instructions:"Send the exact USDT amount on the specified network. Do not send another asset or use a different network. Coins are credited only after Binance confirms the deposit."
   });
  }catch(e){
   const m=e instanceof Error?e.message:"";
   if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
   const messages:Record<string,string>={
-    BINANCE_PERSONAL_API_NOT_CONFIGURED:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY to Vercel Production.",
+    BINANCE_PERSONAL_API_NOT_CONFIGURED:"Binance Personal API is not configured. Please try again later.",
     BINANCE_PERSONAL_API_KEY_INVALID:"Binance rejected the API credentials. Check the API key, secret, permissions and IP restrictions.",
     BINANCE_PERSONAL_API_REQUEST_FAILED:"Binance could not be reached. Try again shortly.",
     BINANCE_USDT_NOT_AVAILABLE:"USDT is not available on this Binance account.",
