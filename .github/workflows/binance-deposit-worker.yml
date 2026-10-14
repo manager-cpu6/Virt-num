@@ -1,0 +1,21 @@
+name: Binance Personal USDT Deposit Worker
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+concurrency:
+  group: binance-personal-deposit-worker
+  cancel-in-progress: false
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Poll confirmed Binance USDT deposits
+        env:
+          CRON_SECRET: ${{ secrets.NUMELIXA_CRON_SECRET }}
+        run: |
+          test -n "$CRON_SECRET" || { echo "Missing GitHub secret NUMELIXA_CRON_SECRET"; exit 1; }
+          curl --fail --silent --show-error --max-time 50 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            https://numelixa.com/api/cron/binance-deposits
