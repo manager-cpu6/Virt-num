@@ -414,6 +414,11 @@ public class NumelixaUpdaterPlugin extends Plugin {
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
+import android.os.Handler;
+import android.os.Looper;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
@@ -439,6 +444,22 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
         try {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
+
+        // Request Android 13+ notification permission at native startup.
+        // This does not depend on the remote website component loading.
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        9103
+                    );
+                }
+            }, 900L);
+        }
     }
 
     @Override
