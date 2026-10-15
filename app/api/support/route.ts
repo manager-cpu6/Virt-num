@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {getUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
+import {sendEmail,emailTemplate} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -40,6 +41,7 @@ export async function POST(req:Request){
     }
     const now=new Date(),id=mongoId();
     await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"reviewing",createdAt:now,reviewUntil:new Date(now.getTime()+DAY),updatedAt:now});
+    try{if(user.email)await sendEmail(String(user.email),"Numelixa Support received your request · "+String(id),emailTemplate("We received your request","Hello "+String(user.name||"there")+", your support request has been received.\n\nTicket ID: "+String(id)+"\nSubject: "+subject+"\nStatus: In review\nExpected review time: within 24 hours.\n\nOur team will review your message. Please keep this ticket ID for reference. You can visit Support at any time to check the request status.","https://support.numelixa.com","Your Numelixa support ticket was received."));}catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
     return NextResponse.json({ok:true,ticket:{id:String(id),status:"reviewing",createdAt:now,reviewUntil:new Date(now.getTime()+DAY)},message:"Your request has been submitted for review. You can submit another request after 24 hours."});
   }catch{return NextResponse.json({ok:false,error:"We could not submit your request. Please try again later."},{status:500})}
 }
