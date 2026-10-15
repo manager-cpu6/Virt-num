@@ -170,7 +170,12 @@ function Providers({stats}:{stats:Stats|null}){
 function AdminPayments(){
  const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null);
  async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
- useEffect(()=>{load()},[]);
+ useEffect(()=>{
+  load();
+  const refreshId=window.setInterval(load,30000);
+  const tickId=window.setInterval(()=>setState((old:any)=>old?({...old,payments:(old.payments||[]).map((p:any)=>p.status==="pending"?({...p,secondsRemaining:Math.max(0,Number(p.secondsRemaining||0)-1)}):p)}):old),1000);
+  return()=>{window.clearInterval(refreshId);window.clearInterval(tickId)};
+ },[]);
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
  async function testBinance(){
   setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
@@ -180,7 +185,21 @@ function AdminPayments(){
  }
  async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");setMsgError(false);try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})});const d=await response.json();setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Personal API":"NOWPayments")+".":d.error||"Unable to switch payment method.");setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to reach payment settings. Please try again.");setMsgError(true)}finally{setBusy(false)}}
  if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
- return <div className="admin-two-col">
+ const pendingPayments=(state.payments||[]).filter((p:any)=>p.status==="pending");
+ return <div className="admin-payment-stack">
+  <Table title={"Pending USDT payments ("+pendingPayments.length+")"}>
+   <p className="admin-help">Live pending Binance deposits. Time remaining updates every second; the list refreshes from the payment database every 30 seconds.</p>
+   {!pendingPayments.length?<div className="country-loading">No pending USDT payments right now.</div>:pendingPayments.map((p:any)=><div key={p.orderId} className="admin-order-card" style={{marginBottom:12,border:"1px solid #284766",borderRadius:16,padding:16}}>
+    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(3)} USDT</b><span className="status active">PENDING</span></div>
+    <div className="admin-order-meta"><span>Network: {p.network||"—"}</span><span>Package price: ${Number(p.baseAmount).toFixed(2)}</span><span>User ID: {p.userId||"—"}</span></div>
+    <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginTop:12}}>
+     <div><small style={{display:"block",opacity:.75}}>TIME REMAINING</small><strong style={{fontSize:24,fontVariantNumeric:"tabular-nums",color:Number(p.secondsRemaining)<=120?"#ffba72":"#7debd2"}}>{String(Math.floor(Number(p.secondsRemaining||0)/60)).padStart(2,"0")}:{String(Number(p.secondsRemaining||0)%60).padStart(2,"0")}</strong></div>
+     <div><small style={{display:"block",opacity:.75}}>EXPIRES</small><strong>{p.expiresAt?new Date(p.expiresAt).toLocaleString():"—"}</strong></div>
+    </div>
+    <small style={{display:"block",marginTop:8,opacity:.65}}>Order: {p.orderId}</small>
+   </div>)}
+  </Table>
+  <div className="admin-two-col">
   <Table title="Active payment method">
    <div className="payment-provider-card"><div><b>NOWPayments</b><small>Existing crypto payment method</small></div><button className={state.activeProvider==="nowpayments"?"primary-btn":"secondary-btn"} disabled={busy||!state.nowpayments.configured} onClick={()=>activate("nowpayments")}>{state.activeProvider==="nowpayments"?"OPEN NOWPAYMENTS":"Open NOWPayments"}</button></div>
    <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>
@@ -198,5 +217,6 @@ function AdminPayments(){
     <small>Credentials are stored server-side encrypted and are never returned to the browser after saving. PayPal payments use dynamic Orders and completed-capture verification.</small>
    </div>
   </Table>
+  </div>
  </div>
 }
