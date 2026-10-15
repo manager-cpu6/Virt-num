@@ -16,7 +16,8 @@ export async function GET(req:Request){
     catch(e){console.error("[BINANCE MANUAL CHECK SYNC]",e instanceof Error?e.message:"sync failed");}
     p=await (await collection<any>("payments")).findOne({orderId,provider:"binance_personal",userId:String(user.id)});
    }
-  }  let status=String(p.status);
+  }
+  let status=String(p.status);
   if(status==="pending"&&p.expiresAt&&new Date(p.expiresAt).getTime()<=Date.now()){
    await (await collection<any>("payments")).updateOne({_id:p._id,provider:"binance_personal",status:"pending",expiresAt:{$lte:new Date()}},{$set:{status:"expired",updatedAt:new Date()}});
    status="expired";
