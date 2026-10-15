@@ -26,7 +26,7 @@ export async function POST(req:Request){
   const payments=await collection<any>("payments"),now=new Date();
   await payments.updateMany({provider:"binance_personal",status:"pending",expiresAt:{$lte:now}},{$set:{status:"expired",updatedAt:now}});
   // Resume the same still-active request for this user/package, including after Back or refresh.
-  const previous=await payments.find({provider:"binance_personal",userId:String(user.id),coins,cryptoCurrency:currency,status:"pending",expiresAt:{$gt:now}}).sort({createdAt:-1}).limit(1).next();
+  const previousFilter:any={provider:"binance_personal",userId:String(user.id),coins,status:"pending",expiresAt:{$gt:now}};if(body.resumeOnly!==true)previousFilter.cryptoCurrency=currency;const previous=await payments.find(previousFilter).sort({createdAt:-1}).limit(1).next();
   if(previous)return NextResponse.json(paymentResponse(previous));
   if(body.resumeOnly===true)return NextResponse.json({ok:true,found:false});
   const requestedNetwork=String(body.network||"").trim();
