@@ -28,7 +28,7 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
    if(!claimed)return;
    const user=await users.findOneAndUpdate({_id:String(payment.userId)},{$inc:{coins:Number(payment.coins)}},{returnDocument:"after",session});
    if(!user)throw new Error("BINANCE_DEPOSIT_USER_NOT_FOUND");
-   await txs.insertOne({_id:mongoId(),userId:String(payment.userId),type:"credit",amount:Number(payment.coins),balanceAfter:Number(user.coins),reference:String(payment.orderId),description:"Binance Personal USDT deposit "+String(deposit.txId),depositTxId:String(deposit.txId),createdAt:new Date()},{session});
+   await txs.insertOne({_id:mongoId(),userId:String(payment.userId),type:"credit",amount:Number(payment.coins),balanceAfter:Number(user.coins),reference:String(payment.orderId),description:"Binance Personal "+String(deposit.coin||payment.cryptoCurrency||"crypto")+" deposit "+String(deposit.txId),depositTxId:String(deposit.txId),createdAt:new Date()},{session});
    credited={userId:String(payment.userId),coins:Number(payment.coins),orderId:String(payment.orderId),paymentId:String(payment._id)};
   });
  }finally{await session.endSession();}
@@ -45,7 +45,7 @@ export async function GET(req:Request){
   await payments.updateMany({provider:"binance_personal",status:"pending",expiresAt:{$lte:new Date(now)}},{$set:{status:"expired",updatedAt:new Date()}});
   const pending=await payments.find({provider:"binance_personal",status:"pending",createdAt:{$gte:new Date(now-90*60*1000)},expiresAt:{$gt:new Date(now)}}).sort({createdAt:1}).limit(500).toArray();
   if(!pending.length)return NextResponse.json({ok:true,checked:0,credited:0,matched:0});
-  const assets=[...new Set(pending.map(p=>String(p.cryptoCurrency||"USDT").toUpperCase()))].filter(c=>["USDT","BNB"].includes(c));
+  const assets=[...new Set(pending.map(p=>String(p.cryptoCurrency||"USDT").toUpperCase()))].filter(c=>/^[A-Z0-9]{2,15}$/.test(c));
   const depositsByAsset=await Promise.all(assets.map(async coin=>({coin,deposits:await getCoinDeposits(coin,now-90*60*1000,now)})));
   let credited=0,matched=0,checked=0;
   for(const group of depositsByAsset){
