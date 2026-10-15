@@ -66,16 +66,24 @@ export type BinanceDeposit = {
   id?: string; amount: string; coin: string; network: string; status: number;
   address: string; addressTag?: string; txId: string; insertTime: number;
 };
-export async function getUsdtDepositInstructions() {
+export async function getUsdtNetworks() {
   const config:any[] = await signedGet("/sapi/v1/capital/config/getall");
   const usdt = config.find(x => String(x.coin).toUpperCase() === "USDT");
   if (!usdt) throw new Error("BINANCE_USDT_NOT_AVAILABLE");
   const networks:any[] = Array.isArray(usdt.networkList) ? usdt.networkList : [];
-  const network = networks.find(x => x.depositEnable && x.isDefault) || networks.find(x => x.depositEnable);
-  if (!network?.network) throw new Error("BINANCE_USDT_DEPOSIT_DISABLED");
-  const data:any = await signedGet("/sapi/v1/capital/deposit/address", {coin:"USDT",network:String(network.network)});
+  return networks.filter(x => x.depositEnable && x.network).map(x => ({
+    network:String(x.network),networkName:String(x.name || x.network),
+    isDefault:Boolean(x.isDefault),busy:Boolean(x.busy),
+  })).sort((a,b)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
+}
+export async function getUsdtDepositInstructions(requestedNetwork?:string) {
+  const networks=await getUsdtNetworks();
+  const network= requestedNetwork ? networks.find(x=>x.network===requestedNetwork) : networks.find(x=>x.isDefault)||networks[0];
+  if (!network) throw new Error("BINANCE_USDT_DEPOSIT_DISABLED");
+  if(requestedNetwork&&!network)throw new Error("BINANCE_NETWORK_NOT_AVAILABLE");
+  const data:any = await signedGet("/sapi/v1/capital/deposit/address", {coin:"USDT",network:network.network});
   if (!data?.address) throw new Error("BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE");
-  return {address:String(data.address),network:String(network.network),networkName:String(network.name || network.network),memo:String(data.tag || data.addressTag || "")};
+  return {address:String(data.address),network:network.network,networkName:network.networkName,memo:String(data.tag || data.addressTag || "")};
 }
 export async function getUsdtDeposits(startTime:number, endTime:number) {
   const data:any = await signedGet("/sapi/v1/capital/deposit/hisrec", {
