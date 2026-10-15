@@ -10,7 +10,8 @@ const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 export async function POST(){
  try{
   const clientId=String(process.env.GOOGLE_CLIENT_ID||"").trim();
-  if(!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured."},{status:503});
+  const clientSecret=String(process.env.GOOGLE_CLIENT_SECRET||"").trim();
+  if(!clientId||!clientSecret)return NextResponse.json({ok:false,error:"Google sign-in needs GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in Vercel. Add https://numelixa.com/api/auth/google/native/callback as an authorized redirect URI in Google Cloud."},{status:503});
   const state=crypto.randomBytes(32).toString("hex");
   await (await collection<any>("googleNativeOAuthStates")).insertOne({
    _id:crypto.randomUUID(),stateHash:hash(state),createdAt:new Date(),
