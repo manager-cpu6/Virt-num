@@ -76,7 +76,8 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    try{await NativeExternalBrowser.open({url:signInUrl});}
    catch(bridgeError){
     // Do not leave the user stuck on a "plugin not implemented" error. Continue to the same Google flow.
-    window.location.href=signInUrl;
+    window.location.href="intent://numelixa.com/auth/native/google#Intent;scheme=https;package=com.android.chrome;end";
+    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=signInUrl;},1200);
    }
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
