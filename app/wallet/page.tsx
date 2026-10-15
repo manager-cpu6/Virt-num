@@ -9,7 +9,7 @@ type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPacka
 
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
-  const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false);
+  const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false),[openingCheckout,setOpeningCheckout]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
   const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null);
 
@@ -40,7 +40,7 @@ export default function Wallet(){
         if(!tokenResponse.ok||!tokenResponse.token)throw new Error(tokenResponse.error||"Unable to start secure checkout.");
         const checkoutUrl="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&token="+encodeURIComponent(String(tokenResponse.token));
         location.href=checkoutUrl;
-      }catch(err){setError(err instanceof Error?err.message:"Unable to start secure checkout");setLoading(false)}
+      }catch(err){setError(err instanceof Error?err.message:"Unable to start secure checkout");setLoading(false);setOpeningCheckout(false)}
       return;
     }
     setLoading(true);setError("");
