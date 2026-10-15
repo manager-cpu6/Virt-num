@@ -1,0 +1,45 @@
+"use client";
+import {useEffect,useMemo,useState} from "react";
+type Pack={coins:number;priceUsd:number;popular?:boolean};
+type Network={network:string;networkName:string;isDefault?:boolean};
+export default function PaymentPage(){
+ const [user,setUser]=useState<any>(null),[packs,setPacks]=useState<Pack[]>([]),[selected,setSelected]=useState<number|null>(null);
+ const [networks,setNetworks]=useState<Network[]>([]),[network,setNetwork]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[deposit,setDeposit]=useState<any>(null),[seconds,setSeconds]=useState(0),[status,setStatus]=useState("pending");
+ useEffect(()=>{(async()=>{try{
+  const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());if(!me.user){location.href="/login?next="+encodeURIComponent("https://payment.numelixa.com/");return;}
+  setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);if(ps.length)setSelected(ps[0].coins);
+  const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
+  setNetworks(nr.networks||[]);setNetwork((nr.networks||[]).find((x:Network)=>x.isDefault)?.network||(nr.networks||[])[0]?.network||"");
+ }catch(e){setError(e instanceof Error?e.message:"Unable to load payment options.");}finally{setLoading(false)}})()},[]);
+ const pack=useMemo(()=>packs.find(x=>x.coins===selected),[packs,selected]);
+ useEffect(()=>{if(!deposit?.expiresAt)return;const tick=()=>setSeconds(Math.max(0,Math.ceil((new Date(deposit.expiresAt).getTime()-Date.now())/1000)));tick();const id=setInterval(tick,1000);return()=>clearInterval(id)},[deposit]);
+ async function create(){if(!pack||!network)return;setBusy(true);setError("");try{const d=await fetch("/api/payments/binance/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:pack.coins,network})}).then(r=>r.json());if(!d.ok)throw new Error(d.error||"Could not create payment");setDeposit(d);setStatus("pending");}catch(e){setError(e instanceof Error?e.message:"Could not create payment");}finally{setBusy(false)}}
+ async function copy(v:string){try{await navigator.clipboard.writeText(v)}catch{setError("Copy failed. Select the value and copy it manually.")}}
+ async function check(){if(!deposit)return;setBusy(true);try{const d=await fetch("/api/payments/binance/status?orderId="+encodeURIComponent(deposit.orderId),{cache:"no-store"}).then(r=>r.json());if(!d.ok)throw new Error(d.error);setStatus(d.status);if(d.status==="paid"){const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());setUser(me.user)}}catch(e){setError(e instanceof Error?e.message:"Unable to check payment")}finally{setBusy(false)}}
+ const time=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
+ return <main style={{minHeight:"100vh",background:"radial-gradient(ellipse at top,#102b52 0%,#071329 42%,#030817 100%)",color:"#f5f8ff",padding:"28px 16px 56px",fontFamily:"Inter,system-ui,sans-serif"}}>
+ <div style={{maxWidth:760,margin:"0 auto"}}>
+ <header style={{display:"flex",alignItems:"center",gap:12,marginBottom:32}}><div style={{width:44,height:44,borderRadius:14,display:"grid",placeItems:"center",background:"linear-gradient(135deg,#1677ff,#00d9ff)",fontSize:24,fontWeight:900}}>N</div><div><strong style={{fontSize:21,letterSpacing:".02em"}}>Numelixa <span style={{color:"#00d9ff"}}>Pay</span></strong><div style={{fontSize:12,color:"#a7b7d0"}}>Secure coin checkout</div></div><span style={{marginLeft:"auto",fontSize:12,color:"#00e5c3"}}>● Personal deposit</span></header>
+ <section style={{border:"1px solid #203b60",borderRadius:24,padding:24,background:"rgba(8,27,54,.86)",boxShadow:"0 24px 80px #0005"}}>
+ <div style={{fontSize:11,letterSpacing:".16em",color:"#00d9ff",fontWeight:800}}>BINANCE · USDT</div><h1 style={{fontSize:"clamp(28px,5vw,40px)",lineHeight:1.12,margin:"10px 0"}}>Choose coins. Select a network.</h1><p style={{color:"#a7b7d0",lineHeight:1.6,marginTop:0}}>Pay using USDT on a supported Binance deposit network. Always send the exact amount shown.</p>
+ {error&&<div role="alert" style={{padding:13,borderRadius:12,background:"#4a1822",color:"#ffdce1",margin:"16px 0"}}>{error}</div>}
+ {loading?<p>Loading secure payment options…</p>:!deposit?<>
+ <h2 style={{fontSize:16,marginTop:26}}>1. Choose your coin package</h2><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))",gap:10}}>
+ {packs.map(p=><button key={p.coins} onClick={()=>setSelected(p.coins)} style={{textAlign:"left",cursor:"pointer",padding:16,borderRadius:16,border:selected===p.coins?"1px solid #00d9ff":"1px solid #294260",background:selected===p.coins?"#12345a":"#091a31",color:"#f5f8ff"}}><div style={{fontSize:22,fontWeight:850}}>{p.coins.toLocaleString()}</div><div style={{fontSize:12,color:"#a7b7d0"}}>coins</div><div style={{fontSize:18,fontWeight:800,marginTop:12}}>${Number(p.priceUsd).toFixed(2)}</div>{p.popular&&<small style={{color:"#00e5c3"}}>Popular</small>}</button>)}
+ </div>
+ <h2 style={{fontSize:16,marginTop:26}}>2. Select USDT network</h2><div style={{display:"grid",gap:9}}>{networks.map(n=><button key={n.network} onClick={()=>setNetwork(n.network)} style={{display:"flex",alignItems:"center",gap:12,textAlign:"left",cursor:"pointer",padding:14,borderRadius:14,border:network===n.network?"1px solid #00d9ff":"1px solid #294260",background:network===n.network?"#12345a":"#091a31",color:"#f5f8ff"}}><span style={{width:20,height:20,borderRadius:20,border:network===n.network?"6px solid #00d9ff":"1px solid #7185a5"}}/><span style={{flex:1}}><strong>{n.networkName}</strong><div style={{fontSize:12,color:"#a7b7d0"}}>USDT deposit network · {n.network}</div></span>{n.isDefault&&<small style={{color:"#00e5c3"}}>Default</small>}</button>)}</div>
+ <button disabled={!pack||!network||busy} onClick={create} style={{width:"100%",padding:16,border:0,borderRadius:14,marginTop:24,background:"linear-gradient(90deg,#1677ff,#00bfe9)",color:"white",fontSize:16,fontWeight:850,cursor:"pointer",opacity:busy?.65:1}}>{busy?"Preparing secure payment…": "Continue to payment · "+(pack?"$"+Number(pack.priceUsd).toFixed(2):"")}</button>
+ </>:<div style={{display:"grid",gap:18,marginTop:22}}>
+ {status==="paid"?<div style={{padding:18,borderRadius:16,background:"#0c3b34",color:"#baffec"}}><h2>Payment confirmed ✓</h2>{Number(deposit.coins).toLocaleString()} coins have been credited.</div>:<>
+ <div style={{display:"flex",justifyContent:"space-between",gap:12,alignItems:"center",padding:16,borderRadius:14,background:"#101d32",border:"1px solid #294260"}}><div><small style={{color:"#a7b7d0"}}>TIME LEFT · 15 MINUTES</small><div style={{fontSize:28,fontWeight:900,fontVariantNumeric:"tabular-nums"}}>{time}</div></div><div style={{textAlign:"right"}}><small style={{color:"#a7b7d0"}}>YOU RECEIVE</small><div style={{fontWeight:850,fontSize:20}}>{deposit.coins} coins</div></div></div>
+ <div style={{padding:18,borderRadius:16,background:"#091a31",border:"1px solid #294260"}}><small style={{color:"#a7b7d0"}}>Exact amount to send</small><div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap",marginTop:6}}><strong style={{fontSize:30}}>{Number(deposit.amount).toFixed(3)} USDT</strong><button onClick={()=>copy(Number(deposit.amount).toFixed(3))} style={copyStyle}>Copy amount</button></div><small style={{color:"#a7b7d0"}}>Network: {deposit.networkName} ({deposit.network})</small></div>
+ <div style={{padding:18,borderRadius:16,background:"#091a31",border:"1px solid #294260"}}><small style={{color:"#a7b7d0"}}>Deposit address</small><div style={{overflowWrap:"anywhere",fontWeight:700,lineHeight:1.6,margin:"8px 0 12px"}}>{deposit.address}</div><button onClick={()=>copy(deposit.address)} style={copyStyle}>Copy deposit address</button>{deposit.memo&&<div style={{marginTop:14}}><small>Memo / Tag (required)</small><p>{deposit.memo}</p><button onClick={()=>copy(deposit.memo)} style={copyStyle}>Copy memo</button></div>}</div>
+ <p style={{color:"#ffd58a",fontSize:13,lineHeight:1.6}}>Send USDT only, on the selected network, and send the exact amount before the timer expires. Transfers on another network or received after expiry may not be credited.</p>
+ <button disabled={busy||seconds===0} onClick={check} style={{...copyStyle,width:"100%",padding:15,background:"#1677ff",color:"white",border:0}}>{busy?"Checking…":"I have paid · Check deposit"}</button>
+ </>}
+ <button onClick={()=>{setDeposit(null);setStatus("pending");setError("")}} style={{...copyStyle,background:"transparent"}}>← Back to coin packages</button>
+ </>}
+ </section><footer style={{textAlign:"center",color:"#7185a5",fontSize:12,marginTop:18}}>Protected by Numelixa · Never share your account credentials or API keys.</footer>
+ </div></main>
+}
+const copyStyle:React.CSSProperties={border:"1px solid #355579",borderRadius:10,padding:"9px 12px",background:"#132b49",color:"#f5f8ff",fontWeight:750,cursor:"pointer"};
