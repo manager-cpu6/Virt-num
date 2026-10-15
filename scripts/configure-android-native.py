@@ -496,21 +496,8 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
 
-        // Request Android 13+ notification permission at native startup.
-        // This does not depend on the remote website component loading.
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        9103
-                    );
-                }
-            }, 900L);
-        }
+        // MobileAppBootstrap owns the permission request so it can retry on every
+        // launch/resume without racing a second native dialog against Capacitor.
     }
 
     @Override

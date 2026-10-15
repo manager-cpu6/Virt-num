@@ -47,6 +47,11 @@ export async function GET(){
 export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
+  if(action==="clear_all_payment_orders"){
+    const payments=await collection<any>("payments");
+    const result=await payments.deleteMany({provider:"binance_personal",status:{$in:["pending","paid","expired","cancelled"]}});
+    return NextResponse.json({ok:true,deletedCount:result.deletedCount||0,message:"All payment orders cleared, including pending, cancelled, expired and paid records."});
+  }
   if(action==="payment_order_action"){
     const orderId=String(b.orderId||"").trim(),operation=String(b.operation||"");
     if(!orderId||!["cancel","activate"].includes(operation))return NextResponse.json({ok:false,error:"Choose a valid payment order action."},{status:400});

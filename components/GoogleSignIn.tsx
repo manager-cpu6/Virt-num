@@ -79,20 +79,16 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   let signInUrl="";
-   try{
-    const started=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({loginHint:loginEmail||""})});
-    const start=await started.json();
-    if(started.ok&&start.ok&&start.url)signInUrl=String(start.url);
-   }catch{}
-   // If server-side OAuth credentials are not configured, use the same browser Google Identity flow as the website.
-   if(!signInUrl){const fallback=new URL("/auth/native/google",window.location.origin);if(loginEmail)fallback.searchParams.set("login_hint",loginEmail);signInUrl=fallback.toString();}
-   try{await NativeExternalBrowser.open({url:signInUrl});}
+   // Use the same Google Identity Services account chooser as the website.
+   // This avoids an OAuth authorization-code redirect_uri mismatch in Chrome.
+   const signInUrl=new URL("/auth/native/google",window.location.origin);
+   if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
+   try{await NativeExternalBrowser.open({url:signInUrl.toString()});}
    catch{
-    // The installed APK may not contain the custom browser bridge yet. Open the same OAuth URL in Chrome.
-    const intentUrl="intent://"+signInUrl.replace("https://","").replace("http://","")+"#Intent;scheme=https;package=com.android.chrome;end";
+    const target=signInUrl.toString();
+    const intentUrl="intent://"+target.replace("https://","").replace("http://","")+"#Intent;scheme=https;package=com.android.chrome;end";
     window.location.href=intentUrl;
-    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=signInUrl;},1500);
+    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=target;},1500);
    }
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }

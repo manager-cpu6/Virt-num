@@ -148,8 +148,11 @@ export default function MobileAppBootstrap(){
    if(document.getElementById("numelixa-notification-gate"))return;
    const gate=document.createElement("div");
    gate.id="numelixa-notification-gate";
-   gate.innerHTML=`<div class="numelixa-notification-gate-backdrop"></div><section class="numelixa-notification-gate-card" role="dialog" aria-modal="true"><div class="numelixa-notification-gate-logo">N</div><div class="numelixa-notification-gate-icon">🔔</div><span class="eyebrow">NUMELIXA ALERTS</span><h2>Notifications are required</h2><p>Allow Android notifications so Numelixa can instantly notify you about SMS codes, purchases, wallet activity, security and important updates.</p><button id="numelixa-enable-notifications" type="button">Allow Notifications</button><small>You can manage this permission later in Android Settings.</small></section>`;
+   gate.innerHTML=`<div class="numelixa-notification-gate-backdrop"></div><section class="numelixa-notification-gate-card" role="dialog" aria-modal="true"><div class="numelixa-notification-gate-logo">N</div><div class="numelixa-notification-gate-icon">🔔</div><span class="eyebrow">NUMELIXA ALERTS</span><h2>Notifications are required</h2><p>Allow Android notifications so Numelixa can instantly notify you about SMS codes, purchases, wallet activity, security and important updates.</p><button id="numelixa-enable-notifications" type="button">Allow Notifications</button><button id="numelixa-open-notification-settings" type="button" style="margin-top:10px;background:transparent;border:1px solid rgba(130,210,240,.4);color:#d8f6ff">Open Android Settings</button><small>If Android has stopped showing the permission dialog, enable Numelixa notifications in Settings.</small></section>`;
    document.body.appendChild(gate);
+   document.getElementById("numelixa-open-notification-settings")?.addEventListener("click",()=>{
+    try{window.location.href="app-settings:"}catch{}
+   });
    document.getElementById("numelixa-enable-notifications")?.addEventListener("click",async()=>{
     if(!push||permissionInFlight)return;
     permissionInFlight=true;
