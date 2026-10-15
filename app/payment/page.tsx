@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useMemo,useState} from "react";
 type Pack={coins:number;priceUsd:number;popular?:boolean};
-type Network={network:string;networkName:string;isDefault?:boolean;busy?:boolean};\ntype Asset={coin:string;name:string;logo:string;usdPrice:number;networks:Network[]};
+type Network={network:string;networkName:string;isDefault?:boolean;busy?:boolean};
+type Asset={coin:string;name:string;logo:string;usdPrice:number;networks:Network[]};
 export default function PaymentPage(){
  const [user,setUser]=useState<any>(null),[packs,setPacks]=useState<Pack[]>([]),[selected,setSelected]=useState<number|null>(null);
  const [assets,setAssets]=useState<Asset[]>([]),[currency,setCurrency]=useState("USDT"),[networks,setNetworks]=useState<Network[]>([]),[network,setNetwork]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[deposit,setDeposit]=useState<any>(null),[seconds,setSeconds]=useState(0),[status,setStatus]=useState("pending"),[redirecting,setRedirecting]=useState(false);
