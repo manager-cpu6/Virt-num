@@ -46,7 +46,7 @@ export default function PaymentPage(){
  <button disabled={busy||seconds===0} onClick={check} style={{...copyStyle,width:"100%",padding:15,background:"#1677ff",color:"white",border:0}}>{busy?<span style={{display:"inline-flex",alignItems:"center",justifyContent:"center",gap:9}}><svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="3" opacity=".25"/><path d="M21 12a9 9 0 0 0-9-9" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur=".8s" repeatCount="indefinite"/></path></svg>Checking Binance deposit…</span> :"Check payment status"}</button>
  </>}
  {status!=="paid"&&<button onClick={()=>{setDeposit(null);setStatus("pending");setError("")}} style={{...copyStyle,background:"transparent"}}>← Back to coin packages</button>}
- </div>
+ </div>}
  </section><footer style={{textAlign:"center",color:"#7185a5",fontSize:12,marginTop:18}}>Protected by Numelixa · Never share your account credentials or API keys.</footer>
  </div></main>
 }
