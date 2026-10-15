@@ -432,6 +432,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
         registerPlugin(NumelixaPushTokenPlugin.class);
+        registerPlugin(SocialLoginPlugin.class);
         super.onCreate(savedInstanceState);
 
         createNotificationChannel();
