@@ -37,24 +37,27 @@ export async function POST(req:Request){
   const baseCrypto=Number((baseAmount/usdPerCoin).toFixed(stablecoin?2:decimals));
   if(!Number.isFinite(baseCrypto)||baseCrypto<=0)return NextResponse.json({ok:false,error:"Unable to calculate the payment amount."},{status:502});
 
-  // Allocate a unique tiny decimal suffix atomically for each asset/network/address/base price.
-  // Multiple users can check out the same package without waiting for another checkout to expire.
-  const counterKey=crypto.createHash("sha256").update([currency,instructions.address,instructions.network,baseCrypto.toFixed(stablecoin?2:decimals)].join("|")).digest("hex");
-  const counters=await collection<any>("paymentAmountCounters");
-  let amountCrypto=0;
-  for(let attempt=0;attempt<10000;attempt++){
-   const counter=await counters.findOneAndUpdate(
-    {_id:counterKey},
-    {$inc:{sequence:1},$setOnInsert:{currency,address:instructions.address,network:instructions.network,baseCrypto,createdAt:now}},
-    {upsert:true,returnDocument:"after"}
-   );
-   const sequence=Number((counter as any)?.sequence??(counter as any)?.value?.sequence??0);
-   if(!Number.isFinite(sequence)||sequence<1)throw new Error("PAYMENT_AMOUNT_RESERVATION_FAILED");
-   // Keep the suffix tiny; wrap after 9,999 units and skip any amount still active.
-   const suffix=sequence===1?0:(((sequence-2)%9999+1)*unit);
-   const candidate=Number((baseCrypto+suffix).toFixed(decimals));
-   const collision=await payments.findOne({provider:"binance_personal",status:"pending",cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,amountCrypto:candidate,expiresAt:{$gt:now}});
-   if(!collision){amountCrypto=candidate;break;}
+  // The original amount belongs to the first checkout while it is free.
+  // Only concurrent checkouts receive a tiny suffix; cancelled/expired orders do not permanently consume the base amount.
+  const activeAmountQuery={provider:"binance_personal",status:"pending",cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,expiresAt:{$gt:now}};
+  const baseCollision=await payments.findOne({...activeAmountQuery,amountCrypto:baseCrypto});
+  let amountCrypto=baseCollision?0:baseCrypto;
+  if(baseCollision){
+   const counterKey=crypto.createHash("sha256").update([currency,instructions.address,instructions.network,baseCrypto.toFixed(stablecoin?2:decimals)].join("|")).digest("hex");
+   const counters=await collection<any>("paymentAmountCounters");
+   for(let attempt=0;attempt<10000;attempt++){
+    const counter=await counters.findOneAndUpdate(
+     {_id:counterKey},
+     {$inc:{sequence:1},$setOnInsert:{currency,address:instructions.address,network:instructions.network,baseCrypto,createdAt:now}},
+     {upsert:true,returnDocument:"after"}
+    );
+    const sequence=Number((counter as any)?.sequence??(counter as any)?.value?.sequence??0);
+    if(!Number.isFinite(sequence)||sequence<1)throw new Error("PAYMENT_AMOUNT_RESERVATION_FAILED");
+    const suffix=((sequence-1)%9999+1)*unit;
+    const candidate=Number((baseCrypto+suffix).toFixed(decimals));
+    const collision=await payments.findOne({...activeAmountQuery,amountCrypto:candidate});
+    if(!collision){amountCrypto=candidate;break;}
+   }
   }
   if(!amountCrypto)return NextResponse.json({ok:false,error:"Unable to reserve a unique payment amount. Please try again."},{status:503});
   const orderId="binance_personal_"+crypto.randomUUID(),expiresAt=new Date(now.getTime()+15*60*1000);
