@@ -1,6 +1,18 @@
 import crypto from "crypto";
+import {ProxyAgent} from "undici";
 
 const BASE = "https://api.binance.com";
+let proxyAgent: ProxyAgent | null = null;
+function getBinanceProxyAgent(){
+  const proxyUrl=String(process.env.FIXIE_URL||"").trim();
+  if(!proxyUrl)throw new Error("BINANCE_FIXIE_URL_NOT_CONFIGURED");
+  if(!proxyAgent)proxyAgent=new ProxyAgent(proxyUrl);
+  return proxyAgent;
+}
+async function binanceFetch(url:string,init:RequestInit={}){
+  const dispatcher=getBinanceProxyAgent();
+  return fetch(url,{...init,dispatcher} as RequestInit & {dispatcher:ProxyAgent});
+}
 function credentials() {
   const key = String(process.env.BINANCE_API_KEY || "").trim();
   const secret = String(process.env.BINANCE_SECRET_KEY || "").trim();
@@ -10,7 +22,7 @@ function credentials() {
 let serverTimeOffset = 0;
 async function syncServerTime(){
   try{
-    const response=await fetch(BASE+"/api/v3/time",{cache:"no-store",signal:AbortSignal.timeout(8000)});
+    const response=await binanceFetch(BASE+"/api/v3/time",{cache:"no-store",signal:AbortSignal.timeout(8000)});
     const data:any=await response.json().catch(()=>null);
     if(response.ok&&Number.isFinite(Number(data?.serverTime)))serverTimeOffset=Number(data.serverTime)-Date.now();
   }catch{}
@@ -24,14 +36,16 @@ async function signedGet(path: string, params: Record<string, string | number | 
     query.set("signature", signature);
     let response:Response;
     try{
-      response=await fetch(BASE+path+"?"+query.toString(),{
+      response=await binanceFetch(BASE+path+"?"+query.toString(),{
         method:"GET",
         headers:{"X-MBX-APIKEY":key},
         cache:"no-store",
         signal:AbortSignal.timeout(15000)
       });
     }catch(error){
+      const message=error instanceof Error?error.message:"";
       console.error("[BINANCE PERSONAL API NETWORK]",path,error instanceof Error?error.name:"unknown");
+      if(message==="BINANCE_FIXIE_URL_NOT_CONFIGURED")throw error;
       throw new Error("BINANCE_NETWORK_ERROR");
     }
     const data:any=await response.json().catch(()=>null);
