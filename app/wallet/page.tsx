@@ -10,7 +10,6 @@ type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPacka
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
   const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false);
-  const[usdtNetworks,setUsdtNetworks]=useState<Array<{network:string;networkName:string;isDefault?:boolean}>>([]),[selectedNetwork,setSelectedNetwork]=useState("");
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
   const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null);
 
@@ -21,15 +20,7 @@ export default function Wallet(){
       setU(d.user||null);setPricing(d.pricing||null);setProvider(d.paymentProvider==="paypal"?"paypal":d.paymentProvider==="binance"?"binance":"nowpayments");
       const packs:Array<Pack>=d.pricing?.coinPackages||[];
       if(fixedPacks.length)setSelected(fixedPacks[0].coins);
-      if(d.paymentProvider==="binance"){
-        fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json()).then(nr=>{
-          if(!nr.ok)throw new Error(nr.error||"Unable to load USDT networks");
-          const available=Array.isArray(nr.networks)?nr.networks.filter((n:any)=>n?.network&&n?.networkName):[];
-          setUsdtNetworks(available);
-          const preferred=available.find((n:any)=>n.isDefault)||available[0];
-          if(preferred)setSelectedNetwork(preferred.network);
-        }).catch(()=>setError("Unable to load USDT deposit networks. Please refresh and try again."));
-      }
+
     }).catch(()=>setError("Unable to load wallet right now.")).finally(()=>setLoaded(true));
   },[]);
 
@@ -43,8 +34,7 @@ export default function Wallet(){
     if(!u.verified_at){location.href="/verify-email";return}
     if(!selectedPack)return;
     if(provider==="binance"){
-      if(!selectedNetwork||!usdtNetworks.some(n=>n.network===selectedNetwork)){setError("Choose an available USDT deposit network first.");return;}
-      location.href="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&network="+encodeURIComponent(selectedNetwork);return;
+      location.href="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins));return;
     }
     setLoading(true);setError("");
     try{
@@ -90,16 +80,8 @@ export default function Wallet(){
       </button>)}</div>}
     {selectedPack&&<section className="wallet-checkout">
       <div><span className="eyebrow">SELECTED PACKAGE</span><strong>{selectedPack.coins.toLocaleString()} coins</strong><small>{"Payment required: $"+selectedPack.priceUsd.toFixed(2)}</small></div>
-      {provider==="binance"&&<div style={{gridColumn:"1 / -1",width:"100%",marginTop:12}}>
-        <span className="eyebrow">USDT DEPOSIT NETWORK</span>
-        <p style={{margin:"6px 0 12px",opacity:.8}}>Choose the network that matches the wallet you will send from. Only USDT networks enabled for deposits are shown.</p>
-        {usdtNetworks.length? <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:10}}>
-          {usdtNetworks.map(n=><button key={n.network} type="button" onClick={()=>{setSelectedNetwork(n.network);setError("");}} aria-pressed={selectedNetwork===n.network} style={{textAlign:"left",padding:13,borderRadius:12,border:selectedNetwork===n.network?"2px solid #00d9ff":"1px solid #355579",background:selectedNetwork===n.network?"rgba(0,217,255,.12)":"rgba(7,19,41,.7)",color:"inherit",cursor:"pointer"}}>
-            <strong>{n.networkName}</strong><small style={{display:"block",opacity:.75,marginTop:4}}>USDT · {n.network}</small>{n.isDefault&&<small style={{display:"block",color:"#00e5c3",marginTop:5}}>Recommended</small>}
-          </button>)}
-        </div>:<small role="status">Loading supported deposit networks…</small>}
-      </div>}
-      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading||(provider==="binance"&&(!selectedNetwork||!usdtNetworks.some(n=>n.network===selectedNetwork)))}>{loading?"Opening secure checkout…":u?provider==="paypal"?"Continue with PayPal":provider==="binance"?"Get "+selectedPack.coins.toLocaleString()+" coins":"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
+
+      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":u?provider==="paypal"?"Continue with PayPal":provider==="binance"?"Get "+selectedPack.coins.toLocaleString()+" coins":"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
     </section>}
     {deposit&&<section className="wallet-checkout" style={{display:"block",marginTop:20}}>
       <div style={{display:"grid",gap:12}}>
