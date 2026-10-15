@@ -213,7 +213,7 @@ function AdminPayments(){
   <Table title={"Payment orders — history ("+otherPayments.length+")"}>
    <p className="admin-help">Cancelled and expired orders release their amount slot. Reactivating an order is allowed only when its exact amount is not reserved by another active checkout. Paid orders are read-only.</p>
    {!otherPayments.length?<div className="country-loading">No previous payment orders.</div>:otherPayments.map((p:any)=><div key={p.orderId} className="admin-order-card" style={{marginBottom:10,border:"1px solid #284766",borderRadius:14,padding:14}}>
-    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(8)} {p.currency</b><span className={"status "+(p.status==="paid"?"active":"")}>{String(p.status).toUpperCase()}</span></div>
+    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(8)} {p.currency}</b><span className={"status "+(p.status==="paid"?"active":"")}>{String(p.status).toUpperCase()}</span></div>
     <div className="admin-order-meta"><span>Package price: ${Number(p.baseAmount).toFixed(2)}</span><span>Network: {p.network||"—"}</span><span>Created: {p.createdAt?new Date(p.createdAt).toLocaleString():"—"}</span></div>
     <small style={{display:"block",marginTop:8,opacity:.65}}>Order: {p.orderId}</small>
     {p.status!=="paid"&&<div style={{marginTop:10}}><button className="secondary-btn" disabled={busy} onClick={()=>orderAction(p,"activate")}>Activate order</button></div>}
