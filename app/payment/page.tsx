@@ -18,9 +18,18 @@ export default function PaymentPage(){
   const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){throw new Error("Your checkout session could not be verified. Return to Coin Store and open checkout again.");}
   setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
   const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
-  setNetworks(nr.networks||[]);const available:Network[]=Array.isArray(nr.networks)?nr.networks.filter((x:Network)=>x?.network&&x?.networkName):[];
+  const allAssets:Asset[]=Array.isArray(nr.assets)?nr.assets:[];if(!allAssets.length)throw new Error("No supported deposit assets are available.");
+  setAssets(allAssets);
+  const requestedCurrency=String(new URLSearchParams(window.location.search).get("currency")||"USDT").toUpperCase();
+  const initialCurrency=allAssets.some(x=>x.coin===requestedCurrency)?requestedCurrency:allAssets[0].coin;
+  setCurrency(initialCurrency);
+  const asset=allAssets.find(x=>x.coin===initialCurrency)!;
+  const available:Network[]=asset.networks||[];setNetworks(available);
   const requestedNetwork=new URLSearchParams(window.location.search).get("network")||"";
-  setNetwork(available.some(x=>x.network===requestedNetwork)?requestedNetwork:(available.find(x=>x.isDefault)?.network||available[0]?.network||""));
+  const initialNetwork=available.some(x=>x.network===requestedNetwork)?requestedNetwork:(available.find(x=>x.isDefault)?.network||available[0]?.network||"");
+  setNetwork(initialNetwork);
+  const chosen=ps.find(x=>x.coins===requested)||ps[0];
+  if(chosen){const resume=await fetch("/api/payments/binance/create",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},cache:"no-store",body:JSON.stringify({coins:chosen.coins,currency:initialCurrency,resumeOnly:true})}).then(r=>r.json());if(resume.ok&&resume.found!==false&&resume.orderId){setDeposit(resume);setStatus("pending");setCurrency(resume.currency||initialCurrency);setNetwork(resume.network||initialNetwork);}}
  }catch(e){setError(e instanceof Error?e.message:"Unable to load payment options.");}finally{setLoading(false)}})()},[]);
  const pack=useMemo(()=>packs.find(x=>x.coins===selected),[packs,selected]);
  useEffect(()=>{if(!deposit?.expiresAt)return;const tick=()=>setSeconds(Math.max(0,Math.ceil((new Date(deposit.expiresAt).getTime()-Date.now())/1000)));tick();const id=setInterval(tick,1000);return()=>clearInterval(id)},[deposit]);
