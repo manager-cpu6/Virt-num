@@ -59,7 +59,9 @@ export async function POST(req:Request){
    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
    BINANCE_BNB_DEPOSIT_DISABLED:"BNB deposits are disabled for available networks in your Binance account.",
    BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance did not return a deposit address. Check API deposit-read permissions.",
-   BINANCE_BNB_PRICE_UNAVAILABLE:"Unable to get the current BNB/USD price. Please retry.",\n   BINANCE_USDC_PRICE_UNAVAILABLE:"Unable to get the current USD Coin price. Please retry.",\n   BINANCE_ASSET_PRICES_UNAVAILABLE:"Live market prices are unavailable. Please try again shortly."
+   BINANCE_BNB_PRICE_UNAVAILABLE:"Unable to get the current BNB/USD price. Please retry.",
+    BINANCE_USDC_PRICE_UNAVAILABLE:"Unable to get the current USD Coin price. Please retry.",
+    BINANCE_ASSET_PRICES_UNAVAILABLE:"Live market prices are unavailable. Please try again shortly."
   };
   console.error("[BINANCE DEPOSIT CREATE]",m);
   const apiCode=m.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
