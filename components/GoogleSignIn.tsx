@@ -12,7 +12,6 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  const[error,setError]=useState("");
  const[loading,setLoading]=useState(false);
  const[isNative,setIsNative]=useState(false);
- const[initialized,setInitialized]=useState(false);
  const[webReady,setWebReady]=useState(false);
  const[clientId,setClientId]=useState("");
  const[configLoaded,setConfigLoaded]=useState(false);
@@ -79,7 +78,6 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    await Browser.open({url:String(data.url),presentationStyle:"fullscreen"});
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
- async function nativeSignIn(){ await Promise.resolve(); }
  useEffect(()=>{
   if(isNative)return;
   let active=true;
