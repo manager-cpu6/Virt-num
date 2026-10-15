@@ -42,7 +42,7 @@ export default function MobileAppBootstrap(){
    // A safety timeout avoids blocking sign-in if the remote app cannot navigate.
    const splashStarted=Date.now();
    let splashRemoved=false;
-   let routePoll:ReturnType<typeof setInterval>|null=null;
+   let routePoll:number|null=null;
    const hideSplash=()=>{
     if(splashRemoved)return;
     splashRemoved=true;
