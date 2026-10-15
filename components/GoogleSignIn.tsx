@@ -1,10 +1,11 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Capacitor} from "@capacitor/core";
+import {Capacitor,registerPlugin} from "@capacitor/core";
 import {App} from "@capacitor/app";
-import {Browser} from "@capacitor/browser";
+
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
+const NativeExternalBrowser=registerPlugin<{open(options:{url:string}):Promise<{opened:boolean}>}>("NumelixaExternalBrowser");
 
 export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  const host=useRef<HTMLDivElement|null>(null);
@@ -49,7 +50,6 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    if(url.protocol!=="com.numelixa.app:"||url.hostname!=="auth"||url.pathname!=="/callback")return;
    const oauthError=url.searchParams.get("error");
    const ticket=String(url.searchParams.get("ticket")||"");
-   try{await Browser.close()}catch{}
    if(oauthError){
     if(oauthError!=="cancelled")setError(oauthError==="account_suspended"?"This account is suspended. Contact Numelixa Support.":"Google sign-in could not be completed. Please try again.");
     setLoading(false);return;
@@ -72,7 +72,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(){
   setLoading(true);setError("");
   try{
-   await Browser.open({url:new URL("/auth/native/google",window.location.origin).toString(),presentationStyle:"fullscreen"});
+   await NativeExternalBrowser.open({url:new URL("/auth/native/google",window.location.origin).toString()});
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
  useEffect(()=>{
