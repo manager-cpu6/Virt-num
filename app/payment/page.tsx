@@ -6,7 +6,7 @@ export default function PaymentPage(){
  const [user,setUser]=useState<any>(null),[packs,setPacks]=useState<Pack[]>([]),[selected,setSelected]=useState<number|null>(null);
  const [networks,setNetworks]=useState<Network[]>([]),[network,setNetwork]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[deposit,setDeposit]=useState<any>(null),[seconds,setSeconds]=useState(0),[status,setStatus]=useState("pending"),[redirecting,setRedirecting]=useState(false);
  useEffect(()=>{(async()=>{try{
-  const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());if(!me.user){location.href="/login?next="+encodeURIComponent("https://payment.numelixa.com/");return;}
+  const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){throw new Error("Your Numelixa session was not shared with checkout. Please return to Coin Store and open checkout again.");}
   setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
   const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
   setNetworks(nr.networks||[]);const available:Network[]=Array.isArray(nr.networks)?nr.networks.filter((x:Network)=>x?.network&&x?.networkName):[];
@@ -21,9 +21,9 @@ export default function PaymentPage(){
   const id=window.setTimeout(()=>{window.location.href="https://numelixa.com/dashboard?payment=success";},2600);
   return()=>window.clearTimeout(id);
  },[status]);
- async function create(){if(!pack||!network)return;setBusy(true);setError("");try{const d=await fetch("/api/payments/binance/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:pack.coins,network})}).then(r=>r.json());if(!d.ok)throw new Error(d.error||"Could not create payment");setDeposit(d);setStatus("pending");}catch(e){setError(e instanceof Error?e.message:"Could not create payment");}finally{setBusy(false)}}
+ async function create(){if(!pack||!network)return;setBusy(true);setError("");try{const d=await fetch("/api/payments/binance/create",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:pack.coins,network})}).then(r=>r.json());if(!d.ok)throw new Error(d.error||"Could not create payment");setDeposit(d);setStatus("pending");}catch(e){setError(e instanceof Error?e.message:"Could not create payment");}finally{setBusy(false)}}
  async function copy(v:string){try{await navigator.clipboard.writeText(v)}catch{setError("Copy failed. Select the value and copy it manually.")}}
- async function check(){if(!deposit)return;setBusy(true);try{const d=await fetch("/api/payments/binance/status?orderId="+encodeURIComponent(deposit.orderId),{cache:"no-store"}).then(r=>r.json());if(!d.ok)throw new Error(d.error);setStatus(d.status);if(d.status==="paid"){const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());setUser(me.user)}}catch(e){setError(e instanceof Error?e.message:"Unable to check payment")}finally{setBusy(false)}}
+ async function check(){if(!deposit)return;setBusy(true);try{const d=await fetch("/api/payments/binance/status?orderId="+encodeURIComponent(deposit.orderId),{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!d.ok)throw new Error(d.error);setStatus(d.status);if(d.status==="paid"){const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());setUser(me.user)}}catch(e){setError(e instanceof Error?e.message:"Unable to check payment")}finally{setBusy(false)}}
  const time=String(Math.floor(seconds/60)).padStart(2,"0")+":"+String(seconds%60).padStart(2,"0");
  return <main style={{minHeight:"100vh",background:"radial-gradient(ellipse at top,#102b52 0%,#071329 42%,#030817 100%)",color:"#f5f8ff",padding:"28px 16px 56px",fontFamily:"Inter,system-ui,sans-serif"}}>
  <div style={{maxWidth:760,margin:"0 auto"}}>
