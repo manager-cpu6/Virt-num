@@ -91,6 +91,7 @@ manifest.write_text(m)
 
 import android.os.Handler;
 import android.os.Looper;
+import android.content.Intent;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
@@ -163,6 +164,21 @@ public class NumelixaPushTokenPlugin extends Plugin {
             return;
         }
         handler.postDelayed(() -> request(call, attempt + 1), 1500L);
+    }
+
+    @PluginMethod
+    public void openNotificationSettings(PluginCall call) {
+        try {
+            Intent intent = new Intent("android.settings.APP_NOTIFICATION_SETTINGS");
+            intent.putExtra("android.provider.extra.APP_PACKAGE", getContext().getPackageName());
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            JSObject out = new JSObject();
+            out.put("opened", true);
+            call.resolve(out);
+        } catch (Exception error) {
+            call.reject("Unable to open Android notification settings", error);
+        }
     }
 
     @PluginMethod
