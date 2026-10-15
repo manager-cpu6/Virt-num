@@ -11,10 +11,15 @@ export async function GET(req:Request){
   if(!p)return NextResponse.json({ok:false,error:"Payment request was not found."},{status:404});
   if(p.status==="pending"){
    const secret=String(process.env.CRON_SECRET||process.env.NUMELIXA_CRON_SECRET||"").trim();
-   if(secret){
-    try{await fetch(new URL("/api/cron/binance-deposits",req.url),{method:"GET",headers:{authorization:"Bearer "+secret},cache:"no-store"});}
-    catch(e){console.error("[BINANCE MANUAL CHECK SYNC]",e instanceof Error?e.message:"sync failed");}
-    p=await (await collection<any>("payments")).findOne({orderId,provider:"binance_personal",userId:String(user.id)});
+   const payments=await collection<any>("payments");
+   const lastSync=p.lastStatusSyncAt?new Date(p.lastStatusSyncAt).getTime():0;
+   if(secret&&Date.now()-lastSync>=30000){
+    const claim=await payments.updateOne({_id:p._id,status:"pending",$or:[{lastStatusSyncAt:{$exists:false}},{lastStatusSyncAt:{$lte:new Date(Date.now()-30000)}}]},{$set:{lastStatusSyncAt:new Date()}});
+    if(claim.modifiedCount===1){
+     try{await fetch(new URL("/api/cron/binance-deposits",req.url),{method:"GET",headers:{authorization:"Bearer "+secret},cache:"no-store"});}
+     catch(e){console.error("[BINANCE MANUAL CHECK SYNC]",e instanceof Error?e.message:"sync failed");}
+    }
+    p=await payments.findOne({orderId,provider:"binance_personal",userId:String(user.id)});
    }
   }
   let status=String(p.status);
