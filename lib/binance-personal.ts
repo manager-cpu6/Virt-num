@@ -81,9 +81,10 @@ export const BINANCE_COIN_NAMES:Record<string,string>={
 const logoSymbol:Record<string,string>={USDT:"tether",USDC:"usd-coin",FDUSD:"first-digital-usd",TUSD:"true-usd",DAI:"dai",BNB:"binancecoin",BTC:"bitcoin",ETH:"ethereum",SOL:"solana",XRP:"xrp",TRX:"tron",TON:"the-open-network",DOGE:"dogecoin",ADA:"cardano",LTC:"litecoin",BCH:"bitcoin-cash",LINK:"chainlink",AVAX:"avalanche-2",DOT:"polkadot",MATIC:"matic-network",POL:"polygon-ecosystem-token",ATOM:"cosmos",ETC:"ethereum-classic",NEAR:"near",APT:"aptos",SUI:"sui",SHIB:"shiba-inu",PEPE:"pepe",UNI:"uniswap",AAVE:"aave",FIL:"filecoin",ARB:"arbitrum",OP:"optimism",ICP:"internet-computer",XLM:"stellar",ALGO:"algorand",VET:"vechain",FTM:"fantom",XMR:"monero",EOS:"eos",INJ:"injective-protocol",SEI:"sei-network",RENDER:"render-token",FET:"fetch-ai",HBAR:"hedera-hashgraph",MKR:"maker",CRV:"curve-dao-token",GRT:"the-graph",SAND:"the-sandbox",MANA:"decentraland",AXS:"axie-infinity",THETA:"theta-token",EGLD:"elrond-erd-2",ZEC:"zcash",XTZ:"tezos",KAVA:"kava",RUNE:"thorchain",WLD:"worldcoin-wld",JUP:"jupiter-exchange-solana",PAXG:"pax-gold",ENS:"ethereum-name-service"};
 export function getCoinDisplayName(coin:string){const c=String(coin||"").toUpperCase();return BINANCE_COIN_NAMES[c]||c;}
 export function getCoinLogo(coin:string){
- const c=String(coin||"").toUpperCase();
- const symbol=logoSymbol[c]||c.toLowerCase();
- return "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+symbol+".png";
+ // The spothq cryptocurrency-icons repository uses ticker filenames (usdt.png,
+ // bnb.png, btc.png), not CoinGecko-style asset slugs such as tether.png.
+ const c=String(coin||"").trim().toLowerCase();
+ return "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+encodeURIComponent(c)+".png";
 }
 export function getCoinLogoFallback(coin:string){
  const c=String(coin||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6)||"COIN";
