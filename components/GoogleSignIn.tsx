@@ -72,10 +72,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(){
   setLoading(true);setError("");
   try{
-   const response=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store"});
-   const data=await response.json();
-   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||"Unable to start Google sign-in.");
-   await Browser.open({url:String(data.url),presentationStyle:"fullscreen"});
+   await Browser.open({url:new URL("/auth/native/google",window.location.origin).toString(),presentationStyle:"fullscreen"});
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
  useEffect(()=>{
