@@ -34,7 +34,14 @@ export default function Wallet(){
     if(!u.verified_at){location.href="/verify-email";return}
     if(!selectedPack)return;
     if(provider==="binance"){
-      location.href="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins));return;
+      setLoading(true);setError("");
+      try{
+        const tokenResponse=await fetch("/api/payments/checkout-token",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",cache:"no-store"}).then(r=>r.json());
+        if(!tokenResponse.ok||!tokenResponse.token)throw new Error(tokenResponse.error||"Unable to start secure checkout.");
+        const checkoutUrl="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&token="+encodeURIComponent(String(tokenResponse.token));
+        location.href=checkoutUrl;
+      }catch(err){setError(err instanceof Error?err.message:"Unable to start secure checkout");setLoading(false)}
+      return;
     }
     setLoading(true);setError("");
     try{
