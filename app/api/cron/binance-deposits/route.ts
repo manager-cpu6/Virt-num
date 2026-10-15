@@ -48,7 +48,7 @@ export async function GET(req:Request){
   const pending=await payments.find({provider:"binance_personal",status:"pending",createdAt:{$gte:new Date(now-reconciliationWindowMs)}}).sort({createdAt:1}).limit(1000).toArray();
   if(!pending.length)return NextResponse.json({ok:true,checked:0,credited:0,matched:0});
   const assets=[...new Set(pending.map(p=>String(p.cryptoCurrency||"USDT").toUpperCase()))].filter(c=>/^[A-Z0-9]{2,15}$/.test(c));
-  const depositsByAsset=await Promise.all(assets.map(async coin=>({coin,deposits:await getCoinDeposits(coin,now-90*60*1000,now)})));
+  const depositsByAsset=await Promise.all(assets.map(async coin=>({coin,deposits:await getCoinDeposits(coin,now-24*60*60*1000,now)})));
   let credited=0,matched=0,checked=0;
   for(const group of depositsByAsset){
    checked+=group.deposits.length;
