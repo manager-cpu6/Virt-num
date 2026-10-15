@@ -113,7 +113,7 @@ export async function getAvailableDepositAssets(){
   if(!networks.length)continue;
   const price=stable.has(coin)?1:prices.get(coin+"USDT");
   if(!Number.isFinite(price)||Number(price)<=0||!symbols.has(coin)&&!stable.has(coin))continue;
-  rows.push({coin,name:getCoinDisplayName(coin),logo:getCoinLogo(coin),usdPrice:Number(price),networks});
+  rows.push({coin,name:String(row.name||getCoinDisplayName(coin)),logo:getCoinLogo(coin),usdPrice:Number(price),networks});
  }
  const priority=["USDT","USDC","BTC","ETH","BNB","SOL","XRP","TRX","TON","DOGE","ADA","LTC","BCH","LINK","AVAX","DOT","SHIB","PEPE","FDUSD","TUSD","DAI"];
  return rows.sort((a,b)=>{const ai=priority.indexOf(a.coin),bi=priority.indexOf(b.coin);return (ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name);});
