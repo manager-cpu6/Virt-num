@@ -17,7 +17,7 @@ export default function PaymentPage(){
    window.history.replaceState({}, "", window.location.pathname+(cleanQuery?"?"+cleanQuery:""));
   }
   const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){throw new Error("Your checkout session could not be verified. Return to Coin Store and open checkout again.");}
-  setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
+  setUser(me.user);const fallbackPrices:Record<number,number>={36:0.77,75:1.65,250:5.49,499:10.99};const ps:Pack[]=(me.pricing?.coinPackages||[]).map((x:any)=>({...x,priceUsd:Number(x.priceUsd??x.price??fallbackPrices[Number(x.coins)]??0)})).filter((x:Pack)=>Number.isFinite(x.priceUsd)&&x.priceUsd>0);setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
   const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
   const allAssets:Asset[]=Array.isArray(nr.assets)?nr.assets:[];if(!allAssets.length)throw new Error("No supported deposit assets are available.");
   setAssets(allAssets);
