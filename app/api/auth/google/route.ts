@@ -32,6 +32,7 @@ export async function POST(req:Request){
    return NextResponse.json({ok:false,error:"This Google account is linked to another email."},{status:409});
   }
   let user=linked||await users.findOne({email});
+  if(user?.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Reason: "+String(user.suspensionReason||"Your account requires review.")+" If you believe this is a mistake, contact https://support.numelixa.com to request a review."},{status:403});
   const now=new Date();
   if(!user){
    const id=mongoId();
