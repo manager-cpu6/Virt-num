@@ -79,18 +79,18 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   // Use the same Google Identity Services account chooser as the website.
-   // This avoids an OAuth authorization-code redirect_uri mismatch in Chrome.
+   // Launch OAuth only with the Android native browser bridge. Navigating the
+   // app WebView to intent:// or the OAuth page as a fallback can trigger the
+   // offline error screen even when the device has working internet.
    const signInUrl=new URL("/auth/native/google",window.location.origin);
    if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
-   try{await NativeExternalBrowser.open({url:signInUrl.toString()});}
-   catch{
-    const target=signInUrl.toString();
-    const intentUrl="intent://"+target.replace("https://","").replace("http://","")+"#Intent;scheme=https;package=com.android.chrome;end";
-    window.location.href=intentUrl;
-    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=target;},1500);
-   }
-  }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
+   const result=await NativeExternalBrowser.open({url:signInUrl.toString()});
+   if(!result?.opened)throw new Error("The secure browser did not open. Please try again.");
+  }catch(e){
+   setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please check that a browser is installed.");
+  }finally{
+   setLoading(false);
+  }
  }
  function continueLastLogin(){if(!lastLogin)return;if(isNative){void nativeSignIn(lastLogin);return}setLoginHint(lastLogin);setError("");window.setTimeout(()=>{try{window.google?.accounts?.id?.prompt()}catch{}},350)}
  useEffect(()=>{
