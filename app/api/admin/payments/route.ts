@@ -3,6 +3,7 @@ import {requireAdmin} from "@/lib/auth";
 import {getPaymentSettings,savePaypalCredentials,setActivePaymentProvider,paypalBaseUrl} from "@/lib/payment-settings";
 import {paypalApi} from "@/lib/paypal";
 import {getUsdtDepositInstructions,personalApiConfigured} from "@/lib/binance-personal";
+import {collection} from "@/lib/mongo";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";
 
@@ -25,8 +26,21 @@ async function ensurePaypalWebhook(clientId:string,secretKey:string,currentId:st
 }
 
 export async function GET(){
- try{await requireAdmin();const s=await getPaymentSettings();return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId? s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance});}
- catch(e){return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});}
+ try{
+  await requireAdmin();
+  const s=await getPaymentSettings();
+  const rows=await (await collection<any>("payments")).find({provider:"binance_personal",status:{$in:["pending","paid","expired"]}}).sort({createdAt:-1}).limit(100).toArray();
+  const now=Date.now();
+  const payments=rows.map((p:any)=>({
+   orderId:String(p.orderId||""),userId:String(p.userId||""),coins:Number(p.coins||0),
+   baseAmount:Number(p.amountUsd||0),exactAmount:Number(p.exact_amount??p.amountCrypto??0),
+   currency:String(p.cryptoCurrency||"USDT"),network:String(p.depositNetworkName||p.depositNetwork||""),
+   status:String(p.status||"pending"),createdAt:p.createdAt||null,expiresAt:p.expiresAt||null,
+   secondsRemaining:p.status==="pending"&&p.expiresAt?Math.max(0,Math.ceil((new Date(p.expiresAt).getTime()-now)/1000)):0,
+   paidAt:p.paidAt||null,txid:p.status==="paid"?String(p.txid||""):""
+  }));
+  return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId?s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance,payments});
+ }catch(e){return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});}
 }
 export async function POST(req:Request){
  try{
