@@ -44,8 +44,8 @@ export async function GET(req:Request){
  if(!personalApiConfigured())return NextResponse.json({ok:false,error:"Binance Personal API is not configured."},{status:503});
  try{
   const now=Date.now(),payments=await collection<any>("payments");
-  await payments.updateMany({provider:"binance_personal",status:"pending",expiresAt:{$lte:new Date(now)}},{$set:{status:"expired",updatedAt:new Date()}});
-  const pending=await payments.find({provider:"binance_personal",status:"pending",createdAt:{$gte:new Date(now-90*60*1000)},expiresAt:{$gt:new Date(now)}}).sort({createdAt:1}).limit(500).toArray();
+  const reconciliationWindowMs=24*60*60*1000;
+  const pending=await payments.find({provider:"binance_personal",status:"pending",createdAt:{$gte:new Date(now-reconciliationWindowMs)}}).sort({createdAt:1}).limit(1000).toArray();
   if(!pending.length)return NextResponse.json({ok:true,checked:0,credited:0,matched:0});
   const assets=[...new Set(pending.map(p=>String(p.cryptoCurrency||"USDT").toUpperCase()))].filter(c=>/^[A-Z0-9]{2,15}$/.test(c));
   const depositsByAsset=await Promise.all(assets.map(async coin=>({coin,deposits:await getCoinDeposits(coin,now-90*60*1000,now)})));
@@ -66,6 +66,7 @@ export async function GET(req:Request){
     try{if(await creditDeposit(candidates[0],d)){credited++;candidates[0].status="paid";}}catch(e){console.error("[BINANCE DEPOSIT CREDIT]",e instanceof Error?e.message:String(e));}
    }
   }
+  await payments.updateMany({provider:"binance_personal",status:"pending",createdAt:{$lt:new Date(now-reconciliationWindowMs)},expiresAt:{$lte:new Date(now)}},{$set:{status:"expired",updatedAt:new Date()}});
   return NextResponse.json({ok:true,checked,pending:pending.length,matched,credited});
  }catch(e){
   const message=e instanceof Error?e.message:"";
