@@ -21,22 +21,27 @@ export async function POST(req:Request){
   const baseAmount=Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
   if(!Number.isFinite(baseAmount)||baseAmount<=0)return NextResponse.json({ok:false,error:"This coin package is no longer available."},{status:400});
 
-  const instructions=await getUsdtDepositInstructions();
+  const requestedNetwork=String(body.network||"").trim();
+  if(!requestedNetwork)return NextResponse.json({ok:false,error:"Choose a USDT deposit network first."},{status:400});
+  const instructions=await getUsdtDepositInstructions(requestedNetwork);
   const payments=await collection<any>("payments");
   let amountCrypto=0,unique=false;
-  // Add a small, exact USDT fraction so each pending user request has a distinct amount.
-  for(let i=0;i<20;i++){
-    const cents=crypto.randomInt(0,100);
-    const candidate=Number((baseAmount+cents/100).toFixed(2));
-    const existing=await payments.findOne({provider:"binance_personal",status:"pending",amountCrypto:candidate});
+  // Preserve the package price and add a deterministic 0.001–0.050 USDT offset.
+  // Reserve against the same destination/network, considering active requests only.
+  for(let milli=1;milli<=50;milli++){
+    const candidate=Number((Math.round(baseAmount*1000)+milli)/1000);
+    const existing=await payments.findOne({
+      provider:"binance_personal",status:"pending",depositAddress:instructions.address,
+      depositNetwork:instructions.network,amountCrypto:candidate,expiresAt:{$gt:new Date()}
+    });
     if(!existing){amountCrypto=candidate;unique=true;break;}
   }
-  if(!unique)return NextResponse.json({ok:false,error:"Unable to reserve a unique deposit amount. Please try again."},{status:409});
+  if(!unique)return NextResponse.json({ok:false,error:"All small unique amounts for this package are currently reserved. Please wait a minute and try again."},{status:409});
   const orderId="binance_personal_"+crypto.randomUUID();
   const now=new Date();
   await payments.insertOne({
     _id:mongoId(),userId:String(user.id),provider:"binance_personal",providerId:orderId,orderId,
-    amountUsd:baseAmount,amountCrypto,cryptoCurrency:"USDT",coins,status:"pending",txid:null,
+    amountUsd:baseAmount,amountCrypto,exact_amount:amountCrypto,cryptoCurrency:"USDT",coins,status:"pending",txid:null,
     packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,
     depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,
     createdAt:now,expiresAt:new Date(now.getTime()+15*60*1000),paidAt:null
@@ -44,7 +49,7 @@ export async function POST(req:Request){
   return NextResponse.json({
     ok:true,depositRequired:true,provider:"binance_personal",orderId,coins,amount:amountCrypto,
     currency:"USDT",address:instructions.address,network:instructions.network,networkName:instructions.networkName,
-    memo:instructions.memo||"",expiresAt:new Date(now.getTime()+15*60*1000).toISOString(),
+    memo:instructions.memo||"",baseAmount,expiresAt:new Date(now.getTime()+15*60*1000).toISOString(),
     instructions:"Send the exact USDT amount on the specified network. Do not send another asset or use a different network. Coins are credited only after Binance confirms the deposit."
   });
  }catch(e){
