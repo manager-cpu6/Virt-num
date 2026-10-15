@@ -51,7 +51,7 @@ export async function POST(req:Request){
    const sequence=Number((counter as any)?.sequence??(counter as any)?.value?.sequence??0);
    if(!Number.isFinite(sequence)||sequence<1)throw new Error("PAYMENT_AMOUNT_RESERVATION_FAILED");
    // Keep the suffix tiny; wrap after 9,999 units and skip any amount still active.
-   const suffix=((sequence-1)%9999+1)*unit;
+   const suffix=sequence===1?0:(((sequence-2)%9999+1)*unit);
    const candidate=Number((baseCrypto+suffix).toFixed(decimals));
    const collision=await payments.findOne({provider:"binance_personal",status:"pending",cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,amountCrypto:candidate,expiresAt:{$gt:now}});
    if(!collision){amountCrypto=candidate;break;}
