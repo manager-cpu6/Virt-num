@@ -302,6 +302,44 @@ public final class NumelixaPushTransport {
 }
 ''')
 
+(JAVA/"NumelixaExternalBrowserPlugin.java").write_text(r'''package com.numelixa.app;
+
+import android.content.Intent;
+import android.net.Uri;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.JSObject;
+import com.getcapacitor.annotation.CapacitorPlugin;
+
+@CapacitorPlugin(name = "NumelixaExternalBrowser")
+public class NumelixaExternalBrowserPlugin extends Plugin {
+    @PluginMethod
+    public void open(PluginCall call) {
+        String value = call.getString("url", "");
+        Uri uri;
+        try { uri = Uri.parse(value); }
+        catch (Exception error) { call.reject("Invalid sign-in URL"); return; }
+        String host = uri.getHost() == null ? "" : uri.getHost().toLowerCase();
+        if (!"https".equalsIgnoreCase(uri.getScheme()) ||
+            !("numelixa.com".equals(host) || "www.numelixa.com".equals(host))) {
+            call.reject("Only Numelixa secure sign-in can be opened");
+            return;
+        }
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.addCategory(Intent.CATEGORY_BROWSABLE);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            getContext().startActivity(intent);
+            JSObject result = new JSObject();
+            result.put("opened", true);
+            call.resolve(result);
+        } catch (Exception error) {
+            call.reject("No browser is available to open Google sign-in", error);
+        }
+    }
+}
+''')
 (JAVA/"NumelixaUpdaterPlugin.java").write_text(r'''package com.numelixa.app;
 
 import android.app.DownloadManager;
@@ -453,6 +491,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(NumelixaUpdaterPlugin.class);
         registerPlugin(NumelixaPushTokenPlugin.class);
+        registerPlugin(NumelixaExternalBrowserPlugin.class);
         registerPlugin(SocialLoginPlugin.class);
         super.onCreate(savedInstanceState);
 
