@@ -62,8 +62,7 @@ export async function POST(req:Request){
   }
   if(!amountCrypto)return NextResponse.json({ok:false,error:"Unable to reserve a unique payment amount. Please try again."},{status:503});
   const orderId="binance_personal_"+crypto.randomUUID(),expiresAt=new Date(now.getTime()+settings.paymentExpiryMinutes*60*1000);
-  const payment={_id:mongoId(),userId:String(user.id),provider:"binance_personal",providerId:orderId,orderId,amountUsd:baseAmount,amountCrypto,exact_amount:amountCrypto,amountSuffix:Number((amountCrypto-baseCrypto).toFixed(decimals)),cryptoCurrency:currency,cryptoUsdPrice:usdPerCoin,coins,status:"pending",txid:null,packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,createdAt:now,expiresAt,paidAt:null};
-  payment.reservationActive=true;
+  const payment={_id:mongoId(),userId:String(user.id),provider:"binance_personal",providerId:orderId,orderId,amountUsd:baseAmount,amountCrypto,exact_amount:amountCrypto,amountSuffix:Number((amountCrypto-baseCrypto).toFixed(decimals)),cryptoCurrency:currency,cryptoUsdPrice:usdPerCoin,coins,status:"pending",reservationActive:true,txid:null,packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,createdAt:now,expiresAt,paidAt:null};
   await payments.insertOne(payment);
   return NextResponse.json(paymentResponse(payment));
  }catch(e){
