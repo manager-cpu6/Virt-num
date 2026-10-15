@@ -16,11 +16,11 @@ export async function POST(req:Request){
   const tickets=await collection<any>("googleNativeOAuthTickets");
   const record=await tickets.findOneAndDelete({ticketHash:hash(ticket),expiresAt:{$gt:new Date()}});
   if(!record?.userId)return NextResponse.json({ok:false,error:"This Google sign-in has expired. Please try again."},{status:401});
-  const user=await (await collection<any>("users")).findOne({_id:String(record.userId)},{projection:{suspendedAt:1,role:1}});
+  const user=await (await collection<any>("users")).findOne({_id:String(record.userId)},{projection:{suspendedAt:1,role:1,email:1}});
   if(!user||user.suspendedAt)return NextResponse.json({ok:false,error:"This account is suspended or unavailable."},{status:403});
   await createSession(String(record.userId),requestMeta(req.headers));
   await claimDeviceTokenForUser(String(record.userId));
-  return NextResponse.json({ok:true,role:user.role||"user"},{headers:{"Cache-Control":"no-store"}});
+  return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||"")},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[NATIVE GOOGLE COMPLETE]",error);
   return NextResponse.json({ok:false,error:"Unable to finish Google sign-in. Please try again."},{status:500});

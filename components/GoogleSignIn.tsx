@@ -6,6 +6,8 @@ import {App} from "@capacitor/app";
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 const NativeExternalBrowser=registerPlugin<{open(options:{url:string}):Promise<{opened:boolean}>}>("NumelixaExternalBrowser");
+function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
+function saveLastLogin(email:string){const normalized=String(email||"").trim().toLowerCase();if(normalized.includes("@")){try{localStorage.setItem("numelixa:last-login-email",normalized)}catch{}}}
 
 export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  const host=useRef<HTMLDivElement|null>(null);
@@ -16,6 +18,9 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  const[webReady,setWebReady]=useState(false);
  const[clientId,setClientId]=useState("");
  const[configLoaded,setConfigLoaded]=useState(false);
+ const[lastLogin,setLastLogin]=useState("");
+ const[loginHint,setLoginHint]=useState("");
+ useEffect(()=>{try{const recent=String(localStorage.getItem("numelixa:last-login-email")||"").trim().toLowerCase();if(recent.includes("@")){setLastLogin(recent);setLoginHint(recent)}}catch{}},[]);
 
  useEffect(()=>{
   let active=true;
@@ -31,6 +36,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   const result=await fetch("/api/auth/google",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential})});
   const data=await result.json();
   if(!result.ok||!data.ok)throw new Error(data.error||"Google sign-in failed.");
+  const email=credentialEmail(credential);if(email){saveLastLogin(email);setLastLogin(email)}
   window.dispatchEvent(new Event("numelixa-auth-ready"));
   onSuccessRef.current();
  }
@@ -60,6 +66,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
     const response=await fetch("/api/auth/google/native/complete",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({ticket})});
     const data=await response.json();
     if(!response.ok||!data.ok)throw new Error(data.error||"Unable to finish Google sign-in.");
+    const email=String(data.email||"").trim().toLowerCase();if(email){saveLastLogin(email);setLastLogin(email);}
     window.dispatchEvent(new Event("numelixa-auth-ready"));onSuccessRef.current();
    }catch(e){setError(e instanceof Error?e.message:"Unable to finish Google sign-in.")}
    finally{setLoading(false)}
@@ -69,18 +76,23 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   return()=>{active=false;if(listener)void listener.remove()};
  },[isNative]);
 
- async function nativeSignIn(){
+ async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   const signInUrl=new URL("/auth/native/google",window.location.origin).toString();
+   const started=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({loginHint:loginEmail||""})});
+   const start=await started.json();
+   if(!started.ok||!start.ok||!start.url)throw new Error(start.error||"Unable to start Google sign-in.");
+   const signInUrl=String(start.url);
    try{await NativeExternalBrowser.open({url:signInUrl});}
-   catch(bridgeError){
-    // Do not leave the user stuck on a "plugin not implemented" error. Continue to the same Google flow.
-    window.location.href="intent://numelixa.com/auth/native/google#Intent;scheme=https;package=com.android.chrome;end";
-    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=signInUrl;},1200);
+   catch{
+    // The installed APK may not contain the custom browser bridge yet. Open the same OAuth URL in Chrome.
+    const intentUrl="intent://"+signInUrl.replace("https://","").replace("http://","")+"#Intent;scheme=https;package=com.android.chrome;end";
+    window.location.href=intentUrl;
+    window.setTimeout(()=>{if(document.visibilityState==="visible")window.location.href=signInUrl;},1500);
    }
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
+ function continueLastLogin(){if(!lastLogin)return;if(isNative){void nativeSignIn(lastLogin);return}setLoginHint(lastLogin);setError("");window.setTimeout(()=>{try{window.google?.accounts?.id?.prompt()}catch{}},350)}
  useEffect(()=>{
   if(isNative)return;
   let active=true;
@@ -99,6 +111,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
      finally{if(active)setLoading(false)}
     },
     auto_select:false,
+    login_hint:loginHint||undefined,
     cancel_on_tap_outside:true
    });
    window.google.accounts.id.renderButton(host.current,{type:"standard",theme:"outline",size:"large",shape:"pill",text:"continue_with",logo_alignment:"left",width:Math.min(360,host.current.clientWidth||360)});
@@ -115,10 +128,10 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   script.addEventListener("load",render);
   script.addEventListener("error",()=>{if(active)setError("Google sign-in could not load. Check your connection and try again.")});
   return()=>{active=false;script?.removeEventListener("load",render)};
- },[isNative,clientId,configLoaded]);
+ },[isNative,clientId,configLoaded,loginHint]);
 
  const GoogleMark=()=><svg width="20" height="20" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.75 7.18l7.73 6C44.43 37.98 46.98 31.88 46.98 24.55z"/><path fill="#FBBC05" d="M10.53 28.59A14.4 14.4 0 0 1 9.75 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.9 23.9 0 0 0 0 24c0 3.87.93 7.52 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.91-5.8l-7.73-6c-2.15 1.45-4.92 2.3-8.18 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>;
 
- if(isNative)return <div className="google-signin-wrap" style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}><button type="button" onClick={nativeSignIn} disabled={loading} className="google-signin-fallback" style={{width:"100%",minHeight:48,display:"flex",alignItems:"center",justifyContent:"center",gap:12,border:"1px solid #d7dce5",borderRadius:999,background:"#fff",color:"#202124",fontWeight:600,fontSize:15,cursor:loading?"wait":"pointer",opacity:loading?0.7:1}}><GoogleMark/>{loading?"Signing in…":"Continue with Google"}</button>{error&&<p className="google-signin-error" role="status">{error}</p>}</div>;
- return <div className="google-signin-wrap" style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>{!webReady&&<button type="button" className="google-signin-fallback" onClick={()=>{if(!clientId){setError("Google sign-in is not configured. Set GOOGLE_CLIENT_ID in Vercel.");return}if(window.google?.accounts?.id){window.google.accounts.id.prompt();return}setError("Google sign-in is still loading. Please wait a moment and try again.")}} style={{width:"100%",minHeight:48,display:"flex",alignItems:"center",justifyContent:"center",gap:12,border:"1px solid #d7dce5",borderRadius:999,background:"#fff",color:"#202124",fontWeight:600,fontSize:15}}><GoogleMark/>Continue with Google</button>}<div ref={host} className="google-signin-button" style={{display:webReady?"flex":"none",justifyContent:"center",width:"100%"}}/>{loading&&<div className="google-signin-loading">Signing in with Google…</div>}{error&&<p className="google-signin-error" role="status">{error}</p>}</div>;
+ if(isNative)return <div className="google-signin-wrap" style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}><button type="button" onClick={()=>void nativeSignIn()} disabled={loading} className="google-signin-fallback" style={{width:"100%",minHeight:48,display:"flex",alignItems:"center",justifyContent:"center",gap:12,border:"1px solid #d7dce5",borderRadius:999,background:"#fff",color:"#202124",fontWeight:600,fontSize:15,cursor:loading?"wait":"pointer",opacity:loading?0.7:1}}><GoogleMark/>{loading?"Signing in…":"Continue with Google"}</button>{lastLogin&&<button type="button" onClick={continueLastLogin} disabled={loading} style={{marginTop:10,width:"100%",maxWidth:340,minHeight:44,borderRadius:14,border:"1px solid rgba(83,218,208,.28)",background:"rgba(18,53,73,.72)",color:"#e9ffff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Continue as {lastLogin}</button>}{error&&<p className="google-signin-error" role="status">{error}</p>}</div>;
+ return <div className="google-signin-wrap" style={{width:"100%",display:"flex",flexDirection:"column",alignItems:"center"}}>{!webReady&&<button type="button" className="google-signin-fallback" onClick={()=>{if(!clientId){setError("Google sign-in is not configured. Set GOOGLE_CLIENT_ID in Vercel.");return}if(window.google?.accounts?.id){window.google.accounts.id.prompt();return}setError("Google sign-in is still loading. Please wait a moment and try again.")}} style={{width:"100%",minHeight:48,display:"flex",alignItems:"center",justifyContent:"center",gap:12,border:"1px solid #d7dce5",borderRadius:999,background:"#fff",color:"#202124",fontWeight:600,fontSize:15}}><GoogleMark/>Continue with Google</button>}<div ref={host} className="google-signin-button" style={{display:webReady?"flex":"none",justifyContent:"center",width:"100%"}}/>{loading&&<div className="google-signin-loading">Signing in with Google…</div>}{lastLogin&&<button type="button" onClick={continueLastLogin} disabled={loading} style={{marginTop:10,width:"100%",maxWidth:340,minHeight:44,borderRadius:14,border:"1px solid rgba(83,218,208,.28)",background:"rgba(18,53,73,.72)",color:"#e9ffff",fontSize:13,fontWeight:700,cursor:"pointer"}}>Continue as {lastLogin}</button>}{error&&<p className="google-signin-error" role="status">{error}</p>}</div>;
 }
