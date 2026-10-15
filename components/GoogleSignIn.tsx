@@ -1,11 +1,11 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Capacitor,registerPlugin} from "@capacitor/core";
+import {Capacitor} from "@capacitor/core";
 import {App} from "@capacitor/app";
+import {Browser} from "@capacitor/browser";
 
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
-const NativeExternalBrowser=registerPlugin<{open(options:{url:string}):Promise<{opened:boolean}>}>("NumelixaExternalBrowser");
 function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
 function saveLastLogin(email:string){const normalized=String(email||"").trim().toLowerCase();if(normalized.includes("@")){try{localStorage.setItem("numelixa:last-login-email",normalized)}catch{}}}
 
@@ -84,8 +84,7 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    // offline error screen even when the device has working internet.
    const signInUrl=new URL("/auth/native/google",window.location.origin);
    if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
-   const result=await NativeExternalBrowser.open({url:signInUrl.toString()});
-   if(!result?.opened)throw new Error("The secure browser did not open. Please try again.");
+   await Browser.open({url:signInUrl.toString(), presentationStyle:"popover"});
   }catch(e){
    setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please check that a browser is installed.");
   }finally{
