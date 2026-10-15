@@ -80,7 +80,16 @@ export const BINANCE_COIN_NAMES:Record<string,string>={
 };
 const logoSymbol:Record<string,string>={USDT:"tether",USDC:"usd-coin",FDUSD:"first-digital-usd",TUSD:"true-usd",DAI:"dai",BNB:"binancecoin",BTC:"bitcoin",ETH:"ethereum",SOL:"solana",XRP:"xrp",TRX:"tron",TON:"the-open-network",DOGE:"dogecoin",ADA:"cardano",LTC:"litecoin",BCH:"bitcoin-cash",LINK:"chainlink",AVAX:"avalanche-2",DOT:"polkadot",MATIC:"matic-network",POL:"polygon-ecosystem-token",ATOM:"cosmos",ETC:"ethereum-classic",NEAR:"near",APT:"aptos",SUI:"sui",SHIB:"shiba-inu",PEPE:"pepe",UNI:"uniswap",AAVE:"aave",FIL:"filecoin",ARB:"arbitrum",OP:"optimism",ICP:"internet-computer",XLM:"stellar",ALGO:"algorand",VET:"vechain",FTM:"fantom",XMR:"monero",EOS:"eos",INJ:"injective-protocol",SEI:"sei-network",RENDER:"render-token",FET:"fetch-ai",HBAR:"hedera-hashgraph",MKR:"maker",CRV:"curve-dao-token",GRT:"the-graph",SAND:"the-sandbox",MANA:"decentraland",AXS:"axie-infinity",THETA:"theta-token",EGLD:"elrond-erd-2",ZEC:"zcash",XTZ:"tezos",KAVA:"kava",RUNE:"thorchain",WLD:"worldcoin-wld",JUP:"jupiter-exchange-solana",PAXG:"pax-gold",ENS:"ethereum-name-service"};
 export function getCoinDisplayName(coin:string){const c=String(coin||"").toUpperCase();return BINANCE_COIN_NAMES[c]||c;}
-export function getCoinLogo(coin:string){const c=String(coin||"").toUpperCase();return "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+c.toLowerCase()+".png";}
+export function getCoinLogo(coin:string){
+ const c=String(coin||"").toUpperCase();
+ const symbol=logoSymbol[c]||c.toLowerCase();
+ return "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+symbol+".png";
+}
+export function getCoinLogoFallback(coin:string){
+ const c=String(coin||"").toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,6)||"COIN";
+ const svg='<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#1677ff"/><stop offset="1" stop-color="#00d9ff"/></linearGradient></defs><circle cx="64" cy="64" r="62" fill="#071329"/><circle cx="64" cy="64" r="52" fill="url(#g)"/><text x="64" y="73" font-family="Arial,sans-serif" font-size="'+(c.length>4?25:c.length>3?30:38)+'" font-weight="700" text-anchor="middle" fill="white">'+c+'</text></svg>';
+ return "data:image/svg+xml;charset=UTF-8,"+encodeURIComponent(svg);
+}
 
 export async function getAvailableDepositAssets(){
  const config:any[]=await signedGet("/sapi/v1/capital/config/getall");
