@@ -31,7 +31,7 @@ export async function POST(req:Request){
   if(!requestedNetwork)return NextResponse.json({ok:false,error:"Choose a deposit network first."},{status:400});
   const instructions=await getCoinDepositInstructions(currency,requestedNetwork);
   const usdPerCoin=await getCryptoUsdPrice(currency);
-  const decimals=["USDT","USDC","FDUSD","TUSD","USDP","DAI"].includes(currency)?2:8;
+  const decimals=["USDT","USDC","FDUSD","TUSD","USDP","DAI"].includes(currency)?2:(baseAmount/usdPerCoin)<0.000001?12:8;
   // Charge the exact package price: no artificial surcharge. If another active order
   // reserves the same exact amount/address/network, wait for its 15-minute window to expire.
   const amountCrypto=Number((baseAmount/usdPerCoin).toFixed(decimals));
@@ -59,7 +59,7 @@ export async function POST(req:Request){
    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
    BINANCE_BNB_DEPOSIT_DISABLED:"BNB deposits are disabled for available networks in your Binance account.",
    BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance did not return a deposit address. Check API deposit-read permissions.",
-   BINANCE_BNB_PRICE_UNAVAILABLE:"Unable to get the current BNB/USD price. Please retry."
+   BINANCE_BNB_PRICE_UNAVAILABLE:"Unable to get the current BNB/USD price. Please retry.",\n   BINANCE_USDC_PRICE_UNAVAILABLE:"Unable to get the current USD Coin price. Please retry.",\n   BINANCE_ASSET_PRICES_UNAVAILABLE:"Live market prices are unavailable. Please try again shortly."
   };
   console.error("[BINANCE DEPOSIT CREATE]",m);
   const apiCode=m.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
