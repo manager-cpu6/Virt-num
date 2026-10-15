@@ -79,10 +79,14 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   const started=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({loginHint:loginEmail||""})});
-   const start=await started.json();
-   if(!started.ok||!start.ok||!start.url)throw new Error(start.error||"Unable to start Google sign-in.");
-   const signInUrl=String(start.url);
+   let signInUrl="";
+   try{
+    const started=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({loginHint:loginEmail||""})});
+    const start=await started.json();
+    if(started.ok&&start.ok&&start.url)signInUrl=String(start.url);
+   }catch{}
+   // If server-side OAuth credentials are not configured, use the same browser Google Identity flow as the website.
+   if(!signInUrl){const fallback=new URL("/auth/native/google",window.location.origin);if(loginEmail)fallback.searchParams.set("login_hint",loginEmail);signInUrl=fallback.toString();}
    try{await NativeExternalBrowser.open({url:signInUrl});}
    catch{
     // The installed APK may not contain the custom browser bridge yet. Open the same OAuth URL in Chrome.

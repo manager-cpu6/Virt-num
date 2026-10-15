@@ -7,8 +7,10 @@ export default function NativeGoogleBrowserPage(){
  const [error,setError]=useState("");
  const [loading,setLoading]=useState(false);
  const [ready,setReady]=useState(false);
+ const [loginHint,setLoginHint]=useState("");
  useEffect(()=>{
   let active=true;
+  setLoginHint(new URLSearchParams(window.location.search).get("login_hint")||"");
   fetch("/api/auth/google/config",{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error(d.error||"Google sign-in is unavailable.");return String(d.clientId||"").trim()}).then(id=>{if(active){if(!id)throw new Error("Google sign-in is not configured.");setClientId(id)}}).catch(e=>{if(active)setError(e instanceof Error?e.message:"Unable to load Google sign-in.")});
   return()=>{active=false};
  },[]);
@@ -18,7 +20,7 @@ export default function NativeGoogleBrowserPage(){
   const render=()=>{
    if(!active||!host.current||!window.google?.accounts?.id)return;
    host.current.innerHTML="";
-   window.google.accounts.id.initialize({client_id:clientId,auto_select:false,cancel_on_tap_outside:false,callback:async(response:any)=>{
+   window.google.accounts.id.initialize({client_id:clientId,auto_select:false,login_hint:loginHint||undefined,cancel_on_tap_outside:false,callback:async(response:any)=>{
     if(!active)return;
     const credential=String(response?.credential||"");
     if(!credential){setError("Google did not return a verified account. Please try again.");return}
@@ -39,7 +41,7 @@ export default function NativeGoogleBrowserPage(){
   script.addEventListener("load",render);
   script.addEventListener("error",()=>{if(active)setError("Google could not load. Check your internet connection and try again.")});
   return()=>{active=false;script?.removeEventListener("load",render)};
- },[clientId]);
+ },[clientId,loginHint]);
  return <main style={{minHeight:"100vh",boxSizing:"border-box",display:"grid",placeItems:"center",padding:"28px 18px",background:"radial-gradient(ellipse at 50% 0%,#164c68 0%,#0a2035 45%,#030817 100%)",color:"#f5f8ff",fontFamily:"Inter,system-ui,sans-serif"}}>
   <section style={{width:"100%",maxWidth:420,boxSizing:"border-box",padding:"30px 22px",borderRadius:28,border:"1px solid rgba(105,224,228,.2)",background:"rgba(7,25,43,.9)",boxShadow:"0 28px 90px rgba(0,0,0,.35)",textAlign:"center"}}>
    <div style={{width:62,height:62,margin:"0 auto 16px",display:"grid",placeItems:"center",borderRadius:21,background:"linear-gradient(135deg,#51ead5,#158fbd 70%,#2879ff)",color:"#041c28",fontSize:31,fontWeight:950,boxShadow:"0 12px 34px rgba(42,208,219,.22)"}}>N</div>

@@ -196,10 +196,10 @@ function AdminPayments(){
  const pendingPayments=(state.payments||[]).filter((p:any)=>p.status==="pending");
  const otherPayments=(state.payments||[]).filter((p:any)=>p.status!=="pending");
  return <div className="admin-payment-stack">
-  <Table title={"Pending USDT payments ("+pendingPayments.length+")"}>
+  <Table title={"Pending crypto payment orders ("+pendingPayments.length+")"}>
    <p className="admin-help">Live pending Binance deposits. Time remaining updates every second; the list refreshes from the payment database every 30 seconds.</p>
    {!pendingPayments.length?<div className="country-loading">No pending USDT payments right now.</div>:pendingPayments.map((p:any)=><div key={p.orderId} className="admin-order-card" style={{marginBottom:12,border:"1px solid #284766",borderRadius:16,padding:16}}>
-    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(3)} USDT</b><span className="status active">PENDING</span></div>
+    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(8)} {p.currency||"USDT"}</b><span className="status active">PENDING</span></div>
     <div className="admin-order-meta"><span>Network: {p.network||"—"}</span><span>Package price: ${Number(p.baseAmount).toFixed(2)}</span><span>User ID: {p.userId||"—"}</span></div>
     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap",marginTop:12}}>
      <div><small style={{display:"block",opacity:.75}}>TIME REMAINING</small><strong style={{fontSize:24,fontVariantNumeric:"tabular-nums",color:Number(p.secondsRemaining)<=120?"#ffba72":"#7debd2"}}>{String(Math.floor(Number(p.secondsRemaining||0)/60)).padStart(2,"0")}:{String(Number(p.secondsRemaining||0)%60).padStart(2,"0")}</strong></div>
