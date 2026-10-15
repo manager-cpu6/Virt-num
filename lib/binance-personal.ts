@@ -109,7 +109,7 @@ export async function getAvailableDepositAssets(){
  for(const row of config){
   const coin=String(row.coin||"").toUpperCase();
   if(!/^[A-Z0-9]{2,15}$/.test(coin)||!Array.isArray(row.networkList))continue;
-  const networks=row.networkList.filter((n:any)=>n.depositEnable&&n.network).map((n:any)=>({network:String(n.network),networkName:String(n.name||n.network),isDefault:Boolean(n.isDefault),busy:Boolean(n.busy)})).sort((a:any,b:any)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
+  const networks=row.networkList.filter((n:any)=>n.depositEnable&&!n.busy&&n.network).map((n:any)=>({network:String(n.network),networkName:String(n.name||n.network),isDefault:Boolean(n.isDefault),busy:Boolean(n.busy)})).sort((a:any,b:any)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
   if(!networks.length)continue;
   const price=stable.has(coin)?1:prices.get(coin+"USDT");
   if(!Number.isFinite(price)||Number(price)<=0||!symbols.has(coin)&&!stable.has(coin))continue;
@@ -125,7 +125,7 @@ export async function getCoinNetworks(coin:string) {
   const row=config.find(x=>String(x.coin).toUpperCase()===asset);
   if(!row)throw new Error("BINANCE_"+asset+"_NOT_AVAILABLE");
   const networks:any[]=Array.isArray(row.networkList)?row.networkList:[];
-  return networks.filter(x=>x.depositEnable&&x.network).map(x=>({
+  return networks.filter(x=>x.depositEnable&&!x.busy&&x.network).map(x=>({
     network:String(x.network),networkName:String(x.name||x.network),
     isDefault:Boolean(x.isDefault),busy:Boolean(x.busy),
   })).sort((a,b)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
@@ -151,7 +151,7 @@ export async function getUsdtDepositInstructions(requestedNetwork?:string){retur
 export async function getUsdtDeposits(startTime:number,endTime:number){return getCoinDeposits("USDT",startTime,endTime);}
 export async function getCryptoUsdPrice(coin:string){
   const asset=String(coin||"").toUpperCase();
-  if(asset==="USDT")return 1;
+  if(["USDT","USDC","FDUSD","TUSD","USDP","DAI"].includes(asset))return 1;
   if(!/^[A-Z0-9]{2,15}$/.test(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
   let response:Response;
   try{response=await binanceFetch(BASE+"/api/v3/ticker/price?symbol="+encodeURIComponent(asset+"USDT"),{cache:"no-store",signal:AbortSignal.timeout(10000)});}
