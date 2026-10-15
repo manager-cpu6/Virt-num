@@ -53,7 +53,7 @@ export default function MobileAppBootstrap(){
     if(routePoll)window.clearInterval(routePoll);
    };
    const checkSplashRoute=()=>{
-    const path=window.location.pathname.replace(/\\/+$/,"")||"/";
+    const path=window.location.pathname.replace(/\/+$/,"")||"/";
     const isHomeOrDashboard=path==="/"||path==="/home"||path==="/dashboard";
     if(isHomeOrDashboard&&Date.now()-splashStarted>=1700)hideSplash();
    };
