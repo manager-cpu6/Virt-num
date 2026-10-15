@@ -1,0 +1,33 @@
+import {NextResponse} from "next/server";
+import crypto from "crypto";
+import {collection} from "@/lib/mongo";
+
+export const runtime="nodejs";
+export const dynamic="force-dynamic";
+
+const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
+
+export async function POST(){
+ try{
+  const clientId=String(process.env.GOOGLE_CLIENT_ID||"").trim();
+  if(!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured."},{status:503});
+  const state=crypto.randomBytes(32).toString("hex");
+  await (await collection<any>("googleNativeOAuthStates")).insertOne({
+   _id:crypto.randomUUID(),stateHash:hash(state),createdAt:new Date(),
+   expiresAt:new Date(Date.now()+10*60*1000)
+  });
+  const redirectUri="https://numelixa.com/api/auth/google/native/callback";
+  const url=new URL("https://accounts.google.com/o/oauth2/v2/auth");
+  url.searchParams.set("client_id",clientId);
+  url.searchParams.set("redirect_uri",redirectUri);
+  url.searchParams.set("response_type","code");
+  url.searchParams.set("scope","openid email profile");
+  url.searchParams.set("state",state);
+  url.searchParams.set("prompt","select_account");
+  url.searchParams.set("include_granted_scopes","true");
+  return NextResponse.json({ok:true,url:url.toString()},{headers:{"Cache-Control":"no-store"}});
+ }catch(error){
+  console.error("[NATIVE GOOGLE START]",error);
+  return NextResponse.json({ok:false,error:"Unable to start Google sign-in. Please try again."},{status:500});
+ }
+}
