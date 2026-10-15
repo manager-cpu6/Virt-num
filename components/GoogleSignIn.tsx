@@ -72,7 +72,12 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(){
   setLoading(true);setError("");
   try{
-   await NativeExternalBrowser.open({url:new URL("/auth/native/google",window.location.origin).toString()});
+   const signInUrl=new URL("/auth/native/google",window.location.origin).toString();
+   try{await NativeExternalBrowser.open({url:signInUrl});}
+   catch(bridgeError){
+    // Do not leave the user stuck on a "plugin not implemented" error. Continue to the same Google flow.
+    window.location.href=signInUrl;
+   }
   }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
  useEffect(()=>{
