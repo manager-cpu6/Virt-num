@@ -28,7 +28,7 @@ export default function AdminPanel(){
      priceUsd:Number(f.get("price"+i)),
      popular:f.get("popular")===String(i)
    })).filter(p=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0);
-   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),smsProvider:String(f.get("smsProvider")||"5sim"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
+   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:Number(f.get("coinsPerUsd")),minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),paymentExpiryMinutes:Number(f.get("paymentExpiryMinutes")),coinPackages,providerOperator:String(f.get("providerOperator")||"any"),smsProvider:String(f.get("smsProvider")||"5sim"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
    const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
    if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
  }
@@ -102,6 +102,7 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
    <label>Coins per $1 USD<input name="coinsPerUsd" type="number" min="1" step="1" defaultValue={stats.settings.coinsPerUsd}/></label>
    <label>Minimum custom top-up USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
    <label>Maximum custom top-up USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label>
+   <label>Crypto payment checkout timer (minutes)<input name="paymentExpiryMinutes" type="number" min="1" max="1440" step="1" defaultValue={(stats.settings as any).paymentExpiryMinutes??15}/><small>Choose 1–1440 minutes. When a user cancels or leaves checkout, the amount reservation is released immediately; this timer controls only the visible checkout window.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>Wallet coin packages</b><small>Set the exact coins and payment price shown to customers. Package prices are independent of custom top-up limits.</small></div></div>{[0,1,2,3].map(i=>{const p=packs[i]||{coins:"",priceUsd:"",popular:false};return <div className="coin-package-row" key={i}><span className="coin-package-index">{i+1}</span><input name={"coins"+i} type="number" min="1" step="1" defaultValue={p.coins} placeholder="Coins"/><input name={"price"+i} type="number" min="0.01" step="0.01" defaultValue={p.priceUsd} placeholder="Price USD"/><label className="popular-check"><input name="popular" type="radio" value={String(i)} defaultChecked={Boolean(p.popular)}/><span>Popular</span></label></div>})}</div>
    <button className="primary-btn" type="submit">Save pricing & operator</button>
   </form>
@@ -212,7 +213,7 @@ function AdminPayments(){
   <Table title={"Payment orders — history ("+otherPayments.length+")"}>
    <p className="admin-help">Cancelled and expired orders release their amount slot. Reactivating an order is allowed only when its exact amount is not reserved by another active checkout. Paid orders are read-only.</p>
    {!otherPayments.length?<div className="country-loading">No previous payment orders.</div>:otherPayments.map((p:any)=><div key={p.orderId} className="admin-order-card" style={{marginBottom:10,border:"1px solid #284766",borderRadius:14,padding:14}}>
-    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(6)} {p.currency}</b><span className={"status "+(p.status==="paid"?"active":"")}>{String(p.status).toUpperCase()}</span></div>
+    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(8)} {p.currency</b><span className={"status "+(p.status==="paid"?"active":"")}>{String(p.status).toUpperCase()}</span></div>
     <div className="admin-order-meta"><span>Package price: ${Number(p.baseAmount).toFixed(2)}</span><span>Network: {p.network||"—"}</span><span>Created: {p.createdAt?new Date(p.createdAt).toLocaleString():"—"}</span></div>
     <small style={{display:"block",marginTop:8,opacity:.65}}>Order: {p.orderId}</small>
     {p.status!=="paid"&&<div style={{marginTop:10}}><button className="secondary-btn" disabled={busy} onClick={()=>orderAction(p,"activate")}>Activate order</button></div>}

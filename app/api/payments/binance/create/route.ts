@@ -1,5 +1,4 @@
 import {NextResponse} from "next/server";
-import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
@@ -44,18 +43,10 @@ export async function POST(req:Request){
   const baseCollision=await payments.findOne({...activeAmountQuery,amountCrypto:baseCrypto});
   let amountCrypto=baseCollision?0:baseCrypto;
   if(baseCollision){
-   const counterKey=crypto.createHash("sha256").update([currency,instructions.address,instructions.network,baseCrypto.toFixed(stablecoin?2:decimals)].join("|")).digest("hex");
-   const counters=await collection<any>("paymentAmountCounters");
-   for(let attempt=0;attempt<10000;attempt++){
-    const counter=await counters.findOneAndUpdate(
-     {_id:counterKey},
-     {$inc:{sequence:1},$setOnInsert:{currency,address:instructions.address,network:instructions.network,baseCrypto,createdAt:now}},
-     {upsert:true,returnDocument:"after"}
-    );
-    const sequence=Number((counter as any)?.sequence??(counter as any)?.value?.sequence??0);
-    if(!Number.isFinite(sequence)||sequence<1)throw new Error("PAYMENT_AMOUNT_RESERVATION_FAILED");
-    const suffix=((sequence-1)%9999+1)*unit;
-    const candidate=Number((baseCrypto+suffix).toFixed(decimals));
+   // Reuse the lowest available suffix every time a checkout is cancelled, paid, or abandoned.
+   // Never use a monotonically increasing counter: that would make amounts drift upward forever.
+   for(let sequence=1;sequence<=9999;sequence++){
+    const candidate=Number((baseCrypto+sequence*unit).toFixed(decimals));
     const collision=await payments.findOne({...activeAmountQuery,amountCrypto:candidate});
     if(!collision){amountCrypto=candidate;break;}
    }
