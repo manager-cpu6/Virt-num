@@ -18,7 +18,7 @@ export async function GET(req:Request){
    }
   }
   let status=String(p.status);
-  if(status==="pending"&&p.expiresAt&&new Date(p.expiresAt).getTime()<=Date.now()){
+  if(status==="pending"&&p.createdAt&&new Date(p.createdAt).getTime()<=Date.now()-24*60*60*1000&&p.expiresAt&&new Date(p.expiresAt).getTime()<=Date.now()){
    await (await collection<any>("payments")).updateOne({_id:p._id,provider:"binance_personal",status:"pending",expiresAt:{$lte:new Date()}},{$set:{status:"expired",updatedAt:new Date()}});
    status="expired";
   }
