@@ -52,9 +52,9 @@ export async function GET(req:Request){
    const amount=Number(d.amount),time=Number(d.insertTime);
    if(!Number.isFinite(amount)||amount<=0)continue;
    const candidates=pending.filter(p=>
-    p.status==="pending"&&Number(p.amountCrypto)===amount&&
+    p.status==="pending"&&Number(p.exact_amount??p.amountCrypto)===amount&&
     norm(p.depositAddress)===norm(d.address)&&norm(p.depositNetwork)===norm(d.network)&&
-    time>=new Date(p.createdAt).getTime()-120000&&time<=new Date(p.expiresAt).getTime()
+    time>=new Date(p.createdAt).getTime()&&time<=new Date(p.expiresAt).getTime()
    );
    if(candidates.length!==1)continue;
    matched++;
