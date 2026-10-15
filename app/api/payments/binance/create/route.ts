@@ -52,6 +52,7 @@ export async function POST(req:Request){
   if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
   const messages:Record<string,string>={
     BINANCE_PERSONAL_API_NOT_CONFIGURED:"Binance Personal API is not configured. Please try again later.",
+    BINANCE_FIXIE_URL_NOT_CONFIGURED:"Add FIXIE_URL to Vercel Production Environment Variables, then redeploy.",
     BINANCE_PERSONAL_API_KEY_INVALID:"Binance rejected the API credentials. Check that the API key and secret match.",
     BINANCE_NETWORK_ERROR:"Numelixa could not connect to Binance. Check Binance API availability and try again.",
     "BINANCE_API_AUTH_ERROR_-2015":"Binance rejected this API key. Check API permissions and the trusted-IP allowlist; Vercel server IPs may not be fixed.",
