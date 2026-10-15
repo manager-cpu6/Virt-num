@@ -57,9 +57,9 @@ export async function GET(req:Request){
     const amount=Number(d.amount),time=Number(d.insertTime);
     if(!Number.isFinite(amount)||amount<=0)continue;
     const candidates=pending.filter(p=>
-     p.status==="pending"&&norm(p.cryptoCurrency||"USDT")===norm(group.coin)&&Number(p.exact_amount??p.amountCrypto)===amount&&
+     p.status==="pending"&&norm(p.cryptoCurrency||"USDT")===norm(group.coin)&&Number(Number(p.exact_amount??p.amountCrypto).toFixed(12))===Number(amount.toFixed(12))&&
      norm(p.depositAddress)===norm(d.address)&&norm(p.depositNetwork)===norm(d.network)&&
-     time>=new Date(p.createdAt).getTime()&&time<=new Date(p.expiresAt).getTime()
+     time>=new Date(p.createdAt).getTime()&&time<=now
     );
     if(candidates.length!==1)continue;
     matched++;
