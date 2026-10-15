@@ -512,8 +512,22 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
 
-        // MobileAppBootstrap owns the permission request so it can retry on every
-        // launch/resume without racing a second native dialog against Capacitor.
+        // Ask Android directly on every fresh app launch when notifications
+        // are not permitted. This works even while the remote web app is offline
+        // or the WebView error page is being shown.
+        if (Build.VERSION.SDK_INT >= 33 &&
+            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                if (Build.VERSION.SDK_INT >= 33 &&
+                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(
+                        this,
+                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                        9103
+                    );
+                }
+            }, 1100L);
+        }
     }
 
     @Override

@@ -47,31 +47,32 @@ button:disabled{opacity:.65}
    title.textContent="Checking your connection";
    message.textContent="Please wait while Numelixa checks the internet connection.";
    try{
-     const controller=new AbortController();
-     const timer=setTimeout(()=>controller.abort(),5000);
-     const r=await fetch(APP+"?connection_check="+Date.now(),{
-       method:"GET",
-       cache:"no-store",
-       redirect:"follow",
-       signal:controller.signal
+     // This page is loaded by Android WebView as a local error page. Fetching
+     // numelixa.com from a file:// origin can be blocked by CORS even when the
+     // phone has internet. An Image request is a CORS-free connectivity probe.
+     await new Promise((resolve,reject)=>{
+       const probe=new Image();
+       const timer=setTimeout(()=>{probe.src="";reject(new Error("probe timeout"))},6500);
+       probe.onload=()=>{clearTimeout(timer);resolve(true)};
+       probe.onerror=()=>{clearTimeout(timer);reject(new Error("probe failed"))};
+       probe.src="https://numelixa.com/numelixa-favicon.png?connectivity="+Date.now();
      });
-     clearTimeout(timer);
-     if(r.ok){
-       title.textContent="Connection restored";
-       message.textContent="Returning to Numelixa…";
-       window.location.replace(APP);
-       return;
-     }
+     title.textContent="Connection restored";
+     message.textContent="Returning to Numelixa…";
+     window.location.replace(APP+"?reconnect="+Date.now());
+     return;
    }catch(e){}
    spinner.style.display="block";
    title.textContent="No internet connection";
-   message.textContent="Turn on mobile data or Wi-Fi. Numelixa will automatically return when the connection is working.";
+   message.textContent="Waiting for mobile data or Wi-Fi. Numelixa will reconnect automatically as soon as the server responds.";
    button.disabled=false;
    checking=false;
  }
  button.addEventListener("click",check);
- window.addEventListener("online",check);
- setInterval(check,3000);
+ window.addEventListener("online",()=>{checking=false;check()});
+ window.addEventListener("pageshow",()=>{checking=false;check()});
+ document.addEventListener("visibilitychange",()=>{if(!document.hidden){checking=false;check()}});
+ setInterval(()=>{if(!checking)check()},2500);
  check();
 })();
 </script>
