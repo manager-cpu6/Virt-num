@@ -38,7 +38,30 @@ export default function MobileAppBootstrap(){
     @media(prefers-reduced-motion:reduce){#numelixa-native-splash *,#numelixa-native-splash:before,#numelixa-native-splash:after{animation:none!important}}
    </style><div class="nsl-card"><div class="nsl-world"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="50" cy="50" r="39" stroke="#56e6df" stroke-opacity=".8"/><ellipse cx="50" cy="50" rx="18" ry="39" stroke="#56e6df" stroke-opacity=".55"/><ellipse cx="50" cy="50" rx="38" ry="14" stroke="#56e6df" stroke-opacity=".55"/><path d="M12 50h76M19 32h62M19 68h62" stroke="#56e6df" stroke-opacity=".5"/><path d="M24 29l11 3 6 10-4 8 9 6 2 14-9 9M60 15l-2 12 11 7-2 10 10 8-4 10M45 12l6 9-8 7" stroke="#63e9de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="65" cy="38" r="3" fill="#67f4d6"/><circle cx="36" cy="54" r="3" fill="#57aaff"/><path d="M36 54Q50 34 65 38" stroke="#72dfff" stroke-dasharray="3 4"/></svg></div><div class="nsl-title">Numelixa<span>.</span></div><div class="nsl-tag">GLOBAL VIRTUAL NUMBERS</div><p class="nsl-sub">Your connected world for virtual numbers, SMS verification and secure account access.</p><div class="nsl-pills"><span>✦ Virtual Numbers</span><span>◉ Global SMS</span><span>⌁ Secure Access</span></div><div class="nsl-loader"><i></i></div></div>`;
    document.body.appendChild(splash);
-   window.setTimeout(()=>{splash.classList.add("nsl-hide");window.setTimeout(()=>splash.remove(),650)},2100);
+   // Keep the startup cover until the app reaches Home or Dashboard.
+   // A safety timeout avoids blocking sign-in if the remote app cannot navigate.
+   const splashStarted=Date.now();
+   let splashRemoved=false;
+   let routePoll:ReturnType<typeof setInterval>|null=null;
+   const hideSplash=()=>{
+    if(splashRemoved)return;
+    splashRemoved=true;
+    splash.classList.add("nsl-hide");
+    window.setTimeout(()=>splash.remove(),650);
+    window.removeEventListener("popstate",checkSplashRoute);
+    window.removeEventListener("numelixa-route-change",checkSplashRoute);
+    if(routePoll)window.clearInterval(routePoll);
+   };
+   const checkSplashRoute=()=>{
+    const path=window.location.pathname.replace(/\\/+$/,"")||"/";
+    const isHomeOrDashboard=path==="/"||path==="/home"||path==="/dashboard";
+    if(isHomeOrDashboard&&Date.now()-splashStarted>=1700)hideSplash();
+   };
+   window.addEventListener("popstate",checkSplashRoute);
+   window.addEventListener("numelixa-route-change",checkSplashRoute);
+   routePoll=window.setInterval(checkSplashRoute,150);
+   window.setTimeout(checkSplashRoute,1750);
+   window.setTimeout(hideSplash,6500);
   }
 
   let stopped=false;
