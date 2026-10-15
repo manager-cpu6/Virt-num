@@ -9,7 +9,7 @@ import AdminSupport from "@/components/AdminSupport";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
-type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string};
+type User={id:string;email:string;name:string;role:string;coins:number;verified_at?:string|null;created_at?:string;suspended_at?:string|null;suspension_reason?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
 export default function AdminPanel(){
@@ -48,6 +48,13 @@ export default function AdminPanel(){
    }catch{setError("Unable to delete user. Please try again.")}
  }
 
+ async function setUserSuspension(user:User,action:"suspend"|"unsuspend"){
+   let reason="";
+   if(action==="suspend"){const answer=prompt("Explain why "+(user.email||"this account")+" is being suspended. The user will receive this reason by email.");if(answer===null)return;reason=answer.trim();if(!reason){setError("A suspension reason is required.");return}}
+   if(!confirm(action==="suspend"?"Suspend "+user.email+" and end active sessions?":"Restore "+user.email+" and send a confirmation email?"))return;
+   setError("");try{const r=await fetch("/api/admin/users",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,action,reason})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to update account status.");setUsers(rows=>rows.map(row=>row.id===user.id?{...row,suspended_at:action==="suspend"?new Date().toISOString():null,suspension_reason:action==="suspend"?reason:""}:row));setSaved(action==="suspend"?"Account suspended and sessions revoked.":"Account restored; confirmation email attempted.");window.setTimeout(()=>setSaved(""),3500)}catch(e){setError(e instanceof Error?e.message:"Unable to update account status.")}
+ }
+
  async function adjustCoins(user:User,mode:"add"|"remove"|"set"){
    const raw=prompt(mode==="set"?"Set exact coin balance:":"Coins to "+mode+":");
    if(raw===null)return;
@@ -66,7 +73,7 @@ export default function AdminPanel(){
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
-  {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins} onDelete={deleteUser}/>}
+  {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
   {tab==="orders"&&<OrdersTable orders={orders} title={"All orders ("+orders.length+")"}/>}
   {tab==="providers"&&<Providers stats={stats}/>}
@@ -114,7 +121,7 @@ function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
   <Table title="Admin control"><div className="admin-cap-grid"><div>Users & balances<small>Search users and add, remove or set coins.</small></div><div>Orders & OTP<small>Inspect phone, SMS, provider order, status and expiry.</small></div><div>Pricing & operators<small>Control markup, coin rate, packages and 5SIM operators.</small></div><div>Live monitoring<small>Track users, wallet coins, order status and service demand.</small></div></div></Table>
  </>
 }
-function UsersTable({users,onAdjust,onDelete}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users & email verification ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span><strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button>{u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}</div></div>)}</Table>}
+function UsersTable({users,onAdjust,onDelete,onSuspension}:{users:User[];onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void;onSuspension:(u:User,a:"suspend"|"unsuspend")=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(u.name+" "+u.email).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users, status & email verification ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name or email…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Unnamed user"}</b><small>{u.email}</small><span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span><span className={"admin-email-verification "+(u.suspended_at?"is-unverified":"is-verified")}>{u.suspended_at?"Suspended":"Account active"}</span>{u.suspended_at&&<small>Reason: {u.suspension_reason||"Not specified"}</small>}<strong>{u.coins.toLocaleString()} coins</strong></div><div className="coin-actions"><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button>{u.role!=="admin"&&<button onClick={()=>onSuspension(u,u.suspended_at?"unsuspend":"suspend")}>{u.suspended_at?"Unsuspend":"Suspend"}</button>}{u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}</div></div>)}</Table>}
 
 function OrdersTable({orders,title,active=false}:{orders:Order[];title:string;active?:boolean}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: {Number(o.price_coins||0).toLocaleString()} coins</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div></div>)}</Table>}
 
