@@ -11,6 +11,36 @@ export default function MobileAppBootstrap(){
   document.documentElement.classList.add("numelixa-native");
   document.body.classList.add("numelixa-native");
 
+  // Premium first-launch cover while the remote app shell finishes rendering.
+  if(!document.getElementById("numelixa-native-splash")){
+   const splash=document.createElement("div");
+   splash.id="numelixa-native-splash";
+   splash.innerHTML=`<style>
+    #numelixa-native-splash{position:fixed;inset:0;z-index:2147483000;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at 50% 20%,#164d68 0%,#0a273b 38%,#04111f 78%);color:#f3fdff;font-family:Inter,Roboto,system-ui,sans-serif;transition:opacity .55s ease,visibility .55s ease}
+    #numelixa-native-splash:before,#numelixa-native-splash:after{content:"";position:absolute;width:340px;height:340px;border-radius:50%;border:1px solid rgba(61,232,220,.15);animation:numelixa-splash-orbit 9s linear infinite}
+    #numelixa-native-splash:after{width:265px;height:265px;border-color:rgba(45,158,255,.23);animation-duration:7s;animation-direction:reverse}
+    #numelixa-native-splash .nsl-card{position:relative;z-index:1;width:min(86vw,350px);text-align:center}
+    #numelixa-native-splash .nsl-logo{width:76px;height:76px;margin:0 auto 18px;border-radius:25px;display:grid;place-items:center;font-size:38px;font-weight:950;color:#04222c;background:linear-gradient(145deg,#5df5dd,#14a9ca 65%,#2879ff);box-shadow:0 0 55px rgba(35,219,221,.28);animation:numelixa-splash-breathe 2.5s ease-in-out infinite}
+    #numelixa-native-splash .nsl-world{height:116px;width:116px;margin:0 auto 17px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,rgba(36,215,216,.22),rgba(12,59,89,.05) 65%);border:1px solid rgba(100,235,242,.26);box-shadow:inset 0 0 35px rgba(41,206,222,.12),0 0 35px rgba(25,154,230,.12)}
+    #numelixa-native-splash .nsl-world svg{width:94px;height:94px;animation:numelixa-splash-orbit 22s linear infinite}
+    #numelixa-native-splash .nsl-title{font-size:31px;font-weight:900;letter-spacing:-1.2px}
+    #numelixa-native-splash .nsl-title span{color:#5debd9}
+    #numelixa-native-splash .nsl-tag{margin-top:9px;font-size:11px;letter-spacing:2.5px;font-weight:800;color:#a2dce7}
+    #numelixa-native-splash .nsl-sub{margin:17px auto 0;max-width:270px;color:#a7c7d5;font-size:13px;line-height:1.6}
+    #numelixa-native-splash .nsl-pills{display:flex;justify-content:center;gap:7px;margin-top:20px;flex-wrap:wrap}
+    #numelixa-native-splash .nsl-pills span{font-size:10px;color:#c7f9f5;background:rgba(33,143,162,.17);border:1px solid rgba(91,223,222,.18);border-radius:999px;padding:7px 10px}
+    #numelixa-native-splash .nsl-loader{width:106px;height:3px;margin:28px auto 0;border-radius:9px;background:#16384d;overflow:hidden}
+    #numelixa-native-splash .nsl-loader i{display:block;width:40%;height:100%;border-radius:9px;background:linear-gradient(90deg,#38e8d2,#3c9eff);animation:numelixa-splash-load 1.35s ease-in-out infinite}
+    #numelixa-native-splash.nsl-hide{opacity:0;visibility:hidden;pointer-events:none}
+    @keyframes numelixa-splash-orbit{to{transform:rotate(360deg)}}
+    @keyframes numelixa-splash-breathe{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.035)}}
+    @keyframes numelixa-splash-load{0%{transform:translateX(-110%)}100%{transform:translateX(270%)}}
+    @media(prefers-reduced-motion:reduce){#numelixa-native-splash *,#numelixa-native-splash:before,#numelixa-native-splash:after{animation:none!important}}
+   </style><div class="nsl-card"><div class="nsl-world"><svg viewBox="0 0 100 100" fill="none" aria-hidden="true"><circle cx="50" cy="50" r="39" stroke="#56e6df" stroke-opacity=".8"/><ellipse cx="50" cy="50" rx="18" ry="39" stroke="#56e6df" stroke-opacity=".55"/><ellipse cx="50" cy="50" rx="38" ry="14" stroke="#56e6df" stroke-opacity=".55"/><path d="M12 50h76M19 32h62M19 68h62" stroke="#56e6df" stroke-opacity=".5"/><path d="M24 29l11 3 6 10-4 8 9 6 2 14-9 9M60 15l-2 12 11 7-2 10 10 8-4 10M45 12l6 9-8 7" stroke="#63e9de" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="65" cy="38" r="3" fill="#67f4d6"/><circle cx="36" cy="54" r="3" fill="#57aaff"/><path d="M36 54Q50 34 65 38" stroke="#72dfff" stroke-dasharray="3 4"/></svg></div><div class="nsl-title">Numelixa<span>.</span></div><div class="nsl-tag">GLOBAL VIRTUAL NUMBERS</div><p class="nsl-sub">Your connected world for virtual numbers, SMS verification and secure account access.</p><div class="nsl-pills"><span>✦ Virtual Numbers</span><span>◉ Global SMS</span><span>⌁ Secure Access</span></div><div class="nsl-loader"><i></i></div></div>`;
+   document.body.appendChild(splash);
+   window.setTimeout(()=>{splash.classList.add("nsl-hide");window.setTimeout(()=>splash.remove(),650)},2100);
+  }
+
   let stopped=false;
   let retryTimer:ReturnType<typeof setTimeout>|null=null;
   let permissionInFlight=false;
