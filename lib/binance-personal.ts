@@ -66,31 +66,48 @@ export type BinanceDeposit = {
   id?: string; amount: string; coin: string; network: string; status: number;
   address: string; addressTag?: string; txId: string; insertTime: number;
 };
-export async function getUsdtNetworks() {
+export async function getCoinNetworks(coin:string) {
+  const asset=String(coin||"").toUpperCase();
+  if(!["USDT","BNB"].includes(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
   const config:any[] = await signedGet("/sapi/v1/capital/config/getall");
-  const usdt = config.find(x => String(x.coin).toUpperCase() === "USDT");
-  if (!usdt) throw new Error("BINANCE_USDT_NOT_AVAILABLE");
-  const networks:any[] = Array.isArray(usdt.networkList) ? usdt.networkList : [];
-  return networks.filter(x => x.depositEnable && x.network).map(x => ({
-    network:String(x.network),networkName:String(x.name || x.network),
+  const row=config.find(x=>String(x.coin).toUpperCase()===asset);
+  if(!row)throw new Error("BINANCE_"+asset+"_NOT_AVAILABLE");
+  const networks:any[]=Array.isArray(row.networkList)?row.networkList:[];
+  return networks.filter(x=>x.depositEnable&&x.network).map(x=>({
+    network:String(x.network),networkName:String(x.name||x.network),
     isDefault:Boolean(x.isDefault),busy:Boolean(x.busy),
   })).sort((a,b)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
 }
-export async function getUsdtDepositInstructions(requestedNetwork?:string) {
-  const networks=await getUsdtNetworks();
-  const network= requestedNetwork ? networks.find(x=>x.network===requestedNetwork) : networks.find(x=>x.isDefault)||networks[0];
-  if (!network) throw new Error("BINANCE_USDT_DEPOSIT_DISABLED");
-  if(requestedNetwork&&!network)throw new Error("BINANCE_NETWORK_NOT_AVAILABLE");
-  const data:any = await signedGet("/sapi/v1/capital/deposit/address", {coin:"USDT",network:network.network});
-  if (!data?.address) throw new Error("BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE");
-  return {address:String(data.address),network:network.network,networkName:network.networkName,memo:String(data.tag || data.addressTag || "")};
+export async function getCoinDepositInstructions(coin:string,requestedNetwork?:string) {
+  const asset=String(coin||"").toUpperCase();
+  const networks=await getCoinNetworks(asset);
+  const network=requestedNetwork?networks.find(x=>x.network===requestedNetwork):networks.find(x=>x.isDefault)||networks[0];
+  if(!network)throw new Error("BINANCE_"+asset+"_DEPOSIT_DISABLED");
+  const data:any=await signedGet("/sapi/v1/capital/deposit/address",{coin:asset,network:network.network});
+  if(!data?.address)throw new Error("BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE");
+  return {address:String(data.address),network:network.network,networkName:network.networkName,memo:String(data.tag||data.addressTag||"")};
 }
-export async function getUsdtDeposits(startTime:number, endTime:number) {
-  const data:any = await signedGet("/sapi/v1/capital/deposit/hisrec", {
-    coin:"USDT", startTime, endTime, limit:1000
-  });
-  if (!Array.isArray(data)) throw new Error("BINANCE_DEPOSIT_HISTORY_INVALID");
+export async function getCoinDeposits(coin:string,startTime:number,endTime:number) {
+  const asset=String(coin||"").toUpperCase();
+  if(!["USDT","BNB"].includes(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
+  const data:any=await signedGet("/sapi/v1/capital/deposit/hisrec",{coin:asset,startTime,endTime,limit:1000});
+  if(!Array.isArray(data))throw new Error("BINANCE_DEPOSIT_HISTORY_INVALID");
   return data as BinanceDeposit[];
+}
+export async function getUsdtNetworks(){return getCoinNetworks("USDT");}
+export async function getUsdtDepositInstructions(requestedNetwork?:string){return getCoinDepositInstructions("USDT",requestedNetwork);}
+export async function getUsdtDeposits(startTime:number,endTime:number){return getCoinDeposits("USDT",startTime,endTime);}
+export async function getCryptoUsdPrice(coin:string){
+  const asset=String(coin||"").toUpperCase();
+  if(asset==="USDT")return 1;
+  if(asset!=="BNB")throw new Error("BINANCE_COIN_NOT_SUPPORTED");
+  let response:Response;
+  try{response=await binanceFetch(BASE+"/api/v3/ticker/price?symbol=BNBUSDT",{cache:"no-store",signal:AbortSignal.timeout(10000)});}
+  catch{throw new Error("BINANCE_NETWORK_ERROR");}
+  const data:any=await response.json().catch(()=>null);
+  const price=Number(data?.price);
+  if(!response.ok||!Number.isFinite(price)||price<=0)throw new Error("BINANCE_BNB_PRICE_UNAVAILABLE");
+  return price;
 }
 export function personalApiConfigured() {
   return Boolean(String(process.env.BINANCE_API_KEY||"").trim() && String(process.env.BINANCE_SECRET_KEY||"").trim());
