@@ -66,9 +66,24 @@ export type BinanceDeposit = {
   id?: string; amount: string; coin: string; network: string; status: number;
   address: string; addressTag?: string; txId: string; insertTime: number;
 };
+export const BINANCE_COIN_NAMES:Record<string,string>={
+ USDT:"Tether USD",USDC:"USD Coin",FDUSD:"First Digital USD",TUSD:"TrueUSD",USDP:"Pax Dollar",DAI:"Dai",
+ BNB:"BNB",BTC:"Bitcoin",ETH:"Ethereum",SOL:"Solana",XRP:"XRP",TRX:"TRON",TON:"Toncoin",DOGE:"Dogecoin",
+ ADA:"Cardano",LTC:"Litecoin",BCH:"Bitcoin Cash",LINK:"Chainlink",AVAX:"Avalanche",DOT:"Polkadot",
+ MATIC:"Polygon",POL:"POL",ATOM:"Cosmos",ETC:"Ethereum Classic",NEAR:"NEAR Protocol",APT:"Aptos",
+ SUI:"Sui",SHIB:"Shiba Inu",PEPE:"Pepe",UNI:"Uniswap",AAVE:"Aave",FIL:"Filecoin",ARB:"Arbitrum",
+ OP:"Optimism",ICP:"Internet Computer",XLM:"Stellar",ALGO:"Algorand",VET:"VeChain",FTM:"Fantom",
+ XMR:"Monero",EOS:"EOS",INJ:"Injective",SEI:"Sei",RENDER:"Render",FET:"Artificial Superintelligence",
+ HBAR:"Hedera",MKR:"Maker",CRV:"Curve DAO",GRT:"The Graph",SAND:"The Sandbox",MANA:"Decentraland",
+ AXS:"Axie Infinity",THETA:"Theta Network",EGLD:"MultiversX",ZEC:"Zcash",XTZ:"Tezos",KAVA:"Kava",
+ RUNE:"THORChain",WLD:"Worldcoin",JUP:"Jupiter",PAXG:"PAX Gold",ENS:"Ethereum Name Service"
+};
+const logoSymbol:Record<string,string>={USDT:"tether",USDC:"usd-coin",FDUSD:"first-digital-usd",TUSD:"true-usd",DAI:"dai",BNB:"binancecoin",BTC:"bitcoin",ETH:"ethereum",SOL:"solana",XRP:"xrp",TRX:"tron",TON:"the-open-network",DOGE:"dogecoin",ADA:"cardano",LTC:"litecoin",BCH:"bitcoin-cash",LINK:"chainlink",AVAX:"avalanche-2",DOT:"polkadot",MATIC:"matic-network",POL:"polygon-ecosystem-token",ATOM:"cosmos",ETC:"ethereum-classic",NEAR:"near",APT:"aptos",SUI:"sui",SHIB:"shiba-inu",PEPE:"pepe",UNI:"uniswap",AAVE:"aave",FIL:"filecoin",ARB:"arbitrum",OP:"optimism",ICP:"internet-computer",XLM:"stellar",ALGO:"algorand",VET:"vechain",FTM:"fantom",XMR:"monero",EOS:"eos",INJ:"injective-protocol",SEI:"sei-network",RENDER:"render-token",FET:"fetch-ai",HBAR:"hedera-hashgraph",MKR:"maker",CRV:"curve-dao-token",GRT:"the-graph",SAND:"the-sandbox",MANA:"decentraland",AXS:"axie-infinity",THETA:"theta-token",EGLD:"elrond-erd-2",ZEC:"zcash",XTZ:"tezos",KAVA:"kava",RUNE:"thorchain",WLD:"worldcoin-wld",JUP:"jupiter-exchange-solana",PAXG:"pax-gold",ENS:"ethereum-name-service"};
+export function getCoinDisplayName(coin:string){const c=String(coin||"").toUpperCase();return BINANCE_COIN_NAMES[c]||c;}
+export function getCoinLogo(coin:string){const c=String(coin||"").toUpperCase();const id=logoSymbol[c];return id?"https://assets.coingecko.com/coins/images/1/large/"+id+".png":"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+c.toLowerCase()+".png";}
 export async function getCoinNetworks(coin:string) {
   const asset=String(coin||"").toUpperCase();
-  if(!["USDT","BNB"].includes(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
+  if(!/^[A-Z0-9]{2,15}$/.test(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
   const config:any[] = await signedGet("/sapi/v1/capital/config/getall");
   const row=config.find(x=>String(x.coin).toUpperCase()===asset);
   if(!row)throw new Error("BINANCE_"+asset+"_NOT_AVAILABLE");
@@ -89,7 +104,7 @@ export async function getCoinDepositInstructions(coin:string,requestedNetwork?:s
 }
 export async function getCoinDeposits(coin:string,startTime:number,endTime:number) {
   const asset=String(coin||"").toUpperCase();
-  if(!["USDT","BNB"].includes(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
+  if(!/^[A-Z0-9]{2,15}$/.test(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
   const data:any=await signedGet("/sapi/v1/capital/deposit/hisrec",{coin:asset,startTime,endTime,limit:1000});
   if(!Array.isArray(data))throw new Error("BINANCE_DEPOSIT_HISTORY_INVALID");
   return data as BinanceDeposit[];
@@ -100,13 +115,13 @@ export async function getUsdtDeposits(startTime:number,endTime:number){return ge
 export async function getCryptoUsdPrice(coin:string){
   const asset=String(coin||"").toUpperCase();
   if(asset==="USDT")return 1;
-  if(asset!=="BNB")throw new Error("BINANCE_COIN_NOT_SUPPORTED");
+  if(!/^[A-Z0-9]{2,15}$/.test(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
   let response:Response;
-  try{response=await binanceFetch(BASE+"/api/v3/ticker/price?symbol=BNBUSDT",{cache:"no-store",signal:AbortSignal.timeout(10000)});}
+  try{response=await binanceFetch(BASE+"/api/v3/ticker/price?symbol="+encodeURIComponent(asset+"USDT"),{cache:"no-store",signal:AbortSignal.timeout(10000)});}
   catch{throw new Error("BINANCE_NETWORK_ERROR");}
   const data:any=await response.json().catch(()=>null);
   const price=Number(data?.price);
-  if(!response.ok||!Number.isFinite(price)||price<=0)throw new Error("BINANCE_BNB_PRICE_UNAVAILABLE");
+  if(!response.ok||!Number.isFinite(price)||price<=0)throw new Error("BINANCE_"+asset+"_PRICE_UNAVAILABLE");
   return price;
 }
 export function personalApiConfigured() {
