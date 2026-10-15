@@ -80,7 +80,35 @@ export const BINANCE_COIN_NAMES:Record<string,string>={
 };
 const logoSymbol:Record<string,string>={USDT:"tether",USDC:"usd-coin",FDUSD:"first-digital-usd",TUSD:"true-usd",DAI:"dai",BNB:"binancecoin",BTC:"bitcoin",ETH:"ethereum",SOL:"solana",XRP:"xrp",TRX:"tron",TON:"the-open-network",DOGE:"dogecoin",ADA:"cardano",LTC:"litecoin",BCH:"bitcoin-cash",LINK:"chainlink",AVAX:"avalanche-2",DOT:"polkadot",MATIC:"matic-network",POL:"polygon-ecosystem-token",ATOM:"cosmos",ETC:"ethereum-classic",NEAR:"near",APT:"aptos",SUI:"sui",SHIB:"shiba-inu",PEPE:"pepe",UNI:"uniswap",AAVE:"aave",FIL:"filecoin",ARB:"arbitrum",OP:"optimism",ICP:"internet-computer",XLM:"stellar",ALGO:"algorand",VET:"vechain",FTM:"fantom",XMR:"monero",EOS:"eos",INJ:"injective-protocol",SEI:"sei-network",RENDER:"render-token",FET:"fetch-ai",HBAR:"hedera-hashgraph",MKR:"maker",CRV:"curve-dao-token",GRT:"the-graph",SAND:"the-sandbox",MANA:"decentraland",AXS:"axie-infinity",THETA:"theta-token",EGLD:"elrond-erd-2",ZEC:"zcash",XTZ:"tezos",KAVA:"kava",RUNE:"thorchain",WLD:"worldcoin-wld",JUP:"jupiter-exchange-solana",PAXG:"pax-gold",ENS:"ethereum-name-service"};
 export function getCoinDisplayName(coin:string){const c=String(coin||"").toUpperCase();return BINANCE_COIN_NAMES[c]||c;}
-export function getCoinLogo(coin:string){const c=String(coin||"").toUpperCase();const id=logoSymbol[c];return id?"https://assets.coingecko.com/coins/images/1/large/"+id+".png":"https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+c.toLowerCase()+".png";}
+export function getCoinLogo(coin:string){const c=String(coin||"").toUpperCase();return "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+c.toLowerCase()+".png";}
+
+export async function getAvailableDepositAssets(){
+ const config:any[]=await signedGet("/sapi/v1/capital/config/getall");
+ let exchange:any=null,tickers:any[]=[];
+ try{
+  const [infoResponse,tickerResponse]=await Promise.all([
+   binanceFetch(BASE+"/api/v3/exchangeInfo",{cache:"no-store",signal:AbortSignal.timeout(12000)}),
+   binanceFetch(BASE+"/api/v3/ticker/price",{cache:"no-store",signal:AbortSignal.timeout(12000)})
+  ]);
+  if(infoResponse.ok&&tickerResponse.ok){exchange=await infoResponse.json();tickers=await tickerResponse.json();}
+ }catch(e){console.error("[BINANCE ASSET PRICES]",e instanceof Error?e.message:"unavailable");}
+ if(!exchange||!Array.isArray(tickers))throw new Error("BINANCE_ASSET_PRICES_UNAVAILABLE");
+ const symbols=new Set((exchange.symbols||[]).filter((s:any)=>s.status==="TRADING"&&s.quoteAsset==="USDT").map((s:any)=>s.baseAsset));
+ const prices=new Map<string,number>(tickers.map((t:any)=>[String(t.symbol||""),Number(t.price)]));
+ const stable=new Set(["USDT","USDC","FDUSD","TUSD","USDP","DAI"]);
+ const rows:any[]=[];
+ for(const row of config){
+  const coin=String(row.coin||"").toUpperCase();
+  if(!/^[A-Z0-9]{2,15}$/.test(coin)||!Array.isArray(row.networkList))continue;
+  const networks=row.networkList.filter((n:any)=>n.depositEnable&&n.network).map((n:any)=>({network:String(n.network),networkName:String(n.name||n.network),isDefault:Boolean(n.isDefault),busy:Boolean(n.busy)})).sort((a:any,b:any)=>Number(b.isDefault)-Number(a.isDefault)||a.networkName.localeCompare(b.networkName));
+  if(!networks.length)continue;
+  const price=stable.has(coin)?1:prices.get(coin+"USDT");
+  if(!Number.isFinite(price)||Number(price)<=0||!symbols.has(coin)&&!stable.has(coin))continue;
+  rows.push({coin,name:getCoinDisplayName(coin),logo:getCoinLogo(coin),usdPrice:Number(price),networks});
+ }
+ const priority=["USDT","USDC","BTC","ETH","BNB","SOL","XRP","TRX","TON","DOGE","ADA","LTC","BCH","LINK","AVAX","DOT","SHIB","PEPE","FDUSD","TUSD","DAI"];
+ return rows.sort((a,b)=>{const ai=priority.indexOf(a.coin),bi=priority.indexOf(b.coin);return (ai<0?999:ai)-(bi<0?999:bi)||a.name.localeCompare(b.name);});
+}
 export async function getCoinNetworks(coin:string) {
   const asset=String(coin||"").toUpperCase();
   if(!/^[A-Z0-9]{2,15}$/.test(asset))throw new Error("BINANCE_COIN_NOT_SUPPORTED");
