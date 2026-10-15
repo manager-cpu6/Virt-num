@@ -9,7 +9,7 @@ export async function GET(){
   await requireUser();
   const settings=await getPaymentSettings();
   if(settings.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Binance payments are unavailable."},{status:503});
-  const assets:{coin:string;name:string;logo:string;networks:any[]}[]=[];
+  const assets:{coin:string;name:string;logo:string;usdPrice:number;networks:any[]}[]=[];
   for(const coin of ["USDT","BNB"]){
    try{
     const networks=await getCoinNetworks(coin);
