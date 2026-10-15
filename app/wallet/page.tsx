@@ -32,6 +32,7 @@ export default function Wallet(){
     if(!u){location.href="/login?next=/wallet";return}
     if(!u.verified_at){location.href="/verify-email";return}
     if(!selectedPack)return;
+    if(provider==="binance"){location.href="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins));return;}
     setLoading(true);setError("");
     try{
       const d=await fetch("/api/payments/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
