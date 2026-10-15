@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireUser} from "@/lib/auth";
 import {getPaymentSettings} from "@/lib/payment-settings";
-import {getCoinNetworks,getCryptoUsdPrice,personalApiConfigured} from "@/lib/binance-personal";
+import {getAvailableDepositAssets,personalApiConfigured} from "@/lib/binance-personal";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(){
@@ -9,14 +9,8 @@ export async function GET(){
   await requireUser();
   const settings=await getPaymentSettings();
   if(settings.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Binance payments are unavailable."},{status:503});
-  const assets:{coin:string;name:string;logo:string;usdPrice:number;networks:any[]}[]=[];
-  for(const coin of ["USDT","BNB"]){
-   try{
-    const networks=await getCoinNetworks(coin);
-    if(networks.length)assets.push({coin,name:coin==="USDT"?"Tether USD":"BNB",logo:coin==="USDT"?"https://assets.coingecko.com/coins/images/325/large/Tether.png":"https://assets.coingecko.com/coins/images/825/large/bnb-icon2_2x.png",usdPrice:await getCryptoUsdPrice(coin),networks});
-   }catch(error){console.error("[BINANCE ASSET NETWORKS]",coin,error instanceof Error?error.message:"unknown");}
-  }
-  if(!assets.length)return NextResponse.json({ok:false,error:"No supported Binance deposit assets are currently available."},{status:503});
+  const assets=await getAvailableDepositAssets();
+  if(!assets.length)return NextResponse.json({ok:false,error:"No supported deposit assets are currently available."},{status:503});
   return NextResponse.json({ok:true,assets},{headers:{"Cache-Control":"no-store"}});
  }catch(e){
   if(e instanceof Error&&e.message==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in."},{status:401});
