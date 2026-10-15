@@ -1,4 +1,3 @@
-import {NextResponse} from "next/server";
 import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {ensureApiKey} from "@/lib/api-key";
@@ -12,7 +11,7 @@ const REDIRECT_URI="https://numelixa.com/api/auth/google/native/callback";
 
 function fail(message:string,status=400){
  const url=new URL(APP_CALLBACK);url.searchParams.set("error",message);
- return NextResponse.redirect(url,status);
+ return new Response(null,{status,headers:{"Location":url.toString(),"Cache-Control":"no-store"}});
 }
 
 export async function GET(req:Request){
@@ -68,7 +67,7 @@ export async function GET(req:Request){
   });
   const callback=new URL(APP_CALLBACK);
   callback.searchParams.set("ticket",ticket);
-  return NextResponse.redirect(callback.toString());
+  return new Response(null,{status:302,headers:{"Location":callback.toString(),"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[NATIVE GOOGLE CALLBACK]",error);
   return fail("google_sign_in_failed",500);
