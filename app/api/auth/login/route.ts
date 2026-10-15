@@ -13,6 +13,7 @@ export async function POST(req:Request){
   if(email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())await ensureAdmin();
   const u=await (await collection<any>("users")).findOne({email});
   if(!u||!(await passwordCheck(password,u.password_hash)))return NextResponse.json({ok:false,error:"Invalid email or password."},{status:401});
+  if(u.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Reason: "+String(u.suspensionReason||"Your account requires review.")+" If you believe this is a mistake, contact https://support.numelixa.com to request a review."},{status:403});
 
   const nativeClient=req.headers.get("x-numelixa-client")==="android-app";
   if(await extraSecurityEnabled()&&!nativeClient){
