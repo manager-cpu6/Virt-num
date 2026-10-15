@@ -58,6 +58,7 @@ export async function POST(req:Request){
   const message=e instanceof Error?e.message:"";
   const binanceErrors:Record<string,string>={
     BINANCE_PERSONAL_API_NOT_CONFIGURED:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy.",
+    BINANCE_FIXIE_URL_NOT_CONFIGURED:"Add FIXIE_URL to Vercel Production Environment Variables, then redeploy.",
     BINANCE_NETWORK_ERROR:"Could not connect to Binance. Check network access and try again.",
     "BINANCE_API_AUTH_ERROR_-2015":"Binance rejected the API key. Check read permissions and trusted-IP restrictions; Vercel server IPs may not be fixed.",
     "BINANCE_API_AUTH_ERROR_-2014":"Binance API key format was rejected. Check the API key.",
