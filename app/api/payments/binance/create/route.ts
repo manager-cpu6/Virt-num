@@ -16,7 +16,7 @@ export async function POST(req:Request){
   const user=await requireUser();
   if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before buying coins."},{status:403});
   const ps=await getPaymentSettings();
-  if(ps.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Binance payments are currently unavailable."},{status:503});
+  if(ps.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
   const body=await req.json(),coins=Math.floor(Number(body.coins)),settings=await getSettings();
   const pack=settings.coinPackages.find((x:any)=>Number(x.coins)===coins);
   const baseAmount=Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
@@ -48,12 +48,12 @@ export async function POST(req:Request){
   const m=e instanceof Error?e.message:"";
   if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
   const messages:Record<string,string>={
-   BINANCE_PERSONAL_API_NOT_CONFIGURED:"Binance Personal API is not configured. Please try again later.",
+   BINANCE_PERSONAL_API_NOT_CONFIGURED:"Crypto payments are temporarily unavailable. Please try again later.",
    BINANCE_FIXIE_URL_NOT_CONFIGURED:"Add FIXIE_URL to Vercel Production Environment Variables, then redeploy.",
    BINANCE_NETWORK_ERROR:"Numelixa could not connect to Binance. Please try again.",
    BINANCE_API_TIMESTAMP_ERROR:"Binance rejected the request timestamp. Please retry shortly.",
    BINANCE_API_RATE_LIMIT:"Binance rate-limited this request. Please wait a moment and try again.",
-   BINANCE_API_TEMPORARY_ERROR:"Binance is temporarily unavailable. Please try again shortly.",
+   BINANCE_API_TEMPORARY_ERROR:"The payment service is temporarily unavailable. Please try again shortly.",
    BINANCE_USDT_NOT_AVAILABLE:"USDT is unavailable on this Binance account.",
    BINANCE_BNB_NOT_AVAILABLE:"BNB is unavailable on this Binance account.",
    BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
@@ -65,7 +65,7 @@ export async function POST(req:Request){
   };
   console.error("[BINANCE DEPOSIT CREATE]",m);
   const apiCode=m.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
-  const error=messages[m]||(apiCode?"Binance rejected the request (API code/status "+apiCode+"). Check API permissions and enabled deposit networks.":"Unable to create the payment request. Check Binance API settings and try again.");
+  const error=messages[m]||(apiCode?"The payment request was rejected (code/status "+apiCode+"). Check API permissions and enabled deposit networks.":"Unable to create the payment request. Please try again or contact support.");
   return NextResponse.json({ok:false,error,diagnosticCode:apiCode||null},{status:500});
  }
 }
