@@ -12,6 +12,7 @@ export type PricingSettings={
   smsProvider:"5sim"|"tiger";
   provider5simEnabled:boolean;
   providerTigerEnabled:boolean;
+  paymentExpiryMinutes:number;
 };
 
 const defaults:PricingSettings={
@@ -29,7 +30,8 @@ const defaults:PricingSettings={
   providerOperators:["any"],
   smsProvider:"5sim",
   provider5simEnabled:true,
-  providerTigerEnabled:true
+  providerTigerEnabled:true,
+  paymentExpiryMinutes:15
 };
 
 export async function getSettings():Promise<PricingSettings>{
@@ -49,7 +51,8 @@ export async function getSettings():Promise<PricingSettings>{
     providerOperators:Array.isArray(s?.providerOperators)&&s.providerOperators.length?s.providerOperators.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):defaults.providerOperators,
     smsProvider:s?.smsProvider==="tiger"?"tiger":"5sim",
     provider5simEnabled:s?.provider5simEnabled!==false,
-    providerTigerEnabled:s?.providerTigerEnabled!==false
+    providerTigerEnabled:s?.providerTigerEnabled!==false,
+    paymentExpiryMinutes:Math.min(1440,Math.max(1,Math.floor(Number(s?.paymentExpiryMinutes??defaults.paymentExpiryMinutes)||defaults.paymentExpiryMinutes)))
   };
 }
 

@@ -71,7 +71,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x}</button>)}</div>
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="users"&&<UsersTable users={topUsers} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} title={"OTP currently waiting ("+waiting.length+")"} active/>}
@@ -191,8 +191,10 @@ function AdminPayments(){
   }catch{setMsg("Unable to contact the Binance test endpoint.");setMsgError(true)}finally{setBusy(false)}
  }
  async function activate(provider:"paypal"|"nowpayments"|"binance"){setBusy(true);setMsg("");setMsgError(false);try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"activate",provider})});const d=await response.json();setMsg(d.ok?"Payment method switched to "+(provider==="paypal"?"PayPal":provider==="binance"?"Binance Personal API":"NOWPayments")+".":d.error||"Unable to switch payment method.");setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to reach payment settings. Please try again.");setMsgError(true)}finally{setBusy(false)}}
+ async function orderAction(p:any,operation:"cancel"|"activate"){if(operation==="cancel"&&!confirm("Cancel payment order "+p.orderId+" and release its amount reservation?"))return;setBusy(true);setMsg("");setMsgError(false);try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"payment_order_action",orderId:p.orderId,operation})});const d=await response.json();setMsg(d.ok?(d.message||"Payment order updated."):(d.error||"Unable to update payment order."));setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to update payment order. Please try again.");setMsgError(true)}finally{setBusy(false)}}
  if(!state)return <Table title="Payment methods"><div className="country-loading">Loading payment settings…</div></Table>;
  const pendingPayments=(state.payments||[]).filter((p:any)=>p.status==="pending");
+ const otherPayments=(state.payments||[]).filter((p:any)=>p.status!=="pending");
  return <div className="admin-payment-stack">
   <Table title={"Pending USDT payments ("+pendingPayments.length+")"}>
    <p className="admin-help">Live pending Binance deposits. Time remaining updates every second; the list refreshes from the payment database every 30 seconds.</p>
@@ -204,6 +206,16 @@ function AdminPayments(){
      <div><small style={{display:"block",opacity:.75}}>EXPIRES</small><strong>{p.expiresAt?new Date(p.expiresAt).toLocaleString():"—"}</strong></div>
     </div>
     <small style={{display:"block",marginTop:8,opacity:.65}}>Order: {p.orderId}</small>
+    <div style={{display:"flex",gap:8,flexWrap:"wrap",marginTop:12}}><button className="secondary-btn" disabled={busy} onClick={()=>orderAction(p,"cancel")}>Cancel order & release amount</button></div>
+   </div>)}
+  </Table>
+  <Table title={"Payment orders — history ("+otherPayments.length+")"}>
+   <p className="admin-help">Cancelled and expired orders release their amount slot. Reactivating an order is allowed only when its exact amount is not reserved by another active checkout. Paid orders are read-only.</p>
+   {!otherPayments.length?<div className="country-loading">No previous payment orders.</div>:otherPayments.map((p:any)=><div key={p.orderId} className="admin-order-card" style={{marginBottom:10,border:"1px solid #284766",borderRadius:14,padding:14}}>
+    <div className="admin-order-head"><b>{Number(p.coins).toLocaleString()} coins · {Number(p.exactAmount).toFixed(6)} {p.currency}</b><span className={"status "+(p.status==="paid"?"active":"")}>{String(p.status).toUpperCase()}</span></div>
+    <div className="admin-order-meta"><span>Package price: ${Number(p.baseAmount).toFixed(2)}</span><span>Network: {p.network||"—"}</span><span>Created: {p.createdAt?new Date(p.createdAt).toLocaleString():"—"}</span></div>
+    <small style={{display:"block",marginTop:8,opacity:.65}}>Order: {p.orderId}</small>
+    {p.status!=="paid"&&<div style={{marginTop:10}}><button className="secondary-btn" disabled={busy} onClick={()=>orderAction(p,"activate")}>Activate order</button></div>}
    </div>)}
   </Table>
   <div className="admin-two-col">

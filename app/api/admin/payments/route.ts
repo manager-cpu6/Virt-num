@@ -4,6 +4,7 @@ import {getPaymentSettings,savePaypalCredentials,setActivePaymentProvider,paypal
 import {paypalApi} from "@/lib/paypal";
 import {getUsdtDepositInstructions,personalApiConfigured} from "@/lib/binance-personal";
 import {collection} from "@/lib/mongo";
+import {getSettings} from "@/lib/settings";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";
 
@@ -29,7 +30,7 @@ export async function GET(){
  try{
   await requireAdmin();
   const s=await getPaymentSettings();
-  const rows=await (await collection<any>("payments")).find({provider:"binance_personal",status:{$in:["pending","paid","expired"]}}).sort({createdAt:-1}).limit(100).toArray();
+  const rows=await (await collection<any>("payments")).find({provider:"binance_personal",status:{$in:["pending","paid","expired","cancelled"]}}).sort({createdAt:-1}).limit(100).toArray();
   const now=Date.now();
   const payments=rows.map((p:any)=>({
    orderId:String(p.orderId||""),userId:String(p.userId||""),coins:Number(p.coins||0),
@@ -37,6 +38,7 @@ export async function GET(){
    currency:String(p.cryptoCurrency||"USDT"),network:String(p.depositNetworkName||p.depositNetwork||""),
    status:String(p.status||"pending"),createdAt:p.createdAt||null,expiresAt:p.expiresAt||null,
    secondsRemaining:p.status==="pending"&&p.expiresAt?Math.max(0,Math.ceil((new Date(p.expiresAt).getTime()-now)/1000)):0,
+   reservationActive:p.status==="pending"&&p.reservationActive!==false&&p.expiresAt&&new Date(p.expiresAt).getTime()>now,
    paidAt:p.paidAt||null,txid:p.status==="paid"?String(p.txid||""):""
   }));
   return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId?s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance,payments});
@@ -45,6 +47,23 @@ export async function GET(){
 export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
+  if(action==="payment_order_action"){
+    const orderId=String(b.orderId||"").trim(),operation=String(b.operation||"");
+    if(!orderId||!["cancel","activate"].includes(operation))return NextResponse.json({ok:false,error:"Choose a valid payment order action."},{status:400});
+    const payments=await collection<any>("payments"),order=await payments.findOne({orderId,provider:"binance_personal"});
+    if(!order)return NextResponse.json({ok:false,error:"Payment order not found."},{status:404});
+    if(order.status==="paid")return NextResponse.json({ok:false,error:"A confirmed payment cannot be cancelled or reactivated."},{status:409});
+    const now=new Date();
+    if(operation==="cancel"){
+      await payments.updateOne({_id:order._id,status:{$ne:"paid"}},{$set:{status:"cancelled",reservationActive:false,cancelledAt:now,updatedAt:now,cancelReason:"admin_cancelled"}});
+      return NextResponse.json({ok:true,message:"Payment order cancelled and amount reservation released."});
+    }
+    const settings=await getSettings(),minutes=settings.paymentExpiryMinutes||15;
+    const collision=await payments.findOne({provider:"binance_personal",_id:{$ne:order._id},status:"pending",reservationActive:{$ne:false},cryptoCurrency:order.cryptoCurrency,depositAddress:order.depositAddress,depositNetwork:order.depositNetwork,amountCrypto:Number(order.amountCrypto),expiresAt:{$gt:now}});
+    if(collision)return NextResponse.json({ok:false,error:"That exact amount is already reserved by another active checkout."},{status:409});
+    await payments.updateOne({_id:order._id,status:{$ne:"paid"}},{$set:{status:"pending",reservationActive:true,expiresAt:new Date(now.getTime()+minutes*60*1000),updatedAt:now},$unset:{cancelledAt:"",cancelReason:""}});
+    return NextResponse.json({ok:true,message:"Payment order activated and its reservation restored."});
+  }
   if(action==="test_binance"){
     if(!personalApiConfigured())return NextResponse.json({ok:false,error:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy."},{status:400});
     const info=await getUsdtDepositInstructions();

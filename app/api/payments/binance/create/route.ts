@@ -24,8 +24,8 @@ export async function POST(req:Request){
   const currency=String(body.currency||"USDT").toUpperCase();
   if(!/^[A-Z0-9]{2,15}$/.test(currency))return NextResponse.json({ok:false,error:"Choose a supported cryptocurrency."},{status:400});
   const payments=await collection<any>("payments"),now=new Date();
-  await payments.updateMany({provider:"binance_personal",status:"pending",expiresAt:{$lte:now}},{$set:{status:"expired",updatedAt:now}});
-  // Back/cancel must not silently reuse an old address or countdown.
+  // Do not expire an unpaid order merely because its visible checkout timer ended.
+  // Its amount slot expires independently; deposit reconciliation continues for up to 24 hours.
   if(body.resumeOnly===true)return NextResponse.json({ok:true,found:false});
   const requestedNetwork=String(body.network||"").trim();
   if(!requestedNetwork)return NextResponse.json({ok:false,error:"Choose a deposit network first."},{status:400});
@@ -39,7 +39,8 @@ export async function POST(req:Request){
 
   // The original amount belongs to the first checkout while it is free.
   // Only concurrent checkouts receive a tiny suffix; cancelled/expired orders do not permanently consume the base amount.
-  const activeAmountQuery={provider:"binance_personal",status:"pending",cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,expiresAt:{$gt:now}};
+  await payments.updateMany({provider:"binance_personal",userId:String(user.id),status:"pending"},{$set:{status:"cancelled",reservationActive:false,cancelledAt:now,updatedAt:now,cancelReason:"new_checkout_started"}});
+  const activeAmountQuery={provider:"binance_personal",status:"pending",reservationActive:{$ne:false},cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,expiresAt:{$gt:now}};
   const baseCollision=await payments.findOne({...activeAmountQuery,amountCrypto:baseCrypto});
   let amountCrypto=baseCollision?0:baseCrypto;
   if(baseCollision){
@@ -60,9 +61,9 @@ export async function POST(req:Request){
    }
   }
   if(!amountCrypto)return NextResponse.json({ok:false,error:"Unable to reserve a unique payment amount. Please try again."},{status:503});
-  const orderId="binance_personal_"+crypto.randomUUID(),expiresAt=new Date(now.getTime()+15*60*1000);
+  const orderId="binance_personal_"+crypto.randomUUID(),expiresAt=new Date(now.getTime()+settings.paymentExpiryMinutes*60*1000);
   const payment={_id:mongoId(),userId:String(user.id),provider:"binance_personal",providerId:orderId,orderId,amountUsd:baseAmount,amountCrypto,exact_amount:amountCrypto,amountSuffix:Number((amountCrypto-baseCrypto).toFixed(decimals)),cryptoCurrency:currency,cryptoUsdPrice:usdPerCoin,coins,status:"pending",txid:null,packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,createdAt:now,expiresAt,paidAt:null};
-  await payments.updateMany({provider:"binance_personal",userId:String(user.id),status:"pending",expiresAt:{$gt:now}},{$set:{status:"cancelled",cancelledAt:now,updatedAt:now,cancelReason:"new_checkout_started"}});
+  payment.reservationActive=true;
   await payments.insertOne(payment);
   return NextResponse.json(paymentResponse(payment));
  }catch(e){

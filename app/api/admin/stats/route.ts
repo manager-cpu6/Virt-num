@@ -66,6 +66,8 @@ export async function POST(req:Request){
       return NextResponse.json({ok:true,settings:await getSettings()});
     }
     const markupPercent=Number(b.markupPercent),coinsPerUsd=Number(b.coinsPerUsd),minTopupUsd=Number(b.minTopupUsd),maxTopupUsd=Number(b.maxTopupUsd);
+    const paymentExpiryMinutes=Math.floor(Number(b.paymentExpiryMinutes??(await getSettings()).paymentExpiryMinutes));
+    if(!Number.isFinite(paymentExpiryMinutes)||paymentExpiryMinutes<1||paymentExpiryMinutes>1440)return NextResponse.json({ok:false,error:"Payment checkout time must be between 1 and 1440 minutes."},{status:400});
     const providerOperator=String(b.providerOperator||"any").trim().toLowerCase()||"any";
     const currentSettings=await getSettings();
     const smsProvider=b.smsProvider==="tiger"?"tiger":"5sim";
@@ -95,7 +97,7 @@ export async function POST(req:Request){
 
     await (await collection<any>("settings")).replaceOne(
       {_id:"pricing"},
-      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:smsProvider==="5sim"?true:currentSettings.provider5simEnabled,providerTigerEnabled:smsProvider==="tiger"?true:currentSettings.providerTigerEnabled,updatedAt:new Date()},
+      {_id:"pricing",markupPercent,coinsPerUsd,minTopupUsd,maxTopupUsd,paymentExpiryMinutes,coinPackages,providerOperator,providerOperators,smsProvider,provider5simEnabled:smsProvider==="5sim"?true:currentSettings.provider5simEnabled,providerTigerEnabled:smsProvider==="tiger"?true:currentSettings.providerTigerEnabled,updatedAt:new Date()},
       {upsert:true}
     );
     return NextResponse.json({ok:true,settings:await getSettings()});
