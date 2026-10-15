@@ -6,7 +6,16 @@ export default function PaymentPage(){
  const [user,setUser]=useState<any>(null),[packs,setPacks]=useState<Pack[]>([]),[selected,setSelected]=useState<number|null>(null);
  const [networks,setNetworks]=useState<Network[]>([]),[network,setNetwork]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[deposit,setDeposit]=useState<any>(null),[seconds,setSeconds]=useState(0),[status,setStatus]=useState("pending"),[redirecting,setRedirecting]=useState(false);
  useEffect(()=>{(async()=>{try{
-  const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){throw new Error("Your Numelixa session was not shared with checkout. Please return to Coin Store and open checkout again.");}
+  const query=new URLSearchParams(window.location.search);
+  const checkoutToken=query.get("token");
+  if(checkoutToken){
+   const redeemed=await fetch("/api/payments/checkout-token/redeem",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",cache:"no-store",body:JSON.stringify({token:checkoutToken})}).then(async r=>({httpOk:r.ok,data:await r.json()}));
+   if(!redeemed.httpOk||!redeemed.data.ok)throw new Error(redeemed.data.error||"Secure checkout link is invalid or expired. Return to Coin Store and try again.");
+   query.delete("token");
+   const cleanQuery=query.toString();
+   window.history.replaceState({}, "", window.location.pathname+(cleanQuery?"?"+cleanQuery:""));
+  }
+  const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){throw new Error("Your checkout session could not be verified. Return to Coin Store and open checkout again.");}
   setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
   const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
   setNetworks(nr.networks||[]);const available:Network[]=Array.isArray(nr.networks)?nr.networks.filter((x:Network)=>x?.network&&x?.networkName):[];
