@@ -62,6 +62,22 @@ if 'firebase_messaging_auto_init_enabled' not in m:
 '''
     pos=m.rfind('</application>')
     m=m[:pos]+meta+m[pos:]
+# Register the secure one-time OAuth return link so Chrome can reopen Numelixa.
+if 'android:scheme="com.numelixa.app"' not in m:
+    activity_start = m.find('<activity')
+    activity_end = m.find('</activity>', activity_start)
+    if activity_start < 0 or activity_end < 0:
+        raise SystemExit("Android launcher activity not found for Google OAuth deep link")
+    deep_link = '''
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="com.numelixa.app" android:host="auth" android:pathPrefix="/callback" />
+            </intent-filter>
+'''
+    m = m[:activity_end] + deep_link + m[activity_end:]
+
 manifest.write_text(m)
 
 (XML/"numelixa_file_paths.xml").write_text('''<?xml version="1.0" encoding="utf-8"?>
@@ -479,6 +495,12 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
             }
             ((SocialLoginPlugin) plugin).handleGoogleLoginIntent(requestCode, data);
         }
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
     }
 
     @Override
