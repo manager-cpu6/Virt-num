@@ -1,7 +1,8 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
 import {Capacitor} from "@capacitor/core";
-import {SocialLogin} from "@capgo/capacitor-social-login";
+import {App} from "@capacitor/app";
+import {Browser} from "@capacitor/browser";
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 
@@ -35,33 +36,50 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  }
 
  useEffect(()=>{
-  const native=Capacitor.isNativePlatform();
-  setIsNative(native);
-  if(!native)return;
+  setIsNative(Capacitor.isNativePlatform());
+ },[]);
+
+ useEffect(()=>{
+  if(!isNative)return;
   let active=true;
-  if(!configLoaded)return;
-  if(!clientId){setError("Google sign-in is not configured. Set GOOGLE_CLIENT_ID in Vercel.");return}
-  SocialLogin.initialize({google:{webClientId:clientId,mode:"online"}})
-   .then(()=>{if(active)setInitialized(true)})
-   .catch((e:any)=>{if(active)setError(e?.message||"Unable to initialize native Google sign-in.")});
-  return()=>{active=false};
- },[clientId,configLoaded]);
+  let listener:{remove:()=>Promise<void>}|undefined;
+  const handleAppUrl=async(event:{url:string})=>{
+   if(!active||!event?.url)return;
+   let url:URL;
+   try{url=new URL(event.url)}catch{return}
+   if(url.protocol!=="com.numelixa.app:"||url.hostname!=="auth"||url.pathname!=="/callback")return;
+   const oauthError=url.searchParams.get("error");
+   const ticket=String(url.searchParams.get("ticket")||"");
+   try{await Browser.close()}catch{}
+   if(oauthError){
+    if(oauthError!=="cancelled")setError(oauthError==="account_suspended"?"This account is suspended. Contact Numelixa Support.":"Google sign-in could not be completed. Please try again.");
+    setLoading(false);return;
+   }
+   if(!ticket){setError("Google returned without a sign-in ticket. Please try again.");setLoading(false);return}
+   setLoading(true);setError("");
+   try{
+    const response=await fetch("/api/auth/google/native/complete",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({ticket})});
+    const data=await response.json();
+    if(!response.ok||!data.ok)throw new Error(data.error||"Unable to finish Google sign-in.");
+    window.dispatchEvent(new Event("numelixa-auth-ready"));onSuccessRef.current();
+   }catch(e){setError(e instanceof Error?e.message:"Unable to finish Google sign-in.")}
+   finally{setLoading(false)}
+  };
+  App.addListener("appUrlOpen",handleAppUrl).then(x=>{listener=x});
+  App.getLaunchUrl().then(result=>{if(result?.url)void handleAppUrl({url:result.url})}).catch(()=>{});
+  return()=>{active=false;if(listener)void listener.remove()};
+ },[isNative]);
 
  async function nativeSignIn(){
-  if(!clientId){setError("Google sign-in is not configured. Set GOOGLE_CLIENT_ID in Vercel.");return}
   setLoading(true);setError("");
   try{
-   if(!initialized)await SocialLogin.initialize({google:{webClientId:clientId,mode:"online"}});
-   const response:any=await SocialLogin.login({provider:"google",options:{scopes:["email","profile"]}});
-   const credential=String(response?.result?.idToken||"").trim();
-   if(!credential)throw new Error("Google did not return an ID token. Please try again.");
-   await completeSignIn(credential);
-  }catch(e){
-   const message=e instanceof Error?e.message:"Unable to sign in with Google.";
-   if(!/cancel|dismiss/i.test(message))setError(message);
-  }finally{setLoading(false)}
+   const response=await fetch("/api/auth/google/native/start",{method:"POST",credentials:"include",cache:"no-store"});
+   const data=await response.json();
+   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||"Unable to start Google sign-in.");
+   await Browser.open({url:String(data.url),presentationStyle:"fullscreen"});
+  }catch(e){setError(e instanceof Error?e.message:"Unable to open Google sign-in in your browser.");setLoading(false)}
  }
-
+ async function nativeSignIn(){ await Promise.resolve(); }
  useEffect(()=>{
   if(isNative)return;
   let active=true;
