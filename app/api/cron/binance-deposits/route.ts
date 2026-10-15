@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {collection,getMongoClient,getMongoDb,mongoId} from "@/lib/mongo";
 import {getCoinDeposits,personalApiConfigured,type BinanceDeposit} from "@/lib/binance-personal";
 import {notifyUser} from "@/lib/notifications";
+import {sendEmail,coinPaymentSuccessEmail} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -29,11 +30,12 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
    const user=await users.findOneAndUpdate({_id:String(payment.userId)},{$inc:{coins:Number(payment.coins)}},{returnDocument:"after",session});
    if(!user)throw new Error("BINANCE_DEPOSIT_USER_NOT_FOUND");
    await txs.insertOne({_id:mongoId(),userId:String(payment.userId),type:"credit",amount:Number(payment.coins),balanceAfter:Number(user.coins),reference:String(payment.orderId),description:"Binance Personal "+String(deposit.coin||payment.cryptoCurrency||"crypto")+" deposit "+String(deposit.txId),depositTxId:String(deposit.txId),createdAt:new Date()},{session});
-   credited={userId:String(payment.userId),coins:Number(payment.coins),orderId:String(payment.orderId),paymentId:String(payment._id)};
+   credited={userId:String(payment.userId),coins:Number(payment.coins),orderId:String(payment.orderId),paymentId:String(payment._id),email:String(user.email||""),name:String(user.name||""),amountUsd:Number(payment.amountUsd||0),currency:String(payment.cryptoCurrency||"Crypto")};
   });
  }finally{await session.endSession();}
  if(credited){
-  try{await notifyUser(credited.userId,"💰 Binance deposit confirmed","Your crypto deposit was confirmed and "+credited.coins.toLocaleString()+" coins were added to your Numelixa wallet.",{paymentId:credited.paymentId,type:"payment"});}catch(e){console.error("[BINANCE DEPOSIT PUSH]",e);}
+  try{await notifyUser(credited.userId,"💰 Payment confirmed","Your crypto deposit was confirmed and "+credited.coins.toLocaleString()+" coins were added to your Numelixa wallet.",{paymentId:credited.paymentId,type:"payment"});}catch(e){console.error("[BINANCE DEPOSIT PUSH]",e);}
+  try{if(credited.email)await sendEmail(credited.email,"Payment successful — Numelixa coins added",coinPaymentSuccessEmail(credited.name,credited.coins,credited.amountUsd,credited.currency,credited.orderId));}catch(e){console.error("[BINANCE DEPOSIT EMAIL]",e instanceof Error?e.message:"send failed");}
  }
  return Boolean(credited);
 }
