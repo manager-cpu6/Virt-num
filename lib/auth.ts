@@ -52,7 +52,7 @@ export async function createSession(userId:string,meta?:SessionMeta){
    lastSeenAt:now,
    ...meta
  });
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*30});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*30,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
 }
 
 export async function getCurrentSession(){
@@ -104,7 +104,7 @@ export async function logout(){
    }
   }catch(error){console.error("[NOTIFICATION DEVICE UNLINK]",error)}
  }
- (await cookies()).delete(COOKIE);
+ (await cookies()).set(COOKIE,"",{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:0,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
  (await cookies()).delete("numelixa_device_token");
 }
 
