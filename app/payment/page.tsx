@@ -7,7 +7,7 @@ export default function PaymentPage(){
  const [networks,setNetworks]=useState<Network[]>([]),[network,setNetwork]=useState(""),[loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[error,setError]=useState(""),[deposit,setDeposit]=useState<any>(null),[seconds,setSeconds]=useState(0),[status,setStatus]=useState("pending");
  useEffect(()=>{(async()=>{try{
   const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());if(!me.user){location.href="/login?next="+encodeURIComponent("https://payment.numelixa.com/");return;}
-  setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);if(ps.length)setSelected(ps[0].coins);
+  setUser(me.user);const ps:Pack[]=me.pricing?.coinPackages||[];setPacks(ps);const requested=Number(new URLSearchParams(window.location.search).get("coins"));if(ps.length)setSelected(ps.some(x=>x.coins===requested)?requested:ps[0].coins);
   const nr=await fetch("/api/payments/binance/networks",{cache:"no-store"}).then(r=>r.json());if(!nr.ok)throw new Error(nr.error||"Unable to load networks");
   setNetworks(nr.networks||[]);setNetwork((nr.networks||[]).find((x:Network)=>x.isDefault)?.network||(nr.networks||[])[0]?.network||"");
  }catch(e){setError(e instanceof Error?e.message:"Unable to load payment options.");}finally{setLoading(false)}})()},[]);
