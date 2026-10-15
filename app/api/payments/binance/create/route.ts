@@ -22,26 +22,26 @@ export async function POST(req:Request){
   const baseAmount=Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
   if(!Number.isFinite(baseAmount)||baseAmount<=0)return NextResponse.json({ok:false,error:"This coin package is no longer available."},{status:400});
   const currency=String(body.currency||"USDT").toUpperCase();
-  if(!["USDT","BNB"].includes(currency))return NextResponse.json({ok:false,error:"Choose USDT or BNB."},{status:400});
+  if(!/^[A-Z0-9]{2,15}$/.test(currency))return NextResponse.json({ok:false,error:"Choose a supported cryptocurrency."},{status:400});
   const payments=await collection<any>("payments"),now=new Date();
   await payments.updateMany({provider:"binance_personal",status:"pending",expiresAt:{$lte:now}},{$set:{status:"expired",updatedAt:now}});
-  // Resume the same still-active request for this user/package, including after Back or refresh.
-  const previousFilter:any={provider:"binance_personal",userId:String(user.id),coins,status:"pending",expiresAt:{$gt:now}};if(body.resumeOnly!==true)previousFilter.cryptoCurrency=currency;const previous=await payments.find(previousFilter).sort({createdAt:-1}).limit(1).next();
-  if(previous)return NextResponse.json(paymentResponse(previous));
+  // Back/cancel must not silently reuse an old address or countdown.
   if(body.resumeOnly===true)return NextResponse.json({ok:true,found:false});
   const requestedNetwork=String(body.network||"").trim();
   if(!requestedNetwork)return NextResponse.json({ok:false,error:"Choose a deposit network first."},{status:400});
   const instructions=await getCoinDepositInstructions(currency,requestedNetwork);
   const usdPerCoin=await getCryptoUsdPrice(currency);
-  const decimals=currency==="USDT"?2:8;
+  const decimals=["USDT","USDC","FDUSD","TUSD","USDP","DAI"].includes(currency)?2:8;
   // Charge the exact package price: no artificial surcharge. If another active order
   // reserves the same exact amount/address/network, wait for its 15-minute window to expire.
   const amountCrypto=Number((baseAmount/usdPerCoin).toFixed(decimals));
   if(!Number.isFinite(amountCrypto)||amountCrypto<=0)return NextResponse.json({ok:false,error:"Unable to calculate the exact payment amount."},{status:502});
   const collision=await payments.findOne({provider:"binance_personal",status:"pending",cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,amountCrypto,expiresAt:{$gt:now}});
-  if(collision)return NextResponse.json({ok:false,error:"This exact payment amount is temporarily reserved by another active checkout. Your amount has not been increased; please try again after its 15-minute timer expires."},{status:409});
+  if(collision&&String(collision.userId)===String(user.id)){await payments.updateOne({_id:collision._id,status:"pending"},{$set:{status:"cancelled",cancelledAt:now,updatedAt:now,cancelReason:"replaced_checkout"}});}
+  else if(collision)return NextResponse.json({ok:false,error:"This exact payment amount is reserved by another active checkout. Your price has not been increased; please try after its 15-minute timer expires."},{status:409});
   const orderId="binance_personal_"+crypto.randomUUID(),expiresAt=new Date(now.getTime()+15*60*1000);
   const payment={_id:mongoId(),userId:String(user.id),provider:"binance_personal",providerId:orderId,orderId,amountUsd:baseAmount,amountCrypto,exact_amount:amountCrypto,cryptoCurrency:currency,cryptoUsdPrice:usdPerCoin,coins,status:"pending",txid:null,packageId:String(coins),depositAddress:instructions.address,depositNetwork:instructions.network,depositNetworkName:instructions.networkName,depositMemo:instructions.memo||"",raw:null,createdAt:now,expiresAt,paidAt:null};
+  await payments.updateMany({provider:"binance_personal",userId:String(user.id),status:"pending",expiresAt:{$gt:now}},{$set:{status:"cancelled",cancelledAt:now,updatedAt:now,cancelReason:"new_checkout_started"}});
   await payments.insertOne(payment);
   return NextResponse.json(paymentResponse(payment));
  }catch(e){
