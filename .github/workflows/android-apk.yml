@@ -118,7 +118,7 @@ jobs:
           assert launcher, "No MAIN/LAUNCHER Activity in generated manifest"
           assert any(name and name.endswith(".MainActivity") for name in launcher), f"Unexpected launcher Activity: {launcher}"
           activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
-          plugin = Path("android/app/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
+          plugin = Path("plugins/numelixa-google-sign-in/android/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
           assert "extends BridgeActivity" in activity, "MainActivity does not extend BridgeActivity"
           assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity, "Duplicate manual registration remains; plugin must use generated PluginManager metadata"
           import json
@@ -143,10 +143,13 @@ jobs:
           from pathlib import Path
           plugin = Path("android/app/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
           activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
-          gradle = Path("android/app/build.gradle").read_text()
+          gradle = Path("plugins/numelixa-google-sign-in/android/build.gradle").read_text()
           assert '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' in plugin, "plugin annotation missing"
           assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity, "Google plugin must be discovered from Capacitor metadata, not manually registered"
-          assert "androidx.credentials:credentials:" in gradle, "Credential Manager dependency missing"
+          assert "androidx.credentials:credentials:" in gradle, "Credential Manager dependency missing from plugin module"
+          plugin_package = json.loads(Path("plugins/numelixa-google-sign-in/package.json").read_text())
+          assert plugin_package.get("capacitor", {}).get("android", {}).get("src") == "android", "Local Capacitor plugin metadata missing"
+          assert "registerPlugin('NumelixaGoogleSignIn')" in Path("plugins/numelixa-google-sign-in/index.js").read_text(), "Local plugin JS registration missing"
           assert "Browser.open" not in Path("components/GoogleSignIn.tsx").read_text(), "browser-only sign-in path found"
           print("PASS: source, Capacitor registration, dependencies, and no Browser.open in GoogleSignIn.tsx")
           PY
