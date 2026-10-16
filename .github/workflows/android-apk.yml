@@ -141,7 +141,8 @@ jobs:
           test -s "$APK"
           python - <<'PY'
           from pathlib import Path
-          plugin = Path("android/app/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
+          import json
+          plugin = Path("plugins/numelixa-google-sign-in/android/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
           activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
           gradle = Path("plugins/numelixa-google-sign-in/android/build.gradle").read_text()
           assert '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' in plugin, "plugin annotation missing"
