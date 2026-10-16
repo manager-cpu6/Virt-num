@@ -1,0 +1,11 @@
+{
+  "name": "@numelixa/capacitor-google-sign-in",
+  "version": "1.0.0",
+  "description": "Numelixa native Google Sign-In using Android Credential Manager",
+  "private": true,
+  "main": "index.js",
+  "types": "index.d.ts",
+  "files": ["android", "index.js", "index.d.ts"],
+  "peerDependencies": { "@capacitor/core": "7.6.9" },
+  "capacitor": { "android": { "src": "android" } }
+}
