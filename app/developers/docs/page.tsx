@@ -57,7 +57,7 @@ async function api(path, options = {}) {
     ...options,
     redirect: "manual",
     headers: {
-      Authorization: `Bearer ${KEY}`,
+      Authorization: "Bearer " + KEY,
       Accept: "application/json",
       "Content-Type": "application/json",
       ...options.headers,
@@ -68,7 +68,7 @@ async function api(path, options = {}) {
   }
   const data = await response.json();
   if (!response.ok || data.ok === false) {
-    throw new Error(data.error || `HTTP ${response.status}`);
+    throw new Error(data.error || ("HTTP " + response.status));
   }
   return data;
 }
