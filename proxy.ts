@@ -1,6 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 
-const PUBLIC_HOSTS=new Set(["developers.numelixa.com","docs.numelixa.com"]);
+const PUBLIC_HOSTS=new Set(["developers.numelixa.com","docs.numelixa.com","support.numelixa.com"]);
 const API_PREFIX="/api/v1";
 const corsHeaders={
   "Access-Control-Allow-Origin":"*",
@@ -64,6 +64,15 @@ export function proxy(req:NextRequest){
       url.pathname="/developers/docs"+pathname.slice(5);
       return NextResponse.rewrite(url);
     }
+  }
+
+
+  if(host==="support.numelixa.com"){
+    const url=req.nextUrl.clone();
+    if(pathname==="/"||pathname==="")url.pathname="/support";
+    else if(pathname==="/api"||pathname.startsWith("/api/"))return NextResponse.next();
+    else if(!pathname.startsWith("/support")&&!pathname.startsWith("/_next/"))url.pathname="/support"+pathname;
+    return NextResponse.rewrite(url);
   }
 
   if(host==="privacy.numelixa.com"&&pathname==="/"){
