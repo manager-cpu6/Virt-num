@@ -1,8 +1,7 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Capacitor,registerPlugin} from "@capacitor/core";
-type NativeGoogleSignInPlugin={signIn:(options:{serverClientId:string})=>Promise<{idToken:string}>};
-const NativeGoogleSignIn=registerPlugin<NativeGoogleSignInPlugin>("NumelixaGoogleSignIn");
+import {Capacitor} from "@capacitor/core";
+import {NumelixaGoogleSignIn as NativeGoogleSignIn} from "@numelixa/capacitor-google-sign-in";
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
