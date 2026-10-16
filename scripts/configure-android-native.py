@@ -664,4 +664,18 @@ public class MainActivity extends BridgeActivity {
 }
 ''')
 
+# Fail fast if the custom Google Sign-In plugin would be generated but not registered.
+google_plugin_source = JAVA / "NumelixaGoogleSignInPlugin.java"
+main_activity_source = JAVA / "MainActivity.java"
+if not google_plugin_source.exists():
+    raise SystemExit("Native Google Sign-In plugin source was not generated")
+plugin_text = google_plugin_source.read_text()
+activity_text = main_activity_source.read_text()
+if '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' not in plugin_text:
+    raise SystemExit("Native Google Sign-In plugin annotation/name mismatch")
+if "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity_text:
+    raise SystemExit("MainActivity does not register NumelixaGoogleSignInPlugin")
+if "androidx.credentials:credentials:" not in app_gradle.read_text():
+    raise SystemExit("Credential Manager dependency is missing from app/build.gradle")
+print("Verified source: NumelixaGoogleSignInPlugin.java exists and MainActivity registers it.")
 print("Numelixa native Android configuration applied.")
