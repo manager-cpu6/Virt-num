@@ -1,41 +1,46 @@
 "use client";
+
 import {useState} from "react";
+
 const BASE="https://numelixa.com/api/v1";
-const examples:Record<string,string>={
- "cURL":`# API requests should return JSON directly (no browser login/redirect)
-curl --fail-with-body -sS -L "${BASE}/account" \
-  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
+const KEY="$NUMELIXA_API_KEY";
+
+const samples:Record<string,string>={
+ "cURL":`# 1. Check your account
+curl --fail-with-body -sS "${BASE}/account" \\
+  -H "Authorization: Bearer ${KEY}" \\
   -H "Accept: application/json"
 
-# Check stock
-curl --fail-with-body -sS -L "${BASE}/stock?country=usa&service=whatsapp" \
-  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
+# 2. Check WhatsApp stock in the USA
+curl --fail-with-body -sS "${BASE}/stock?country=usa&service=whatsapp" \\
+  -H "Authorization: Bearer ${KEY}" \\
   -H "Accept: application/json"
 
-# Purchase
-curl --fail-with-body -sS -L -X POST "${BASE}/orders" \
-  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
+# 3. Purchase a number (creates an order)
+curl --fail-with-body -sS -X POST "${BASE}/orders" \\
+  -H "Authorization: Bearer ${KEY}" \\
+  -H "Accept: application/json" \\
+  -H "Content-Type: application/json" \\
   --data '{"country":"usa","service":"whatsapp"}'`,
  Python:`import os
 import requests
 
 BASE = "${BASE}"
 KEY = os.environ["NUMELIXA_API_KEY"]
-SESSION = requests.Session()
-SESSION.headers.update({
+session = requests.Session()
+session.headers.update({
     "Authorization": f"Bearer {KEY}",
     "Accept": "application/json",
     "Content-Type": "application/json",
 })
 
 def api(method, path, **kwargs):
-    # Follow redirects while preserving safe request behavior; inspect final URL/status.
-    response = SESSION.request(method, BASE + path, timeout=20,
-                               allow_redirects=True, **kwargs)
-    if not response.url.startswith(BASE):
-        raise RuntimeError(f"Unexpected API redirect to {response.url}")
+    # Do not follow redirects: an API request should return JSON directly.
+    response = session.request(
+        method, BASE + path, timeout=20, allow_redirects=False, **kwargs
+    )
+    if 300 <= response.status_code < 400:
+        raise RuntimeError("Unexpected redirect from API: " + response.headers.get("Location", ""))
     try:
         data = response.json()
     except ValueError as exc:
@@ -44,12 +49,13 @@ def api(method, path, **kwargs):
         raise RuntimeError(f"HTTP {response.status_code}: {data.get('error', 'API request failed')}")
     return data
 
-print(api("GET", "/account"))
+account = api("GET", "/account")
+print("Account:", account)
 stock = api("GET", "/stock?country=usa&service=whatsapp")
 print("Stock:", stock)
 order = api("POST", "/orders", json={"country": "usa", "service": "whatsapp"})
 print("Order:", order)`,
- "JavaScript":`const BASE = "${BASE}";
+ JavaScript:`const BASE = "${BASE}";
 const KEY = process.env.NUMELIXA_API_KEY;
 
 async function api(path, options = {}) {
@@ -64,112 +70,100 @@ async function api(path, options = {}) {
     },
   });
   if (response.status >= 300 && response.status < 400) {
-    throw new Error("Unexpected API redirect. Check the API deployment/base URL.");
+    throw new Error("Unexpected API redirect; check the API URL.");
   }
   const data = await response.json();
   if (!response.ok || data.ok === false) {
-    throw new Error(data.error || ("HTTP " + response.status));
+    throw new Error(data.error || "HTTP " + response.status);
   }
   return data;
 }
 
-const account = await api("/account");
-console.log(account);
-const stock = await api("/stock?country=usa&service=whatsapp");
-console.log(stock);
-const order = await api("/orders", {
+console.log(await api("/account"));
+console.log(await api("/stock?country=usa&service=whatsapp"));
+console.log(await api("/orders", {
   method: "POST",
   body: JSON.stringify({ country: "usa", service: "whatsapp" }),
-});
-console.log(order);`,
+}));`,
  PHP:`<?php
 $base = "${BASE}";
 $key = getenv("NUMELIXA_API_KEY");
+
 function numelixa($method, $path, $payload = null) {
   global $base, $key;
-  $headers = ["Authorization: Bearer " . $key, "Accept: application/json", "Content-Type: application/json"];
   $ch = curl_init($base . $path);
-  curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS => 3, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => 20]);
+  $headers = [
+    "Authorization: Bearer " . $key,
+    "Accept: application/json",
+    "Content-Type: application/json"
+  ];
+  curl_setopt_array($ch, [
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_FOLLOWLOCATION => false,
+    CURLOPT_CUSTOMREQUEST => $method,
+    CURLOPT_HTTPHEADER => $headers,
+    CURLOPT_TIMEOUT => 20
+  ]);
   if ($payload !== null) curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
-  $body = curl_exec($ch); $status = curl_getinfo($ch, CURLINFO_HTTP_CODE); $url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
+  $body = curl_exec($ch);
+  $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
   if ($body === false) throw new RuntimeException(curl_error($ch));
   curl_close($ch);
-  if (strpos($url, $base) !== 0) throw new RuntimeException("Unexpected redirect target");
+  if ($status >= 300 && $status < 400) throw new RuntimeException("Unexpected API redirect");
   $data = json_decode($body, true);
   if ($status < 200 || $status >= 300 || !is_array($data) || (($data["ok"] ?? true) === false))
     throw new RuntimeException($data["error"] ?? "Numelixa API request failed");
   return $data;
 }
+
 print_r(numelixa("GET", "/account"));
-print_r(numelixa("POST", "/orders", ["country" => "usa", "service" => "whatsapp"]));`,
- Go:`package main
-import ("encoding/json"; "fmt"; "net/http"; "bytes"; "os"; "io")
-const base = "${BASE}"
-func main() {
-  req, _ := http.NewRequest("GET", base+"/account", nil)
-  req.Header.Set("Authorization", "Bearer "+os.Getenv("NUMELIXA_API_KEY"))
-  req.Header.Set("Accept", "application/json")
-  client := &http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error { return http.ErrUseLastResponse }}
-  res, err := client.Do(req); if err != nil { panic(err) }; defer res.Body.Close()
-  body, _ := io.ReadAll(res.Body)
-  if res.StatusCode >= 300 && res.StatusCode < 400 { panic("Unexpected redirect: "+res.Header.Get("Location")) }
-  if res.StatusCode < 200 || res.StatusCode >= 300 { panic(fmt.Sprintf("HTTP %d: %s", res.StatusCode, body)) }
-  var data map[string]any; if err := json.Unmarshal(body, &data); err != nil { panic(err) }; fmt.Println(data)
-  _ = bytes.NewBuffer(nil)
-}`,
- Ruby:`require "net/http"
-require "json"
-require "uri"
-base = "${BASE}"
-uri = URI(base + "/account")
-request = Net::HTTP::Get.new(uri)
-request["Authorization"] = "Bearer #{ENV.fetch("NUMELIXA_API_KEY")}"
-request["Accept"] = "application/json"
-response = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) { |http| http.request(request) }
-raise "Unexpected redirect: #{response["location"]}" if response.is_a?(Net::HTTPRedirection)
-data = JSON.parse(response.body)
-raise(data["error"] || "API failed") unless response.is_a?(Net::HTTPSuccess) && data["ok"] != false
-puts data.inspect`,
- Java:`import java.net.URI;
-import java.net.http.*;
-public class Main {
-  public static void main(String[] args) throws Exception {
-    String base = "${BASE}";
-    String key = System.getenv("NUMELIXA_API_KEY");
-    HttpClient client = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build();
-    HttpRequest request = HttpRequest.newBuilder(URI.create(base + "/account"))
-      .header("Authorization", "Bearer " + key).header("Accept", "application/json").GET().build();
-    HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-    if (response.statusCode() >= 300 && response.statusCode() < 400) throw new RuntimeException("Unexpected redirect");
-    if (response.statusCode() < 200 || response.statusCode() >= 300) throw new RuntimeException("HTTP " + response.statusCode() + ": " + response.body());
-    System.out.println(response.body());
-  }
-}`
+print_r(numelixa("GET", "/stock?country=usa&service=whatsapp"));
+print_r(numelixa("POST", "/orders", ["country" => "usa", "service" => "whatsapp"]));`
 };
-const languages=Object.keys(examples);
-function Code({value}:{value:string}){const[done,setDone]=useState(false);return <div style={{position:"relative",margin:"12px 0 24px"}}><pre style={{overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",padding:"18px 56px 18px 16px",borderRadius:15,background:"#01191f",border:"1px solid rgba(121,246,229,.13)",color:"#c9eeea",fontSize:12,lineHeight:1.65}}>{value}</pre><button onClick={async()=>{try{await navigator.clipboard.writeText(value);setDone(true);setTimeout(()=>setDone(false),1500)}catch{}}} style={{position:"absolute",right:10,top:10,border:"1px solid rgba(121,246,229,.2)",background:"rgba(114,223,206,.08)",color:"#72dfce",borderRadius:9,padding:"7px 9px",fontSize:11,fontWeight:900}}>{done?"Copied":"Copy code"}</button></div>}
+
+const sections=[
+ {id:"overview",title:"Overview",desc:"Start here: API base URL, authentication and JSON response rules."},
+ {id:"account",title:"Account & balance",desc:"Read your API account, wallet balance and transactions."},
+ {id:"inventory",title:"Services, countries & stock",desc:"Find supported services and check available inventory before buying."},
+ {id:"orders",title:"Orders",desc:"Purchase a number, save the order ID, retrieve the SMS code and cancel eligible orders."},
+ {id:"webhooks",title:"Webhooks",desc:"Receive order and SMS events on your server instead of polling the API repeatedly."},
+ {id:"errors",title:"Errors & reliability",desc:"Handle HTTP statuses, timeouts, retries and idempotency safely."},
+ {id:"examples",title:"Code examples",desc:"Copy complete examples for cURL, Python, JavaScript/Node.js and PHP."}
+];
+
+function Code({value}:{value:string}){
+ const [copied,setCopied]=useState(false);
+ return <div style={{position:"relative",margin:"12px 0 24px"}}>
+  <pre style={{overflowX:"auto",whiteSpace:"pre-wrap",wordBreak:"break-word",padding:"18px 62px 18px 16px",borderRadius:14,background:"#03141d",border:"1px solid rgba(109,222,230,.16)",color:"#d9f5f4",fontSize:12,lineHeight:1.7}}>{value}</pre>
+  <button onClick={async()=>{try{await navigator.clipboard.writeText(value);setCopied(true);window.setTimeout(()=>setCopied(false),1300)}catch{}}} style={{position:"absolute",right:9,top:9,border:"1px solid rgba(109,222,230,.22)",background:"#0c2934",color:"#7be5d8",borderRadius:8,padding:"7px 10px",fontSize:11,fontWeight:800}}>{copied?"Copied":"Copy"}</button>
+ </div>
+}
+
 export default function Docs(){
- const[language,setLanguage]=useState("Python");
- const[endpoint,setEndpoint]=useState("GET /account");
- return <main className="numelixa-docs-page" style={{maxWidth:1120,margin:"0 auto",padding:"24px 18px 80px",color:"#eafff9",lineHeight:1.7}}>
- <a href="https://numelixa.com" aria-label="Back to Numelixa" title="Back to Numelixa">← Numelixa</a>
- <div style={{fontSize:11,letterSpacing:3,color:"#72dfce",fontWeight:900,marginTop:22}}>NUMELIXA DEVELOPER PLATFORM · API V1</div>
- <h1 style={{fontSize:44,letterSpacing:-2.5,margin:"8px 0"}}>API Documentation</h1>
- <p style={{color:"#86a8a9",maxWidth:850}}>Production REST API for virtual numbers. All endpoints use JSON. Send your API key with every request; browser cookies and interactive sign-in should not be required for API-key requests.</p>
- <div style={{padding:18,borderRadius:18,background:"rgba(5,39,47,.75)",border:"1px solid rgba(121,246,229,.14)"}}><b>Base URL</b><p><code>{BASE}</code></p><b>Authentication</b><p><code>Authorization: Bearer YOUR_SECRET_API_KEY</code></p><p style={{color:"#7e9e9f",fontSize:12}}>Keep the secret on your server. Never embed it in a public website or mobile app. Set NUMELIXA_API_KEY as an environment variable.</p></div>
- <section style={{marginTop:30}}><h2>Quick start · choose your language</h2><p style={{color:"#86a8a9"}}>Select a language below. Each tab shows a copy-ready example for checking the authenticated account and includes safe handling for unexpected redirects and API errors.</p>
- <div role="tablist" aria-label="Programming language" style={{display:"flex",gap:8,flexWrap:"wrap",margin:"16px 0"}}>{languages.map(lang=><button key={lang} role="tab" aria-selected={language===lang} onClick={()=>setLanguage(lang)} style={{padding:"9px 14px",borderRadius:10,border:"1px solid "+(language===lang?"#72dfce":"rgba(121,246,229,.15)"),background:language===lang?"#72dfce":"rgba(114,223,206,.05)",color:language===lang?"#03242b":"#c9eeea",fontWeight:800}}>{lang}</button>)}</div>
- <Code value={examples[language]}/>
- </section>
- <section style={{marginTop:42}}><h2>Endpoint reference</h2><p style={{color:"#86a8a9"}}>Use the exact base URL above. API endpoints must return JSON rather than redirecting to a website login page. If you receive HTML or a 3xx response, inspect the response and do not treat it as a successful API result.</p>
- <label htmlFor="endpoint">Choose an endpoint</label><select id="endpoint" value={endpoint} onChange={e=>setEndpoint(e.target.value)} style={{display:"block",width:"100%",maxWidth:420,margin:"10px 0",padding:12,borderRadius:10,background:"#041e25",color:"#eafff9",border:"1px solid rgba(121,246,229,.2)"}}>{["GET /account","GET /balance","GET /transactions","GET /services","GET /countries?service=whatsapp","GET /stock?country=usa&service=whatsapp","POST /orders","GET /orders","GET /orders/ORDER_ID","POST /orders/code","POST /orders/cancel"].map(x=><option key={x}>{x}</option>)}</select>
- <Code value={`curl --fail-with-body -sS -L -X ${"$"}{endpoint.startsWith("POST")?"POST":"GET"} "https://numelixa.com/api/v1/${"$"}{endpoint.replace(/^(GET|POST) \/?/,"")}" \\\n  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \\\n  -H "Accept: application/json" \\\n  -H "Content-Type: application/json"${"$"}{endpoint==="POST /orders"?' \\\n  --data \'{"country":"usa","service":"whatsapp"}\'':endpoint==="POST /orders/code"||endpoint==="POST /orders/cancel"?' \\\n  --data \'{"orderId":"ORDER_ID"}\'':""}`}/>
- <p style={{color:"#86a8a9",fontSize:12}}>For purchase, SMS retrieval and cancellation, use the endpoint-specific request body shown below. Do not blindly retry a purchase after a timeout; first check order status.</p>
- </section>
- <section style={{marginTop:42}}><h2>Common request bodies</h2><h3>Purchase a number · POST /orders</h3><Code value={`{"country":"usa","service":"whatsapp"}`}/><h3>Retrieve SMS · POST /orders/code</h3><Code value={`{"orderId":"ORDER_ID"}`}/><h3>Cancel eligible waiting order · POST /orders/cancel</h3><Code value={`{"orderId":"ORDER_ID"}`}/></section>
- <section style={{marginTop:42}}><h2>Errors and status codes</h2><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}><tbody>{[["200","Success"],["400","Invalid or missing parameters"],["401","Missing, invalid or revoked API key"],["402","Insufficient wallet balance"],["403","Account verification or permission required"],["404","Order/resource not found"],["409","Stock, price or order-state conflict"],["429","Rate limit exceeded"],["500","Unexpected server error"],["502","Temporary upstream number-service failure"],["503","Number service unavailable"]].map(([a,b])=><tr key={a}><td style={{padding:10,borderBottom:"1px solid rgba(255,255,255,.06)",fontFamily:"monospace"}}>{a}</td><td style={{padding:10,borderBottom:"1px solid rgba(255,255,255,.06)"}}>{b}</td></tr>)}</tbody></table></div><Code value={`{"ok":false,"error":"Human-readable error message"}`}/></section>
- <section style={{marginTop:42}}><h2>Production best practices</h2><ul><li>Store keys in environment variables or a secrets manager.</li><li>Refresh stock and price immediately before purchase.</li><li>Save the returned order ID and reconcile after network timeouts.</li><li>Use exponential backoff for SMS polling; stop when completed, cancelled or expired.</li><li>Handle 401 by checking key status, never by redirecting API users to browser sign-in.</li><li>Do not expose provider credentials or internal routing choices.</li></ul></section>
- <footer style={{marginTop:50,padding:20,borderRadius:18,background:"rgba(114,223,206,.05)",border:"1px solid rgba(114,223,206,.12)"}}><b>API contract</b><p style={{color:"#78999a",marginBottom:0}}>This reference documents the intended API behavior. Verify all endpoints against the current production deployment before relying on examples in production; language snippets have not been executed against your live account in this chat.</p></footer>
+ const [language,setLanguage]=useState("Python");
+ const [section,setSection]=useState("overview");
+ const [endpoint,setEndpoint]=useState("GET /account");
+ const [showWebhook,setShowWebhook]=useState(false);
+ const panel={padding:22,borderRadius:20,border:"1px solid rgba(109,222,230,.14)",background:"rgba(5,28,39,.78)",marginBottom:18} as const;
+ return <main style={{maxWidth:1240,margin:"0 auto",padding:"24px 18px 90px",color:"#edf9ff",fontFamily:"Inter,system-ui,sans-serif",lineHeight:1.7}}>
+  <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><a href="https://numelixa.com" style={{color:"#7be5d8",textDecoration:"none",fontWeight:800}}>← Numelixa</a><a href="https://support.numelixa.com" style={{color:"#a8c0ce",textDecoration:"none",fontSize:13}}>Developer support ↗</a></div>
+  <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr)",gap:18,marginTop:30}}>
+   <section style={{padding:"28px 24px",borderRadius:26,border:"1px solid rgba(109,222,230,.2)",background:"radial-gradient(ellipse at 10% 0%,rgba(21,111,137,.35),transparent 55%),linear-gradient(145deg,#071b2b,#04121e)"}}>
+    <div style={{fontSize:11,letterSpacing:3,color:"#7be5d8",fontWeight:900}}>NUMELIXA DEVELOPERS · REST API V1</div>
+    <h1 style={{fontSize:"clamp(32px,5vw,48px)",letterSpacing:-1.8,lineHeight:1.1,margin:"12px 0"}}>Build with Numelixa</h1>
+    <p style={{maxWidth:760,color:"#a8c0ce",fontSize:16}}>A practical reference for virtual-number workflows. Each topic has its own section, examples are separated by language, and API-key requests are designed to receive JSON—not browser login pages.</p>
+    <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:20}}><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>REST · JSON</span><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>Bearer API key</span><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>Webhook-ready</span></div>
+   </section>
+   <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(230px,1fr))",gap:10}}>{sections.map((s,i)=><button key={s.id} onClick={()=>{setSection(s.id);document.getElementById(s.id)?.scrollIntoView({behavior:"smooth",block:"start"})}} style={{textAlign:"left",padding:15,borderRadius:14,border:"1px solid "+(section===s.id?"rgba(123,229,216,.5)":"rgba(109,222,230,.12)"),background:section===s.id?"rgba(20,91,104,.35)":"rgba(5,28,39,.65)",color:"#edf9ff",cursor:"pointer"}}><span style={{display:"block",color:"#7be5d8",fontSize:10,fontWeight:900,letterSpacing:1.5}}>0{i+1}</span><b>{s.title}</b><span style={{display:"block",fontSize:12,color:"#91acbc",lineHeight:1.5,marginTop:4}}>{s.desc}</span></button>)}</div>
+   <section id="overview" style={panel}><h2 style={{marginTop:0}}>01 · Overview & authentication</h2><p style={{color:"#a8c0ce"}}>All requests target the API base URL. Send your key on every request. Keep it on a private server, never inside a public frontend or distributed APK.</p><p><b>Base URL</b><br/><code>{BASE}</code></p><p><b>Authentication header</b><br/><code>Authorization: Bearer YOUR_SECRET_API_KEY</code></p><p><b>Standard headers</b><br/><code>Accept: application/json</code><br/><code>Content-Type: application/json</code> for JSON request bodies.</p><div style={{padding:14,borderRadius:12,background:"rgba(255,194,94,.07)",border:"1px solid rgba(255,194,94,.2)",color:"#f4d8a3",fontSize:13}}>Do not add <code>-L</code> / automatic redirect following to API examples. A redirect can hide a wrong URL or an authentication problem; inspect 3xx responses instead.</div></section>
+   <section id="account" style={panel}><h2 style={{marginTop:0}}>02 · Account & balance</h2><p style={{color:"#a8c0ce"}}>Verify that your key is active before starting an order. Use the balance and transaction endpoints to reconcile wallet changes.</p><Code value={`curl --fail-with-body -sS "${BASE}/account" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/balance" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json"`}/></section>
+   <section id="inventory" style={panel}><h2 style={{marginTop:0}}>03 · Services, countries & stock</h2><p style={{color:"#a8c0ce"}}>Discover the supported catalog first. Check stock and price immediately before purchasing because availability can change.</p><Code value={`curl --fail-with-body -sS "${BASE}/services" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/countries?service=whatsapp" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/stock?country=usa&service=whatsapp" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/></section>
+   <section id="orders" style={panel}><h2 style={{marginTop:0}}>04 · Orders lifecycle</h2><h3>Purchase a number</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json" \\\n  -H "Content-Type: application/json" \\\n  --data '{"country":"usa","service":"whatsapp"}'`}/><h3>Retrieve an order</h3><Code value={`curl --fail-with-body -sS "${BASE}/orders/ORDER_ID" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><h3>Request SMS code</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders/code" -H "Authorization: Bearer ${KEY}" -H "Content-Type: application/json" -H "Accept: application/json" --data '{"orderId":"ORDER_ID"}'`}/><h3>Cancel an eligible waiting order</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders/cancel" -H "Authorization: Bearer ${KEY}" -H "Content-Type: application/json" -H "Accept: application/json" --data '{"orderId":"ORDER_ID"}'`}/><p style={{color:"#a8c0ce",fontSize:13}}>Save the returned order ID. If a purchase times out, check the order/account history before retrying so you do not accidentally create a second purchase.</p></section>
+   <section id="webhooks" style={panel}><h2 style={{marginTop:0}}>05 · Webhooks (event-driven integration)</h2><p style={{color:"#a8c0ce"}}>A webhook lets Numelixa notify your server when an event occurs. Your backend can update your database or trigger your own workflow without repeatedly polling the API. Configure a public HTTPS endpoint in your developer settings when webhook management is available for your account.</p><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:12}}><div style={{padding:14,borderRadius:12,background:"#071b29"}}><b>1. Register endpoint</b><p style={{color:"#91acbc",fontSize:13}}>Provide an HTTPS URL controlled by you, e.g. <code>https://example.com/webhooks/numelixa</code>.</p></div><div style={{padding:14,borderRadius:12,background:"#071b29"}}><b>2. Verify the request</b><p style={{color:"#91acbc",fontSize:13}}>Use a signing secret and verify the signature against the raw request body before trusting the event.</p></div><div style={{padding:14,borderRadius:12,background:"#071b29"}}><b>3. Acknowledge quickly</b><p style={{color:"#91acbc",fontSize:13}}>Return HTTP 2xx promptly, process the work asynchronously, and make handlers idempotent.</p></div></div><button onClick={()=>setShowWebhook(v=>!v)} style={{marginTop:14,padding:"10px 13px",borderRadius:10,border:"1px solid rgba(123,229,216,.3)",background:"#0b2b38",color:"#7be5d8",fontWeight:800}}>{showWebhook?"Hide":"Show"} example webhook receiver</button>{showWebhook&&<Code value={`// Node.js / Express example (illustrative receiver; verify signature using the\n// exact signature header and algorithm documented by your webhook sender).\napp.post("/webhooks/numelixa", express.raw({type:"application/json"}), async (req, res) => {\n  // 1) Verify the signature on req.body before parsing it.\n  // 2) Persist event.id to prevent duplicate processing.\n  // 3) Queue your business logic and respond quickly.\n  res.sendStatus(204);\n});`}/>}<div style={{marginTop:14,fontSize:12,color:"#f0d29b"}}>Important: webhook delivery, signing, retries and dashboard registration must be implemented server-side before treating this as an active production webhook service. This page does not pretend that a setting exists if it has not yet been built.</div></section>
+   <section id="errors" style={panel}><h2 style={{marginTop:0}}>06 · Errors, status codes & reliability</h2><div style={{overflowX:"auto"}}><table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}><tbody>{[["200/201","Successful request"],["400","Invalid input or missing parameters"],["401","API key missing, invalid or revoked"],["402","Insufficient wallet balance"],["403","Permission or account restriction"],["404","Order or resource not found"],["409","Stock, price or order-state conflict"],["429","Rate limit exceeded"],["500","Unexpected server error"],["502/503","Temporary upstream/service unavailability"]].map(([code,meaning])=><tr key={code}><td style={{padding:10,borderBottom:"1px solid rgba(255,255,255,.06)",fontFamily:"monospace",whiteSpace:"nowrap"}}>{code}</td><td style={{padding:10,borderBottom:"1px solid rgba(255,255,255,.06)",color:"#b4cbd6"}}>{meaning}</td></tr>)}</tbody></table></div><p style={{color:"#a8c0ce"}}>Use timeouts, bounded retries and exponential backoff for safe reads. Avoid retrying a purchase blindly after a network timeout. Do not treat HTML as an API response.</p><Code value={`{ "ok": false, "error": "Human-readable error message" }`}/></section>
+   <section id="examples" style={panel}><h2 style={{marginTop:0}}>07 · Language-specific examples</h2><p style={{color:"#a8c0ce"}}>Choose one language. Each complete example checks the account, reads stock and creates an order. Store the API key in an environment variable.</p><div role="tablist" aria-label="Programming language" style={{display:"flex",gap:8,flexWrap:"wrap",margin:"16px 0"}}>{Object.keys(samples).map(lang=><button key={lang} role="tab" aria-selected={language===lang} onClick={()=>setLanguage(lang)} style={{padding:"9px 14px",borderRadius:10,border:"1px solid "+(language===lang?"#7be5d8":"rgba(109,222,230,.15)"),background:language===lang?"#7be5d8":"rgba(123,229,216,.05)",color:language===lang?"#03212a":"#d9f5f4",fontWeight:800}}>{lang}</button>)}</div><Code value={samples[language]}/></section>
+   <section style={panel}><h2 style={{marginTop:0}}>Security checklist</h2><ul style={{color:"#b4cbd6",paddingLeft:22}}><li>Never expose API keys in browser JavaScript, mobile apps, screenshots or public repositories.</li><li>Use HTTPS for your backend and webhook receiver.</li><li>Rotate a key immediately if it may have leaked.</li><li>Validate webhook signatures and reject duplicate event IDs.</li><li>Keep a local order ledger and reconcile status after timeouts.</li></ul><a href="https://support.numelixa.com" style={{color:"#7be5d8",fontWeight:800}}>Need help? Contact developer support →</a></section>
+  </div>
+  <footer style={{marginTop:24,padding:18,borderTop:"1px solid rgba(109,222,230,.12)",fontSize:12,color:"#7895a5"}}>Numelixa Developer Documentation · API v1 · Use the live API contract and account permissions as the source of truth.</footer>
  </main>
 }
