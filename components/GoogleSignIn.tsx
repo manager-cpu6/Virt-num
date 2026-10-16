@@ -80,16 +80,17 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   try{
    // Start a real OAuth authorization-code flow on the server, then open it
    // in the system browser (not Google Identity Services inside the WebView).
-   const response=await fetch("https://numelixa.com/api/auth/google/native/start",{
+   const response=await fetch("/api/auth/google/native/start",{
     method:"POST",credentials:"omit",cache:"no-store",
     headers:{"Content-Type":"application/json","Accept":"application/json"},
     body:JSON.stringify({loginHint:loginEmail||""})
    });
    const data=await response.json().catch(()=>({}));
-   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||"Unable to start secure Google sign-in.");
+   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||("Google sign-in start failed (HTTP "+response.status+")."));
    await Browser.open({url:String(data.url),presentationStyle:"popover"});
   }catch(e){
-   setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please try again.");
+   console.error("[Numelixa native Google sign-in]",e);
+   setError(e instanceof Error?(e instanceof TypeError?"Could not reach Numelixa. Check your connection and try again.":e.message):"Unable to open Google sign-in. Please try again.");
   }finally{
    setLoading(false);
   }
