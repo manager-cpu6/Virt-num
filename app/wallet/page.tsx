@@ -1,6 +1,7 @@
 "use client";
 
 import TopBar from "@/components/TopBar";
+import {Capacitor} from "@capacitor/core";
 import {useEffect,useMemo,useState} from "react";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean;paymentUrl?:string};
@@ -38,7 +39,9 @@ export default function Wallet(){
       try{
         const tokenResponse=await fetch("/api/payments/checkout-token",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",cache:"no-store"}).then(r=>r.json());
         if(!tokenResponse.ok||!tokenResponse.token)throw new Error(tokenResponse.error||"Unable to start secure checkout.");
-        const checkoutUrl="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&token="+encodeURIComponent(String(tokenResponse.token));
+        const nativeApp=Capacitor.isNativePlatform();
+        const returnTo=nativeApp?"com.numelixa.app://auth/callback?payment=success":"https://numelixa.com/wallet?payment=success";
+        const checkoutUrl="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&token="+encodeURIComponent(String(tokenResponse.token))+"&returnTo="+encodeURIComponent(returnTo);
         location.href=checkoutUrl;
       }catch(err){setError(err instanceof Error?err.message:"Unable to start secure checkout");setLoading(false);setOpeningCheckout(false)}
       return;
