@@ -107,7 +107,10 @@ jobs:
           activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
           plugin = Path("android/app/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
           assert "extends BridgeActivity" in activity, "MainActivity does not extend BridgeActivity"
-          assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" in activity, "Bridge registration missing"
+          assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity, "Duplicate manual registration remains; plugin must use generated PluginManager metadata"
+          import json
+          registry = json.loads(Path("android/app/src/main/assets/capacitor.plugins.json").read_text())
+          assert any(item.get("classpath") == "com.numelixa.app.NumelixaGoogleSignInPlugin" for item in registry), "Capacitor PluginManager metadata missing native Google plugin"
           assert "NUMELIXA_PLUGIN_REGISTER_START" in activity and "NUMELIXA_PLUGIN_FOUND=" in activity, "Runtime diagnostics missing"
           assert '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' in plugin, "Native plugin name mismatch"
           assert '@PluginMethod' in plugin and 'void signIn(PluginCall call)' in plugin, "Native method mismatch"

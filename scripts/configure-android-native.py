@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from pathlib import Path
+import json
 import re
 
 ROOT=Path("android")
@@ -615,7 +616,6 @@ public class MainActivity extends BridgeActivity {
         registerPlugin(NumelixaUpdaterPlugin.class);
         registerPlugin(NumelixaPushTokenPlugin.class);
         registerPlugin(NumelixaExternalBrowserPlugin.class);
-        registerPlugin(NumelixaGoogleSignInPlugin.class);
         super.onCreate(savedInstanceState);
 
         // Inspect the live Capacitor Bridge after BridgeActivity has created it.
@@ -685,18 +685,34 @@ public class MainActivity extends BridgeActivity {
 }
 ''')
 
-# Fail fast if the custom Google Sign-In plugin would be generated but not registered.
+# Register the app-local plugin through Capacitor 7.4.3's official PluginManager
+# discovery asset. "npx cap sync android" generates this file, so add the local
+# class after sync and before Gradle packages assets. Do not also register this
+# plugin manually in MainActivity: keep one deterministic discovery path.
 google_plugin_source = JAVA / "NumelixaGoogleSignInPlugin.java"
 main_activity_source = JAVA / "MainActivity.java"
+plugin_registry = APP / "src/main/assets/capacitor.plugins.json"
 if not google_plugin_source.exists():
     raise SystemExit("Native Google Sign-In plugin source was not generated")
 plugin_text = google_plugin_source.read_text()
 activity_text = main_activity_source.read_text()
 if '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' not in plugin_text:
     raise SystemExit("Native Google Sign-In plugin annotation/name mismatch")
-if "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity_text:
-    raise SystemExit("MainActivity does not register NumelixaGoogleSignInPlugin")
+if "registerPlugin(NumelixaGoogleSignInPlugin.class);" in activity_text:
+    raise SystemExit("Google Sign-In must use PluginManager discovery, not duplicate manual registration")
+if not plugin_registry.exists():
+    raise SystemExit("Capacitor-generated assets/capacitor.plugins.json is missing after cap sync")
+registry = json.loads(plugin_registry.read_text())
+if not isinstance(registry, list):
+    raise SystemExit("capacitor.plugins.json must contain an array")
+class_path = "com.numelixa.app.NumelixaGoogleSignInPlugin"
+if not any(item.get("classpath") == class_path for item in registry):
+    registry.append({"pkg": "com.numelixa.app", "classpath": class_path})
+plugin_registry.write_text(json.dumps(registry, indent=2) + "\n")
+verified_registry = json.loads(plugin_registry.read_text())
+if not any(item.get("classpath") == class_path for item in verified_registry):
+    raise SystemExit("Native Google Sign-In plugin missing from Capacitor PluginManager registry")
 if "androidx.credentials:credentials:" not in app_gradle.read_text():
     raise SystemExit("Credential Manager dependency is missing from app/build.gradle")
-print("Verified source: NumelixaGoogleSignInPlugin.java exists and MainActivity registers it.")
+print("Verified Capacitor PluginManager discovery entry:", class_path)
 print("Numelixa native Android configuration applied.")
