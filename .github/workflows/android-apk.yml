@@ -132,7 +132,7 @@ jobs:
           activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
           gradle = Path("android/app/build.gradle").read_text()
           assert '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' in plugin, "plugin annotation missing"
-          assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" in activity, "MainActivity registration missing"
+          assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" not in activity, "Google plugin must be discovered from Capacitor metadata, not manually registered"
           assert "androidx.credentials:credentials:" in gradle, "Credential Manager dependency missing"
           assert "Browser.open" not in Path("components/GoogleSignIn.tsx").read_text(), "browser-only sign-in path found"
           print("PASS: source, Capacitor registration, dependencies, and no Browser.open in GoogleSignIn.tsx")
