@@ -34,6 +34,19 @@ jobs:
           npm install
           echo "Resolved Capacitor package versions:"
           npm ls @capacitor/core @capacitor/android @capacitor/cli --depth=0
+          echo "Full @capacitor/core tree:"
+          npm ls @capacitor/core --all
+          node - <<'NODE'
+          const fs = require('fs');
+          const lock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'));
+          const entries = Object.entries(lock.packages || {})
+            .filter(([path]) => path.endsWith('node_modules/@capacitor/core'))
+            .map(([path, value]) => ({ path, version: value.version }));
+          console.log('Lockfile @capacitor/core entries:', JSON.stringify(entries));
+          if (entries.length !== 1 || entries[0].version !== '7.6.9') {
+            throw new Error('Expected exactly one @capacitor/core@7.6.9 installation in lockfile');
+          }
+          NODE
       - name: Generate Android project and sync
         run: |
           npx cap add android
