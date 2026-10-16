@@ -3,17 +3,17 @@ import {useState} from "react";
 const BASE="https://numelixa.com/api/v1";
 const examples:Record<string,string>={
  "cURL":`# API requests should return JSON directly (no browser login/redirect)
-curl --fail-with-body -sS -L "${BASE}/account" \
+curl --fail-with-body -sS "${BASE}/account" \
   -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
   -H "Accept: application/json"
 
 # Check stock
-curl --fail-with-body -sS -L "${BASE}/stock?country=usa&service=whatsapp" \
+curl --fail-with-body -sS "${BASE}/stock?country=usa&service=whatsapp" \
   -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
   -H "Accept: application/json"
 
 # Purchase
-curl --fail-with-body -sS -L -X POST "${BASE}/orders" \
+curl --fail-with-body -sS -X POST "${BASE}/orders" \
   -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json" \
@@ -33,7 +33,7 @@ SESSION.headers.update({
 def api(method, path, **kwargs):
     # Follow redirects while preserving safe request behavior; inspect final URL/status.
     response = SESSION.request(method, BASE + path, timeout=20,
-                               allow_redirects=True, **kwargs)
+                               allow_redirects=False, **kwargs)
     if not response.url.startswith(BASE):
         raise RuntimeError(f"Unexpected API redirect to {response.url}")
     try:
@@ -89,8 +89,7 @@ function numelixa($method, $path, $payload = null) {
   global $base, $key;
   $headers = ["Authorization: Bearer " . $key, "Accept: application/json", "Content-Type: application/json"];
   $ch = curl_init($base . $path);
-  curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => true,
-    CURLOPT_MAXREDIRS => 3, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => 20]);
+  curl_setopt_array($ch, [CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false, CURLOPT_CUSTOMREQUEST => $method, CURLOPT_HTTPHEADER => $headers, CURLOPT_TIMEOUT => 20]);
   if ($payload !== null) curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
   $body = curl_exec($ch); $status = curl_getinfo($ch, CURLINFO_HTTP_CODE); $url = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
   if ($body === false) throw new RuntimeException(curl_error($ch));
@@ -158,13 +157,13 @@ export default function Docs(){
  <h1 style={{fontSize:44,letterSpacing:-2.5,margin:"8px 0"}}>API Documentation</h1>
  <p style={{color:"#86a8a9",maxWidth:850}}>Production REST API for virtual numbers. All endpoints use JSON. Send your API key with every request; browser cookies and interactive sign-in should not be required for API-key requests.</p>
  <div style={{padding:18,borderRadius:18,background:"rgba(5,39,47,.75)",border:"1px solid rgba(121,246,229,.14)"}}><b>Base URL</b><p><code>{BASE}</code></p><b>Authentication</b><p><code>Authorization: Bearer YOUR_SECRET_API_KEY</code></p><p style={{color:"#7e9e9f",fontSize:12}}>Keep the secret on your server. Never embed it in a public website or mobile app. Set NUMELIXA_API_KEY as an environment variable.</p></div>
- <section style={{marginTop:30}}><h2>Quick start · choose your language</h2><p style={{color:"#86a8a9"}}>Select a language below. Each tab shows a copy-ready example for checking the authenticated account and includes safe handling for unexpected redirects and API errors.</p>
+ <section style={{marginTop:30}}><h2>Quick start · choose your language</h2><p style={{color:"#86a8a9"}}>Select a language below. Each tab has a copy-ready server-side example. Redirects are not followed: a 3xx response is treated as a configuration error, not a successful API response.</p>
  <div role="tablist" aria-label="Programming language" style={{display:"flex",gap:8,flexWrap:"wrap",margin:"16px 0"}}>{languages.map(lang=><button key={lang} role="tab" aria-selected={language===lang} onClick={()=>setLanguage(lang)} style={{padding:"9px 14px",borderRadius:10,border:"1px solid "+(language===lang?"#72dfce":"rgba(121,246,229,.15)"),background:language===lang?"#72dfce":"rgba(114,223,206,.05)",color:language===lang?"#03242b":"#c9eeea",fontWeight:800}}>{lang}</button>)}</div>
  <Code value={examples[language]}/>
  </section>
  <section style={{marginTop:42}}><h2>Endpoint reference</h2><p style={{color:"#86a8a9"}}>Use the exact base URL above. API endpoints must return JSON rather than redirecting to a website login page. If you receive HTML or a 3xx response, inspect the response and do not treat it as a successful API result.</p>
  <label htmlFor="endpoint">Choose an endpoint</label><select id="endpoint" value={endpoint} onChange={e=>setEndpoint(e.target.value)} style={{display:"block",width:"100%",maxWidth:420,margin:"10px 0",padding:12,borderRadius:10,background:"#041e25",color:"#eafff9",border:"1px solid rgba(121,246,229,.2)"}}>{["GET /account","GET /balance","GET /transactions","GET /services","GET /countries?service=whatsapp","GET /stock?country=usa&service=whatsapp","POST /orders","GET /orders","GET /orders/ORDER_ID","POST /orders/code","POST /orders/cancel"].map(x=><option key={x}>{x}</option>)}</select>
- <Code value={`curl --fail-with-body -sS -L -X ${"$"}{endpoint.startsWith("POST")?"POST":"GET"} "https://numelixa.com/api/v1/${"$"}{endpoint.replace(/^(GET|POST) \/?/,"")}" \\\n  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \\\n  -H "Accept: application/json" \\\n  -H "Content-Type: application/json"${"$"}{endpoint==="POST /orders"?' \\\n  --data \'{"country":"usa","service":"whatsapp"}\'':endpoint==="POST /orders/code"||endpoint==="POST /orders/cancel"?' \\\n  --data \'{"orderId":"ORDER_ID"}\'':""}`}/>
+ <Code value={`curl --fail-with-body -sS -X ${"$"}{endpoint.startsWith("POST")?"POST":"GET"} "https://numelixa.com/api/v1/${"$"}{endpoint.replace(/^(GET|POST) \/?/,"")}" \\\n  -H "Authorization: Bearer ${"$"}NUMELIXA_API_KEY" \\\n  -H "Accept: application/json" \\\n  -H "Content-Type: application/json"${"$"}{endpoint==="POST /orders"?' \\\n  --data \'{"country":"usa","service":"whatsapp"}\'':endpoint==="POST /orders/code"||endpoint==="POST /orders/cancel"?' \\\n  --data \'{"orderId":"ORDER_ID"}\'':""}`}/>
  <p style={{color:"#86a8a9",fontSize:12}}>For purchase, SMS retrieval and cancellation, use the endpoint-specific request body shown below. Do not blindly retry a purchase after a timeout; first check order status.</p>
  </section>
  <section style={{marginTop:42}}><h2>Common request bodies</h2><h3>Purchase a number · POST /orders</h3><Code value={`{"country":"usa","service":"whatsapp"}`}/><h3>Retrieve SMS · POST /orders/code</h3><Code value={`{"orderId":"ORDER_ID"}`}/><h3>Cancel eligible waiting order · POST /orders/cancel</h3><Code value={`{"orderId":"ORDER_ID"}`}/></section>
