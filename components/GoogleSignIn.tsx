@@ -44,8 +44,35 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   setIsNative(Capacitor.isNativePlatform());
  },[]);
 
+ function diagnoseNativeGoogleSignIn(){
+  const cap=(window as any).Capacitor;
+  const headers=Array.isArray(cap?.PluginHeaders)?cap.PluginHeaders:[];
+  const header=headers.find((entry:any)=>entry?.name==="NumelixaGoogleSignIn");
+  const legacyPlugins=cap?.Plugins;
+  const report={
+   platform:cap?.getPlatform?.()||"unknown",
+   isNativePlatform:cap?.isNativePlatform?.()??null,
+   isPluginAvailable:cap?.isPluginAvailable?.("NumelixaGoogleSignIn")??null,
+   capacitorPresent:!!cap,
+   pluginsObjectPresent:!!legacyPlugins,
+   pluginHeaderCount:headers.length,
+   matchingPluginHeader:header||null,
+   legacyPluginObjectPresent:!!legacyPlugins?.NumelixaGoogleSignIn,
+   legacyPluginMethods:legacyPlugins?.NumelixaGoogleSignIn?Object.keys(legacyPlugins.NumelixaGoogleSignIn):[]
+  };
+  console.info("[Numelixa native Google sign-in runtime diagnostic]",report);
+  return report;
+ }
  async function nativeSignIn(){
   setLoading(true);setError("");
+  const diagnostic=diagnoseNativeGoogleSignIn();
+  if(diagnostic.isPluginAvailable===false || !diagnostic.matchingPluginHeader){
+   const message="Native Google sign-in is not exposed by the Capacitor Bridge. Runtime diagnostics were written to the WebView console.";
+   console.error("NUMELIXA_PLUGIN_HEADER_MISSING",diagnostic);
+   setError(message);
+   setLoading(false);
+   return;
+  }
   try{
    if(!clientId)throw new Error("Google sign-in is not configured. Please try again later.");
    const result=await NativeGoogleSignIn.signIn({serverClientId:clientId});

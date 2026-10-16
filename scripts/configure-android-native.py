@@ -604,17 +604,38 @@ import android.util.Log;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginHandle;
+import com.getcapacitor.PluginMethodHandle;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends BridgeActivity {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        Log.i("NumelixaGoogleSignIn", "NUMELIXA_PLUGIN_REGISTER_START");
         registerPlugin(NumelixaUpdaterPlugin.class);
         registerPlugin(NumelixaPushTokenPlugin.class);
         registerPlugin(NumelixaExternalBrowserPlugin.class);
         registerPlugin(NumelixaGoogleSignInPlugin.class);
         super.onCreate(savedInstanceState);
+
+        // Inspect the live Capacitor Bridge after BridgeActivity has created it.
+        try {
+            PluginHandle handle = getBridge() == null ? null : getBridge().getPlugin("NumelixaGoogleSignIn");
+            boolean signInFound = false;
+            if (handle != null) {
+                for (PluginMethodHandle method : handle.getMethods()) {
+                    if ("signIn".equals(method.getName())) {
+                        signInFound = true;
+                        break;
+                    }
+                }
+            }
+            Log.i("NumelixaGoogleSignIn", "NUMELIXA_PLUGIN_REGISTERED");
+            Log.i("NumelixaGoogleSignIn", "NUMELIXA_PLUGIN_FOUND=" + (handle != null));
+            Log.i("NumelixaGoogleSignIn", "NUMELIXA_PLUGIN_METHOD_SIGNIN=" + signInFound);
+        } catch (Exception diagnosticError) {
+            Log.e("NumelixaGoogleSignIn", "NUMELIXA_PLUGIN_RUNTIME_DIAGNOSTIC_FAILED", diagnosticError);
+        }
 
         createNotificationChannel();
         try {

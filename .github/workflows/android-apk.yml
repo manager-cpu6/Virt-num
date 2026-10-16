@@ -30,7 +30,10 @@ jobs:
           distribution: temurin
           java-version: "21"
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          echo "Resolved Capacitor package versions:"
+          npm ls @capacitor/core @capacitor/android @capacitor/cli --depth=0
       - name: Generate Android project and sync
         run: |
           npx cap add android
@@ -83,6 +86,34 @@ jobs:
           ANDROID_VERSION_CODE: ${{ github.run_number }}
           ANDROID_VERSION_NAME: ${{ github.ref_name }}
         run: python scripts/set-android-version.py
+      - name: Verify generated launcher and native plugin bridge
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import xml.etree.ElementTree as ET
+          from pathlib import Path
+          ns = {"android": "http://schemas.android.com/apk/res/android"}
+          manifest = ET.parse("android/app/src/main/AndroidManifest.xml").getroot()
+          launcher = []
+          for activity in manifest.findall(".//activity", ns):
+              for intent in activity.findall("intent-filter", ns):
+                  actions = [n.get("{http://schemas.android.com/apk/res/android}name") for n in intent.findall("action", ns)]
+                  categories = [n.get("{http://schemas.android.com/apk/res/android}name") for n in intent.findall("category", ns)]
+                  if "android.intent.action.MAIN" in actions and "android.intent.category.LAUNCHER" in categories:
+                      launcher.append(activity.get("{http://schemas.android.com/apk/res/android}name"))
+          assert launcher, "No MAIN/LAUNCHER Activity in generated manifest"
+          assert any(name and name.endswith(".MainActivity") for name in launcher), f"Unexpected launcher Activity: {launcher}"
+          activity = Path("android/app/src/main/java/com/numelixa/app/MainActivity.java").read_text()
+          plugin = Path("android/app/src/main/java/com/numelixa/app/NumelixaGoogleSignInPlugin.java").read_text()
+          assert "extends BridgeActivity" in activity, "MainActivity does not extend BridgeActivity"
+          assert "registerPlugin(NumelixaGoogleSignInPlugin.class);" in activity, "Bridge registration missing"
+          assert "NUMELIXA_PLUGIN_REGISTER_START" in activity and "NUMELIXA_PLUGIN_FOUND=" in activity, "Runtime diagnostics missing"
+          assert '@CapacitorPlugin(name = "NumelixaGoogleSignIn")' in plugin, "Native plugin name mismatch"
+          assert '@PluginMethod' in plugin and 'void signIn(PluginCall call)' in plugin, "Native method mismatch"
+          print("Launcher Activity:", launcher)
+          print("PASS: launcher, actual BridgeActivity registration, plugin name, signIn method")
+          PY
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
