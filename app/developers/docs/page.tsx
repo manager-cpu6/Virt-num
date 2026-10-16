@@ -155,7 +155,7 @@ export default function Docs(){
  return <main className="numelixa-docs-page" style={{maxWidth:1120,margin:"0 auto",padding:"24px 18px 80px",color:"#eafff9",lineHeight:1.7}}>
  <a href="https://numelixa.com" aria-label="Back to Numelixa" title="Back to Numelixa">← Numelixa</a>
  <div style={{fontSize:11,letterSpacing:3,color:"#72dfce",fontWeight:900,marginTop:22}}>NUMELIXA DEVELOPER PLATFORM · API V1</div>
- <h1 style={{fontSize:clamp(32,44,44),letterSpacing:-2.5,margin:"8px 0"}}>API Documentation</h1>
+ <h1 style={{fontSize:44,letterSpacing:-2.5,margin:"8px 0"}}>API Documentation</h1>
  <p style={{color:"#86a8a9",maxWidth:850}}>Production REST API for virtual numbers. All endpoints use JSON. Send your API key with every request; browser cookies and interactive sign-in should not be required for API-key requests.</p>
  <div style={{padding:18,borderRadius:18,background:"rgba(5,39,47,.75)",border:"1px solid rgba(121,246,229,.14)"}}><b>Base URL</b><p><code>{BASE}</code></p><b>Authentication</b><p><code>Authorization: Bearer YOUR_SECRET_API_KEY</code></p><p style={{color:"#7e9e9f",fontSize:12}}>Keep the secret on your server. Never embed it in a public website or mobile app. Set NUMELIXA_API_KEY as an environment variable.</p></div>
  <section style={{marginTop:30}}><h2>Quick start · choose your language</h2><p style={{color:"#86a8a9"}}>Select a language below. Each tab shows a copy-ready example for checking the authenticated account and includes safe handling for unexpected redirects and API errors.</p>
