@@ -2,7 +2,9 @@
 import {useEffect,useRef,useState} from "react";
 import {Capacitor} from "@capacitor/core";
 import {App} from "@capacitor/app";
-import {Browser} from "@capacitor/browser";
+import {registerPlugin} from "@capacitor/core";
+
+const NumelixaExternalBrowser=registerPlugin<{open(options:{url:string}):Promise<{opened:boolean}>}>("NumelixaExternalBrowser");
 
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
@@ -84,7 +86,8 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    // offline error screen even when the device has working internet.
    const signInUrl=new URL("/auth/native/google",window.location.origin);
    if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
-   await Browser.open({url:signInUrl.toString(), presentationStyle:"popover"});
+   const opened=await NumelixaExternalBrowser.open({url:signInUrl.toString()});
+   if(!opened?.opened)throw new Error("Unable to open Google sign-in in your browser.");
   }catch(e){
    setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please check that a browser is installed.");
   }finally{
