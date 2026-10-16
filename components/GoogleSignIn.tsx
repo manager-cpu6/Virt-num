@@ -61,6 +61,15 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
    legacyPluginMethods:legacyPlugins?.NumelixaGoogleSignIn?Object.keys(legacyPlugins.NumelixaGoogleSignIn):[]
   };
   console.info("[Numelixa native Google sign-in runtime diagnostic]",report);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC window.Capacitor",cap);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC window.Capacitor.getPlatform()",cap?.getPlatform?.());
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC window.Capacitor.Plugins",legacyPlugins);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC window.Capacitor.PluginHeaders",cap?.PluginHeaders);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC imported Capacitor runtime",Capacitor);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC native plugin proxy",NativeGoogleSignIn);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC native plugin proxy signIn",NativeGoogleSignIn.signIn);
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC imported isPluginAvailable",Capacitor.isPluginAvailable("NumelixaGoogleSignIn"));
+  console.info("NUMELIXA_JS_RUNTIME_DIAGNOSTIC global and imported object identical",cap===Capacitor);
   return report;
  }
  async function nativeSignIn(){
