@@ -10,11 +10,11 @@
     "android:sync": "cap sync android"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/core": "^7.4.3",
-    "@capacitor/push-notifications": "^7.0.3",
-    "@capacitor/splash-screen": "^7.0.3",
-    "@capacitor/local-notifications": "^7.0.3",
+    "@capacitor/android": "7.6.9",
+    "@capacitor/core": "7.6.9",
+    "@capacitor/push-notifications": "7.0.7",
+    "@capacitor/splash-screen": "7.0.5",
+    "@capacitor/local-notifications": "7.0.7",
     "bcryptjs": "^3.0.2",
     "firebase-admin": "^14.5.0",
     "jose": "^6.1.0",
@@ -24,10 +24,10 @@
     "nodemailer": "^7.0.6",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "@capacitor/app": "^7.1.0"
+    "@capacitor/app": "7.1.2"
   },
   "devDependencies": {
-    "@capacitor/cli": "^7.4.3",
+    "@capacitor/cli": "7.6.9",
     "@types/node": "^22.0.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
