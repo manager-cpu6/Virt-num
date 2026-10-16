@@ -12,6 +12,7 @@
   "dependencies": {
     "@capacitor/android": "7.6.9",
     "@capacitor/core": "7.6.9",
+    "@numelixa/capacitor-google-sign-in": "file:plugins/numelixa-google-sign-in",
     "@capacitor/push-notifications": "7.0.7",
     "@capacitor/splash-screen": "7.0.5",
     "@capacitor/local-notifications": "7.0.7",
