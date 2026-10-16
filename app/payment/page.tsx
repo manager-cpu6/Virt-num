@@ -47,7 +47,15 @@ export default function PaymentPage(){
  useEffect(()=>{
   if(status!=="paid")return;
   setRedirecting(true);
-  const id=window.setTimeout(()=>{window.location.href="https://numelixa.com/dashboard?payment=success";},2600);
+  const query=new URLSearchParams(window.location.search);
+  const requestedReturn=query.get("returnTo")||"";
+  // Only accept the one explicit Numelixa Android callback or the same-site wallet route.
+  const returnUrl=requestedReturn==="com.numelixa.app://auth/callback?payment=success"
+    ? requestedReturn
+    : requestedReturn==="https://numelixa.com/wallet?payment=success"
+      ? requestedReturn
+      : "https://numelixa.com/dashboard?payment=success";
+  const id=window.setTimeout(()=>{window.location.href=returnUrl;},1800);
   return()=>window.clearTimeout(id);
  },[status]);
   function armConfirmationSound(){try{const Ctx=window.AudioContext||(window as any).webkitAudioContext;if(!Ctx)return;const ctx:AudioContext=audioContextRef.current||new Ctx();audioContextRef.current=ctx;if(ctx.state==="suspended")void ctx.resume();}catch{}}
