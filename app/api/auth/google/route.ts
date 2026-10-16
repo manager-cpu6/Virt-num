@@ -17,12 +17,15 @@ export async function POST(req:Request){
 
   const verify=await fetch("https://oauth2.googleapis.com/tokeninfo?id_token="+encodeURIComponent(credential),{cache:"no-store"});
   if(!verify.ok)return NextResponse.json({ok:false,error:"Google could not verify this sign-in. Please try again."},{status:401});
-  const profile=await verify.json() as {aud?:string;sub?:string;email?:string;email_verified?:string|boolean;name?:string};
+  const profile=await verify.json() as {aud?:string;sub?:string;email?:string;email_verified?:string|boolean;name?:string;iss?:string;exp?:string|number};
   const email=String(profile.email||"").trim().toLowerCase();
   const googleId=String(profile.sub||"").trim();
   const audience=String(profile.aud||"").trim();
+  const issuer=String(profile.iss||"").trim();
+  const expiresAt=Number(profile.exp||0);
   const verified=profile.email_verified===true||String(profile.email_verified).toLowerCase()==="true";
-  if(audience!==clientId||!googleId||!email.includes("@")||!verified){
+  const issuerValid=issuer==="accounts.google.com"||issuer==="https://accounts.google.com";
+  if(audience!==clientId||!issuerValid||!Number.isFinite(expiresAt)||expiresAt<=Math.floor(Date.now()/1000)||!googleId||!email.includes("@")||!verified){
    return NextResponse.json({ok:false,error:"Google account verification failed. Use a verified Google account."},{status:401});
   }
 

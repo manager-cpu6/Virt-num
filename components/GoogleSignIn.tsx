@@ -1,8 +1,8 @@
 "use client";
 import {useEffect,useRef,useState} from "react";
-import {Capacitor} from "@capacitor/core";
-import {App} from "@capacitor/app";
-import {Browser} from "@capacitor/browser";
+import {Capacitor,registerPlugin} from "@capacitor/core";
+type NativeGoogleSignInPlugin={signIn:(options:{serverClientId:string})=>Promise<{idToken:string}>};
+const NativeGoogleSignIn=registerPlugin<NativeGoogleSignInPlugin>("NumelixaGoogleSignIn");
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
@@ -44,58 +44,25 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
   setIsNative(Capacitor.isNativePlatform());
  },[]);
 
- useEffect(()=>{
-  if(!isNative)return;
-  let active=true;
-  let listener:{remove:()=>Promise<void>}|undefined;
-  const handleAppUrl=async(event:{url:string})=>{
-   if(!active||!event?.url)return;
-   let url:URL;
-   try{url=new URL(event.url)}catch{return}
-   if(url.protocol!=="com.numelixa.app:"||url.hostname!=="auth"||url.pathname!=="/callback")return;
-   const oauthError=url.searchParams.get("error");
-   const ticket=String(url.searchParams.get("ticket")||"");
-   if(oauthError){
-    if(oauthError!=="cancelled")setError(oauthError==="account_suspended"?"This account is suspended. Contact Numelixa Support.":"Google sign-in could not be completed. Please try again.");
-    setLoading(false);return;
-   }
-   if(!ticket){setError("Google returned without a sign-in ticket. Please try again.");setLoading(false);return}
-   setLoading(true);setError("");
-   try{
-    const response=await fetch("/api/auth/google/native/complete",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({ticket})});
-    const data=await response.json();
-    if(!response.ok||!data.ok)throw new Error(data.error||"Unable to finish Google sign-in.");
-    const email=String(data.email||"").trim().toLowerCase();if(email){saveLastLogin(email);setLastLogin(email);}
-    window.dispatchEvent(new Event("numelixa-auth-ready"));onSuccessRef.current();
-   }catch(e){setError(e instanceof Error?e.message:"Unable to finish Google sign-in.")}
-   finally{setLoading(false)}
-  };
-  App.addListener("appUrlOpen",handleAppUrl).then(x=>{listener=x});
-  App.getLaunchUrl().then(result=>{if(result?.url)void handleAppUrl({url:result.url})}).catch(()=>{});
-  return()=>{active=false;if(listener)void listener.remove()};
- },[isNative]);
-
- async function nativeSignIn(loginEmail=lastLogin){
+ async function nativeSignIn(){
   setLoading(true);setError("");
   try{
-   // Start a real OAuth authorization-code flow on the server, then open it
-   // in the system browser (not Google Identity Services inside the WebView).
-   const response=await fetch("/api/auth/google/native/start",{
-    method:"POST",credentials:"omit",cache:"no-store",
-    headers:{"Content-Type":"application/json","Accept":"application/json"},
-    body:JSON.stringify({loginHint:loginEmail||""})
-   });
-   const data=await response.json().catch(()=>({}));
-   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||("Google sign-in start failed (HTTP "+response.status+")."));
-   await Browser.open({url:String(data.url),presentationStyle:"popover"});
+   if(!clientId)throw new Error("Google sign-in is not configured. Please try again later.");
+   const result=await NativeGoogleSignIn.signIn({serverClientId:clientId});
+   const idToken=String(result?.idToken||"").trim();
+   if(!idToken)throw new Error("Google did not return an ID token. Please try again.");
+   await completeSignIn(idToken);
   }catch(e){
-   console.error("[Numelixa native Google sign-in]",e);
-   setError(e instanceof Error?(e instanceof TypeError?"Could not reach Numelixa. Check your connection and try again.":e.message):"Unable to open Google sign-in. Please try again.");
-  }finally{
-   setLoading(false);
-  }
+   const message=e instanceof Error?e.message:String(e||"");
+   console.warn("[Numelixa native Google sign-in]",message);
+   if(/CANCELED|CANCELLED|USER_CANCELED|GetCredentialCancellationException/i.test(message)){setError("");}
+   else if(/NO_CREDENTIAL|NoCredentialException|no credential|no google account/i.test(message)){setError("No Google account is available on this device. Add a Google account in Android Settings and try again.");}
+   else if(/network|unable to resolve|timeout|offline|failed to connect/i.test(message)){setError("Could not reach Google or Numelixa. Check your internet connection and try again.");}
+   else if(/invalid|expired|token/i.test(message)){setError("Google sign-in could not be verified. Please try again.");}
+   else{setError(message||"Unable to sign in with Google. Please try again.");}
+  }finally{setLoading(false)}
  }
- function continueLastLogin(){if(!lastLogin)return;if(isNative){void nativeSignIn(lastLogin);return}setLoginHint(lastLogin);setError("");window.setTimeout(()=>{try{window.google?.accounts?.id?.prompt()}catch{}},350)}
+ function continueLastLogin(){if(!lastLogin)return;if(isNative){void nativeSignIn();return}setLoginHint(lastLogin);setError("");window.setTimeout(()=>{try{window.google?.accounts?.id?.prompt()}catch{}},350)}
  useEffect(()=>{
   if(isNative)return;
   let active=true;
