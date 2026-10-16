@@ -2,6 +2,7 @@
 import {useEffect,useRef,useState} from "react";
 import {Capacitor} from "@capacitor/core";
 import {App} from "@capacitor/app";
+import {Browser} from "@capacitor/browser";
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
@@ -77,15 +78,18 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   // Use Numelixa’s own HTTPS domain directly, matching the working website flow.
-   // Do not call Capacitor Browser or a custom native plugin: neither is guaranteed
-   // to be registered in the installed APK. The server OAuth route returns to the
-   // app through its registered com.numelixa.app://auth/callback deep link.
-   const signInUrl=new URL("https://www.numelixa.com/auth/native/google");
-   if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
-   window.location.assign(signInUrl.toString());
+   // Start a real OAuth authorization-code flow on the server, then open it
+   // in the system browser (not Google Identity Services inside the WebView).
+   const response=await fetch("https://numelixa.com/api/auth/google/native/start",{
+    method:"POST",credentials:"omit",cache:"no-store",
+    headers:{"Content-Type":"application/json","Accept":"application/json"},
+    body:JSON.stringify({loginHint:loginEmail||""})
+   });
+   const data=await response.json().catch(()=>({}));
+   if(!response.ok||!data.ok||!data.url)throw new Error(data.error||"Unable to start secure Google sign-in.");
+   await Browser.open({url:String(data.url),presentationStyle:"popover"});
   }catch(e){
-   setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please check that a browser is installed.");
+   setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please try again.");
   }finally{
    setLoading(false);
   }
