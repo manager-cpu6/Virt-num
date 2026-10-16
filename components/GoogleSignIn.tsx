@@ -2,10 +2,6 @@
 import {useEffect,useRef,useState} from "react";
 import {Capacitor} from "@capacitor/core";
 import {App} from "@capacitor/app";
-import {registerPlugin} from "@capacitor/core";
-
-const NumelixaExternalBrowser=registerPlugin<{open(options:{url:string}):Promise<{opened:boolean}>}>("NumelixaExternalBrowser");
-
 
 declare global { interface Window { google?:any; __numelixaGoogleScript?:boolean } }
 function credentialEmail(credential:string){try{const payload=credential.split(".")[1];if(!payload)return "";const normalized=payload.replace(/-/g,"+").replace(/_/g,"/");const decoded=atob(normalized+"=".repeat((4-normalized.length%4)%4));return String(JSON.parse(decoded).email||"").trim().toLowerCase()}catch{return ""}}
@@ -81,13 +77,13 @@ export default function GoogleSignIn({onSuccess}:{onSuccess:()=>void}){
  async function nativeSignIn(loginEmail=lastLogin){
   setLoading(true);setError("");
   try{
-   // Launch OAuth only with the Android native browser bridge. Navigating the
-   // app WebView to intent:// or the OAuth page as a fallback can trigger the
-   // offline error screen even when the device has working internet.
-   const signInUrl=new URL("/auth/native/google",window.location.origin);
+   // Use Numelixa’s own HTTPS domain directly, matching the working website flow.
+   // Do not call Capacitor Browser or a custom native plugin: neither is guaranteed
+   // to be registered in the installed APK. The server OAuth route returns to the
+   // app through its registered com.numelixa.app://auth/callback deep link.
+   const signInUrl=new URL("https://www.numelixa.com/auth/native/google");
    if(loginEmail)signInUrl.searchParams.set("login_hint",loginEmail);
-   const opened=await NumelixaExternalBrowser.open({url:signInUrl.toString()});
-   if(!opened?.opened)throw new Error("Unable to open Google sign-in in your browser.");
+   window.location.assign(signInUrl.toString());
   }catch(e){
    setError(e instanceof Error?e.message:"Unable to open Google sign-in. Please check that a browser is installed.");
   }finally{
