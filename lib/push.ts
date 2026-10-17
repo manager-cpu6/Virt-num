@@ -35,6 +35,10 @@ function firebaseApp(){
   console.warn("[FCM_ADMIN_INIT_MISSING_CREDENTIALS]",{projectId,clientEmailConfigured:Boolean(clientEmail),privateKeyConfigured:Boolean(privateKey)});
   return null;
  }
+ if(!clientEmail.endsWith("@numelixa.iam.gserviceaccount.com")){
+  console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"firebase-service-account-project-mismatch",expectedProject:EXPECTED_PROJECT_ID,clientEmailDomain:clientEmail.split("@").pop()||"missing"});
+  throw new Error("Firebase service-account email must belong to the numelixa project.");
+ }
  const existing=getApps().find(app=>app.name==="numelixa-fcm");
  if(existing){
   if(!initDiagnosticLogged){console.info("[FCM_ADMIN_INITIALIZED]",{projectId,mode:serviceJson?"service-account-json":"split-credentials",reused:true});initDiagnosticLogged=true;}
