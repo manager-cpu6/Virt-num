@@ -112,10 +112,36 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-@CapacitorPlugin(name = "NumelixaPushToken")
+@CapacitorPlugin(name = "NumelixaPushToken", permissions = {\n    @Permission(alias = "notifications", strings = {Manifest.permission.POST_NOTIFICATIONS})\n})
 public class NumelixaPushTokenPlugin extends Plugin {
     private static final int MAX_ATTEMPTS = 8;
     private final Handler handler = new Handler(Looper.getMainLooper());
+
+    @PluginMethod
+    public void requestNotificationPermission(PluginCall call) {
+        if (android.os.Build.VERSION.SDK_INT < 33 ||
+            getContext().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            JSObject result = new JSObject();
+            result.put("granted", true);
+            result.put("status", android.os.Build.VERSION.SDK_INT < 33 ? "not_required" : "granted");
+            call.resolve(result);
+            return;
+        }
+        requestPermissionForAlias("notifications", call, "notificationPermissionResult");
+    }
+
+    @PermissionCallback
+    private void notificationPermissionResult(PluginCall call) {
+        boolean granted = android.os.Build.VERSION.SDK_INT < 33 ||
+            getContext().checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS)
+                == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        JSObject result = new JSObject();
+        result.put("granted", granted);
+        result.put("status", granted ? "granted" : "denied");
+        android.util.Log.i("NUMELIXA_PUSH", "FCM_PERMISSION_RESULT=" + (granted ? "granted" : "denied"));
+        call.resolve(result);
+    }
 
     @PluginMethod
     public void getToken(PluginCall call) {
