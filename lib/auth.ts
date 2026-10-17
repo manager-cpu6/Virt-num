@@ -47,12 +47,12 @@ export async function createSession(userId:string,meta?:SessionMeta){
    _id:mongoId(),
    tokenHash:hash(raw),
    userId:String(userId),
-   expiresAt:new Date(now.getTime()+30*24*60*60*1000),
+   expiresAt:new Date(now.getTime()+90*24*60*60*1000),
    createdAt:now,
    lastSeenAt:now,
    ...meta
  });
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*30,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
 }
 
 export async function getCurrentSession(){
