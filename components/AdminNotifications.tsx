@@ -18,10 +18,26 @@ export default function AdminNotifications(){
  const[backendError,setBackendError]=useState("");
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
+ const[firebaseProjectId,setFirebaseProjectId]=useState("numelixa");
+ const[firebaseClientEmail,setFirebaseClientEmail]=useState("");
+ const[firebasePrivateKey,setFirebasePrivateKey]=useState("");
+ const[firebasePrivateKeyConfigured,setFirebasePrivateKeyConfigured]=useState(false);
+ const[firebaseEncryptionReady,setFirebaseEncryptionReady]=useState(false);
+ const[firebaseSettingsSource,setFirebaseSettingsSource]=useState("environment");
+ const[firebaseSettingsBusy,setFirebaseSettingsBusy]=useState(false);
+ const[firebaseSettingsResult,setFirebaseSettingsResult]=useState("");
 
  async function load(){
   setBackendError("");
   try{
+   const firebaseSettings=await fetch("/api/admin/firebase-settings",{cache:"no-store",credentials:"include"}).then(r=>r.json()).catch(()=>null);
+   if(firebaseSettings?.ok){
+    setFirebaseProjectId(String(firebaseSettings.projectId||"numelixa"));
+    setFirebaseClientEmail(String(firebaseSettings.clientEmail||""));
+    setFirebasePrivateKeyConfigured(Boolean(firebaseSettings.privateKeyConfigured));
+    setFirebaseEncryptionReady(Boolean(firebaseSettings.encryptionReady));
+    setFirebaseSettingsSource(String(firebaseSettings.source||"environment"));
+   }else if(firebaseSettings?.error){setFirebaseSettingsResult("⚠️ "+firebaseSettings.error)}
    const health=await fetch("/api/notifications/health",{cache:"no-store"}).then(r=>r.json()).catch(()=>null);
    if(health?.ok){
     setDatabaseConfigured(Boolean(health.databaseConfigured));
@@ -51,6 +67,18 @@ export default function AdminNotifications(){
    .then(d=>{if(d.ok)setUsers(d.users||[])})
    .catch(()=>{});
  },[]);
+
+ async function saveFirebaseSettings(e:React.FormEvent){
+  e.preventDefault();setFirebaseSettingsBusy(true);setFirebaseSettingsResult("");
+  try{
+   const r=await fetch("/api/admin/firebase-settings",{method:"PUT",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({projectId:firebaseProjectId,clientEmail:firebaseClientEmail,privateKey:firebasePrivateKey})});
+   const d=await r.json().catch(()=>null);
+   if(!r.ok||!d?.ok){setFirebaseSettingsResult("❌ "+(d?.error||"Unable to save Firebase settings."));return}
+   setFirebasePrivateKey("");setFirebasePrivateKeyConfigured(true);setFirebaseSettingsSource("encrypted-admin-settings");
+   setFirebaseSettingsResult("✅ Credentials encrypted and saved. Tap Refresh status, then use Test this admin device.");
+   await load();
+  }catch{setFirebaseSettingsResult("❌ Unable to reach Firebase settings endpoint.")}finally{setFirebaseSettingsBusy(false)}
+ }
 
  async function testCurrentDevice(){
   setBusy(true);setResult("");
@@ -106,6 +134,26 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
+  <div className="notification-compose" style={{marginBottom:16}}>
+   <span className="eyebrow">FIREBASE SERVER SETTINGS</span>
+   <h2>Firebase configuration</h2>
+   <p>Server credentials are encrypted before being stored. The Android package and Firebase App ID are bundled into the APK and require a rebuild if changed.</p>
+   {!firebaseEncryptionReady&&<div className="error-box" style={{marginBottom:12}}>Before saving, add <b>FIREBASE_SETTINGS_ENCRYPTION_KEY</b> to Vercel Production (a random secret of at least 32 characters) and redeploy. Do not paste private keys into chat or source code.</div>}
+   <form className="admin-form" onSubmit={saveFirebaseSettings}>
+    <label>Firebase Project ID
+     <input value={firebaseProjectId} onChange={e=>setFirebaseProjectId(e.target.value)} required/>
+    </label>
+    <label>Firebase Admin service-account email
+     <input type="email" value={firebaseClientEmail} onChange={e=>setFirebaseClientEmail(e.target.value)} placeholder="firebase-adminsdk-…@numelixa.iam.gserviceaccount.com" required/>
+    </label>
+    <label>Firebase Admin private key
+     <textarea value={firebasePrivateKey} onChange={e=>setFirebasePrivateKey(e.target.value)} rows={4} placeholder={firebasePrivateKeyConfigured?"Private key is already stored encrypted. Leave blank to keep it, or paste a replacement.":"Paste complete PEM private key including BEGIN/END lines."}/>
+    </label>
+    <div className="notice"><p><b>Android package:</b> com.numelixa.app<br/><b>Firebase App ID:</b> 1:832390289699:android:963bd5705215947fb51496<br/><b>Project number:</b> 832390289699<br/><b>Credentials source:</b> {firebaseSettingsSource}</p></div>
+    <button className="primary-btn" disabled={firebaseSettingsBusy||!firebaseEncryptionReady||!firebaseClientEmail.trim()||!firebaseProjectId.trim()}>{firebaseSettingsBusy?"Saving securely…":"Save Firebase settings"}</button>
+    {firebaseSettingsResult&&<div className="success-box">{firebaseSettingsResult}</div>}
+   </form>
+  </div>
   <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase Admin initialized":"Firebase Admin credentials missing or invalid"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>
    {(!databaseConfigured||backendError)&&<div className="error-box" style={{marginTop:10}}>
     <b>{!databaseConfigured?"Notification storage is not configured. Add MONGODB_URI in Vercel Production.":backendError}</b>
