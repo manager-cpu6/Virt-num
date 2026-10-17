@@ -103,6 +103,9 @@ manifest.write_text(m)
 
 import android.os.Handler;
 import android.os.Looper;
+import android.Manifest;
+import com.getcapacitor.annotation.Permission;
+import com.getcapacitor.annotation.PermissionCallback;
 import android.content.Intent;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
