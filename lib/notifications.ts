@@ -3,6 +3,11 @@ import {collection,mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
 
 export async function claimDeviceTokenForUser(userId:string){
+ const users=await collection<any>("users");
+ const account=await users.findOne({_id:String(userId)},{projection:{email:1,verifiedAt:1,pushWelcomeSentAt:1}});
+ // Only verified email accounts may own push tokens. This also prevents
+ // phone-only sign-ins from linking a device through the legacy cookie path.
+ if(!String(account?.email||"").includes("@")||!account?.verifiedAt)return false;
  const jar=await cookies();
  const token=String(
   jar.get("numelixa_device_token")?.value||
@@ -12,7 +17,6 @@ export async function claimDeviceTokenForUser(userId:string){
  if(token.length<20)return false;
 
  const devices=await collection<any>("deviceTokens");
- const users=await collection<any>("users");
  const now=new Date();
 
  await devices.updateOne(
@@ -35,7 +39,6 @@ export async function claimDeviceTokenForUser(userId:string){
 
  // Send the first-device welcome from the authenticated server path. This
  // also works when the login happens before the browser event fires.
- const account=await users.findOne({_id:String(userId)},{projection:{pushWelcomeSentAt:1}});
  if(!account?.pushWelcomeSentAt){
   try{
    const result=await sendPush(
