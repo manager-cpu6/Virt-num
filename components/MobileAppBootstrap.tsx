@@ -73,6 +73,7 @@ export default function MobileAppBootstrap(){
   const seenForegroundPushes=new Set<string>();
   let capacitorToken="";
   let tokenInFlight=false;
+  let registeredAccountToken="";
   const cleanups:Array<()=>void>=[];
 
   const isAuthenticated=async()=>{
@@ -105,6 +106,8 @@ export default function MobileAppBootstrap(){
     console.info("[NUMELIXA FCM_WAITING_FOR_VERIFIED_EMAIL]");
     return false;
    }
+   const registrationKey=String(account.id)+":"+token;
+   if(registeredAccountToken===registrationKey)return true;
    tokenInFlight=true;
    try{
     const response=await fetch("/api/notifications/register",{
@@ -114,6 +117,7 @@ export default function MobileAppBootstrap(){
     });
     if(response.ok){
      const result=await response.json().catch(()=>null);
+     registeredAccountToken=registrationKey;
      console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:Boolean(result?.linked),httpStatus:response.status});
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
