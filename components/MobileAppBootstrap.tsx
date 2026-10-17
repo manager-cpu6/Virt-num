@@ -92,9 +92,21 @@ export default function MobileAppBootstrap(){
   const saveAndRegister=async(token:string,deviceId?:string,appVersion?:string)=>{
    token=String(token||"").trim();
    if(token.length<20||stopped||tokenInFlight)return false;
+   // Only link push tokens after a verified email account is authenticated.
+   // Never create anonymous/unlinked device records at app startup.
+   let account:any=null;
+   try{
+    const me=await fetch("/api/me",{cache:"no-store",credentials:"include"});
+    if(!me.ok)return false;
+    const payload=await me.json().catch(()=>null);
+    account=payload?.user;
+   }catch{return false}
+   if(!account?.id||!String(account?.email||"").includes("@")||!account?.verified_at){
+    console.info("[NUMELIXA FCM_WAITING_FOR_VERIFIED_EMAIL]");
+    return false;
+   }
    tokenInFlight=true;
    try{
-    localStorage.setItem(TOKEN_KEY,token);
     const response=await fetch("/api/notifications/register",{
      method:"POST",credentials:"include",cache:"no-store",
      headers:{"Content-Type":"application/json"},
@@ -102,13 +114,11 @@ export default function MobileAppBootstrap(){
     });
     if(response.ok){
      const result=await response.json().catch(()=>null);
-     console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:Boolean(result?.linked),pending:Boolean(result?.pending),httpStatus:response.status});
+     console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:Boolean(result?.linked),httpStatus:response.status});
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
-    // A 401 is expected for the short window before login/session cookies are
-    // ready. The server now stores the device as unlinked, and we keep retrying
-    // so the same token becomes linked as soon as the account is authenticated.
+    console.error("[NUMELIXA FCM_REGISTER_HTTP_FAILURE]",{status:response.status});
     scheduleRetry();
     return false;
    }catch(error){
@@ -142,10 +152,16 @@ export default function MobileAppBootstrap(){
 
   const syncCurrentToken=async()=>{
    if(stopped)return;
+   // Email verification/login is the only point at which a device is linked.
+   let authenticated=false;
+   try{
+    const me=await fetch("/api/me",{cache:"no-store",credentials:"include"});
+    const data=me.ok?await me.json().catch(()=>null):null;
+    authenticated=Boolean(data?.user?.id&&String(data.user.email||"").includes("@")&&data.user.verified_at);
+   }catch{}
+   if(!authenticated)return;
    const cached=String(localStorage.getItem(TOKEN_KEY)||"").trim();
    const current=await getNativeToken();
-   // Only fall back to the cached token when Firebase temporarily cannot
-   // provide the current installation token; don't re-register stale tokens.
    if(!current&&cached)await saveAndRegister(cached);
   };
 
@@ -312,10 +328,9 @@ export default function MobileAppBootstrap(){
     const authPoll=window.setInterval(async()=>{
      if(stopped)return;
      try{
-      await getNativeToken();
       if(await isAuthenticated())await syncCurrentToken();
      }catch(error){console.error("[NUMELIXA PUSH AUTH SYNC]",error)}
-    },2500);
+    },5000);
     cleanups.push(()=>window.clearInterval(authPoll));
 
     // Ask for notification permission FIRST. Never wait for Firebase token
