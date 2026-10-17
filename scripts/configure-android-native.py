@@ -101,8 +101,6 @@ manifest.write_text(m)
 
 (JAVA/"NumelixaPushTokenPlugin.java").write_text(r'''package com.numelixa.app;
 
-import android.os.Handler;
-import android.os.Looper;
 import android.content.Intent;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
@@ -403,7 +401,6 @@ public class NumelixaExternalBrowserPlugin extends Plugin {
 import android.app.DownloadManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
@@ -528,9 +525,7 @@ public class NumelixaUpdaterPlugin extends Plugin {
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
-import android.Manifest;
 import android.content.pm.PackageManager;
-import androidx.core.app.ActivityCompat;
 import android.os.Handler;
 import android.os.Looper;
 import android.content.Intent;
@@ -577,37 +572,12 @@ public class MainActivity extends BridgeActivity {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
 
-        // Ask Android directly on every fresh app launch when notifications
-        // are not permitted. This works even while the remote web app is offline
-        // or the WebView error page is being shown.
-        if (Build.VERSION.SDK_INT >= 33 &&
-            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                if (Build.VERSION.SDK_INT >= 33 &&
-                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(
-                        this,
-                        new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                        9103
-                    );
-                }
-            }, 1100L);
-        }
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 9103 && Build.VERSION.SDK_INT >= 33) {
-            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
-            Log.i("NUMELIXA_PUSH", "FCM_PERMISSION=" + (granted ? "granted" : "denied"));
-        }
     }
 
     private void createNotificationChannel() {
