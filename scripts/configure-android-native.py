@@ -115,9 +115,11 @@ public class NumelixaPushTokenPlugin extends Plugin {
                 app = FirebaseApp.initializeApp(getContext());
             }
             if (app == null) {
+                android.util.Log.e("NUMELIXA_PUSH", "FCM_INIT_FAILURE firebaseAppNull=true");
                 call.reject("Firebase is not initialized. Check google-services.json.");
                 return;
             }
+            android.util.Log.i("NUMELIXA_PUSH", "FCM_INIT_OK projectId=" + app.getOptions().getProjectId());
 
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
             request(call, 1);

@@ -142,9 +142,11 @@ export default function MobileAppBootstrap(){
 
   const syncCurrentToken=async()=>{
    if(stopped)return;
-   const token=String(localStorage.getItem(TOKEN_KEY)||"").trim();
-   if(token)await saveAndRegister(token);
-   await getNativeToken();
+   const cached=String(localStorage.getItem(TOKEN_KEY)||"").trim();
+   const current=await getNativeToken();
+   // Only fall back to the cached token when Firebase temporarily cannot
+   // provide the current installation token; don't re-register stale tokens.
+   if(!current&&cached)await saveAndRegister(cached);
   };
 
   const showPermissionGate=()=>{
@@ -234,8 +236,13 @@ export default function MobileAppBootstrap(){
     push=PushNotifications;
     localNotifications=LocalNotifications;
 
-    const registration=await PushNotifications.addListener("registration",(event)=>{
-     if(event?.value){capacitorToken=String(event.value).trim();void saveAndRegister(capacitorToken);}
+    const registration=await PushNotifications.addListener("registration",async(event)=>{
+     if(event?.value){
+      capacitorToken=String(event.value).trim();
+      const status=await NativePushToken.getStatus().catch(()=>({} as any));
+      console.info("[NUMELIXA FCM_TOKEN_REFRESHED]",{tokenPresent:Boolean(capacitorToken),tokenLength:capacitorToken.length});
+      void saveAndRegister(capacitorToken,status.deviceId,status.appVersion);
+     }
     });
     cleanups.push(()=>registration.remove());
 

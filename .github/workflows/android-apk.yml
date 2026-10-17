@@ -89,6 +89,20 @@ jobs:
           root.write_text(root_text)
           app.write_text(app_text)
           PY
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cfg = json.loads(Path("android/app/google-services.json").read_text())
+          info = cfg.get("project_info", {})
+          assert info.get("project_id") == "numelixa", f"Wrong Firebase project: {info.get('project_id')}"
+          assert str(info.get("project_number")) == "832390289699", "Firebase project number mismatch"
+          assert any(
+              c.get("client_info", {}).get("android_client_info", {}).get("package_name") == "com.numelixa.app"
+              and c.get("client_info", {}).get("mobilesdk_app_id") == "1:832390289699:android:963bd5705215947fb51496"
+              for c in cfg.get("client", [])
+          ), "Expected Numelixa Android Firebase app missing"
+          print("PASS: google-services.json belongs to Firebase project numelixa / com.numelixa.app")
+          PY
           echo "Firebase Android configuration and Google Services plugin installed."
       - name: Generate Numelixa launcher icons
         run: |
@@ -130,9 +144,17 @@ jobs:
           print("Launcher Activity:", launcher)
           print("PASS: launcher, actual BridgeActivity registration, plugin name, signIn method")
           PY
+      - name: Verify Firebase Messaging dependency graph
+        working-directory: android
+        run: |
+          ./gradlew app:dependencies --configuration debugRuntimeClasspath > /tmp/numelixa-gradle-deps.txt
+          grep -E 'com.google.firebase:firebase-messaging' /tmp/numelixa-gradle-deps.txt
+          grep -E 'com.google.gms.google-services' app/build.gradle
+          grep -E 'firebase_messaging_auto_init_enabled|POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
+          echo "PASS: Firebase Messaging is present in the resolved Android dependency graph"
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: ./gradlew clean assembleDebug
       - name: Verify native Google Sign-In is in the APK
         shell: bash
         run: |
@@ -157,6 +179,17 @@ jobs:
           APKANALYZER="$(find "$ANDROID_HOME" -type f -name apkanalyzer -print -quit)"
           if [ -z "$APKANALYZER" ]; then echo "apkanalyzer was not found in Android SDK"; exit 1; fi
           "$APKANALYZER" dex packages --defined-only "$APK" > /tmp/numelixa-apk-dex.txt
+          if ! grep -q 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt; then
+            echo "ERROR: Firebase Messaging classes are absent from compiled APK dex"
+            cat /tmp/numelixa-apk-dex.txt
+            exit 1
+          fi
+          grep 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt | head -5
+          if ! grep -q 'NumelixaPushTokenPlugin' /tmp/numelixa-apk-dex.txt; then
+            echo "ERROR: NumelixaPushTokenPlugin is absent from compiled APK dex"
+            cat /tmp/numelixa-apk-dex.txt
+            exit 1
+          fi
           if ! grep -q 'NumelixaGoogleSignInPlugin' /tmp/numelixa-apk-dex.txt; then
             echo "ERROR: NumelixaGoogleSignInPlugin is absent from compiled APK dex"
             cat /tmp/numelixa-apk-dex.txt
