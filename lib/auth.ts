@@ -52,7 +52,7 @@ export async function createSession(userId:string,meta?:SessionMeta){
    lastSeenAt:now,
    ...meta
  });
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90});
 }
 
 export async function getCurrentSession(){
@@ -63,7 +63,7 @@ export async function getCurrentSession(){
  if(!s)return null;
  const now=new Date();
  await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90});
  return {...s,expiresAt:new Date(now.getTime()+90*24*60*60*1000),tokenHash:undefined};
 }
 
@@ -87,7 +87,7 @@ export async function getUser(){
  if(!s)return null;
  const now=new Date();
  await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90});
  return sessionUser(String(s.userId));
 }
 
@@ -108,7 +108,7 @@ export async function logout(){
    }
   }catch(error){console.error("[NOTIFICATION DEVICE UNLINK]",error)}
  }
- (await cookies()).set(COOKIE,"",{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:0,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ (await cookies()).set(COOKIE,"",{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:0});
  (await cookies()).delete("numelixa_device_token");
 }
 
