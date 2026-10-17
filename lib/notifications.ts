@@ -4,10 +4,10 @@ import {sendPush} from "@/lib/push";
 
 export async function claimDeviceTokenForUser(userId:string){
  const users=await collection<any>("users");
- const account=await users.findOne({_id:String(userId)},{projection:{email:1,verifiedAt:1,pushWelcomeSentAt:1}});
- // Only verified email accounts may own push tokens. This also prevents
- // phone-only sign-ins from linking a device through the legacy cookie path.
- if(!String(account?.email||"").includes("@")||!account?.verifiedAt)return false;
+ const account=await users.findOne({_id:String(userId)},{projection:{email:1,pushWelcomeSentAt:1}});
+ // Only an account with an email address may own push tokens. Existing
+ // accounts are eligible regardless of legacy verifiedAt field state.
+ if(!String(account?.email||"").includes("@"))return false;
  const jar=await cookies();
  const token=String(
   jar.get("numelixa_device_token")?.value||
