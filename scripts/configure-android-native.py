@@ -145,6 +145,9 @@ public class NumelixaPushTokenPlugin extends Plugin {
 
                 JSObject out = new JSObject();
                 out.put("token", value);
+                out.put("deviceId", installationId());
+                out.put("appVersion", appVersion());
+                android.util.Log.i("NUMELIXA_PUSH", "FCM_TOKEN_RECEIVED tokenPresent=true tokenLength=" + value.length());
                 call.resolve(out);
             })
             .addOnFailureListener(error -> {
@@ -191,6 +194,9 @@ public class NumelixaPushTokenPlugin extends Plugin {
         out.put("tokenLength", String.valueOf(
             prefs.getString("fcm_token", "")).trim().length());
         out.put("tokenError", prefs.getString("fcm_token_error", ""));
+        out.put("deviceId", installationId());
+        out.put("appVersion", appVersion());
+        out.put("permission", permissionStatus());
         out.put("registrationStatus",
             prefs.getString("last_registration_status", ""));
         out.put("registrationResponse",
@@ -198,6 +204,28 @@ public class NumelixaPushTokenPlugin extends Plugin {
         out.put("registrationAt",
             prefs.getLong("last_registration_at", 0L));
         call.resolve(out);
+    }
+
+    private String installationId() {
+        android.content.SharedPreferences prefs = getContext().getSharedPreferences("numelixa_push", 0);
+        String id = prefs.getString("installation_id", "");
+        if (id == null || id.trim().isEmpty()) {
+            id = java.util.UUID.randomUUID().toString();
+            prefs.edit().putString("installation_id", id).apply();
+        }
+        return id;
+    }
+
+    private String appVersion() {
+        try {
+            android.content.pm.PackageInfo info = getContext().getPackageManager().getPackageInfo(getContext().getPackageName(), 0);
+            return info.versionName == null ? "" : info.versionName;
+        } catch (Exception ignored) { return ""; }
+    }
+
+    private String permissionStatus() {
+        if (android.os.Build.VERSION.SDK_INT < 33) return "not_required";
+        return getContext().checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED ? "granted" : "denied";
     }
 
     private static String safe(Throwable t) {
@@ -559,21 +587,33 @@ public class MainActivity extends BridgeActivity {
         setIntent(intent);
     }
 
-    private void createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            NotificationChannel channel = new NotificationChannel(
-                "numelixa",
-                "Numelixa",
-                NotificationManager.IMPORTANCE_HIGH
-            );
-            channel.setDescription(
-                "SMS codes, purchases, wallet activity and important Numelixa alerts"
-            );
-            channel.enableVibration(true);
-            channel.setShowBadge(true);
-            NotificationManager manager = getSystemService(NotificationManager.class);
-            if (manager != null) manager.createNotificationChannel(channel);
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 9103 && Build.VERSION.SDK_INT >= 33) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            Log.i("NUMELIXA_PUSH", "FCM_PERMISSION=" + (granted ? "granted" : "denied"));
         }
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return;
+        NotificationManager manager = getSystemService(NotificationManager.class);
+        if (manager == null) return;
+        createChannel(manager, "general", "General", "General Numelixa updates", NotificationManager.IMPORTANCE_DEFAULT);
+        createChannel(manager, "security", "Security", "Account security and login alerts", NotificationManager.IMPORTANCE_HIGH);
+        createChannel(manager, "verification", "Verification", "SMS verification and order codes", NotificationManager.IMPORTANCE_HIGH);
+        createChannel(manager, "admin", "Admin updates", "Important Numelixa announcements", NotificationManager.IMPORTANCE_HIGH);
+    }
+
+    private void createChannel(NotificationManager manager, String id, String name, String description, int importance) {
+        NotificationChannel channel = new NotificationChannel(id, name, importance);
+        channel.setDescription(description);
+        channel.enableVibration(true);
+        channel.setShowBadge(true);
+        channel.setSound(android.provider.Settings.System.DEFAULT_NOTIFICATION_URI,
+            new android.media.AudioAttributes.Builder().setUsage(android.media.AudioAttributes.USAGE_NOTIFICATION).build());
+        manager.createNotificationChannel(channel);
     }
 }
 ''')

@@ -89,7 +89,7 @@ export default function MobileAppBootstrap(){
    retryTimer=setTimeout(()=>{retryTimer=null;void syncCurrentToken()},10000);
   };
 
-  const saveAndRegister=async(token:string)=>{
+  const saveAndRegister=async(token:string,deviceId?:string,appVersion?:string)=>{
    token=String(token||"").trim();
    if(token.length<20||stopped||tokenInFlight)return false;
    tokenInFlight=true;
@@ -98,9 +98,11 @@ export default function MobileAppBootstrap(){
     const response=await fetch("/api/notifications/register",{
      method:"POST",credentials:"include",cache:"no-store",
      headers:{"Content-Type":"application/json"},
-     body:JSON.stringify({token,platform:Capacitor.getPlatform()})
+     body:JSON.stringify({token,platform:Capacitor.getPlatform(),deviceId:deviceId||"",appVersion:appVersion||""})
     });
     if(response.ok){
+     const result=await response.json().catch(()=>null);
+     console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:Boolean(result?.linked),pending:Boolean(result?.pending),httpStatus:response.status});
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
@@ -120,7 +122,7 @@ export default function MobileAppBootstrap(){
    try{
     const result=await NativePushToken.getToken();
     const token=String(result?.token||"").trim();
-    if(token){await saveAndRegister(token);return token;}
+    if(token){console.info("[NUMELIXA FCM_TOKEN_RECEIVED]",{tokenPresent:true,tokenLength:token.length});await saveAndRegister(token,result.deviceId,result.appVersion);return token;}
    }catch(error){
     console.error("[NUMELIXA NATIVE FCM TOKEN]",error);
    }
@@ -129,7 +131,8 @@ export default function MobileAppBootstrap(){
    // path. If the custom native bridge is unavailable, the callback token can
    // still reach the same backend endpoint.
    if(capacitorToken.length>=20){
-    await saveAndRegister(capacitorToken);
+    const status=await NativePushToken.getStatus().catch(()=>({} as any));
+    await saveAndRegister(capacitorToken,status.deviceId,status.appVersion);
     return capacitorToken;
    }
 
@@ -171,30 +174,21 @@ export default function MobileAppBootstrap(){
 
   const ensureAndroidChannel=async()=>{
    if(channelReady||!push||Capacitor.getPlatform()!=="android")return;
+   const channels=[
+    {id:"general",name:"General",description:"General Numelixa updates",importance:4},
+    {id:"security",name:"Security",description:"Account security and login alerts",importance:5},
+    {id:"verification",name:"Verification",description:"SMS verification and order codes",importance:5},
+    {id:"admin",name:"Admin updates",description:"Important Numelixa announcements",importance:5}
+   ];
    try{
-    await push.createChannel({
-     id:"numelixa",
-     name:"Numelixa Notifications",
-     description:"SMS codes, number orders, wallet activity and account security",
-     importance:5,
-     sound:"default",
-     visibility:1
-    });
-    if(localNotifications){
-     await localNotifications.createChannel({
-      id:"numelixa",
-      name:"Numelixa Notifications",
-      description:"SMS codes, number orders, wallet activity and account security",
-      importance:5,
-      sound:"default",
-      visibility:1
-     });
+    for(const channel of channels){
+     await push.createChannel({...channel,sound:"default",visibility:1,vibration:true});
+     if(localNotifications)await localNotifications.createChannel({...channel,sound:"default",visibility:1,vibration:true});
     }
     channelReady=true;
+    console.info("[NUMELIXA FCM_CHANNELS_READY]",{channels:channels.map(x=>x.id)});
    }catch(error){
-    // Some Android/Capacitor versions do not expose channel management.
-    // Keep registration running; FCM may fall back to the default channel.
-    console.warn("[NUMELIXA NOTIFICATION CHANNEL] unavailable");
+    console.error("[NUMELIXA FCM_CHANNEL_FAILURE]",error instanceof Error?error.message:"Unable to create Android notification channels");
    }
   };
 
@@ -203,6 +197,7 @@ export default function MobileAppBootstrap(){
    permissionInFlight=true;
    try{
     const current=await push.checkPermissions();
+    console.info("[NUMELIXA FCM_PERMISSION]",{status:current.receive==="granted"?"granted":"denied"});
     if(current.receive==="granted"){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
@@ -214,6 +209,7 @@ export default function MobileAppBootstrap(){
     // launch. This is the single permission request path (the native activity
     // must not race it with a second dialog).
     const requested=await push.requestPermissions();
+    console.info("[NUMELIXA FCM_PERMISSION]",{status:requested.receive==="granted"?"granted":"denied"});
     if(requested.receive==="granted"){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
@@ -263,8 +259,10 @@ export default function MobileAppBootstrap(){
      try{
       const rawId=String(event?.id||"").replace(/\D/g,"").slice(-8);
       const notificationId=Number(rawId)||Math.max(1,Date.now()%2147483647);
-      await localNotifications.schedule({notifications:[{
-       id:notificationId,title,body,channelId:"numelixa",
+      const messageType=String(data.type||"").toLowerCase();
+     const channelId=["sms","verification","verification_code"].includes(messageType)?"verification":["security","login","login_approval","account_security"].includes(messageType)?"security":["admin","announcement","push_test"].includes(messageType)?"admin":"general";
+     await localNotifications.schedule({notifications:[{
+       id:notificationId,title,body,channelId,
        schedule:{at:new Date(Date.now()+250)},
        extra:{...data,url:String(data.url||"/")}
       }]});
@@ -324,7 +322,7 @@ export default function MobileAppBootstrap(){
     await syncCurrentToken();
     try{
      const status=await NativePushToken.getStatus();
-     console.log("[NUMELIXA FCM STATUS]",{tokenPresent:Boolean(status.tokenPresent),tokenLength:status.tokenLength,registrationStatus:status.registrationStatus});
+     console.log("[NUMELIXA FCM STATUS]",{tokenPresent:Boolean(status.tokenPresent),tokenLength:status.tokenLength,registrationStatus:status.registrationStatus,permission:status.permission,deviceIdentityPresent:Boolean(status.deviceId)});
     }catch(error){
      console.warn("[NUMELIXA FCM STATUS]",error);
     }

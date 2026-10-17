@@ -116,7 +116,7 @@ export async function POST(req:Request){
   };
   let pushError:string|null=null;
   try{
-   pushResult=await sendPush(uniqueTokens,title,message);
+   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",url:"/"});
   }catch(error){
    pushError=error instanceof Error?error.message:String(error);
    console.error("[ADMIN NOTIFICATIONS PUSH]",pushError);
