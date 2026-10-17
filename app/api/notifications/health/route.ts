@@ -1,21 +1,23 @@
 import {NextResponse} from "next/server";
 import {isFirebaseConfigured} from "@/lib/push";
+import {getFirebaseServerSettings,getSavedFirebaseSettings} from "@/lib/firebase-settings";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(){
- const firebaseServiceJson=String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||process.env.FIREBASE_SERVICE_ACCOUNT||"").trim();
- const firebaseParts=Boolean(String(process.env.FIREBASE_CLIENT_EMAIL||"").trim()&&String(process.env.FIREBASE_PRIVATE_KEY||"").trim());
- const clientEmail=String(process.env.FIREBASE_CLIENT_EMAIL||"").trim();
+ let settings={projectId:"",clientEmail:"",privateKey:""};
+ let saved=false;
+ try{settings=await getFirebaseServerSettings();saved=Boolean(await getSavedFirebaseSettings())}catch{}
+ const clientEmail=String(settings.clientEmail||"").trim();
  const serviceAccountProjectMatch=clientEmail.endsWith("@numelixa.iam.gserviceaccount.com");
- const configuredProject=String(process.env.FIREBASE_PROJECT_ID||"numelixa").trim();
+ const configuredProject=String(settings.projectId||"").trim();
  let firebaseAdminReady=false;
  try{firebaseAdminReady=await isFirebaseConfigured()}catch{}
  return NextResponse.json({
   ok:true,
   databaseConfigured:Boolean(String(process.env.MONGODB_URI||"").trim()),
   firebaseAdminConfigured:firebaseAdminReady,
-  firebaseAdminCredentialsPresent:Boolean(firebaseServiceJson||firebaseParts),
-  firebaseAdminMode:firebaseServiceJson?"service_account_json":firebaseParts?"split_credentials":"missing",
+  firebaseAdminCredentialsPresent:Boolean(clientEmail&&settings.privateKey),
+  firebaseAdminMode:saved?"encrypted_admin_settings":clientEmail&&settings.privateKey?"environment":"missing",
   firebaseProjectExpected:"numelixa",
   firebaseProjectIdMatches:configuredProject==="numelixa",
   serviceAccountProjectMatch:firebaseParts?serviceAccountProjectMatch:null,
