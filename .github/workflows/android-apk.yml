@@ -189,7 +189,7 @@ jobs:
             cat /tmp/numelixa-apk-dex.txt
             exit 1
           fi
-          grep 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt | head -5
+          grep -m 5 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt
           apkanalyzer dex packages --defined-only "$RELEASE_APK" > /tmp/numelixa-release-dex.txt
           grep -q 'com.google.firebase.messaging' /tmp/numelixa-release-dex.txt
           grep -q 'NumelixaPushTokenPlugin' /tmp/numelixa-release-dex.txt
