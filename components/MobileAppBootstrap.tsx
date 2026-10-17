@@ -212,16 +212,10 @@ export default function MobileAppBootstrap(){
     // Request Android's runtime notification permission automatically on first
     // launch. This is the single permission request path (the native activity
     // must not race it with a second dialog).
-    const requested=await NativePushToken.requestNotificationPermission();
-    console.info("FCM_PERMISSION="+(requested.granted?"granted":"denied"));
-    if(requested.granted===true){
-     await ensureAndroidChannel();
-     document.getElementById("numelixa-notification-gate")?.remove();
-     await push.register();
-     await syncCurrentToken();
-     return true;
-    }
-    // Keep the app covered until the user grants permission or opens Settings.
+    // MainActivity owns the first-launch Android runtime prompt directly.
+    // Do not issue a second request from WebView startup (it can race the
+    // Activity dialog and leave the user with no visible prompt).
+    console.info("FCM_PERMISSION=pending-or-denied; native Activity requests it");
     showPermissionGate();
     return false;
    }catch(error){
