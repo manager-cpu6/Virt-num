@@ -55,6 +55,7 @@ export async function createSession(userId:string,meta?:SessionMeta){
  (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
 }
 
+// Cookie writes are only safe in Route Handlers/Server Actions. This helper is also called by Server Components, so refresh the DB session here but leave the browser cookie unchanged.
 export async function getCurrentSession(){
  const raw=(await cookies()).get(COOKIE)?.value;
  if(!raw)return null;
@@ -63,7 +64,7 @@ export async function getCurrentSession(){
  if(!s)return null;
  const now=new Date();
  await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ 
  return {...s,expiresAt:new Date(now.getTime()+90*24*60*60*1000),tokenHash:undefined};
 }
 
@@ -87,7 +88,7 @@ export async function getUser(){
  if(!s)return null;
  const now=new Date();
  await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
- (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ 
  return sessionUser(String(s.userId));
 }
 
