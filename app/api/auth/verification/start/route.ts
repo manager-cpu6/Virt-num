@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {requireUser,tokenHash,mongoId} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
 import {sendEmail,verificationEmail} from "@/lib/mailer";
+import {notifyUser} from "@/lib/notifications";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -103,6 +104,13 @@ export async function POST(req:Request){
    expiresAt,
    createdAt:now
   });
+  // Do not copy the actual email OTP into a lock-screen push. The push is a
+  // generic security alert; the code remains exclusively in the verified email.
+  try{
+   await notifyUser(String(u.id),"Security verification","A verification code was sent to your email. Check your inbox to continue.",{type:"security",url:"/verify-email"});
+  }catch(error){
+   console.error("[EMAIL VERIFICATION PUSH]",error instanceof Error?error.message:"Unable to send security alert");
+  }
   return NextResponse.json({ok:true,expiresAt:expiresAt.toISOString(),reused:false});
  }catch(e){
   const m=e instanceof Error?e.message:"Verification failed";
