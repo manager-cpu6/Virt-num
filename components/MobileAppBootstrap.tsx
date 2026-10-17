@@ -214,7 +214,7 @@ export default function MobileAppBootstrap(){
     // must not race it with a second dialog).
     const requested=await NativePushToken.requestNotificationPermission();
     console.info("FCM_PERMISSION="+(requested.granted?"granted":"denied"));
-    if(requested.receive==="granted"){
+    if(requested.granted===true){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
      await push.register();
