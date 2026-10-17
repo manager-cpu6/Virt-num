@@ -190,7 +190,7 @@ jobs:
             exit 1
           fi
           grep -m 5 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt
-          apkanalyzer dex packages --defined-only "$RELEASE_APK" > /tmp/numelixa-release-dex.txt
+          "$APKANALYZER" dex packages --defined-only "$RELEASE_APK" > /tmp/numelixa-release-dex.txt
           grep -q 'com.google.firebase.messaging' /tmp/numelixa-release-dex.txt
           grep -q 'NumelixaPushTokenPlugin' /tmp/numelixa-release-dex.txt
           echo "PASS: release APK contains Firebase Messaging and NumelixaPushTokenPlugin"
