@@ -106,6 +106,7 @@ export default function MobileAppBootstrap(){
     console.info("[NUMELIXA FCM_WAITING_FOR_EMAIL_LOGIN]");
     return false;
    }
+   try{localStorage.setItem(TOKEN_KEY,token)}catch{}
    const registrationKey=String(account.id)+":"+token;
    if(registeredAccountToken===registrationKey)return true;
    tokenInFlight=true;
