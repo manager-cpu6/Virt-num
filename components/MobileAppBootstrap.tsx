@@ -3,7 +3,7 @@ import {useEffect} from "react";
 import {Capacitor,registerPlugin} from "@capacitor/core";
 
 const TOKEN_KEY="numelixa_fcm_token_v5";
-const NativePushToken=registerPlugin<{getToken():Promise<{token?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number}>}>( "NumelixaPushToken");
+const NativePushToken=registerPlugin<{getToken():Promise<{token?:string;deviceId?:string;appVersion?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number;deviceId?:string;appVersion?:string;permission?:string}>}>( "NumelixaPushToken");
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
