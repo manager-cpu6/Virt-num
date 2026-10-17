@@ -31,7 +31,9 @@ Set the following in Vercel **Production** environment variables, then redeploy:
 - `FIREBASE_PRIVATE_KEY`: the matching private key, with escaped newlines supported
 - `MONGODB_URI`: database used for device tokens
 
-Never expose `FIREBASE_PRIVATE_KEY` to browser JavaScript, APK assets, client responses, public logs, or source control. A service-account private key has privileged server access. Keep it in a server-side secret store (such as Vercel environment variables / a dedicated secret manager), restrict who can change it, and rotate it if exposed.
+For optional admin-panel credential management, first set `FIREBASE_SETTINGS_ENCRYPTION_KEY` in Vercel Production to a strong random secret of at least 32 characters, then redeploy. The admin-only Firebase configuration panel encrypts the service-account credentials with AES-256-GCM before storing them in MongoDB. The key itself must remain only in Vercel; without it, the panel cannot save credentials. The UI never reads the private key back after saving.
+
+Never expose `FIREBASE_PRIVATE_KEY` to browser JavaScript, APK assets, client responses, public logs, or source control. A service-account private key has privileged server access. Restrict admin access, and rotate the key if exposed.
 
 Changing the server service account does not change the Android package or the client `google-services.json`. Changing Android package/project app registration requires updating Firebase's Android app registration and rebuilding the APK.
 
