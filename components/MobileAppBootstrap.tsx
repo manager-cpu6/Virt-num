@@ -270,7 +270,7 @@ export default function MobileAppBootstrap(){
       const messageType=String(data.type||"").toLowerCase();
      const channelId=["sms","verification","verification_code"].includes(messageType)?"verification":["security","login","login_approval","account_security"].includes(messageType)?"security":["admin","announcement","push_test"].includes(messageType)?"admin":"general";
      await localNotifications.schedule({notifications:[{
-       id:notificationId,title,body,channelId,
+       id:notificationId,title,body,channelId,smallIcon:"ic_stat_numelixa",
        schedule:{at:new Date(Date.now()+250)},
        extra:{...data,url:String(data.url||"/")}
       }]});

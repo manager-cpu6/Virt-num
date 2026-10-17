@@ -62,6 +62,18 @@ if 'firebase_messaging_auto_init_enabled' not in m:
 '''
     pos=m.rfind('</application>')
     m=m[:pos]+meta+m[pos:]
+
+# Pin the Android system-tray icon and default channel for FCM notification payloads.
+if 'com.google.firebase.messaging.default_notification_icon' not in m:
+    meta='''        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_stat_numelixa" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="general" />
+'''
+    pos=m.rfind('</application>')
+    m=m[:pos]+meta+m[pos:]
 # Register the secure one-time OAuth return link so Chrome can reopen Numelixa.
 if 'android:scheme="com.numelixa.app"' not in m:
     activity_start = m.find('<activity')

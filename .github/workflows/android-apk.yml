@@ -151,7 +151,10 @@ jobs:
           grep -E 'com.google.firebase:firebase-messaging' /tmp/numelixa-gradle-deps.txt
           grep -E 'com.google.gms.google-services' app/build.gradle
           grep -E 'firebase_messaging_auto_init_enabled|POST_NOTIFICATIONS' app/src/main/AndroidManifest.xml
-          echo "PASS: Firebase Messaging is present in the resolved Android dependency graph"
+          test -s app/src/main/res/drawable/ic_stat_numelixa.png
+          grep -q 'com.google.firebase.messaging.default_notification_icon' app/src/main/AndroidManifest.xml
+          grep -q 'com.google.firebase.messaging.default_notification_channel_id' app/src/main/AndroidManifest.xml
+          echo "PASS: Firebase Messaging dependency and notification icon/channel metadata are present"
       - name: Build debug APK
         working-directory: android
         run: ./gradlew clean assembleDebug

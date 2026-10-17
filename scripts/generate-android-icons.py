@@ -53,4 +53,15 @@ values.mkdir(parents=True,exist_ok=True)
     '<?xml version="1.0" encoding="utf-8"?>\n<resources><color name="numelixa_icon_background">#020817</color></resources>\n',
     encoding="utf-8"
 )
-print("Generated Numelixa launcher icons.")
+# Android's small notification icon must be a simple white silhouette on transparency.
+drawable=ROOT/"drawable"
+drawable.mkdir(parents=True,exist_ok=True)
+small=Image.new("RGBA",(72,72),(0,0,0,0))
+small_draw=ImageDraw.Draw(small)
+sw=9
+small_draw.line((19,53,19,19),fill=(255,255,255,255),width=sw)
+small_draw.line((19,19,53,53),fill=(255,255,255,255),width=sw)
+small_draw.line((53,53,53,19),fill=(255,255,255,255),width=sw)
+small.save(drawable/"ic_stat_numelixa.png")
+
+print("Generated Numelixa launcher and monochrome notification icons.")
