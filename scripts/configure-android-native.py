@@ -558,7 +558,9 @@ public class NumelixaUpdaterPlugin extends Plugin {
 
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.Manifest;
 import android.content.pm.PackageManager;
+import androidx.core.app.ActivityCompat;
 import android.os.Handler;
 import android.os.Looper;
 import android.content.Intent;
@@ -601,6 +603,7 @@ public class MainActivity extends BridgeActivity {
         }
 
         createNotificationChannel();
+        requestNotificationPermissionOnFirstLaunch();
         try {
             FirebaseMessaging.getInstance().setAutoInitEnabled(true);
         } catch (Exception ignored) {}
@@ -611,6 +614,40 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+    }
+
+    private void requestNotificationPermissionOnFirstLaunch() {
+        if (Build.VERSION.SDK_INT < 33) {
+            Log.i("NUMELIXA_PUSH", "FCM_PERMISSION_NOT_REQUIRED sdk=" + Build.VERSION.SDK_INT);
+            return;
+        }
+        if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+            Log.i("NUMELIXA_PUSH", "FCM_PERMISSION_ALREADY_GRANTED");
+            return;
+        }
+        // Request from the foreground Activity itself. This does not depend on
+        // WebView JavaScript, dynamic Capacitor imports, Firebase token startup,
+        // or network access, so Android 13+ reliably displays Allow/Don't allow.
+        new Handler(Looper.getMainLooper()).postDelayed(() -> {
+            if (isFinishing() || isDestroyed()) return;
+            if (checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                Log.i("NUMELIXA_PUSH", "FCM_PERMISSION_REQUEST_START");
+                ActivityCompat.requestPermissions(
+                    MainActivity.this,
+                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
+                    4301
+                );
+            }
+        }, 1200L);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 4301) {
+            boolean granted = grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED;
+            Log.i("NUMELIXA_PUSH", "FCM_PERMISSION_RESULT=" + (granted ? "granted" : "denied"));
+        }
     }
 
     private void createNotificationChannel() {
