@@ -16,8 +16,15 @@ function firebaseApp(){
    throw new Error("Firebase service-account JSON is invalid.");
   }
  }
- const projectId=String(process.env.FIREBASE_PROJECT_ID||service?.project_id||EXPECTED_PROJECT_ID).trim();
+ const configuredProject=String(process.env.FIREBASE_PROJECT_ID||"").trim();
  const serviceProject=String(service?.project_id||"").trim();
+ // The Android Firebase app is explicitly registered to project "numelixa".
+ // Never accidentally send to a different project because an environment
+ // variable was copied from the separate Google OAuth project.
+ if(configuredProject&&configuredProject!==EXPECTED_PROJECT_ID){
+  console.warn("[FCM_PROJECT_ENV_MISMATCH]",{expectedProject:EXPECTED_PROJECT_ID,configuredProject,usingExpectedProject:true});
+ }
+ const projectId=serviceProject||EXPECTED_PROJECT_ID;
  const clientEmail=String(service?.client_email||process.env.FIREBASE_CLIENT_EMAIL||"").trim();
  const privateKey=String(service?.private_key??process.env.FIREBASE_PRIVATE_KEY??"").replace(/\\n/g,"\n").replace(/\r\n/g,"\n").trim();
  if(projectId!==EXPECTED_PROJECT_ID||(serviceProject&&serviceProject!==EXPECTED_PROJECT_ID)){
