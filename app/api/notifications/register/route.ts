@@ -16,11 +16,11 @@ export async function POST(req:Request){
   if(!String(process.env.MONGODB_URI||"").trim())return NextResponse.json({ok:false,error:"PUSH_STORAGE_NOT_CONFIGURED"},{status:503});
 
   // Push registration is email-account-only. Do not persist tokens for
-  // anonymous installs, phone-only sessions, or unverified email accounts.
+  // anonymous installs or phone-only sessions. Existing email accounts remain eligible even if created before email verification was introduced.
   const user=await requireUser();
   const email=String(user.email||"").trim().toLowerCase();
-  if(!email.includes("@")||!user.verified_at){
-   return NextResponse.json({ok:false,error:"VERIFIED_EMAIL_REQUIRED",message:"Verify and sign in to your email account to enable notifications."},{status:403});
+  if(!email.includes("@")){
+   return NextResponse.json({ok:false,error:"VERIFIED_EMAIL_REQUIRED",message:"Sign in to your email account to enable notifications."},{status:403});
   }
 
   const devices=await collection<any>("deviceTokens"),now=new Date();
