@@ -65,7 +65,7 @@ const channelFor=(data:Record<string,string>)=>{
 };
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
- let app:ReturnType<typeof firebaseApp>;
+ let app:Awaited<ReturnType<typeof firebaseApp>>;
  try{app=await firebaseApp()}catch(error){
   return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-admin-init-failed",message:error instanceof Error?error.message:"Firebase Admin credentials could not be initialized."}]};
  }
