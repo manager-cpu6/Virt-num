@@ -27,7 +27,7 @@ export async function GET(){
    deviceCount,
    linkedDeviceCount,
    unlinkedDeviceCount,
-   serverPushConfigured:isFirebaseConfigured()
+   serverPushConfigured:await isFirebaseConfigured()
   },{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[ADMIN NOTIFICATIONS GET]",error);
