@@ -61,8 +61,10 @@ export async function getCurrentSession(){
  const sessions=await collection<any>("sessions");
  const s=await sessions.findOne({tokenHash:hash(raw),expiresAt:{$gt:new Date()}});
  if(!s)return null;
- await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:new Date()}});
- return {...s,tokenHash:undefined};
+ const now=new Date();
+ await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
+ return {...s,expiresAt:new Date(now.getTime()+90*24*60*60*1000),tokenHash:undefined};
 }
 
 async function sessionUser(userId:string){
@@ -83,7 +85,9 @@ export async function getUser(){
  const sessions=await collection<any>("sessions");
  const s=await sessions.findOne({tokenHash:hash(raw),expiresAt:{$gt:new Date()}});
  if(!s)return null;
- await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:new Date()}});
+ const now=new Date();
+ await sessions.updateOne({_id:s._id},{$set:{lastSeenAt:now,expiresAt:new Date(now.getTime()+90*24*60*60*1000)}});
+ (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
  return sessionUser(String(s.userId));
 }
 
