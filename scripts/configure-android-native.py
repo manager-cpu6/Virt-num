@@ -101,6 +101,8 @@ manifest.write_text(m)
 
 (JAVA/"NumelixaPushTokenPlugin.java").write_text(r'''package com.numelixa.app;
 
+import android.os.Handler;
+import android.os.Looper;
 import android.content.Intent;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
