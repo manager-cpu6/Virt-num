@@ -253,6 +253,7 @@ export default function MobileAppBootstrap(){
     cleanups.push(()=>registrationError.remove());
 
     const received=await PushNotifications.addListener("pushNotificationReceived",async(event)=>{
+     console.info("[NUMELIXA FCM_MESSAGE_RECEIVED]",{hasTitle:Boolean(event?.title),hasBody:Boolean(event?.body),dataType:String(event?.data?.type||"general")});
      window.dispatchEvent(new Event("numelixa-notification"));
      // Android FCM notification payloads are displayed by the system while
      // backgrounded. Only this foreground callback schedules a local alert.
@@ -273,7 +274,9 @@ export default function MobileAppBootstrap(){
        schedule:{at:new Date(Date.now()+250)},
        extra:{...data,url:String(data.url||"/")}
       }]});
-     }catch{
+      console.info("[NUMELIXA FCM_NOTIFICATION_DISPLAYED]",{channelId,notificationId});
+     }catch(error){
+      console.error("[NUMELIXA FCM_NOTIFICATION_DISPLAY_FAILURE]",error instanceof Error?error.message:"Local notification scheduling failed");
       // In-app notification events still fire if local alert presentation fails.
      }
     });
