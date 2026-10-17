@@ -93,7 +93,7 @@ export default function MobileAppBootstrap(){
   const saveAndRegister=async(token:string,deviceId?:string,appVersion?:string)=>{
    token=String(token||"").trim();
    if(token.length<20||stopped||tokenInFlight)return false;
-   // Only link push tokens after a verified email account is authenticated.
+   // Link push tokens after any email account has an authenticated session.
    // Never create anonymous/unlinked device records at app startup.
    let account:any=null;
    try{
@@ -102,8 +102,8 @@ export default function MobileAppBootstrap(){
     const payload=await me.json().catch(()=>null);
     account=payload?.user;
    }catch{return false}
-   if(!account?.id||!String(account?.email||"").includes("@")||!account?.verified_at){
-    console.info("[NUMELIXA FCM_WAITING_FOR_VERIFIED_EMAIL]");
+   if(!account?.id||!String(account?.email||"").trim().includes("@")){
+    console.info("[NUMELIXA FCM_WAITING_FOR_EMAIL_LOGIN]");
     return false;
    }
    const registrationKey=String(account.id)+":"+token;
@@ -156,12 +156,12 @@ export default function MobileAppBootstrap(){
 
   const syncCurrentToken=async()=>{
    if(stopped)return;
-   // Email verification/login is the only point at which a device is linked.
+   // Email login is the only point at which a device is linked.
    let authenticated=false;
    try{
     const me=await fetch("/api/me",{cache:"no-store",credentials:"include"});
     const data=me.ok?await me.json().catch(()=>null):null;
-    authenticated=Boolean(data?.user?.id&&String(data.user.email||"").includes("@")&&data.user.verified_at);
+    authenticated=Boolean(data?.user?.id&&String(data.user.email||"").trim().includes("@"));
    }catch{}
    if(!authenticated)return;
    const cached=String(localStorage.getItem(TOKEN_KEY)||"").trim();
