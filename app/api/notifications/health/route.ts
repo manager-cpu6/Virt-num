@@ -9,7 +9,7 @@ export async function GET(){
  const serviceAccountProjectMatch=clientEmail.endsWith("@numelixa.iam.gserviceaccount.com");
  const configuredProject=String(process.env.FIREBASE_PROJECT_ID||"numelixa").trim();
  let firebaseAdminReady=false;
- try{firebaseAdminReady=isFirebaseConfigured()}catch{}
+ try{firebaseAdminReady=await isFirebaseConfigured()}catch{}
  return NextResponse.json({
   ok:true,
   databaseConfigured:Boolean(String(process.env.MONGODB_URI||"").trim()),
