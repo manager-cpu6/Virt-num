@@ -87,7 +87,7 @@ export default function AdminNotifications(){
    }else if(!d.pushConfigured){
     setResult(
      "⚠️ Saved for "+d.recipients+" users, but Firebase Push is not configured on the server. "+
-     "Add FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in Vercel."
+     "Check FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in Vercel Production, and confirm the service account belongs to Firebase project numelixa."
     );
    }else if(Number(d.failed||0)>0){
     setResult(
@@ -106,7 +106,7 @@ export default function AdminNotifications(){
  }
 
  return <div className="admin-notifications">
-  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase ready":"Firebase Admin credentials missing"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>
+  <div className="notification-compose"><div className="notice"><span>🔔</span><p>Native push: <b>{serverPushConfigured?"Firebase Admin initialized":"Firebase Admin credentials missing or invalid"}</b> · <b>{deviceCount}</b> registered · <b>{linkedDeviceCount}</b> linked · <b>{unlinkedDeviceCount}</b> unlinked</p></div>
    {(!databaseConfigured||backendError)&&<div className="error-box" style={{marginTop:10}}>
     <b>{!databaseConfigured?"Notification storage is not configured. Add MONGODB_URI in Vercel Production.":backendError}</b>
    </div>}

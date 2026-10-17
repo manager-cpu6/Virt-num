@@ -142,6 +142,7 @@ export async function POST(req:Request){
      ?(details||"Firebase Push is not configured. Check Firebase Admin credentials in Vercel.")
      :details||"Firebase did not confirm delivery to any device. No notification was saved as sent.",
     devices:uniqueTokens.length,failed:pushResult.failureCount,
+    invalidTokens:pushResult.invalidTokens.length,
     pushConfigured:pushResult.configured
    },{status:pushResult.configured?502:503});
   }
@@ -157,6 +158,7 @@ export async function POST(req:Request){
   return NextResponse.json({
    ok:true,recipients:deliveredUserIds.length,targetUsers:ids.length,
    devices:uniqueTokens.length,sent:pushResult.successCount,failed:pushResult.failureCount,
+   invalidTokens:pushResult.invalidTokens.length,
    pushConfigured:true,pushError
   });
  }catch(error){
