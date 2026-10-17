@@ -109,7 +109,10 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
    if(item.success){successfulTokens.push(batch[index]);if(item.messageId)messageIds.push(item.messageId);return;}
    const code=String(item.error?.code||"unknown"),message=String(item.error?.message||"FCM send failed");
    if(errors.length<20)errors.push({code,message});
-   if(code==="messaging/registration-token-not-registered"||code==="messaging/invalid-registration-token")invalidTokens.push(batch[index]);
+   if(code==="messaging/registration-token-not-registered"||code==="messaging/invalid-registration-token"){
+    invalidTokens.push(batch[index]);
+    console.warn("[FCM_TOKEN_INVALID]",{code,batchIndex:index,cleanupRequired:true});
+   }
   });
  }
  console.info(successCount>0?"[FCM_SEND_SUCCESS]":"[FCM_SEND_FAILURE]",{projectId:EXPECTED_PROJECT_ID,attempted:unique.length,sent:successCount,failed:failureCount,invalidTokens:invalidTokens.length,channelId,messageIds:messageIds.length});

@@ -201,7 +201,7 @@ export default function MobileAppBootstrap(){
    permissionInFlight=true;
    try{
     const current=await push.checkPermissions();
-    console.info("[NUMELIXA FCM_PERMISSION]",{status:current.receive==="granted"?"granted":"denied"});
+    console.info("FCM_PERMISSION="+(current.receive==="granted"?"granted":"denied"));
     if(current.receive==="granted"){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
@@ -213,7 +213,7 @@ export default function MobileAppBootstrap(){
     // launch. This is the single permission request path (the native activity
     // must not race it with a second dialog).
     const requested=await push.requestPermissions();
-    console.info("[NUMELIXA FCM_PERMISSION]",{status:requested.receive==="granted"?"granted":"denied"});
+    console.info("FCM_PERMISSION="+(requested.receive==="granted"?"granted":"denied"));
     if(requested.receive==="granted"){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
