@@ -1,34 +1,23 @@
-import {getApps,initializeApp,cert} from "firebase-admin/app";
+import {getApps,initializeApp,cert,deleteApp} from "firebase-admin/app";
 import {getMessaging} from "firebase-admin/messaging";
+import {getFirebaseServerSettings} from "@/lib/firebase-settings";
+import crypto from "crypto";
 
 const EXPECTED_PROJECT_ID="numelixa";
 let initDiagnosticLogged=false;
+const pushGlobal=globalThis as typeof globalThis & {__numelixaFirebaseFingerprint?:string};
 
-function firebaseApp(){
- const serviceJson=String(process.env.FIREBASE_SERVICE_ACCOUNT_JSON||process.env.FIREBASE_SERVICE_ACCOUNT||"").trim();
- let service:any=null;
- if(serviceJson){
-  try{
-   service=JSON.parse(serviceJson);
-   if(service.private_key)service.private_key=String(service.private_key).replace(/\\n/g,"\n").replace(/\r\n/g,"\n");
-  }catch{
-   console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"invalid-service-account-json"});
-   throw new Error("Firebase service-account JSON is invalid.");
-  }
+async function firebaseApp(){
+ let settings;
+ try{settings=await getFirebaseServerSettings()}catch(error){
+  console.error("[FCM_ADMIN_SETTINGS_FAILURE]",{message:error instanceof Error?error.message:"Unable to load Firebase settings"});
+  throw new Error("Firebase Admin settings could not be loaded. Check encrypted admin settings and FIREBASE_SETTINGS_ENCRYPTION_KEY.");
  }
- const configuredProject=String(process.env.FIREBASE_PROJECT_ID||"").trim();
- const serviceProject=String(service?.project_id||"").trim();
- // The Android Firebase app is explicitly registered to project "numelixa".
- // Never accidentally send to a different project because an environment
- // variable was copied from the separate Google OAuth project.
- if(configuredProject&&configuredProject!==EXPECTED_PROJECT_ID){
-  console.warn("[FCM_PROJECT_ENV_MISMATCH]",{expectedProject:EXPECTED_PROJECT_ID,configuredProject,usingExpectedProject:true});
- }
- const projectId=serviceProject||EXPECTED_PROJECT_ID;
- const clientEmail=String(service?.client_email||process.env.FIREBASE_CLIENT_EMAIL||"").trim();
- const privateKey=String(service?.private_key??process.env.FIREBASE_PRIVATE_KEY??"").replace(/\\n/g,"\n").replace(/\r\n/g,"\n").trim();
- if(projectId!==EXPECTED_PROJECT_ID||(serviceProject&&serviceProject!==EXPECTED_PROJECT_ID)){
-  console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"firebase-project-mismatch",expectedProject:EXPECTED_PROJECT_ID,configuredProject:projectId,serviceProject:serviceProject||null});
+ const projectId=String(settings.projectId||EXPECTED_PROJECT_ID).trim();
+ const clientEmail=String(settings.clientEmail||"").trim();
+ const privateKey=String(settings.privateKey||"").replace(/\\n/g,"\n").replace(/\r\n/g,"\n").trim();
+ if(projectId!==EXPECTED_PROJECT_ID){
+  console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"firebase-project-mismatch",expectedProject:EXPECTED_PROJECT_ID,configuredProject:projectId});
   throw new Error("Firebase Admin credentials must belong to the Numelixa Firebase project.");
  }
  if(!clientEmail||!privateKey){
@@ -39,14 +28,20 @@ function firebaseApp(){
   console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"firebase-service-account-project-mismatch",expectedProject:EXPECTED_PROJECT_ID,clientEmailDomain:clientEmail.split("@").pop()||"missing"});
   throw new Error("Firebase service-account email must belong to the numelixa project.");
  }
- const existing=getApps().find(app=>app.name==="numelixa-fcm");
+ const fingerprint=crypto.createHash("sha256").update(projectId+"|"+clientEmail+"|"+privateKey).digest("hex");
+ let existing=getApps().find(app=>app.name==="numelixa-fcm");
+ if(existing&&pushGlobal.__numelixaFirebaseFingerprint!==fingerprint){
+  await deleteApp(existing);
+  existing=undefined;
+ }
  if(existing){
-  if(!initDiagnosticLogged){console.info("[FCM_ADMIN_INITIALIZED]",{projectId,mode:serviceJson?"service-account-json":"split-credentials",reused:true});initDiagnosticLogged=true;}
+  if(!initDiagnosticLogged){console.info("[FCM_ADMIN_INITIALIZED]",{projectId,mode:"server-settings",reused:true});initDiagnosticLogged=true;}
   return existing;
  }
  try{
   const app=initializeApp({credential:cert({projectId,clientEmail,privateKey})},"numelixa-fcm");
-  console.info("[FCM_ADMIN_INITIALIZED]",{projectId,mode:serviceJson?"service-account-json":"split-credentials",reused:false});
+  pushGlobal.__numelixaFirebaseFingerprint=fingerprint;
+  console.info("[FCM_ADMIN_INITIALIZED]",{projectId,mode:"server-settings",reused:false});
   initDiagnosticLogged=true;
   return app;
  }catch(error){
@@ -54,7 +49,7 @@ function firebaseApp(){
   throw new Error("Firebase Admin initialization failed. Verify the service-account credentials and project.");
  }
 }
-export function isFirebaseConfigured(){try{return Boolean(firebaseApp())}catch{return false}}
+export async function isFirebaseConfigured(){try{return Boolean(await firebaseApp())}catch{return false}}
 
 export type PushSendResult={
  configured:boolean;successCount:number;failureCount:number;invalidTokens:string[];
@@ -71,7 +66,7 @@ const channelFor=(data:Record<string,string>)=>{
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
  let app:ReturnType<typeof firebaseApp>;
- try{app=firebaseApp()}catch(error){
+ try{app=await firebaseApp()}catch(error){
   return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-admin-init-failed",message:error instanceof Error?error.message:"Firebase Admin credentials could not be initialized."}]};
  }
  if(!app)return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-config-missing",message:"Firebase Admin credentials are incomplete. Configure FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in Vercel Production."}]};
