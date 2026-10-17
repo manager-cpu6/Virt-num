@@ -20,7 +20,7 @@ export async function GET(){
   firebaseAdminMode:saved?"encrypted_admin_settings":clientEmail&&settings.privateKey?"environment":"missing",
   firebaseProjectExpected:"numelixa",
   firebaseProjectIdMatches:configuredProject==="numelixa",
-  serviceAccountProjectMatch:firebaseParts?serviceAccountProjectMatch:null,
+  serviceAccountProjectMatch:clientEmail?serviceAccountProjectMatch:null,
   androidFirebaseClientConfigured:null,
   androidFirebaseClientConfig:"Bundled in the Android APK; token registration and real delivery must be verified on a device",
   registrationEndpoint:"/api/notifications/register"
