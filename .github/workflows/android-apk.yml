@@ -157,13 +157,15 @@ jobs:
           echo "PASS: Firebase Messaging dependency and notification icon/channel metadata are present"
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew clean assembleDebug
+        run: ./gradlew clean assembleDebug assembleRelease
       - name: Verify native Google Sign-In is in the APK
         shell: bash
         run: |
           set -euo pipefail
           APK=android/app/build/outputs/apk/debug/app-debug.apk
+          RELEASE_APK=android/app/build/outputs/apk/release/app-release-unsigned.apk
           test -s "$APK"
+          test -s "$RELEASE_APK"
           python - <<'PY'
           from pathlib import Path
           import json
@@ -188,6 +190,10 @@ jobs:
             exit 1
           fi
           grep 'com.google.firebase.messaging' /tmp/numelixa-apk-dex.txt | head -5
+          apkanalyzer dex packages --defined-only "$RELEASE_APK" > /tmp/numelixa-release-dex.txt
+          grep -q 'com.google.firebase.messaging' /tmp/numelixa-release-dex.txt
+          grep -q 'NumelixaPushTokenPlugin' /tmp/numelixa-release-dex.txt
+          echo "PASS: release APK contains Firebase Messaging and NumelixaPushTokenPlugin"
           if ! grep -q 'NumelixaPushTokenPlugin' /tmp/numelixa-apk-dex.txt; then
             echo "ERROR: NumelixaPushTokenPlugin is absent from compiled APK dex"
             cat /tmp/numelixa-apk-dex.txt
