@@ -115,7 +115,9 @@ import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-@CapacitorPlugin(name = "NumelixaPushToken", permissions = {\n    @Permission(alias = "notifications", strings = {Manifest.permission.POST_NOTIFICATIONS})\n})
+@CapacitorPlugin(name = "NumelixaPushToken", permissions = {
+    @Permission(alias = "notifications", strings = {Manifest.permission.POST_NOTIFICATIONS})
+})
 public class NumelixaPushTokenPlugin extends Plugin {
     private static final int MAX_ATTEMPTS = 8;
     private final Handler handler = new Handler(Looper.getMainLooper());
