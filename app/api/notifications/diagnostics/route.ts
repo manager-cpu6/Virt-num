@@ -19,7 +19,7 @@ export async function GET(){
     : 0;
   return NextResponse.json({
    ok:true,
-   firebaseServerConfigured:isFirebaseConfigured(),
+   firebaseServerConfigured:await isFirebaseConfigured(),
    browserOrAppSession:Boolean(user),
    deviceCookie:Boolean(token),
    deviceRegistered:Boolean(row),
