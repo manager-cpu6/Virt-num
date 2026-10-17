@@ -3,7 +3,7 @@ import {useEffect} from "react";
 import {Capacitor,registerPlugin} from "@capacitor/core";
 
 const TOKEN_KEY="numelixa_fcm_token_v5";
-const NativePushToken=registerPlugin<{getToken():Promise<{token?:string;deviceId?:string;appVersion?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number;deviceId?:string;appVersion?:string;permission?:string}>}>( "NumelixaPushToken");
+const NativePushToken=registerPlugin<{getToken():Promise<{token?:string;deviceId?:string;appVersion?:string}>;requestNotificationPermission():Promise<{granted?:boolean;status?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number;deviceId?:string;appVersion?:string;permission?:string}>}>( "NumelixaPushToken");
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -164,8 +164,8 @@ export default function MobileAppBootstrap(){
     if(!push||permissionInFlight)return;
     permissionInFlight=true;
     try{
-     const result=await push.requestPermissions();
-     if(result.receive==="granted"){
+     const result=await NativePushToken.requestNotificationPermission();
+     if(result.granted){
       await ensureAndroidChannel();
       gate.remove();
       await push.register();
@@ -212,8 +212,8 @@ export default function MobileAppBootstrap(){
     // Request Android's runtime notification permission automatically on first
     // launch. This is the single permission request path (the native activity
     // must not race it with a second dialog).
-    const requested=await push.requestPermissions();
-    console.info("FCM_PERMISSION="+(requested.receive==="granted"?"granted":"denied"));
+    const requested=await NativePushToken.requestNotificationPermission();
+    console.info("FCM_PERMISSION="+(requested.granted?"granted":"denied"));
     if(requested.receive==="granted"){
      await ensureAndroidChannel();
      document.getElementById("numelixa-notification-gate")?.remove();
