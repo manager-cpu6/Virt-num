@@ -324,14 +324,16 @@ export default function MobileAppBootstrap(){
     },2500);
     cleanups.push(()=>window.clearInterval(authPoll));
 
-    // Token retrieval is independent from the permission dialog. If permission
-    // was already granted in Android Settings, FCM getToken() runs immediately.
-    // Start permission/token synchronization immediately. Token
-    // retrieval is retried independently so a temporary Firebase/Play
-    // Services startup delay does not permanently leave the device unregistered.
-    await getNativeToken();
+    // Ask for notification permission FIRST. Never wait for Firebase token
+    // retrieval or a backend/network request before displaying Android's
+    // first-launch permission dialog; either operation can stall on startup.
+    // Token acquisition/registration is retried independently after permission
+    // handling, so it cannot suppress the system permission prompt.
     await ensurePushPermission();
-    await syncCurrentToken();
+    if (!stopped) {
+     void getNativeToken();
+     void syncCurrentToken();
+    }
     try{
      const status=await NativePushToken.getStatus();
      console.log("[NUMELIXA FCM STATUS]",{tokenPresent:Boolean(status.tokenPresent),tokenLength:status.tokenLength,registrationStatus:status.registrationStatus,permission:status.permission,deviceIdentityPresent:Boolean(status.deviceId)});
