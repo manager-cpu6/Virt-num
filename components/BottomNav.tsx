@@ -3,7 +3,7 @@ import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 
 const items=[
- {href:"/",label:"Home",icon:"⌂"},
+ {href:"/dashboard",label:"Home",icon:"⌂"},
  {href:"/services",label:"Numbers",icon:"＋"},
  {href:"/wallet",label:"Wallet",icon:"◈"},
  {href:"/numbers",label:"Orders",icon:"▣"},
@@ -21,7 +21,7 @@ export default function BottomNav(){
  };
 
  const isSelected=(href:string)=>{
-  if(href==="/")return path==="/"||path==="/dashboard";
+  if(href==="/dashboard")return path==="/dashboard";
   if(href==="/services")return path.startsWith("/services")||path.startsWith("/countries");
   if(href==="/numbers")return path==="/numbers"||path.startsWith("/get-code/");
   return path===href||path.startsWith(href+"/");
