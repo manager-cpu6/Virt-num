@@ -15,7 +15,7 @@ export async function POST(req:Request){
   if(!credential||!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured. Please contact support."},{status:503});
   const verify=await fetch("https://oauth2.googleapis.com/tokeninfo?id_token="+encodeURIComponent(credential),{cache:"no-store"});
   if(!verify.ok)return NextResponse.json({ok:false,error:"Google could not verify this sign-in. Please try again."},{status:401});
-  const profile=await verify.json() as {aud?:string;sub?:string;email?:string;email_verified?:string|boolean;name?:string};
+  const profile=await verify.json() as {aud?:string;sub?:string;email?:string;email_verified?:string|boolean;name?:string;picture?:string};
   const email=String(profile.email||"").trim().toLowerCase();
   const googleId=String(profile.sub||"").trim();
   const verified=profile.email_verified===true||String(profile.email_verified).toLowerCase()==="true";
@@ -30,10 +30,10 @@ export async function POST(req:Request){
    return NextResponse.json({ok:false,error:"This account is suspended. Contact Numelixa Support."},{status:403});
   const now=new Date();
   if(!user){
-   user={_id:mongoId(),email,name:String(profile.name||email.split("@")[0]).slice(0,100),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
+   user={_id:mongoId(),email,name:String(profile.name||email.split("@")[0]).slice(0,100),avatarUrl:String(profile.picture||"").slice(0,2048),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
    await users.insertOne(user);
   }else{
-   await users.updateOne({_id:user._id},{$set:{googleId,verifiedAt:user.verifiedAt||now,name:user.name||String(profile.name||email.split("@")[0]).slice(0,100),updatedAt:now}});
+   await users.updateOne({_id:user._id},{$set:{googleId,verifiedAt:user.verifiedAt||now,name:user.name||String(profile.name||email.split("@")[0]).slice(0,100),avatarUrl:user.avatarUrl||String(profile.picture||"").slice(0,2048),updatedAt:now}});
   }
   const userId=String(user._id);
   await ensureApiKey(userId);

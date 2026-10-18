@@ -24,8 +24,8 @@ function requestMeta(h:Headers):SessionMeta{
   const city=String(h.get("x-vercel-ip-city")||"").trim();
   const country=String(h.get("x-vercel-ip-country")||"").trim();
   const region=String(h.get("x-vercel-ip-country-region")||"").trim();
-  const platform=/android/i.test(ua)?"Android":/iphone|ipad|ios/i.test(ua)?"iOS":/windows/i.test(ua)?"Windows":/mac os/i.test(ua)?"macOS":/linux/i.test(ua)?"Linux":"Other";
-  const device=/android/i.test(ua)?((ua.match(/Android[^;)]*/i)?.[0])||"Android device"):/iphone/i.test(ua)?"iPhone":/ipad/i.test(ua)?"iPad":/windows/i.test(ua)?"Windows PC":/mac os/i.test(ua)?"Mac":"Browser";
+  const platform=String(h.get("x-numelixa-platform")||(/android/i.test(ua)?"Android":/iphone|ipad|ios/i.test(ua)?"iOS":/windows/i.test(ua)?"Windows":/mac os/i.test(ua)?"macOS":/linux/i.test(ua)?"Linux":"Other")).slice(0,40);
+  const device=String(h.get("x-numelixa-device")||(/android/i.test(ua)?((ua.match(/Android[^;)]*/i)?.[0])||"Android device"):/iphone/i.test(ua)?"iPhone":/ipad/i.test(ua)?"iPad":/windows/i.test(ua)?"Windows PC":/mac os/i.test(ua)?"Mac":"Browser")).slice(0,160);
   const browser=/edg\//i.test(ua)?"Edge":/chrome\//i.test(ua)?"Chrome":/firefox\//i.test(ua)?"Firefox":/safari\//i.test(ua)&&!/chrome|android/i.test(ua)?"Safari":"Browser";
   return {ip,city,country,region,userAgent:ua,device,browser,platform};
 }
@@ -89,7 +89,7 @@ export async function getCurrentSession(){
 async function sessionUser(userId:string){
  const u=await (await collection<any>("users")).findOne({_id:userId});
  if(!u||u.suspendedAt)return null;
- return {id:String(u._id),email:u.email,name:u.name,role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||null,createdAt:u.createdAt||null};
+ return {id:String(u._id),email:u.email,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||null,createdAt:u.createdAt||null};
 }
 
 export async function getUser(){
