@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import crypto from "crypto";
 import {collection} from "@/lib/mongo";
-import {createSession,requestMeta} from "@/lib/auth";
+import {createSession,createMobileSession,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 
 export const runtime="nodejs";
@@ -20,6 +20,10 @@ export async function POST(req:Request){
   if(!user||user.suspendedAt)return NextResponse.json({ok:false,error:"This account is suspended or unavailable."},{status:403});
   await createSession(String(record.userId),requestMeta(req.headers));
   await claimDeviceTokenForUser(String(record.userId));
+  if(req.headers.get("x-numelixa-client")==="android-app"){
+   const accessToken=await createMobileSession(String(record.userId),requestMeta(req.headers));
+   return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||""),accessToken,user:{id:String(record.userId),email:String(user.email||""),role:user.role||"user",verified_at:user.verifiedAt||new Date()}},{headers:{"Cache-Control":"no-store"}});
+  }
   return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||"")},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[NATIVE GOOGLE COMPLETE]",error);

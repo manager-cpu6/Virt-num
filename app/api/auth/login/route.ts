@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
-import {createSession,passwordCheck,ensureAdmin,requestMeta} from "@/lib/auth";
+import {createSession,createMobileSession,passwordCheck,ensureAdmin,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {extraSecurityEnabled,createLoginApproval} from "@/lib/login-security";
 
@@ -26,6 +26,10 @@ export async function POST(req:Request){
 
   await createSession(String(u._id),requestMeta(req.headers));
   await claimDeviceTokenForUser(String(u._id));
+  if(nativeClient){
+   const accessToken=await createMobileSession(String(u._id),requestMeta(req.headers));
+   return NextResponse.json({ok:true,role:u.role,accessToken,user:{id:String(u._id),email:u.email,name:u.name,role:u.role,verified_at:u.verifiedAt||null}},{headers:{"Cache-Control":"no-store"}});
+  }
   return NextResponse.json({ok:true,role:u.role});
  }catch(e){
   return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Login failed"},{status:500});

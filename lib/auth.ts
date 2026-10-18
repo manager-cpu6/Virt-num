@@ -55,6 +55,24 @@ export async function createSession(userId:string,meta?:SessionMeta){
  (await cookies()).set(COOKIE,raw,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*90,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
 }
 
+// Native apps receive a random, opaque bearer token. Only its SHA-256 hash is stored;
+// unlike a public API key, it is revocable and expires with its session.
+export async function createMobileSession(userId:string,meta?:SessionMeta){
+ const raw=crypto.randomBytes(32).toString("base64url");
+ const now=new Date();
+ await (await collection<any>("sessions")).insertOne({
+  _id:mongoId(),tokenHash:hash(raw),userId:String(userId),mobile:true,
+  expiresAt:new Date(now.getTime()+30*24*60*60*1000),createdAt:now,lastSeenAt:now,...meta
+ });
+ return raw;
+}
+
+export async function revokeMobileSession(raw:string){
+ if(!raw)return false;
+ const result=await (await collection<any>("sessions")).deleteOne({tokenHash:hash(raw),mobile:true});
+ return result.deletedCount===1;
+}
+
 // Cookie writes are only safe in Route Handlers/Server Actions. This helper is also called by Server Components, so refresh the DB session here but leave the browser cookie unchanged.
 export async function getCurrentSession(){
  const raw=(await cookies()).get(COOKIE)?.value;
@@ -77,7 +95,17 @@ async function sessionUser(userId:string){
 export async function getUser(){
  const h=await headers(),auth=String(h.get("authorization")||"");
  if(auth.toLowerCase().startsWith("bearer ")){
-  const userId=await authenticateApiKey(auth.slice(7));if(userId)return sessionUser(userId);
+  const credential=auth.slice(7).trim();
+  const userId=await authenticateApiKey(credential);if(userId)return sessionUser(userId);
+  // Mobile bearer tokens are opaque random values; validate against hashed session records.
+  if(credential){
+   const s=await (await collection<any>("sessions")).findOne({tokenHash:hash(credential),expiresAt:{$gt:new Date()}});
+   if(s){
+    const now=new Date();
+    await (await collection<any>("sessions")).updateOne({_id:s._id},{$set:{lastSeenAt:now}});
+    return sessionUser(String(s.userId));
+   }
+  }
  }
  const apiKey=h.get("x-api-key");
  if(apiKey){const userId=await authenticateApiKey(apiKey);if(userId)return sessionUser(userId)}

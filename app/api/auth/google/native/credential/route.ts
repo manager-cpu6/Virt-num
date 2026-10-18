@@ -11,7 +11,7 @@ export async function POST(req:Request){
  try{
   const body=await req.json().catch(()=>null);
   const credential=String(body?.credential||"").trim();
-  const clientId=String(process.env.GOOGLE_CLIENT_ID||"").trim();
+  const clientId=String(process.env.GOOGLE_WEB_CLIENT_ID||process.env.GOOGLE_CLIENT_ID||"").trim();
   if(!credential||!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured. Please contact support."},{status:503});
   const verify=await fetch("https://oauth2.googleapis.com/tokeninfo?id_token="+encodeURIComponent(credential),{cache:"no-store"});
   if(!verify.ok)return NextResponse.json({ok:false,error:"Google could not verify this sign-in. Please try again."},{status:401});

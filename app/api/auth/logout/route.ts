@@ -1,9 +1,16 @@
 import {NextResponse} from "next/server";
 import {cookies} from "next/headers";
 import {collection} from "@/lib/mongo";
-import {logout} from "@/lib/auth";
+import {logout,revokeMobileSession} from "@/lib/auth";
 export const runtime="nodejs";
 export async function POST(req:Request){
+ const nativeClient=req.headers.get("x-numelixa-client")==="android-app";
+ if(nativeClient){
+  const authorization=String(req.headers.get("authorization")||"");
+  const token=authorization.toLowerCase().startsWith("bearer ")?authorization.slice(7).trim():"";
+  if(token)await revokeMobileSession(token);
+  return NextResponse.json({ok:true},{headers:{"Cache-Control":"no-store"}});
+ }
  try{
   const jar=await cookies();
   const token=String(jar.get("numelixa_device_token")?.value||"").trim();
