@@ -22,7 +22,7 @@ export async function POST(req:Request){
   await claimDeviceTokenForUser(String(record.userId));
   if(req.headers.get("x-numelixa-client")==="android-app"){
    const accessToken=await createMobileSession(String(record.userId),requestMeta(req.headers));
-   return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||""),accessToken,user:{id:String(record.userId),email:String(user.email||""),role:user.role||"user"}},{headers:{"Cache-Control":"no-store"}});
+   return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||""),accessToken,user:{id:String(record.userId),email:String(user.email||""),role:user.role||"user",verified_at:user.verifiedAt||new Date()}},{headers:{"Cache-Control":"no-store"}});
   }
   return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||"")},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
