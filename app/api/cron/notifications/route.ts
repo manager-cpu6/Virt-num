@@ -13,7 +13,6 @@ function authorized(req: Request) {
 }
 
 async function refundOrder(o: any) {
-  const pushOutbox = await processPushOutbox(50);
   const orders = await collection<any>("orders");
   const users = await collection<any>("users");
   const txs = await collection<any>("coinTransactions");
@@ -52,6 +51,7 @@ export async function GET(req: Request) {
     return NextResponse.json({ok: false, error: "Unauthorized"}, {status: 401});
   }
 
+  const pushOutbox = await processPushOutbox(50);
   const orders = await collection<any>("orders");
   const now = Date.now();
   const waiting = await orders.find({
