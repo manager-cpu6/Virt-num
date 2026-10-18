@@ -52,7 +52,7 @@ export async function claimDeviceTokenForUser(userId:string){
  return true;
 }
 
-async function deliverPushOutbox(outboxId:string){
+async function deliverPushOutbox(outboxId:string):Promise<{sent:number;configured:boolean;skipped?:boolean;failed?:number}>{
  const outbox=await collection<any>("pushOutbox");
  const now=new Date();
  const leaseUntil=new Date(now.getTime()+2*60*1000);
