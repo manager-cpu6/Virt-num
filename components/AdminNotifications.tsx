@@ -10,7 +10,7 @@ export default function AdminNotifications(){
  const[title,setTitle]=useState("");
  const[message,setMessage]=useState("");
  const[target,setTarget]=useState("all");
- const[users,setUsers]=useState<{id:string;name:string;email:string}[]>([]);
+ const[users,setUsers]=useState<{id:string;name:string;email:string;hasAndroidPush?:boolean}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0),[linkedDeviceCount,setLinkedDeviceCount]=useState(0),[unlinkedDeviceCount,setUnlinkedDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
@@ -161,12 +161,12 @@ export default function AdminNotifications(){
    <button type="button" className="secondary-btn full" onClick={testCurrentDevice} disabled={busy}>🔔 Test this admin device</button>
    <span className="eyebrow">PUSH CENTER</span>
    <h2>Send a notification</h2>
-   <p>Send a real native phone notification to every user or one specific user. Numelixa does not use an in-app notification inbox.</p>
+   <p>All users sends only to accounts with a registered Android push device. Website-only accounts can remain in the user database, but cannot receive native phone push notifications until they sign in on the Android app.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
-      <option value="all">All users</option>
-      {users.map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email}</option>)}
+      <option value="all">All users with linked Android devices ({linkedDeviceCount})</option>
+      {users.filter(u=>u.hasAndroidPush).map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email} · Android linked</option>)}
      </select>
     </label>
     <label>Title
