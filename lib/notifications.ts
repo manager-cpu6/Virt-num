@@ -32,7 +32,8 @@ export async function claimDeviceTokenForUser(userId:string){
    secure:process.env.NODE_ENV==="production",
    sameSite:"lax",
    path:"/",
-   maxAge:60*60*24*365
+   maxAge:60*60*24*365,
+   ...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})
   });
   jar.delete("numelixa_device_token_pending");
  }catch{}
