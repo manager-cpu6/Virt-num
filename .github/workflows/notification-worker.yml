@@ -14,5 +14,5 @@ jobs:
           CRON_SECRET: ${{ secrets.NUMELIXA_CRON_SECRET }}
         run: |
           test -n "$CRON_SECRET" || { echo "Missing GitHub secret NUMELIXA_CRON_SECRET"; exit 1; }
-          curl --fail --silent --show-error --max-time 45             -H "Authorization: Bearer $CRON_SECRET"             https://numelixa.com/api/cron/notifications
+          curl --fail --silent --show-error --max-time 45             -H "Authorization: Bearer $CRON_SECRET"             https://www.numelixa.com/api/cron/notifications
           echo
