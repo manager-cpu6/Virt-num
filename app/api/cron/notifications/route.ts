@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {collection, mongoId} from "@/lib/mongo";
 import {check, cancel, finalize, type SmsProvider} from "@/lib/sms-provider";
-import {notifyUser} from "@/lib/notifications";
+import {notifyUser,processPushOutbox} from "@/lib/notifications";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -13,6 +13,7 @@ function authorized(req: Request) {
 }
 
 async function refundOrder(o: any) {
+  const pushOutbox = await processPushOutbox(50);
   const orders = await collection<any>("orders");
   const users = await collection<any>("users");
   const txs = await collection<any>("coinTransactions");
@@ -152,5 +153,5 @@ export async function GET(req: Request) {
     }
   }
 
-  return NextResponse.json({ok: true, checked, received, refunded, warnings});
+  return NextResponse.json({ok: true, checked, received, refunded, warnings, pushOutbox});
 }
