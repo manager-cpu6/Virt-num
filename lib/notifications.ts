@@ -64,54 +64,50 @@ export async function notifyUser(
  message:string,
  data:Record<string,string>={}
 ){
- const id=mongoId();
- const createdAt=new Date();
  const notifications=await collection<any>("notifications");
-
- await notifications.insertOne({
-  _id:id,
+ const devicesCollection=await collection<any>("deviceTokens");
+ const devices=await devicesCollection.find({
   userId:String(userId),
-  title,
-  message,
-  createdAt,
-  readAt:null,
-  systemSent:true,
-  sentCount:0,
-  pushConfigured:false
- });
+  platform:"android",
+  enabled:{$ne:false}
+ }).toArray();
+ const tokens=[...new Set(devices.map((d)=>String(d.token||"").trim()).filter(token=>token.length>=20))];
 
- let sent=0;
- let pushConfigured=false;
+ let result:Awaited<ReturnType<typeof sendPush>>;
  try{
-  const devices=await (await collection<any>("deviceTokens"))
-   .find({userId:String(userId)})
-   .toArray();
-
-  const result=await sendPush(
-   devices.map((d)=>String(d.token||"")),
-   title,
-   message,
-   {url:data.url||"/",...data}
-  );
-
-  sent=result.successCount;
-  pushConfigured=result.configured;
-
-  if(result.invalidTokens?.length){
-   await (await collection<any>("deviceTokens"))
-    .deleteMany({token:{$in:result.invalidTokens}});
-  }
+  result=await sendPush(tokens,title,message,{url:data.url||"/",...data});
  }catch(error){
   console.error("[PUSH USER]",{
    userId,
    message:error instanceof Error?error.message:String(error)
   });
+  return {id:"",sent:0,pushConfigured:false,failed:tokens.length};
  }
 
- await notifications.updateOne(
-  {_id:id},
-  {$set:{sentCount:sent,pushConfigured,updatedAt:new Date()}}
- );
+ if(result.invalidTokens.length){
+  await devicesCollection.deleteMany({token:{$in:result.invalidTokens}});
+ }
 
- return {id,sent,pushConfigured};
+ // A notification record is evidence of a real FCM acceptance, not a fake
+ // inbox entry. Do not persist it when no device was linked or FCM rejected
+ // every token.
+ if(!result.configured||result.successCount===0){
+  return {id:"",sent:0,pushConfigured:result.configured,failed:result.failureCount};
+ }
+
+ const id=mongoId();
+ await notifications.insertOne({
+  _id:id,
+  userId:String(userId),
+  title,
+  message,
+  createdAt:new Date(),
+  readAt:null,
+  systemSent:true,
+  sentCount:result.successCount,
+  failureCount:result.failureCount,
+  pushConfigured:true,
+  pushError:null
+ });
+ return {id,sent:result.successCount,pushConfigured:true,failed:result.failureCount};
 }
