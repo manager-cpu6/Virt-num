@@ -92,7 +92,8 @@ export default function MobileAppBootstrap(){
 
   const saveAndRegister=async(token:string,deviceId?:string,appVersion?:string)=>{
    token=String(token||"").trim();
-   if(token.length<20||stopped||tokenInFlight)return false;
+   if(token.length<20||stopped)return false;
+   if(tokenInFlight){scheduleRetry();return false;}
    // One authenticated JavaScript registration path only. The native token
    // bridge must never POST to the protected endpoint without session cookies.
    tokenInFlight=true;
@@ -113,6 +114,7 @@ export default function MobileAppBootstrap(){
     }
     if(!account?.id||!String(account?.email||"").trim().includes("@")){
      console.info("[NUMELIXA FCM_WAITING_FOR_EMAIL_LOGIN]");
+     scheduleRetry();
      return false;
     }
 
