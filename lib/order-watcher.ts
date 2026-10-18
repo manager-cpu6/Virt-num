@@ -29,8 +29,7 @@ export async function watchOrderForPush(orderId:string,userId:string){
       code,
       fullSms,
       status:"received",
-      completedAt:new Date(),
-      codeNotifiedAt:new Date()
+      completedAt:new Date()
      }},
      {returnDocument:"after"}
     );
