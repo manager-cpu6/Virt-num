@@ -89,7 +89,7 @@ export async function getCurrentSession(){
 async function sessionUser(userId:string){
  const u=await (await collection<any>("users")).findOne({_id:userId});
  if(!u||u.suspendedAt)return null;
- return {id:String(u._id),email:u.email,name:u.name,role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||null,createdAt:u.createdAt||null};
+ return {id:String(u._id),email:u.email,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||null,createdAt:u.createdAt||null};
 }
 
 export async function getUser(){
