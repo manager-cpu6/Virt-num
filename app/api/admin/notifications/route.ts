@@ -11,8 +11,9 @@ export async function GET(){
  try{
   await requireAdmin();
   const devices=await collection<any>("deviceTokens");
-  const deviceCount=await devices.countDocuments({});
-  const linkedDeviceCount=await devices.countDocuments({userId:{$type:"string",$ne:""}});
+  const activeFilter={platform:"android",enabled:{$ne:false}};
+  const deviceCount=await devices.countDocuments(activeFilter);
+  const linkedDeviceCount=await devices.countDocuments({...activeFilter,userId:{$type:"string",$ne:""}});
   const unlinkedDeviceCount=Math.max(0,deviceCount-linkedDeviceCount);
   const rows=await (await collection<any>("notifications"))
    .find({adminSent:true}).sort({createdAt:-1}).limit(50).toArray();
@@ -47,7 +48,7 @@ export async function POST(req:Request){
    const devices=await collection<any>("deviceTokens");
    const adminId=String(admin.id||"").trim();
    const rows=adminId
-    ?await devices.find({userId:adminId},{projection:{token:1,platform:1,updatedAt:1,lastSeenAt:1}}).sort({updatedAt:-1}).toArray()
+    ?await devices.find({userId:adminId,platform:"android",enabled:{$ne:false}},{projection:{token:1,platform:1,updatedAt:1,lastSeenAt:1}}).sort({updatedAt:-1}).toArray()
     :[];
    const tokens=[...new Set(rows.map(x=>String(x.token||"").trim()).filter(x=>x.length>=20))];
 
@@ -105,7 +106,7 @@ export async function POST(req:Request){
 
   const ids=userIds.map(u=>String(u._id));
   const deviceRows=await (await collection<any>("deviceTokens"))
-   .find({userId:{$in:ids}}).toArray();
+   .find({userId:{$in:ids},platform:"android",enabled:{$ne:false}}).toArray();
   const uniqueTokens=[...new Set(deviceRows.map(x=>String(x.token||"").trim()).filter(x=>x.length>=20))];
   if(!uniqueTokens.length){
    return NextResponse.json({ok:false,error:"No Android push devices are linked to the selected users. Open the Numelixa Android app, sign in, and allow notifications before sending."},{status:409});
