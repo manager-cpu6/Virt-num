@@ -12,6 +12,7 @@ export async function POST(req:Request){
   const platform=String(body?.platform||"android").trim().toLowerCase();
   const deviceId=String(body?.deviceId||"").trim().slice(0,160);
   const appVersion=String(body?.appVersion||"").trim().slice(0,40);
+  const deviceName=String(req.headers.get("x-numelixa-device")||body?.deviceName||"").trim().slice(0,160);
   if(!token||token.length<20)return NextResponse.json({ok:false,error:"Invalid device token."},{status:400});
   if(!String(process.env.MONGODB_URI||"").trim())return NextResponse.json({ok:false,error:"PUSH_STORAGE_NOT_CONFIGURED"},{status:503});
 
@@ -30,6 +31,7 @@ export async function POST(req:Request){
   const fields:any={token,platform,updatedAt:now,lastSeenAt:now,enabled:true,userId:String(user.id),email};
   if(deviceId)fields.deviceId=deviceId;
   if(appVersion)fields.appVersion=appVersion;
+  if(deviceName)fields.deviceName=deviceName;
   await devices.updateOne(filter,{$set:fields,$setOnInsert:{createdAt:now}},{upsert:true});
 
   console.info("[FCM_TOKEN_REGISTERED]",{authenticated:true,verifiedEmail:true,linked:true,platform,deviceIdentityPresent:Boolean(deviceId),appVersion:appVersion||undefined});
