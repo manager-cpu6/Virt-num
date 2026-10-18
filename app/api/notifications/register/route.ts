@@ -42,7 +42,7 @@ export async function POST(req:Request){
    }catch(error){console.error("[WELCOME PUSH]",error instanceof Error?error.message:"Unknown push error");}
   }
   const response=NextResponse.json({ok:true,registered:true,linked:true});
-  response.cookies.set("numelixa_device_token",token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*365});
+  response.cookies.set("numelixa_device_token",token,{httpOnly:true,secure:process.env.NODE_ENV==="production",sameSite:"lax",path:"/",maxAge:60*60*24*365,...(process.env.NODE_ENV==="production"?{domain:".numelixa.com"}:{})});
   response.cookies.delete("numelixa_device_token_pending");
   return response;
  }catch(error){
