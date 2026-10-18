@@ -60,7 +60,7 @@ export async function DELETE(req:Request){
   if(!deviceId&&!sessionId)return NextResponse.json({ok:false,error:"Device ID is required."},{status:400});
   const sessions=await collection<any>("sessions");
   let removed=0;
-  if(deviceId){
+  if(deviceId&&deviceId!==sessionId){
    const result=await sessions.deleteMany({userId:String(user.id),deviceId});
    removed=result.deletedCount||0;
    await (await collection<any>("deviceTokens")).updateMany(
