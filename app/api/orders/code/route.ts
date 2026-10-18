@@ -11,7 +11,7 @@ export async function POST(req:Request){try{const u=await requireUser(),id=Strin
  const p=await check(String(o.providerOrderId),provider);
  if(Number(p.status)===3){const code=String(p.sms||"");try{await finalize(String(o.providerOrderId),provider)}catch{}const changed=await orders.findOneAndUpdate(
    {_id:id,userId:u.id,status:"waiting"},
-   {$set:{code,fullSms:String((p as any).fullSms||code),status:"received",completedAt:new Date(),codeNotifiedAt:new Date()}},
+   {$set:{code,fullSms:String((p as any).fullSms||code),status:"received",completedAt:new Date()}},
    {returnDocument:"after"}
  );
  if(changed){
