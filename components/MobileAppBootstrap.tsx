@@ -3,7 +3,7 @@ import {useEffect} from "react";
 import {Capacitor,registerPlugin} from "@capacitor/core";
 
 const TOKEN_KEY="numelixa_fcm_token_v5";
-const NativePushToken=registerPlugin<{getToken():Promise<{token?:string;deviceId?:string;appVersion?:string}>;requestNotificationPermission():Promise<{granted?:boolean;status?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number;deviceId?:string;appVersion?:string;permission?:string}>}>( "NumelixaPushToken");
+const NativePushToken=registerPlugin<{getToken():Promise<{token?:string;deviceId?:string;appVersion?:string}>;requestNotificationPermission():Promise<{granted?:boolean;status?:string}>;openNotificationSettings():Promise<{opened?:boolean}>;getStatus():Promise<{tokenPresent?:boolean;tokenLength?:string|number;tokenError?:string;registrationStatus?:string;registrationResponse?:string;registrationAt?:number;deviceId?:string;appVersion?:string;permission?:string}>;recordRegistrationResult(options:{status:number;response:string}):Promise<void>}>( "NumelixaPushToken");
 
 export default function MobileAppBootstrap(){
  useEffect(()=>{
@@ -93,41 +93,58 @@ export default function MobileAppBootstrap(){
   const saveAndRegister=async(token:string,deviceId?:string,appVersion?:string)=>{
    token=String(token||"").trim();
    if(token.length<20||stopped||tokenInFlight)return false;
-   // Link push tokens after any email account has an authenticated session.
-   // Never create anonymous/unlinked device records at app startup.
-   let account:any=null;
-   try{
-    const me=await fetch("/api/me",{cache:"no-store",credentials:"include"});
-    if(!me.ok)return false;
-    const payload=await me.json().catch(()=>null);
-    account=payload?.user;
-   }catch{return false}
-   if(!account?.id||!String(account?.email||"").trim().includes("@")){
-    console.info("[NUMELIXA FCM_WAITING_FOR_EMAIL_LOGIN]");
-    return false;
-   }
-   try{localStorage.setItem(TOKEN_KEY,token)}catch{}
-   const registrationKey=String(account.id)+":"+token;
-   if(registeredAccountToken===registrationKey)return true;
+   // One authenticated JavaScript registration path only. The native token
+   // bridge must never POST to the protected endpoint without session cookies.
    tokenInFlight=true;
    try{
+    let account:any=null;
+    let meResponse:Response;
+    try{
+     meResponse=await fetch("/api/me",{cache:"no-store",credentials:"include"});
+     if(!meResponse.ok){
+      if(meResponse.status>=500)scheduleRetry();
+      return false;
+     }
+     const payload=await meResponse.json().catch(()=>null);
+     account=payload?.user;
+    }catch{
+     scheduleRetry();
+     return false;
+    }
+    if(!account?.id||!String(account?.email||"").trim().includes("@")){
+     console.info("[NUMELIXA FCM_WAITING_FOR_EMAIL_LOGIN]");
+     return false;
+    }
+
+    try{localStorage.setItem(TOKEN_KEY,token)}catch{}
+    const registrationKey=String(account.id)+":"+token;
+    if(registeredAccountToken===registrationKey)return true;
+
     const response=await fetch("/api/notifications/register",{
      method:"POST",credentials:"include",cache:"no-store",
      headers:{"Content-Type":"application/json"},
-     body:JSON.stringify({token,platform:Capacitor.getPlatform(),deviceId:deviceId||"",appVersion:appVersion||""})
+     body:JSON.stringify({token,platform:"android",deviceId:deviceId||"",appVersion:appVersion||""})
     });
-    if(response.ok){
-     const result=await response.json().catch(()=>null);
+    const result=await response.json().catch(()=>null);
+    const safeResponse=JSON.stringify({
+     ok:Boolean(result?.ok),
+     error:String(result?.error||""),
+     message:String(result?.message||"")
+    }).slice(0,280);
+    try{
+     await NativePushToken.recordRegistrationResult({status:response.status,response:safeResponse});
+    }catch{}
+    if(response.ok&&result?.ok&&result?.linked){
      registeredAccountToken=registrationKey;
-     console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:Boolean(result?.linked),httpStatus:response.status});
+     console.info("[NUMELIXA FCM_TOKEN_REGISTERED]",{linked:true,httpStatus:response.status});
      window.dispatchEvent(new Event("numelixa-push-ready"));
      return true;
     }
-    console.error("[NUMELIXA FCM_REGISTER_HTTP_FAILURE]",{status:response.status});
+    console.error("[NUMELIXA FCM_REGISTER_HTTP_FAILURE]",{status:response.status,code:String(result?.error||"REGISTER_FAILED")});
     scheduleRetry();
     return false;
    }catch(error){
-    console.error("[NUMELIXA PUSH REGISTER]",error);
+    console.error("[NUMELIXA PUSH REGISTER]",error instanceof Error?error.message:"Registration failed");
     scheduleRetry();
     return false;
    }finally{tokenInFlight=false}
