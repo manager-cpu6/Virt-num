@@ -10,8 +10,11 @@ export async function GET(){
  try{
   await requireAdmin();
   const rows=await (await collection<any>("users")).find({}, {projection:{password_hash:0}}).sort({coins:-1,createdAt:-1}).limit(500).toArray();
+  const activeDevices=await (await collection<any>("deviceTokens")).find({platform:"android",enabled:{$ne:false},userId:{$type:"string",$ne:""}},{projection:{userId:1}}).toArray();
+  const pushUserIds=new Set(activeDevices.map(d=>String(d.userId||"")).filter(Boolean));
   return NextResponse.json({ok:true,users:rows.map(u=>({
    id:String(u._id),email:u.email,name:u.name,role:u.role,coins:Number(u.coins||0),
+   hasAndroidPush:pushUserIds.has(String(u._id)),
    verified_at:u.verifiedAt||null,created_at:u.createdAt,suspended_at:u.suspendedAt||null,suspension_reason:u.suspensionReason||""
   }))},{headers:{"Cache-Control":"no-store"}});
  }catch{return NextResponse.json({ok:false,error:"Unauthorized"},{status:401})}
