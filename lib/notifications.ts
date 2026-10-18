@@ -5,8 +5,6 @@ import {sendPush} from "@/lib/push";
 export async function claimDeviceTokenForUser(userId:string){
  const users=await collection<any>("users");
  const account=await users.findOne({_id:String(userId)},{projection:{email:1,pushWelcomeSentAt:1}});
- // Only an account with an email address may own push tokens. Existing
- // accounts are eligible regardless of legacy verifiedAt field state.
  if(!String(account?.email||"").includes("@"))return false;
  const jar=await cookies();
  const token=String(
@@ -18,14 +16,12 @@ export async function claimDeviceTokenForUser(userId:string){
 
  const devices=await collection<any>("deviceTokens");
  const now=new Date();
-
  await devices.updateOne(
   {token},
-  {$set:{token,userId:String(userId),updatedAt:now,lastSeenAt:now},$setOnInsert:{createdAt:now}},
+  {$set:{token,userId:String(userId),updatedAt:now,lastSeenAt:now,platform:"android",enabled:true},$setOnInsert:{createdAt:now}},
   {upsert:true}
  );
 
- // Convert the pending handoff into the normal authenticated device cookie.
  try{
   jar.set("numelixa_device_token",token,{
    httpOnly:true,
@@ -38,8 +34,6 @@ export async function claimDeviceTokenForUser(userId:string){
   jar.delete("numelixa_device_token_pending");
  }catch{}
 
- // Send the first-device welcome from the authenticated server path. This
- // also works when the login happens before the browser event fires.
  if(!account?.pushWelcomeSentAt){
   try{
    const result=await sendPush(
@@ -52,10 +46,94 @@ export async function claimDeviceTokenForUser(userId:string){
     await users.updateOne({_id:String(userId)},{$set:{pushWelcomeSentAt:new Date()}});
    }
   }catch(error){
-   console.error("[WELCOME PUSH CLAIM]",error);
+   console.error("[WELCOME PUSH CLAIM]",error instanceof Error?error.message:"Push delivery failed");
   }
  }
  return true;
+}
+
+async function deliverPushOutbox(outboxId:string){
+ const outbox=await collection<any>("pushOutbox");
+ const now=new Date();
+ const leaseUntil=new Date(now.getTime()+2*60*1000);
+ const job=await outbox.findOneAndUpdate(
+  {_id:outboxId,status:"pending",$or:[{lockedUntil:{$exists:false}},{lockedUntil:{$lt:now}}]},
+  {$set:{lockedUntil:leaseUntil,lastAttemptAt:now},$inc:{attempts:1}},
+  {returnDocument:"after"}
+ );
+ if(!job)return {sent:0,configured:false,skipped:true};
+ const devicesCollection=await collection<any>("deviceTokens");
+ const devices=await devicesCollection.find({
+  userId:String(job.userId),
+  platform:"android",
+  enabled:{$ne:false}
+ }).toArray();
+ const tokens=[...new Set(devices.map((d)=>String(d.token||"").trim()).filter(token=>token.length>=20))];
+ let result:Awaited<ReturnType<typeof sendPush>>;
+ try{
+  result=await sendPush(tokens,String(job.title||"Numelixa"),String(job.message||""),job.data||{});
+ }catch(error){
+  result={configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"push-send-failed",message:error instanceof Error?error.message:"Push send failed"}]};
+ }
+ if(result.invalidTokens.length){
+  await devicesCollection.deleteMany({token:{$in:result.invalidTokens}});
+ }
+ if(result.configured&&result.successCount>0){
+  const notificationId=mongoId();
+  await (await collection<any>("notifications")).updateOne(
+   {outboxId:String(job._id)},
+   {$setOnInsert:{
+    _id:notificationId,
+    outboxId:String(job._id),
+    userId:String(job.userId),
+    title:String(job.title||"Numelixa"),
+    message:String(job.message||""),
+    createdAt:new Date(),
+    readAt:null,
+    systemSent:true,
+    sentCount:result.successCount,
+    failureCount:result.failureCount,
+    pushConfigured:true
+   }},
+   {upsert:true}
+  );
+  await outbox.updateOne({_id:job._id,status:"pending"},{$set:{
+   status:"sent",sentAt:new Date(),sentCount:result.successCount,
+   failureCount:result.failureCount,lastError:null
+  },$unset:{lockedUntil:""}});
+  return {sent:result.successCount,configured:true,failed:result.failureCount};
+ }
+ const attempts=Number(job.attempts||1);
+ const delayMs=tokens.length?Math.min(30*60*1000,10_000*Math.pow(2,Math.min(6,attempts-1))):5*60*1000;
+ const error=result.errors?.[0];
+ await outbox.updateOne({_id:job._id,status:"pending"},{$set:{
+  nextAttemptAt:new Date(Date.now()+delayMs),
+  lastError:String(error?.code||(!tokens.length?"no-active-device":"push-not-delivered")).slice(0,120),
+  lastErrorMessage:String(error?.message||(!tokens.length?"No active Android device is linked.":"Firebase did not accept the push.")).slice(0,280),
+  lastFailureCount:result.failureCount
+ },$unset:{lockedUntil:""}});
+ return {sent:0,configured:result.configured,failed:result.failureCount};
+}
+
+export async function processPushOutbox(limit=25){
+ const outbox=await collection<any>("pushOutbox");
+ const now=new Date();
+ const jobs=await outbox.find({status:"pending",nextAttemptAt:{$lte:now}})
+  .sort({nextAttemptAt:1,createdAt:1}).limit(Math.max(1,Math.min(100,limit))).toArray();
+ let attempted=0,sent=0,failed=0;
+ for(const job of jobs){
+  try{
+   const result=await deliverPushOutbox(String(job._id));
+   if(result.skipped)continue;
+   attempted++;
+   sent+=result.sent;
+   if(!result.sent)failed++;
+  }catch(error){
+   failed++;
+   console.error("[PUSH OUTBOX]",{jobId:String(job._id),message:error instanceof Error?error.message:"Outbox delivery failed"});
+  }
+ }
+ return {attempted,sent,failed};
 }
 
 export async function notifyUser(
@@ -64,50 +142,25 @@ export async function notifyUser(
  message:string,
  data:Record<string,string>={}
 ){
- const notifications=await collection<any>("notifications");
- const devicesCollection=await collection<any>("deviceTokens");
- const devices=await devicesCollection.find({
-  userId:String(userId),
-  platform:"android",
-  enabled:{$ne:false}
- }).toArray();
- const tokens=[...new Set(devices.map((d)=>String(d.token||"").trim()).filter(token=>token.length>=20))];
-
- let result:Awaited<ReturnType<typeof sendPush>>;
- try{
-  result=await sendPush(tokens,title,message,{url:data.url||"/",...data});
- }catch(error){
-  console.error("[PUSH USER]",{
-   userId,
-   message:error instanceof Error?error.message:String(error)
-  });
-  return {id:"",sent:0,pushConfigured:false,failed:tokens.length};
- }
-
- if(result.invalidTokens.length){
-  await devicesCollection.deleteMany({token:{$in:result.invalidTokens}});
- }
-
- // A notification record is evidence of a real FCM acceptance, not a fake
- // inbox entry. Do not persist it when no device was linked or FCM rejected
- // every token.
- if(!result.configured||result.successCount===0){
-  return {id:"",sent:0,pushConfigured:result.configured,failed:result.failureCount};
- }
-
  const id=mongoId();
- await notifications.insertOne({
+ const now=new Date();
+ await (await collection<any>("pushOutbox")).insertOne({
   _id:id,
   userId:String(userId),
-  title,
-  message,
-  createdAt:new Date(),
-  readAt:null,
-  systemSent:true,
-  sentCount:result.successCount,
-  failureCount:result.failureCount,
-  pushConfigured:true,
-  pushError:null
+  title:String(title).slice(0,120),
+  message:String(message).slice(0,1000),
+  data:Object.fromEntries(Object.entries({url:"/",...data}).map(([key,value])=>[String(key),String(value)])),
+  status:"pending",
+  attempts:0,
+  createdAt:now,
+  nextAttemptAt:now,
+  lastError:null
  });
- return {id,sent:result.successCount,pushConfigured:true,failed:result.failureCount};
+ try{
+  const result=await deliverPushOutbox(id);
+  return {id:result.sent?id:"",sent:result.sent,pushConfigured:result.configured,failed:result.failed||0,queued:!result.sent};
+ }catch(error){
+  console.error("[PUSH USER]",{userId:String(userId),message:error instanceof Error?error.message:"Push queue failed"});
+  return {id:"",sent:0,pushConfigured:false,failed:1,queued:true};
+ }
 }
