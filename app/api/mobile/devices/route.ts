@@ -1,27 +1,33 @@
+import crypto from "crypto";
 import {NextResponse} from "next/server";
 import {requireUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
+const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 
-export async function GET(){
+export async function GET(req:Request){
  try{
   const user=await requireUser();
-  const rows=await (await collection<any>("deviceTokens"))
-   .find({userId:String(user.id),enabled:{$ne:false}})
-   .project({token:0})
-   .sort({lastSeenAt:-1,updatedAt:-1})
-   .toArray();
-  return NextResponse.json({ok:true,devices:rows.map((d:any)=>({
-   deviceId:String(d.deviceId||d._id||""),
-   deviceName:String(d.deviceName||d.deviceModel||d.platform||"Device"),
-   deviceModel:String(d.deviceModel||""),
-   platform:String(d.platform||"unknown"),
-   appVersion:String(d.appVersion||""),
-   lastSeenAt:d.lastSeenAt||d.updatedAt||d.createdAt||null,
-   createdAt:d.createdAt||null,
-   location:String(d.location||"Not collected")
+  const auth=String(req.headers.get("authorization")||"");
+  const raw=auth.toLowerCase().startsWith("bearer ")?auth.slice(7).trim():"";
+  const currentHash=raw?hash(raw):"";
+  const rows=await (await collection<any>("sessions"))
+   .find({userId:String(user.id),expiresAt:{$gt:new Date()}})
+   .sort({lastSeenAt:-1,createdAt:-1}).toArray();
+  return NextResponse.json({ok:true,devices:rows.map((s:any)=>({
+   sessionId:String(s._id),
+   current:Boolean(currentHash&&s.tokenHash===currentHash),
+   device:String(s.device||"Device"),
+   browser:String(s.browser||"App"),
+   platform:String(s.platform||"Unknown"),
+   city:String(s.city||""),
+   region:String(s.region||""),
+   country:String(s.country||""),
+   createdAt:s.createdAt||null,
+   lastSeenAt:s.lastSeenAt||s.createdAt||null,
+   expiresAt:s.expiresAt||null
   }))},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   const message=error instanceof Error?error.message:"Unable to load devices.";
@@ -33,13 +39,10 @@ export async function DELETE(req:Request){
  try{
   const user=await requireUser();
   const body=await req.json().catch(()=>null);
-  const deviceId=String(body?.deviceId||"").trim();
-  if(!deviceId)return NextResponse.json({ok:false,error:"Device ID is required."},{status:400});
-  const result=await (await collection<any>("deviceTokens")).updateOne(
-   {userId:String(user.id),deviceId},
-   {$set:{enabled:false,revokedAt:new Date(),updatedAt:new Date()}}
-  );
-  if(!result.matchedCount)return NextResponse.json({ok:false,error:"Device not found or already removed."},{status:404});
+  const sessionId=String(body?.sessionId||"").trim();
+  if(!sessionId)return NextResponse.json({ok:false,error:"Session ID is required."},{status:400});
+  const result=await (await collection<any>("sessions")).deleteOne({_id:sessionId,userId:String(user.id)});
+  if(!result.deletedCount)return NextResponse.json({ok:false,error:"Device session not found or already removed."},{status:404});
   return NextResponse.json({ok:true,removed:true});
  }catch(error){
   const message=error instanceof Error?error.message:"Unable to remove device.";
