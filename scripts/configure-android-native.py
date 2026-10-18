@@ -186,7 +186,7 @@ public class NumelixaPushTokenPlugin extends Plugin {
                     .putString("fcm_token_error", "")
                     .apply();
 
-                NumelixaPushTransport.registerToken(getContext(), value);
+                // The authenticated WebView registers this token with the user's session cookie.
 
                 JSObject out = new JSObject();
                 out.put("token", value);
@@ -229,6 +229,22 @@ public class NumelixaPushTokenPlugin extends Plugin {
         }
     }
 
+    @PluginMethod
+    public void recordRegistrationResult(PluginCall call) {
+        int status = call.getInt("status", 0);
+        String response = call.getString("response", "");
+        if (response == null) response = "";
+        if (response.length() > 280) response = response.substring(0, 280);
+        getContext().getSharedPreferences("numelixa_push", 0)
+            .edit()
+            .putString("last_registration_status", String.valueOf(status))
+            .putString("last_registration_response", response)
+            .putLong("last_registration_at", System.currentTimeMillis())
+            .apply();
+        JSObject result = new JSObject();
+        result.put("saved", true);
+        call.resolve(result);
+    }
     @PluginMethod
     public void getStatus(PluginCall call) {
         android.content.SharedPreferences prefs =
@@ -276,117 +292,6 @@ public class NumelixaPushTokenPlugin extends Plugin {
     private static String safe(Throwable t) {
         if (t == null) return "Unknown Firebase error";
         return t.getMessage() == null ? t.getClass().getSimpleName() : t.getMessage();
-    }
-}
-''')
-
-(JAVA/"NumelixaPushTransport.java").write_text(r'''package com.numelixa.app;
-
-import android.content.Context;
-import android.os.Build;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import org.json.JSONObject;
-
-public final class NumelixaPushTransport {
-    private static final String TAG = "NUMELIXA_PUSH";
-    private static final String REGISTER_URL =
-        "https://numelixa.com/api/notifications/register";
-
-    private NumelixaPushTransport() {}
-
-    public static void registerToken(Context context, String token) {
-        final String value = token == null ? "" : token.trim();
-        if (value.length() < 20) return;
-
-        new Thread(() -> {
-            HttpURLConnection connection = null;
-            try {
-                URL url = new URL(REGISTER_URL);
-                connection = (HttpURLConnection) url.openConnection();
-                connection.setRequestMethod("POST");
-                connection.setConnectTimeout(10000);
-                connection.setReadTimeout(10000);
-                connection.setDoOutput(true);
-                connection.setRequestProperty("Content-Type", "application/json");
-                connection.setRequestProperty("Accept", "application/json");
-                connection.setRequestProperty("Cache-Control", "no-cache");
-                connection.setRequestProperty(
-                    "User-Agent",
-                    "Numelixa-Android/" + Build.VERSION.SDK_INT
-                );
-
-                JSONObject body = new JSONObject();
-                body.put("token", value);
-                body.put("platform", "android");
-
-                byte[] payload = body.toString().getBytes(
-                    java.nio.charset.StandardCharsets.UTF_8
-                );
-
-                try (OutputStream out = connection.getOutputStream()) {
-                    out.write(payload);
-                    out.flush();
-                }
-
-                int status = connection.getResponseCode();
-                String response = readResponse(connection, status);
-                String safeResponse =
-                    response.length() > 300 ? response.substring(0, 300) : response;
-
-                context.getSharedPreferences("numelixa_push", Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("last_registration_status", String.valueOf(status))
-                    .putString("last_registration_response", safeResponse)
-                    .putLong("last_registration_at", System.currentTimeMillis())
-                    .apply();
-
-                android.util.Log.d(
-                    TAG,
-                    "FCM token registration HTTP " + status +
-                    " response=" + safeResponse
-                );
-            } catch (Exception error) {
-                String message = error.getMessage() == null
-                    ? error.getClass().getSimpleName()
-                    : error.getMessage();
-
-                context.getSharedPreferences("numelixa_push", Context.MODE_PRIVATE)
-                    .edit()
-                    .putString("last_registration_status", "error")
-                    .putString("last_registration_response", message)
-                    .putLong("last_registration_at", System.currentTimeMillis())
-                    .apply();
-
-                android.util.Log.e(
-                    TAG,
-                    "FCM token registration failed: " + message,
-                    error
-                );
-            } finally {
-                if (connection != null) connection.disconnect();
-            }
-        }, "numelixa-fcm-register").start();
-    }
-
-    private static String readResponse(HttpURLConnection connection, int status) {
-        try {
-            java.io.InputStream stream =
-                status >= 400 ? connection.getErrorStream() : connection.getInputStream();
-            if (stream == null) return "";
-            try (BufferedReader reader =
-                     new BufferedReader(new InputStreamReader(stream))) {
-                StringBuilder result = new StringBuilder();
-                String line;
-                while ((line = reader.readLine()) != null) result.append(line);
-                return result.toString();
-            }
-        } catch (Exception ignored) {
-            return "";
-        }
     }
 }
 ''')
