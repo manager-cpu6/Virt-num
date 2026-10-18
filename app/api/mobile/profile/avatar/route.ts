@@ -18,7 +18,7 @@ export async function PUT(req:Request){
   const bytes=Buffer.from(match[2],"base64");
   if(!bytes.length||bytes.length>MAX_BYTES)return NextResponse.json({ok:false,error:"Profile photo must be smaller than 450 KB."},{status:413});
   const users=await collection<any>("users");
-  await users.updateOne({_id:String(user.id)},{$set:{avatarDataUrl:avatar,updatedAt:new Date()}});
+  await users.updateOne({_id:String(user.id)},{$set:{avatarDataUrl:avatar,avatarUrl:avatar,updatedAt:new Date()}});
   return NextResponse.json({ok:true,avatarUrl:avatar},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   const message=error instanceof Error?error.message:"Unable to update profile photo.";
