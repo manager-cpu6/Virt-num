@@ -183,8 +183,14 @@ export default function MobileAppBootstrap(){
     const data=me.ok?await me.json().catch(()=>null):null;
     authenticated=Boolean(data?.user?.id&&String(data.user.email||"").trim().includes("@"));
    }catch{}
-   if(!authenticated)return;
-   const cached=String(localStorage.getItem(TOKEN_KEY)||"").trim();
+   if(!authenticated){
+    // The native token can arrive before login. Keep retrying so the first
+    // successful email login always links this installation to that account.
+    scheduleRetry();
+    return;
+   }
+   let cached="";
+   try{cached=String(localStorage.getItem(TOKEN_KEY)||"").trim()}catch{}
    const current=await getNativeToken();
    if(!current&&cached)await saveAndRegister(cached);
   };
@@ -333,7 +339,15 @@ export default function MobileAppBootstrap(){
     cleanups.push(()=>action.remove());
 
     const refresh=()=>{
-     void ensurePushPermission().then(()=>syncCurrentToken());
+     void ensurePushPermission().then(async()=>{
+      await syncCurrentToken();
+      // Re-register after Android returns from the system permission dialog
+      // or the user resumes the app after signing in.
+      if(await isAuthenticated()){
+       try{await push.register()}catch(error){console.warn("[NUMELIXA FCM REGISTER RETRY]",error)}
+       await syncCurrentToken();
+      }
+     });
     };
     window.addEventListener("numelixa-auth-ready",refresh);
     window.addEventListener("online",refresh);
@@ -346,9 +360,8 @@ export default function MobileAppBootstrap(){
      document.removeEventListener("visibilitychange",refresh);
     });
 
-    // Keep syncing both before and after login. The backend accepts an
-    // authenticated token immediately and also stores an unlinked token when
-    // the session is not ready yet.
+    // Keep syncing after login and when Android resumes the WebView. The
+    // backend intentionally links tokens only to authenticated email accounts.
     const authPoll=window.setInterval(async()=>{
      if(stopped)return;
      try{
@@ -374,7 +387,13 @@ export default function MobileAppBootstrap(){
      console.warn("[NUMELIXA FCM STATUS]",error);
     }
 
-    const heartbeat=window.setInterval(()=>{void syncCurrentToken()},30000);
+    const heartbeat=window.setInterval(async()=>{
+     if(stopped)return;
+     await syncCurrentToken();
+     if(await isAuthenticated()){
+      try{await push.register()}catch(error){console.warn("[NUMELIXA FCM HEARTBEAT REGISTER]",error)}
+     }
+    },30000);
     cleanups.push(()=>window.clearInterval(heartbeat));
    }catch(error){console.error("[NUMELIXA PUSH]",error)}
   })();
