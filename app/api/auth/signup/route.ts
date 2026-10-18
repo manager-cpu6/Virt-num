@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection,mongoId} from "@/lib/mongo";
-import {createSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
+import {createSession,createMobileSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {ensureApiKey} from "@/lib/api-key";
 import {sendEmail,verificationEmail} from "@/lib/mailer";
@@ -29,8 +29,10 @@ export async function POST(req:Request){
 
   }
   await ensureApiKey(id);
+  const nativeClient=req.headers.get("x-numelixa-client")==="android-app";
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
+  const accessToken=nativeClient?await createMobileSession(id,requestMeta(req.headers)):null;
 
   const code=String(Math.floor(100000+Math.random()*900000));
   await users.updateOne({_id:id},{$set:{verificationEmailLastAttemptAt:now}});
@@ -51,6 +53,6 @@ export async function POST(req:Request){
    console.error("[SIGNUP EMAIL]",e instanceof Error?e.message:String(e));
   }
 
-  return NextResponse.json({ok:true,verificationRequired:true});
+  return NextResponse.json({ok:true,verificationRequired:true,...(accessToken?{accessToken,user:{id,email,name,role:"user",verified_at:null}}:{})},{headers:{"Cache-Control":"no-store"}});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Signup failed"},{status:500})}
 }
