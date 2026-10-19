@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,getPrice,activeProvider} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
+import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancelOrAlreadyClosed,getPrice,activeProvider} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmail,purchaseSuccessEmail} from "@/lib/mailer";
 import {notifyUser} from "@/lib/notifications";
 import {watchOrderForPush} from "@/lib/order-watcher";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
@@ -332,12 +332,12 @@ export async function DELETE(req:Request){
   const o=await orders.findOne({_id:id,userId:u.id});
   if(!o)return NextResponse.json({ok:false,error:"Order not found."},{status:404});
   if(o.status!=="waiting")return NextResponse.json({ok:false,error:"This order can no longer be cancelled."},{status:409});
-  const now=Date.now(),createdAt=new Date(o.createdAt).getTime(),isTiger=String(o.provider||"")==="tiger";
+  const now=Date.now(),createdAt=new Date(o.createdAt).getTime(),expiresAt=new Date(o.expiresAt||0).getTime(),isTiger=String(o.provider||"")==="tiger",isExpired=Number.isFinite(expiresAt)&&expiresAt>0&&now>=expiresAt;
   if(!Number.isFinite(createdAt))return NextResponse.json({ok:false,error:"Order timestamp is invalid."},{status:409});
-  if(isTiger){
+  if(!isExpired&&isTiger){
    const eligibleAt=o.cancelAvailableAt?new Date(o.cancelAvailableAt).getTime():createdAt+6*60*1000;
    if(now<eligibleAt)return NextResponse.json({ok:false,code:"CANCEL_TIMER_ACTIVE",cancelAvailableAt:new Date(eligibleAt).toISOString(),error:"Cancellation and refund become available after 6 minutes."},{status:409});
-  }else if(now-createdAt>5*60*1000){
+  }else if(!isExpired&&!isTiger&&now-createdAt>5*60*1000){
    return NextResponse.json({ok:false,error:"Cancellation is available only during the first 5 minutes."},{status:409});
   }
   // Claim the cancellation atomically so repeated taps cannot trigger duplicate refunds.
@@ -348,7 +348,7 @@ export async function DELETE(req:Request){
   );
   if(!claimed)return NextResponse.json({ok:false,error:"Order status changed while cancelling."},{status:409});
   try{
-   await cancel(String(o.providerOrderId),isTiger?"tiger":"5sim");
+   await cancelOrAlreadyClosed(String(o.providerOrderId),isTiger?"tiger":"5sim");
   }catch(error){
    await orders.updateOne({_id:id,userId:u.id,status:"cancelling"},{$set:{status:"waiting"},$unset:{cancellationRequestedAt:""}});
    console.error("[ORDER CANCEL PROVIDER]",error);
