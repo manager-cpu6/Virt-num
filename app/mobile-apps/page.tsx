@@ -29,6 +29,7 @@ export default function MobileAppsPage(){
      <h2 style={{fontSize:29,letterSpacing:"-1px",margin:"8px 0"}}>Install or create shortcut</h2>
      <p style={{color:"#a7b7d0",fontSize:14,lineHeight:1.75}}>Install the Numelixa website as a browser app or add a home-screen shortcut for quick access. On supported browsers, use the install prompt below.</p>
      <div style={{marginTop:20}}><InstallShortcutButton/></div>
+     <a href="/api/mobile/apk" style={{display:"flex",justifyContent:"center",alignItems:"center",gap:8,marginTop:10,padding:"13px 15px",borderRadius:14,border:"1px solid rgba(0,217,255,.25)",color:"#b7f4ff",textDecoration:"none",fontWeight:750,fontSize:13}}>Prefer the Android APK? Download it here ↓</a>
      <p style={{color:"#7185a5",fontSize:12,lineHeight:1.65,marginTop:14}}>If no install prompt appears, open your browser menu (⋮) and select “Install app” or “Add to Home screen”.</p>
     </article>
    </section>
