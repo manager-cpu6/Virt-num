@@ -1,0 +1,18 @@
+"use client";
+import {useEffect,useState} from "react";
+type Service={id:string;name:string};
+export default function AdminServiceCatalog(){
+ const [services,setServices]=useState<Service[]>([]),[hidden,setHidden]=useState<string[]>([]),[name,setName]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[ok,setOk]=useState("");
+ async function load(){const r=await fetch("/api/admin/catalog-services",{cache:"no-store"});const d=await r.json();if(!d.ok){setError(d.error||"Unable to load services");return}setServices(d.services||[]);setHidden(d.hiddenServices||[])}
+ useEffect(()=>{void load()},[]);
+ async function change(action:"hide"|"restore",value=name){if(!value.trim())return;setBusy(true);setError("");setOk("");try{const r=await fetch("/api/admin/catalog-services",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action,name:value})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to update service");setHidden(d.hiddenServices||[]);setName("");setOk(action==="hide"?"Service hidden from the live catalog.":"Service restored to the live catalog.");await load()}catch(e){setError(e instanceof Error?e.message:"Unable to update service")}finally{setBusy(false)}}
+ const field={width:"100%",padding:"12px 14px",borderRadius:10,border:"1px solid #294866",background:"#07172b",color:"#f5f8ff"} as const;
+ const btn={padding:"10px 14px",borderRadius:10,border:"1px solid #31516f",background:"#102b47",color:"#f5f8ff",cursor:"pointer"} as const;
+ return <div className="admin-card"><h2>Service catalog visibility</h2><p className="admin-help">Hide a service by entering its exact name or provider ID. Hidden services are removed from customer catalogs and API service lists. Restore them at any time.</p>
+  <form onSubmit={e=>{e.preventDefault();void change("hide",name)}} style={{display:"flex",gap:10,flexWrap:"wrap",margin:"14px 0"}}><input value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. WhatsApp or wa" style={{...field,flex:"1 1 240px"}}/><button disabled={busy||!name.trim()} style={btn}>Hide service</button></form>
+  {error&&<div className="error-box">{error}</div>}{ok&&<div className="success-box">{ok}</div>}
+  <h3 style={{marginTop:18}}>Hidden services ({hidden.length})</h3>
+  {!hidden.length?<p className="admin-help">No services are hidden.</p>:<div style={{display:"flex",gap:8,flexWrap:"wrap",margin:"10px 0 18px"}}>{hidden.map(key=><div key={key} style={{display:"flex",alignItems:"center",gap:8,padding:"7px 10px",borderRadius:10,border:"1px solid #294866",background:"#091a30",color:"#dce9f8"}}><span>{key}</span><button disabled={busy} style={btn} onClick={()=>void change("restore",key)}>Restore</button></div>)}</div>}
+  <h3>Visible services ({services.length})</h3><div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))",gap:8,marginTop:10}}>{services.map(s=><div key={s.id} style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:10,padding:10,border:"1px solid #203d59",borderRadius:10}}><div><b>{s.name}</b><small style={{display:"block",opacity:.65}}>{s.id}</small></div><button disabled={busy} style={btn} onClick={()=>void change("hide",s.name)}>Hide</button></div>)}</div>
+ </div>
+}
