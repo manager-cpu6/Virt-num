@@ -29,8 +29,8 @@ export async function createLoginApproval(userId:string,h:Headers){
  }).toArray();
 
  if(!devices.length){
-   await approvals.updateOne({approvalId:id},{$set:{status:"denied",deniedReason:"NO_MOBILE_DEVICE"}});
-   return {approvalId:id,expiresAt,deviceCount:0};
+   await approvals.updateOne({approvalId:id},{$set:{deliveryStatus:"NO_MOBILE_DEVICE"}});
+   return {approvalId:id,expiresAt,deviceCount:0,pushSent:0};
  }
 
  const location=[meta.city,meta.country].filter(Boolean).join(", ")||"Location unavailable";
@@ -42,7 +42,7 @@ export async function createLoginApproval(userId:string,h:Headers){
  );
  if(result.invalidTokens?.length)await (await collection<any>("deviceTokens")).deleteMany({token:{$in:result.invalidTokens}});
  if(result.successCount===0){
-   await approvals.updateOne({approvalId:id},{$set:{status:"denied",deniedReason:"PUSH_NOT_DELIVERED",pushErrors:result.errors||[]}});
+   await approvals.updateOne({approvalId:id},{$set:{deliveryStatus:"PUSH_NOT_DELIVERED",pushErrors:result.errors||[]}});
  }
  return {approvalId:id,expiresAt,deviceCount:devices.length,pushSent:result.successCount};
 }
