@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
+import ServiceLogo from "@/components/ServiceLogo";
 
 type S={id:string;code:string;name:string};
 
@@ -22,19 +23,6 @@ function popularRank(x:S){
  return 9999;
 }
 
-const iconAliases:Record<string,string>={wa:"whatsapp",fb:"facebook",ig:"instagram",threads:"instagram",tg:"telegram",tt:"tiktok",go:"google",tw:"x",sn:"snapchat",ms:"microsoft",op:"openai",telegram2:"telegram",amazonprime:"amazon",amazonshop:"amazon",whatsappbusiness:"whatsapp",facebooklite:"facebook",instagramlite:"instagram",tiktoklite:"tiktok",gmail:"gmail",youtube:"youtube",linkedin:"linkedin",paypal:"paypal",discordapp:"discord",chatgpt:"openai"};
-const brandDomains:Record<string,string>={whatsapp:"whatsapp.com",telegram:"telegram.org",amazon:"amazon.com",facebook:"facebook.com",instagram:"instagram.com",tiktok:"tiktok.com",google:"google.com",gmail:"mail.google.com",youtube:"youtube.com",microsoft:"microsoft.com",apple:"apple.com",x:"x.com",twitter:"x.com",snapchat:"snapchat.com",discord:"discord.com",linkedin:"linkedin.com",paypal:"paypal.com",openai:"openai.com",chatgpt:"chatgpt.com",reddit:"reddit.com",spotify:"spotify.com",netflix:"netflix.com",uber:"uber.com",signal:"signal.org",viber:"viber.com",pinterest:"pinterest.com",twitch:"twitch.tv",steam:"steampowered.com",yahoo:"yahoo.com",ebay:"ebay.com",airbnb:"airbnb.com",binance:"binance.com",dropbox:"dropbox.com",slack:"slack.com",zoom:"zoom.us",notion:"notion.so",canva:"canva.com",figma:"figma.com"};
-function AppLogo({id,name}:{id:string;name:string}){
- const[failed,setFailed]=useState(false);
- const raw=id.toLowerCase().replace(/[^a-z0-9]/g,"");
- const icon=iconAliases[raw]||raw;
- const brand=Object.keys(brandDomains).sort((a,b)=>b.length-a.length).find(k=>raw===k||raw.startsWith(k))||icon;
- const domain=brandDomains[brand]||brand+".com";
- const src=failed?"https://www.google.com/s2/favicons?domain="+domain+"&sz=128":"https://cdn.simpleicons.org/"+icon;
- return <span className={"service-icon service-icon-"+icon}>
-   <img src={src} alt={name+" logo"} loading="lazy" onError={()=>{if(!failed)setFailed(true)}}/>
- </span>
-}
 
 export default function ServicesPage(){
  const[s,setS]=useState<S[]>([]),[q,setQ]=useState(""),[loading,setLoading]=useState(true),[showAll,setShowAll]=useState(false),[error,setError]=useState("");
@@ -82,7 +70,7 @@ export default function ServicesPage(){
 
    {loading?<div className="service-loading">Loading live services…</div>
    :error?<div className="helper-card"><b>Live catalog unavailable</b><span>Please try again in a moment.</span></div>
-   :<div className="service-grid">{filtered.map((x,i)=><Link key={x.id+i} className="service-card" href={"/countries?service="+encodeURIComponent(x.id)}><AppLogo id={x.id} name={x.name}/><div><b>{x.name}</b><small>Live SMS verification</small></div><span className="chevron">›</span></Link>)}</div>}
+   :<div className="service-grid">{filtered.map((x,i)=><Link key={x.id+i} className="service-card" href={"/countries?service="+encodeURIComponent(x.id)}><ServiceLogo id={x.id} name={x.name}/><div><b>{x.name}</b><small>Live SMS verification</small></div><span className="chevron">›</span></Link>)}</div>}
 
    {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try another search.</span></div>}
  </div>
