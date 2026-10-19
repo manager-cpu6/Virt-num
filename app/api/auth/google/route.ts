@@ -12,7 +12,7 @@ export async function POST(req:Request){
   const body=await req.json().catch(()=>null);
   const credential=String(body?.credential||"").trim();
   if(!credential)return NextResponse.json({ok:false,error:"Google sign-in token is missing."},{status:400});
-  const clientId=String(process.env.GOOGLE_WEB_CLIENT_ID||process.env.GOOGLE_CLIENT_ID||"").trim();
+  const clientId=String(process.env.GOOGLE_CLIENT_ID||process.env.GOOGLE_WEB_CLIENT_ID||"").trim();
   if(!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured yet."},{status:503});
 
   const verify=await fetch("https://oauth2.googleapis.com/tokeninfo?id_token="+encodeURIComponent(credential),{cache:"no-store"});
