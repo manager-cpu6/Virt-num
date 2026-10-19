@@ -5,7 +5,6 @@ import {sendEmail,emailTemplate} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-const DAY=24*60*60*1000;
 
 export async function GET(){
   try{
@@ -13,8 +12,7 @@ export async function GET(){
     if(!user)return NextResponse.json({ok:false,error:"Please sign in to contact support."},{status:401});
     const tickets=await collection<any>("supportTickets");
     const latest=await tickets.find({userId:String(user.id)}).sort({createdAt:-1}).limit(1).next();
-    const until=latest?new Date(latest.createdAt).getTime()+DAY:0;
-    return NextResponse.json({ok:true,ticket:latest?{id:String(latest._id),subject:latest.subject,status:latest.status,createdAt:latest.createdAt,reviewUntil:new Date(until).toISOString(),canSubmit:Date.now()>=until}:null,canSubmit:!latest||Date.now()>=until});
+    return NextResponse.json({ok:true,ticket:latest?{id:String(latest._id),subject:latest.subject,status:latest.status,createdAt:latest.createdAt}:null,canSubmit:true});
   }catch{return NextResponse.json({ok:false,error:"Support is temporarily unavailable."},{status:500})}
 }
 
@@ -34,14 +32,10 @@ export async function POST(req:Request){
     if(channel==="email"&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact))return NextResponse.json({ok:false,error:"Enter a valid email address."},{status:400});
     if(subject.length<4||subject.length>120||message.length<15||message.length>3000)return NextResponse.json({ok:false,error:"Add a subject and a message (15–3000 characters)."}, {status:400});
     const tickets=await collection<any>("supportTickets");
-    const latest=await tickets.find({userId:String(user.id)}).sort({createdAt:-1}).limit(1).next();
-    if(latest){
-      const nextAt=new Date(latest.createdAt).getTime()+DAY;
-      if(Date.now()<nextAt)return NextResponse.json({ok:false,code:"REVIEW_COOLDOWN",error:"Your last support request is in the 24-hour review window.",reviewUntil:new Date(nextAt).toISOString()},{status:429});
-    }
     const now=new Date(),id=mongoId();
-    await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"reviewing",createdAt:now,reviewUntil:new Date(now.getTime()+DAY),updatedAt:now});
-    try{if(user.email)await sendEmail(String(user.email),"Numelixa Support received your request · "+String(id),emailTemplate("We received your request","Hello "+String(user.name||"there")+", your support request has been received.\n\nTicket ID: "+String(id)+"\nSubject: "+subject+"\nStatus: In review\nExpected review time: within 24 hours.\n\nOur team will review your message. Please keep this ticket ID for reference. You can visit Support at any time to check the request status.","https://support.numelixa.com","Your Numelixa support ticket was received."));}catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
-    return NextResponse.json({ok:true,ticket:{id:String(id),status:"reviewing",createdAt:now,reviewUntil:new Date(now.getTime()+DAY)},message:"Your request has been submitted for review. You can submit another request after 24 hours."});
+    await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"reviewing",createdAt:now,updatedAt:now});
+    const acknowledgement="Hello "+String(user.name||"there")+",\\n\\nThank you for contacting Numelixa Support. We have received your message and created a support ticket for you.\\n\\nTICKET DETAILS\\nTicket ID: "+String(id)+"\\nSubject: "+subject+"\\nStatus: Received — awaiting review\\nSubmitted: "+now.toLocaleString("en-US",{dateStyle:"long",timeStyle:"short",timeZone:"UTC"})+" UTC\\n\\nWHAT HAPPENS NEXT?\\nOur support team will review the details you provided, check any relevant account or order information, and reply to this email if more information is needed. Please keep your ticket ID in the subject of any follow-up so we can find your request quickly. You do not need to submit the same request again. We will respond as soon as a team member has reviewed it; you do not need to wait a fixed 24-hour window before contacting support again.\\n\\nFor your security, never send your password or one-time verification codes in a support message.\\n\\nKind regards,\\nNumelixa Support Team";
+    try{if(user.email)await sendEmail(String(user.email),"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support ticket is open",acknowledgement,"https://support.numelixa.com","Ticket #"+String(id)+" has been received by Numelixa Support."));}catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
+    return NextResponse.json({ok:true,ticket:{id:String(id),status:"reviewing",createdAt:now},message:"Your request has been received. We can see your request and will respond after our team has reviewed it. Your ticket number is "+String(id)+"."});
   }catch{return NextResponse.json({ok:false,error:"We could not submit your request. Please try again later."},{status:500})}
 }
