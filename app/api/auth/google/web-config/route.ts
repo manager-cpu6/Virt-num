@@ -1,0 +1,10 @@
+import {NextResponse} from "next/server";
+
+export const runtime="nodejs";
+export const dynamic="force-dynamic";
+
+export async function GET(){
+ const clientId=String(process.env.GOOGLE_CLIENT_ID||"").trim();
+ if(!clientId)return NextResponse.json({ok:false,error:"Website Google sign-in is not configured. Set GOOGLE_CLIENT_ID to the Web OAuth client ID in Vercel."},{status:503,headers:{"Cache-Control":"no-store"}});
+ return NextResponse.json({ok:true,clientId},{headers:{"Cache-Control":"no-store"}});
+}
