@@ -79,3 +79,14 @@ export async function purchase(country:string,service:string,maxPrice?:number,op
 export async function check(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.check(orderid):five.check(orderid)}
 export async function finalize(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.finalize(orderid):five.finalize(orderid)}
 export async function cancel(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.cancel(orderid):five.cancel(orderid)}
+// Providers commonly return NOT_FOUND after an activation has already expired or
+// been cancelled upstream. In that case the local order can be closed safely;
+// do not leave a stale waiting order blocking the user's refund.
+export async function cancelOrAlreadyClosed(orderid:string,provider?:SmsProvider){
+ try{return await cancel(orderid,provider)}
+ catch(error){
+  const message=error instanceof Error?error.message:String(error||"");
+  if(/activation\s+not\s+found|order\s+not\s+found|activation\s+not\s+active|already\s+(?:cancelled|canceled|expired)|status_cancel|status\s*:\s*cancel|activation\s+expired/i.test(message))return {alreadyClosed:true};
+  throw error;
+ }
+}
