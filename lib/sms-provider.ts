@@ -29,7 +29,38 @@ function serviceRank(service:any){
 export async function listServices(){
  const provider=await activeProvider();
  const services=provider==="tiger"?await tiger.listServices():await five.listServices();
- return [...services].sort((a:any,b:any)=>serviceRank(a)-serviceRank(b)||String(a.name||a.id).localeCompare(String(b.name||b.id)));
+ const normalize=(v:any)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+ // Remove provider duplicates such as whatsapp2 / telegram2 without changing
+ // the upstream service IDs used for valid purchases.
+ const withoutNumberedDuplicates=services.filter((s:any)=>{
+  const id=normalize(s?.id??s?.code);
+  const name=normalize(s?.name);
+  return ![id,name].some(value=>/^(whatsapp|wa|telegram|tg|facebook|fb|instagram|ig|tiktok|tt|google|go|snapchat|sn|discord|reddit|viber|signal)\\d+$/.test(value));
+ });
+ const groups:Record<string,string[]> = {
+  whatsapp:["whatsapp","wa"], facebook:["facebook","fb"], instagram:["instagram","ig"],
+  telegram:["telegram","tg"], tiktok:["tiktok","tt"], google:["google","go"],
+  snapchat:["snapchat","sn"], x:["x","twitter","tw"]
+ };
+ const preferred:Record<string,string> = provider==="tiger"
+  ? {whatsapp:"wa",facebook:"fb",instagram:"ig",telegram:"tg",tiktok:"tt",google:"go",snapchat:"sn",x:"tw"}
+  : {whatsapp:"whatsapp",facebook:"facebook",instagram:"instagram",telegram:"telegram",tiktok:"tiktok",google:"google",snapchat:"snapchat",x:"twitter"};
+ const chosen=new Set<any>();
+ const consumed=new Set<string>();
+ for(const s of withoutNumberedDuplicates){
+  const id=normalize(s?.id??s?.code), name=normalize(s?.name);
+  const family=Object.keys(groups).find(k=>(groups[k]||[]).includes(id)||(groups[k]||[]).includes(name));
+  if(!family){chosen.add(s);continue;}
+  if(consumed.has(family))continue;
+  const candidates=withoutNumberedDuplicates.filter((item:any)=>{
+   const itemId=normalize(item?.id??item?.code), itemName=normalize(item?.name);
+   return (groups[family]||[]).includes(itemId)||(groups[family]||[]).includes(itemName);
+  });
+  const best=candidates.find((item:any)=>normalize(item?.id??item?.code)===preferred[family])||candidates[0];
+  if(best)chosen.add(best);
+  consumed.add(family);
+ }
+ return [...chosen].sort((a:any,b:any)=>serviceRank(a)-serviceRank(b)||String(a.name||a.id).localeCompare(String(b.name||b.id)));
 }
 export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
 export async function stock(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator)}
