@@ -35,7 +35,7 @@ export async function listServices(){
  const withoutNumberedDuplicates=services.filter((s:any)=>{
   const id=normalize(s?.id??s?.code);
   const name=normalize(s?.name);
-  return ![id,name].some(value=>/^(whatsapp|wa|telegram|tg|facebook|fb|instagram|ig|tiktok|tt|google|go|snapchat|sn|discord|reddit|viber|signal)\\d+$/.test(value));
+  return ![id,name].some(value=>/^(whatsapp|wa|telegram|tg|facebook|fb|instagram|ig|tiktok|tt|google|go|snapchat|sn|discord|reddit|viber|signal)\d+$/.test(value));
  });
  const groups:Record<string,string[]> = {
   whatsapp:["whatsapp","wa"], facebook:["facebook","fb"], instagram:["instagram","ig"],
