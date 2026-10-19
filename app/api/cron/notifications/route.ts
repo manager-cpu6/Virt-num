@@ -54,10 +54,10 @@ export async function GET(req: Request) {
   const pushOutbox = await processPushOutbox(50);
   const orders = await collection<any>("orders");
   const now = Date.now();
-  const waiting = await orders.find({
-    status: "waiting",
-    expiresAt: {$gt: new Date(now - 60_000)}
-  }).sort({createdAt: 1}).limit(100).toArray();
+  // Include expired waiting orders as well. Filtering to recent expiresAt values
+  // previously caused orders to disappear from the worker one minute after expiry.
+  const waiting = await orders.find({status: "waiting"})
+    .sort({createdAt: 1}).limit(100).toArray();
 
   let checked = 0;
   let received = 0;
@@ -68,6 +68,59 @@ export async function GET(req: Request) {
     try {
       const provider:SmsProvider = o.provider === "tiger" ? "tiger" : "5sim";
       const age = now - new Date(o.createdAt).getTime();
+      const expiresAt = new Date(o.expiresAt).getTime();
+
+      // At the activation's actual deadline, first check whether the SMS arrived
+      // just before expiry. Otherwise cancel upstream and refund exactly once.
+      if (Number.isFinite(expiresAt) && expiresAt <= now) {
+        let providerStatus: any = null;
+        try {
+          providerStatus = await check(String(o.providerOrderId), provider);
+          checked++;
+        } catch {}
+
+        if (Number(providerStatus?.status) === 3) {
+          const code = String(providerStatus.sms || "");
+          const fullSms = String(providerStatus.fullSms || code);
+          const changed = await orders.findOneAndUpdate(
+            {_id: o._id, userId: o.userId, status: "waiting"},
+            {$set: {code, fullSms, status: "received", completedAt: new Date() }},
+            {returnDocument: "after"}
+          );
+          try { await finalize(String(o.providerOrderId), provider); } catch {}
+          if (changed) {
+            received++;
+            await notifyUser(
+              String(o.userId),
+              "🔐 New verification code",
+              code ? "Your verification code is " + code : "A new SMS has arrived. Open Numelixa to view it.",
+              {orderId: String(o._id), type: "sms", code}
+            );
+          }
+          continue;
+        }
+
+        let cancelled = false;
+        try {
+          await cancel(String(o.providerOrderId), provider);
+          cancelled = true;
+        } catch {}
+
+        if (cancelled || Number(providerStatus?.status) === 6) {
+          if (await refundOrder(o)) {
+            refunded++;
+            await notifyUser(
+              String(o.userId),
+              "⏱️ Order expired and cancelled",
+              "The number's timer expired without an SMS. The activation was cancelled and your coins were refunded automatically.",
+              {orderId: String(o._id), type: "refund"}
+            );
+          }
+        }
+        // If provider status/cancellation could not be confirmed, leave the order
+        // waiting so the next cron run retries rather than falsely refunding it.
+        continue;
+      }
 
       if (age >= 10 * 60 * 1000) {
         try { await cancel(String(o.providerOrderId), provider); } catch {}
@@ -83,7 +136,6 @@ export async function GET(req: Request) {
         continue;
       }
 
-      const expiresAt = new Date(o.expiresAt).getTime();
       if (
         expiresAt > now &&
         expiresAt - now <= 120_000 &&
