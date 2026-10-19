@@ -1,6 +1,7 @@
 import * as five from "@/lib/fivesim";
 import * as tiger from "@/lib/tigersms";
 import {getSettings} from "@/lib/settings";
+import {collection} from "@/lib/mongo";
 export type SmsProvider="5sim"|"tiger";
 export async function activeProvider():Promise<SmsProvider>{
  const s=await getSettings();
@@ -60,7 +61,16 @@ export async function listServices(){
   if(best)chosen.add(best);
   consumed.add(family);
  }
- return [...chosen].sort((a:any,b:any)=>serviceRank(a)-serviceRank(b)||String(a.name||a.id).localeCompare(String(b.name||b.id)));
+ const sorted=[...chosen].sort((a:any,b:any)=>serviceRank(a)-serviceRank(b)||String(a.name||a.id).localeCompare(String(b.name||b.id)));
+ const catalog=await (await collection<any>("settings")).findOne({_id:"serviceCatalog"});
+ const hidden=new Set<string>(Array.isArray(catalog?.hiddenServices)?catalog.hiddenServices.map((v:any)=>String(v)):[]);
+ const normalizeKey=(v:any)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
+ return sorted.filter((service:any)=>![
+   normalizeKey(service?.id??service?.code),
+   normalizeKey(service?.name),
+   normalizeKey(service?.title)
+ ].some(key=>hidden.has(key)));
+
 }
 export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
 export async function stock(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator)}
