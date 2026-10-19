@@ -66,6 +66,19 @@ export default function AdminPanel(){
    setUsers(v=>v.map(x=>x.id===user.id?{...x,coins:d.coins}:x))
  }
 
+ async function cancelWaitingOrder(order:Order){
+  if(String(order.status).toLowerCase()!=="waiting")return;
+  if(!confirm("Cancel this waiting "+(order.service_display||order.service)+" order? The provider must confirm cancellation before the order is marked cancelled and coins are refunded."))return;
+  setError("");setSaved("");
+  try{
+   const r=await fetch("/api/admin/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({orderId:order.id})});
+   const d=await r.json();
+   if(!r.ok||!d.ok)throw new Error(d.error||"Unable to cancel waiting order.");
+   setSaved(d.message||"Waiting order cancelled.");
+   await loadData("orders");await loadStats();
+  }catch(e){setError(e instanceof Error?e.message:"Unable to cancel waiting order.")}
+ }
+
  const topUsers=useMemo(()=>[...users].sort((a,b)=>b.coins-a.coins),[users]);
  const waiting=useMemo(()=>orders.filter(o=>String(o.status).toLowerCase()==="waiting"),[orders]);
 
