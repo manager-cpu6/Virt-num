@@ -36,9 +36,9 @@ export async function POST(req:Request){
   const baseCrypto=Number((baseAmount/usdPerCoin).toFixed(stablecoin?2:decimals));
   if(!Number.isFinite(baseCrypto)||baseCrypto<=0)return NextResponse.json({ok:false,error:"Unable to calculate the payment amount."},{status:502});
 
-  // The original amount belongs to the first checkout while it is free.
-  // Only concurrent checkouts receive a tiny suffix; cancelled/expired orders do not permanently consume the base amount.
-  await payments.updateMany({provider:"binance_personal",userId:String(user.id),status:"pending"},{$set:{status:"cancelled",reservationActive:false,cancelledAt:now,updatedAt:now,cancelReason:"new_checkout_started"}});
+  // Web and Android share this collection and reservation pool. Keep existing pending
+  // checkouts active so each order (even for the same account on two devices) keeps its
+  // own exact amount until it is paid, cancelled, or expires.
   const activeAmountQuery={provider:"binance_personal",status:"pending",reservationActive:{$ne:false},cryptoCurrency:currency,depositAddress:instructions.address,depositNetwork:instructions.network,expiresAt:{$gt:now}};
   const baseCollision=await payments.findOne({...activeAmountQuery,amountCrypto:baseCrypto});
   let amountCrypto=baseCollision?0:baseCrypto;
