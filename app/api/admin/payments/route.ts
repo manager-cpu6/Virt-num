@@ -82,7 +82,11 @@ export async function POST(req:Request){
     if(provider==="binance"&&!s.binance.configured)return NextResponse.json({ok:false,error:"Save valid Binance API credentials and Webshare proxy details first."},{status:400});
     await setActivePaymentProvider(provider);return NextResponse.json({ok:true,activeProvider:provider});
   }
-  if(action==="save_binance_connection"){\n    const saved=await saveBinanceConnectionConfig({webshareHost:b.webshareHost,websharePort:b.websharePort,webshareUsername:b.webshareUsername,websharePassword:b.websharePassword,apiKey:b.apiKey,apiSecret:b.apiSecret});\n    return NextResponse.json({ok:true,binance:saved.binance,message:"Webshare proxy and Binance API settings saved securely."});\n  }\n  if(action==="save_paypal"){
+  if(action==="save_binance_connection"){
+    const saved=await saveBinanceConnectionConfig({webshareHost:b.webshareHost,websharePort:b.websharePort,webshareUsername:b.webshareUsername,websharePassword:b.websharePassword,apiKey:b.apiKey,apiSecret:b.apiSecret});
+    return NextResponse.json({ok:true,binance:saved.binance,message:"Webshare proxy and Binance API settings saved securely."});
+  }
+  if(action==="save_paypal"){
     const clientId=String(b.clientId||"").trim(),secretKey=String(b.secretKey||"").trim();
     if(clientId.length<10||secretKey.length<10)return NextResponse.json({ok:false,error:"Enter a valid PayPal Client ID and Secret Key."},{status:400});
     const current=await getPaymentSettings();
@@ -107,7 +111,9 @@ export async function POST(req:Request){
     BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
     BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance returned no address. Check wallet/deposit read permissions."
   };
-  if(message==="BINANCE_CREDENTIALS_REQUIRED")return NextResponse.json({ok:false,error:"Enter both Binance API key and API secret."},{status:400});\n  if(message==="WEBSHARE_CONFIGURATION_INVALID")return NextResponse.json({ok:false,error:"Enter a valid Webshare host, port, username and password."},{status:400});\n  if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
+  if(message==="BINANCE_CREDENTIALS_REQUIRED")return NextResponse.json({ok:false,error:"Enter both Binance API key and API secret."},{status:400});
+  if(message==="WEBSHARE_CONFIGURATION_INVALID")return NextResponse.json({ok:false,error:"Enter a valid Webshare host, port, username and password."},{status:400});
+  if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
   const apiCode=message.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
   if(apiCode)return NextResponse.json({ok:false,error:"Binance rejected the signed request (API code/status "+apiCode+"). Check the Binance API permissions, account eligibility, and enabled deposit network.",diagnosticCode:apiCode},{status:502});
   const m=e instanceof Error?e.message:"";
