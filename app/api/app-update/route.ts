@@ -12,21 +12,21 @@ const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/dow
 
 function cleanReleaseNotes(raw:unknown){
   const text=String(raw||"")
-    .replace(/\\*\\*Full Changelog\\*\\*:?[^\\n]*/gi,"")
-    .replace(/Full Changelog:?[^\\n]*/gi,"")
-    .replace(/https?:\\/\\/\\S+/gi,"")
-    .replace(/github\\.com\\/[^\\s]*/gi,"");
+    .replace(/\*\*Full Changelog\*\*:?[^\n]*/gi,"")
+    .replace(/Full Changelog:?[^\n]*/gi,"")
+    .replace(/https?:\/\/\S+/gi,"")
+    .replace(/github\.com\/[^\s]*/gi,"");
   const seen=new Set<string>();
   const lines:string[]=[];
-  for(let line of text.split(/\\r?\\n/)){
-    line=line.replace(/^\\s*[-*•>]+\\s*/,"").replace(/[\\x60*_]{1,3}/g,"").replace(/\\s+/g," ").trim();
+  for(let line of text.split(/\r?\n/)){
+    line=line.replace(/^\s*[-*•>]+\s*/,"").replace(/[\x60*_]{1,3}/g,"").replace(/\s+/g," ").trim();
     const lower=line.toLowerCase();
     if(line.length<8||lower.includes("full changelog")||lower.includes("commits/android-latest")||lower.includes("github.com/manager-cpu6")||["yo","infc","una","hom"].includes(lower))continue;
     const key=lower.replace(/[^a-z0-9]+/g," ").trim();
     if(!key||seen.has(key))continue;
     seen.add(key);lines.push(line);if(lines.length===4)break;
   }
-  return lines.join("\\n")||"A cleaner update experience, improved download progress, and stability improvements.";
+  return lines.join("\n")||"A cleaner update experience, improved download progress, and stability improvements.";
 }
 
 function compareVersions(left:string,right:string){
