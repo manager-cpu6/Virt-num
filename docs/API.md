@@ -369,3 +369,31 @@ Error bodies use:
 API keys can be revoked and replaced from the Numelixa Developer dashboard. A revoked key must no longer be used.
 
 Numelixa's public API contract intentionally hides internal number-network identity, routing configuration, credentials and upstream implementation details.
+
+
+## 14. Webhooks
+
+Configure an HTTPS endpoint in **Developers → Webhooks**, for example:
+
+`https://example.com/webhooks/numelixa`
+
+Save the URL, copy the signing secret shown on first save, and keep it on your server. The current event types are:
+
+- `order.created` — an API number order was created successfully.
+- `order.code_received` — the API code endpoint returned a verification code.
+- `order.cancelled` — an eligible order was cancelled and refunded.
+
+Read-only GET requests do not create webhook events. Each delivery is a JSON POST with an event envelope:
+
+```json
+{
+  "id": "EVENT_UUID",
+  "type": "order.created",
+  "createdAt": "2026-10-20T12:00:00.000Z",
+  "data": {}
+}
+```
+
+Headers include `X-Numelixa-Event`, `X-Numelixa-Event-Id`, `X-Numelixa-Timestamp`, and `X-Numelixa-Signature`. The signature is `sha256=` followed by the hex HMAC-SHA256 of `timestamp + "." + rawRequestBody`, using your signing secret. Verify the exact raw body before parsing JSON, compare signatures in constant time, reject stale timestamps, and deduplicate event IDs. Return a 2xx response quickly and process heavier work asynchronously.
+
+Initial delivery uses a short timeout and does not automatically retry failed deliveries. Check the Webhooks status panel and retain API polling as a recovery path. Use the dashboard's test-event button to verify your receiver.
