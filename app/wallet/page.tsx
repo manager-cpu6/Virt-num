@@ -7,7 +7,7 @@ import {useEffect,useMemo,useState} from "react";
 type Pack={coins:number;priceUsd:number;popular?:boolean;paymentUrl?:string};
 type Me={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
-function formatCryptoAmount(value:unknown){const n=Number(value);if(!Number.isFinite(n))return String(value??"");return n.toFixed(12).replace(/0+$/,"").replace(/\\.$/,"");}
+function formatCryptoAmount(value:unknown){const n=Number(value);if(!Number.isFinite(n))return String(value??"");return n.toFixed(12).replace(/0+$/,"").replace(/\.$/,"");}
 
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
