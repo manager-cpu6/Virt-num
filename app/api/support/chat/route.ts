@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {getUser,requireAdmin} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
+import {sendPush} from "@/lib/push";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const clean=(x:unknown,n=4000)=>String(x??"").trim().slice(0,n);
@@ -49,12 +50,7 @@ export async function POST(req:Request){
    const tokens=await collection<any>("deviceTokens");
    const targetUser=admin?conversationId:null;
    const deviceRows=targetUser?await tokens.find({userId:targetUser}).project({token:1}).toArray():[];
-   if(deviceRows.length){
-    const {getMessaging}=await import("firebase-admin/messaging");
-    const {getFirebaseAdmin}=await import("@/lib/firebase-admin");
-    const app=await getFirebaseAdmin();
-    if(app)await getMessaging(app).sendEachForMulticast({tokens:deviceRows.map((x:any)=>String(x.token)).filter(Boolean),notification:{title:"Numelixa Help Team",body:text||"You received a new attachment."},data:{type:"support_chat",conversationId},android:{priority:"high",notification:{channelId:"numelixa_support_chat"}}});
-   }
+   if(deviceRows.length)await sendPush(deviceRows.map((x:any)=>String(x.token)), "Numelixa Help Team", text||"You received a new attachment.", {type:"support_chat",conversationId,url:"/account"});
   }catch(e){console.error("[SUPPORT CHAT PUSH]",e)}
   return NextResponse.json({ok:true,message:visible(message)});
  }catch{return NextResponse.json({ok:false,error:"Could not send the message. Please try again."},{status:500})}
