@@ -1,6 +1,6 @@
 # Numelixa Developer API v1
 
-Base URL: `https://numelixa.com/api/v1`
+Base URL: `https://www.numelixa.com/api/v1`
 
 Numelixa provides a REST/JSON API for developers building bots, websites, automation and applications around virtual-number activations.
 
@@ -39,7 +39,7 @@ Never expose an API key in browser JavaScript, Android/iOS source code or public
 Returns account and wallet information.
 
 ```bash
-curl "https://numelixa.com/api/v1/account" \
+curl "https://www.numelixa.com/api/v1/account" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -74,7 +74,7 @@ Returns recent wallet ledger entries for the authenticated account.
 Returns the services currently available for number activation.
 
 ```bash
-curl "https://numelixa.com/api/v1/services" \
+curl "https://www.numelixa.com/api/v1/services" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -85,7 +85,7 @@ curl "https://numelixa.com/api/v1/services" \
 Returns supported countries, live availability and the Numelixa selling price.
 
 ```bash
-curl "https://numelixa.com/api/v1/countries?service=whatsapp" \
+curl "https://www.numelixa.com/api/v1/countries?service=whatsapp" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -106,7 +106,7 @@ Do not calculate a purchase price from a stale country response. Refresh the sto
 Checks live availability and the current Numelixa price.
 
 ```bash
-curl "https://numelixa.com/api/v1/stock?country=usa&service=whatsapp" \
+curl "https://www.numelixa.com/api/v1/stock?country=usa&service=whatsapp" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -140,7 +140,7 @@ Required JSON:
 ```
 
 ```bash
-curl -X POST "https://numelixa.com/api/v1/orders" \
+curl -X POST "https://www.numelixa.com/api/v1/orders" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
   -H "Content-Type: application/json" \
   -d '{"country":"usa","service":"whatsapp"}'
@@ -177,7 +177,7 @@ Optional query:
 - `status` — filter by an order status.
 
 ```bash
-curl "https://numelixa.com/api/v1/orders?limit=25&status=waiting" \
+curl "https://www.numelixa.com/api/v1/orders?limit=25&status=waiting" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -186,7 +186,7 @@ curl "https://numelixa.com/api/v1/orders?limit=25&status=waiting" \
 Returns one order.
 
 ```bash
-curl "https://numelixa.com/api/v1/orders/ORDER_ID" \
+curl "https://www.numelixa.com/api/v1/orders/ORDER_ID" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
 ```
 
@@ -205,7 +205,7 @@ Request:
 ```
 
 ```bash
-curl -X POST "https://numelixa.com/api/v1/orders/code" \
+curl -X POST "https://www.numelixa.com/api/v1/orders/code" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
   -H "Content-Type: application/json" \
   -d '{"orderId":"ORDER_ID"}'
@@ -220,7 +220,7 @@ For automation, poll at a reasonable interval with backoff and stop polling when
 Only eligible waiting orders can be cancelled.
 
 ```bash
-curl -X POST "https://numelixa.com/api/v1/orders/cancel" \
+curl -X POST "https://www.numelixa.com/api/v1/orders/cancel" \
   -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
   -H "Content-Type: application/json" \
   -d '{"orderId":"ORDER_ID"}'
@@ -241,7 +241,7 @@ Cancellation is account-scoped. A key cannot cancel another account's order.
 ## 9. JavaScript / Node.js
 
 ```js
-const API = "https://numelixa.com/api/v1";
+const API = "https://www.numelixa.com/api/v1";
 const KEY = process.env.NUMELIXA_API_KEY;
 
 async function api(path, options = {}) {
@@ -289,7 +289,7 @@ console.log(order.order.id, order.order.number);
 import os
 import requests
 
-API = "https://numelixa.com/api/v1"
+API = "https://www.numelixa.com/api/v1"
 HEADERS = {
     "Authorization": "Bearer " + os.environ["NUMELIXA_API_KEY"],
     "Content-Type": "application/json",
