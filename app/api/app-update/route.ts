@@ -4,11 +4,11 @@ import {collection} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const CURRENT_VERSION="1.0.6";
-const CURRENT_VERSION_CODE=7;
+const CURRENT_VERSION="1.0.7+8";
+const CURRENT_VERSION_CODE=8;
 const CURRENT_SIZE_BYTES=0;
-const CURRENT_RELEASE_NOTES="A redesigned update screen with clear download progress, downloaded MB, percentage, and stability improvements.";
-const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/app-release.apk";
+const CURRENT_RELEASE_NOTES="Help Team Chat is now available in Account. This release improves automatic update discovery and removes the redundant Notifications shortcut from Home. Push notifications remain enabled.";
+const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk";
 
 function cleanReleaseNotes(raw:unknown){
   const text=String(raw||"")
