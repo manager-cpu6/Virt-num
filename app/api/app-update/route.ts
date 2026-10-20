@@ -4,10 +4,10 @@ import {collection} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const CURRENT_VERSION="1.0.5";
-const CURRENT_VERSION_CODE=6;
+const CURRENT_VERSION="1.0.6";
+const CURRENT_VERSION_CODE=7;
 const CURRENT_SIZE_BYTES=0;
-const CURRENT_RELEASE_NOTES="A cleaner update experience, improved download progress, and stability improvements.";
+const CURRENT_RELEASE_NOTES="A redesigned update screen with clear download progress, downloaded MB, percentage, and stability improvements.";
 const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/app-release.apk";
 
 function cleanReleaseNotes(raw:unknown){
