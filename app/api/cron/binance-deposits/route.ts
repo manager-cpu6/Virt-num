@@ -41,7 +41,7 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
 }
 export async function GET(req:Request){
  if(!authorized(req))return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});
- if(!personalApiConfigured())return NextResponse.json({ok:false,error:"Binance Personal API is not configured."},{status:503});
+ if(!await personalApiConfigured())return NextResponse.json({ok:false,error:"Binance API credentials or Webshare proxy are not configured."},{status:503});
  try{
   const now=Date.now(),payments=await collection<any>("payments");
   const reconciliationWindowMs=24*60*60*1000;
