@@ -7,11 +7,11 @@ let proxyAgent: ProxyAgent | null = null;
 let proxyAgentUrl = "";
 async function getBinanceProxyAgent():Promise<ProxyAgent>{
   const config=await getBinanceConnectionConfig();
-  const host=String(config.webshareHost||"").trim().replace(/^https?:\\/\\//i,"").replace(/\\/$/,"");
+  const host=String(config.webshareHost||"").trim().replace(/^https?:\/\//i,"").replace(/\/$/,"");
   const port=String(config.websharePort||"").trim();
   const username=String(config.webshareUsername||"").trim();
   const password=String(config.websharePassword||"").trim();
-  if(!host||host.includes("/")||!/^\\d{1,5}$/.test(port)||Number(port)<1||Number(port)>65535||!username||!password)throw new Error("BINANCE_WEBSHARE_NOT_CONFIGURED");
+  if(!host||host.includes("/")||!/^\d{1,5}$/.test(port)||Number(port)<1||Number(port)>65535||!username||!password)throw new Error("BINANCE_WEBSHARE_NOT_CONFIGURED");
   const proxyUrl="http://"+encodeURIComponent(username)+":"+encodeURIComponent(password)+"@"+host+":"+port;
   if(!proxyAgent||proxyAgentUrl!==proxyUrl){
     if(proxyAgent){try{await proxyAgent.close();}catch{}}
@@ -175,5 +175,5 @@ export async function getCryptoUsdPrice(coin:string){
 }
 export async function personalApiConfigured() {
   const config=await getBinanceConnectionConfig();
-  return Boolean(config.apiKey&&config.apiSecret&&config.webshareHost&&/^\\d{1,5}$/.test(config.websharePort)&&Number(config.websharePort)>0&&Number(config.websharePort)<=65535&&config.webshareUsername&&config.websharePassword);
+  return Boolean(config.apiKey&&config.apiSecret&&config.webshareHost&&/^\d{1,5}$/.test(config.websharePort)&&Number(config.websharePort)>0&&Number(config.websharePort)<=65535&&config.webshareUsername&&config.websharePassword);
 }
