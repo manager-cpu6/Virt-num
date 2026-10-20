@@ -121,7 +121,7 @@ Example:
     "country": "usa",
     "service": "whatsapp",
     "price": 85,
-    "currency": "USD"
+    "currency": "coins"
   }
 }
 ```
