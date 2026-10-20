@@ -32,7 +32,7 @@ export async function GET(req:Request){
    orders:rows.map((o:any)=>({
     id:String(o._id),service:o.service,
     country:o.country,countryCode:o.countryCode,phone:o.phoneNumber,
-    price:Number(o.priceCoins||0),status:o.status,code:o.code||null,
+    price:Number(o.priceCoins||0),currency:"coins",status:o.status,code:o.code||null,
     fullSms:o.fullSms||null,
     expiresAt:o.expiresAt,createdAt:o.createdAt,completedAt:o.completedAt||null
    })),
