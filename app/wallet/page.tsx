@@ -7,6 +7,7 @@ import {useEffect,useMemo,useState} from "react";
 type Pack={coins:number;priceUsd:number;popular?:boolean;paymentUrl?:string};
 type Me={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
+function formatCryptoAmount(value:unknown){const n=Number(value);if(!Number.isFinite(n))return String(value??"");return n.toFixed(12).replace(/0+$/,"").replace(/\\.$/,"");}
 
 export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
@@ -99,7 +100,7 @@ export default function Wallet(){
         <h2 style={{margin:0}}>Send the exact amount</h2>
         {depositStatus!=="paid"&&<div className="wallet-expiry-countdown" role="timer" aria-live="polite" style={{display:"grid",gap:4,padding:14,borderRadius:14,background:"#101d32",border:"1px solid #263b5a"}}><small>TIME LEFT TO PAY</small><strong>{expiryLabel}</strong>{secondsLeft===0&&<span>This payment request has expired. Create a new request to pay.</span>}</div>}
         {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. This payment request expires in 15 minutes. Payments received after expiry are not accepted.</p>}
-        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{Number(deposit.amount).toFixed(2)} USDT <button type="button" className="secondary-btn" onClick={()=>copyValue(Number(deposit.amount).toFixed(2))}>Copy amount</button></strong></div>
+        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{formatCryptoAmount(deposit.amount)} {deposit.currency||"USDT"} <button type="button" className="secondary-btn" onClick={()=>copyValue(formatCryptoAmount(deposit.amount))}>Copy amount</button></strong></div>
         <div><small>Network — must match exactly</small><strong style={{display:"block"}}>{deposit.networkName||deposit.network}</strong></div>
         <div><small>Deposit address QR</small><div style={{display:"flex",justifyContent:"center",padding:14}}><img src={"https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data="+encodeURIComponent(String(deposit.address||""))} alt="USDT deposit address QR code" width="220" height="220" style={{background:"#fff",padding:8,borderRadius:12,maxWidth:"100%"}}/></div><small>Binance deposit address</small><div style={{overflowWrap:"anywhere",fontWeight:700}}>{deposit.address}</div><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.address))}>Copy address</button></div>
         {deposit.memo&&<div><small>Memo / Tag (required)</small><strong>{deposit.memo}</strong><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.memo))}>Copy memo</button></div>}
