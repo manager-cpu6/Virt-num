@@ -8,7 +8,7 @@ export async function GET(){
  try{
   await requireUser();
   const settings=await getPaymentSettings();
-  if(settings.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
+  if(settings.activeProvider!=="binance"||!await personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
   const assets=await getAvailableDepositAssets();
   if(!assets.length)return NextResponse.json({ok:false,error:"No supported deposit assets are currently available."},{status:503});
   return NextResponse.json({ok:true,assets},{headers:{"Cache-Control":"no-store"}});
