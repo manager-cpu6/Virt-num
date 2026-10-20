@@ -70,7 +70,7 @@ export async function POST(req:Request){
     return NextResponse.json({ok:true,message:"Payment order activated and its reservation restored."});
   }
   if(action==="test_binance"){
-    if(!await personalApiConfigured())return NextResponse.json({ok:false,error:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy."},{status:400});
+    if(!await personalApiConfigured())return NextResponse.json({ok:false,error:"Save valid Binance API credentials and Webshare proxy details in Admin → Payment methods first."},{status:400});
     const info=await getUsdtDepositInstructions();
     const address=String(info.address||"");
     return NextResponse.json({ok:true,network:info.networkName||info.network,addressPreview:address.length>12?address.slice(0,6)+"…"+address.slice(-5):address,message:"Binance API connection successful. Deposit address is available."});
