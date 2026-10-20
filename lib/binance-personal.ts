@@ -1,23 +1,35 @@
 import crypto from "crypto";
 import {ProxyAgent} from "undici";
+import {getBinanceConnectionConfig} from "@/lib/payment-settings";
 
 const BASE = "https://api.binance.com";
 let proxyAgent: ProxyAgent | null = null;
-function getBinanceProxyAgent(){
-  const proxyUrl=String(process.env.FIXIE_URL||"").trim();
-  if(!proxyUrl)throw new Error("BINANCE_FIXIE_URL_NOT_CONFIGURED");
-  if(!proxyAgent)proxyAgent=new ProxyAgent(proxyUrl);
+let proxyAgentUrl = "";
+async function getBinanceProxyAgent():Promise<ProxyAgent>{
+  const config=await getBinanceConnectionConfig();
+  const host=String(config.webshareHost||"").trim().replace(/^https?:\/\//i,"").replace(/\/$/,"");
+  const port=String(config.websharePort||"").trim();
+  const username=String(config.webshareUsername||"").trim();
+  const password=String(config.websharePassword||"").trim();
+  if(!host||host.includes("/")||!/^\d{1,5}$/.test(port)||Number(port)<1||Number(port)>65535||!username||!password)throw new Error("BINANCE_WEBSHARE_NOT_CONFIGURED");
+  const proxyUrl="http://"+encodeURIComponent(username)+":"+encodeURIComponent(password)+"@"+host+":"+port;
+  if(!proxyAgent||proxyAgentUrl!==proxyUrl){
+    if(proxyAgent){try{await proxyAgent.close();}catch{}}
+    proxyAgent=new ProxyAgent(proxyUrl);
+    proxyAgentUrl=proxyUrl;
+  }
   return proxyAgent;
 }
 async function binanceFetch(url:string,init:RequestInit={}){
-  const dispatcher=getBinanceProxyAgent();
+  const dispatcher=await getBinanceProxyAgent();
   return fetch(url,{...init,dispatcher} as RequestInit & {dispatcher:ProxyAgent});
 }
-function credentials() {
-  const key = String(process.env.BINANCE_API_KEY || "").trim();
-  const secret = String(process.env.BINANCE_SECRET_KEY || "").trim();
-  if (!key || !secret) throw new Error("BINANCE_PERSONAL_API_NOT_CONFIGURED");
-  return { key, secret };
+async function credentials() {
+  const config=await getBinanceConnectionConfig();
+  const key=String(config.apiKey||"").trim();
+  const secret=String(config.apiSecret||"").trim();
+  if(!key||!secret)throw new Error("BINANCE_PERSONAL_API_NOT_CONFIGURED");
+  return {key,secret};
 }
 let serverTimeOffset = 0;
 async function syncServerTime(){
@@ -28,7 +40,7 @@ async function syncServerTime(){
   }catch{}
 }
 async function signedGet(path: string, params: Record<string, string | number | boolean> = {}) {
-  const {key, secret} = credentials();
+  const {key, secret} = await credentials();
   for(let attempt=0;attempt<2;attempt++){
     const query = new URLSearchParams();
     for (const [k,v] of Object.entries({...params, timestamp: Date.now()+serverTimeOffset, recvWindow: 10000})) query.set(k, String(v));
@@ -45,7 +57,7 @@ async function signedGet(path: string, params: Record<string, string | number | 
     }catch(error){
       const message=error instanceof Error?error.message:"";
       console.error("[BINANCE PERSONAL API NETWORK]",path,error instanceof Error?error.name:"unknown");
-      if(message==="BINANCE_FIXIE_URL_NOT_CONFIGURED")throw error;
+      if(message==="BINANCE_WEBSHARE_NOT_CONFIGURED"||message==="BINANCE_PERSONAL_API_NOT_CONFIGURED")throw error;
       throw new Error("BINANCE_NETWORK_ERROR");
     }
     const data:any=await response.json().catch(()=>null);
@@ -161,6 +173,7 @@ export async function getCryptoUsdPrice(coin:string){
   if(!response.ok||!Number.isFinite(price)||price<=0)throw new Error("BINANCE_"+asset+"_PRICE_UNAVAILABLE");
   return price;
 }
-export function personalApiConfigured() {
-  return Boolean(String(process.env.BINANCE_API_KEY||"").trim() && String(process.env.BINANCE_SECRET_KEY||"").trim());
+export async function personalApiConfigured() {
+  const config=await getBinanceConnectionConfig();
+  return Boolean(config.apiKey&&config.apiSecret&&config.webshareHost&&/^\d{1,5}$/.test(config.websharePort)&&Number(config.websharePort)>0&&Number(config.websharePort)<=65535&&config.webshareUsername&&config.websharePassword);
 }

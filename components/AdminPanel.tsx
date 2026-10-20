@@ -191,8 +191,8 @@ function Providers({stats}:{stats:Stats|null}){
 
 
 function AdminPayments(){
- const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null);
- async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok)setState(d);}
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[webshareHost,setWebshareHost]=useState(""),[websharePort,setWebsharePort]=useState(""),[webshareUsername,setWebshareUsername]=useState(""),[websharePassword,setWebsharePassword]=useState(""),[binanceApiKey,setBinanceApiKey]=useState(""),[binanceApiSecret,setBinanceApiSecret]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null);
+ async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok){setState(d);setWebshareHost((old:string)=>old||d.binance?.webshareHost||"");setWebsharePort((old:string)=>old||d.binance?.websharePort||"");}}
  useEffect(()=>{
   load();
   const refreshId=window.setInterval(load,30000);
@@ -200,6 +200,14 @@ function AdminPayments(){
   return()=>{window.clearInterval(refreshId);window.clearInterval(tickId)};
  },[]);
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
+ async function saveBinanceConnection(){
+  setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
+  try{
+   const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_binance_connection",webshareHost,websharePort,webshareUsername,websharePassword,apiKey:binanceApiKey,apiSecret:binanceApiSecret})});
+   const d=await response.json();setMsg(d.ok?(d.message||"Webshare and Binance settings saved."):d.error||"Unable to save Webshare settings.");setMsgError(!d.ok);
+   if(d.ok){setWebshareUsername("");setWebsharePassword("");setBinanceApiKey("");setBinanceApiSecret("");await load();}
+  }catch{setMsg("Unable to save Webshare and Binance settings.");setMsgError(true)}finally{setBusy(false)}
+ }
  async function testBinance(){
   setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
   try{const response=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"test_binance"})});const d=await response.json();
@@ -242,9 +250,18 @@ function AdminPayments(){
    <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>
    <p className="admin-help">Only one payment method is active at a time. Switching methods does not alter existing pending payments.</p>
    {msg&&<div className={msgError?"error-box":"success-box"}>{msg}</div>}
-  <div className="payment-provider-card"><div><b>Binance Personal API</b><small>{state.binance?.configured?"API credentials detected · USDT deposit history and automatic wallet credit":"Not configured · add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy"}</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{busy?"Activating…":state.activeProvider==="binance"?"BINANCE PERSONAL ACTIVE":"Activate Binance Personal"}</button></div>
-   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:12}}><button className="secondary-btn" disabled={busy||!state.binance?.configured} onClick={testBinance}>{busy?"Testing Binance…":"Test Binance API connection"}</button>{binanceTest?.ok&&<small>Network: {binanceTest.network} · Address: {binanceTest.addressPreview}</small>}</div>
-   <p className="admin-help">Add BINANCE_API_KEY and BINANCE_SECRET_KEY to Vercel Production. Use a read-only API key with IP restrictions where possible; it needs permission to read wallet/deposit history and deposit address information, not withdrawals or trading. Never paste the secret into chat or GitHub. Confirmed USDT deposits are matched to unique pending deposit amounts and credited once.</p>
+  <div className="payment-provider-card"><div><b>Binance Personal API · Webshare proxy</b><small>{state.binance?.configured?"Binance credentials and Webshare proxy configured · server-side routing enabled":"Configure Binance API credentials and Webshare proxy below before activating payments."}</small></div><button className={state.activeProvider==="binance"?"primary-btn":"secondary-btn"} disabled={busy||!state.binance?.configured} onClick={()=>activate("binance")}>{busy?"Activating…":state.activeProvider==="binance"?"BINANCE PERSONAL ACTIVE":"Activate Binance Personal"}</button></div>
+   <div className="admin-form" style={{marginTop:14}}>
+    <label>Webshare proxy host / IP<input value={webshareHost} onChange={e=>setWebshareHost(e.target.value)} placeholder="Webshare host or static proxy IP" autoComplete="off"/></label>
+    <label>Webshare port<input value={websharePort} onChange={e=>setWebsharePort(e.target.value)} placeholder="Proxy port" inputMode="numeric" autoComplete="off"/></label>
+    <label>Webshare username<input value={webshareUsername} onChange={e=>setWebshareUsername(e.target.value)} placeholder={state.binance?.webshareUsernamePreview||"Username (leave blank to keep saved)"} autoComplete="off"/></label>
+    <label>Webshare password<input value={websharePassword} onChange={e=>setWebsharePassword(e.target.value)} placeholder="Password (leave blank to keep saved)" type="password" autoComplete="new-password"/></label>
+    <label>Binance API key<input value={binanceApiKey} onChange={e=>setBinanceApiKey(e.target.value)} placeholder={state.binance?.apiKeyPreview||"Binance API key"} autoComplete="off"/></label>
+    <label>Binance API secret<input value={binanceApiSecret} onChange={e=>setBinanceApiSecret(e.target.value)} placeholder="Secret (leave blank to keep saved)" type="password" autoComplete="new-password"/></label>
+    <button className="primary-btn" disabled={busy||!webshareHost||!websharePort} onClick={saveBinanceConnection}>{busy?"Saving settings…":"Save Webshare & Binance settings"}</button>
+   </div>
+   <div style={{display:"flex",gap:10,flexWrap:"wrap",alignItems:"center",marginTop:12}}><button className="secondary-btn" disabled={busy||!state.binance?.configured} onClick={testBinance}>{busy?"Testing Binance…":"Test Binance via Webshare"}</button>{binanceTest?.ok&&<small>Network: {binanceTest.network} · Address: {binanceTest.addressPreview}</small>}</div>
+   <p className="admin-help">All Binance API calls (including asset prices, network lookup, deposit addresses and deposit reconciliation) route through Webshare from the server. Credentials are encrypted before being stored in the database and are never returned to the browser. Use a Binance API key with wallet/deposit read permissions only; do not enable withdrawals or trading. Leave secret fields blank to keep saved credentials.</p>
   </Table>
   <Table title="PayPal credentials">
    <div className="admin-form">
