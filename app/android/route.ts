@@ -14,13 +14,20 @@ const ALLOWED_HOSTS=new Set([
 ]);
 
 function compareVersions(left:string,right:string){
-  const normalize=(value:string)=>value.split("+")[0].split("-")[0].split(".").map(part=>Number.parseInt(part,10)||0);
+  // Compare the Android build number after "+" too: 1.0.7+9 must be newer
+  // than 1.0.7+8, otherwise existing installs never see build-only updates.
+  const normalize=(value:string)=>{
+    const [release,buildText]=value.trim().split("+",2);
+    const core=release.split("-")[0].split(".").map(part=>Number.parseInt(part,10)||0);
+    const build=Number.parseInt(buildText||"0",10)||0;
+    return {core,build};
+  };
   const a=normalize(left),b=normalize(right);
-  for(let i=0;i<Math.max(a.length,b.length);i++){
-    const diff=(a[i]||0)-(b[i]||0);
+  for(let i=0;i<Math.max(a.core.length,b.core.length);i++){
+    const diff=(a.core[i]||0)-(b.core[i]||0);
     if(diff!==0)return diff;
   }
-  return 0;
+  return a.build-b.build;
 }
 
 function safeSource(value:string){
