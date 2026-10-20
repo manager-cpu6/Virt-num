@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
-import {getPaymentSettings,savePaypalCredentials,setActivePaymentProvider,paypalBaseUrl} from "@/lib/payment-settings";
+import {getPaymentSettings,savePaypalCredentials,saveBinanceConnectionConfig,setActivePaymentProvider,paypalBaseUrl} from "@/lib/payment-settings";
 import {paypalApi} from "@/lib/paypal";
 import {getUsdtDepositInstructions,personalApiConfigured} from "@/lib/binance-personal";
 import {collection} from "@/lib/mongo";
@@ -70,7 +70,7 @@ export async function POST(req:Request){
     return NextResponse.json({ok:true,message:"Payment order activated and its reservation restored."});
   }
   if(action==="test_binance"){
-    if(!personalApiConfigured())return NextResponse.json({ok:false,error:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy."},{status:400});
+    if(!await personalApiConfigured())return NextResponse.json({ok:false,error:"Add BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production, then redeploy."},{status:400});
     const info=await getUsdtDepositInstructions();
     const address=String(info.address||"");
     return NextResponse.json({ok:true,network:info.networkName||info.network,addressPreview:address.length>12?address.slice(0,6)+"…"+address.slice(-5):address,message:"Binance API connection successful. Deposit address is available."});
@@ -79,10 +79,10 @@ export async function POST(req:Request){
     const provider=b.provider==="paypal"?"paypal":b.provider==="binance"?"binance":"nowpayments";const s=await getPaymentSettings();
     if(provider==="paypal"&&!s.paypal.configured)return NextResponse.json({ok:false,error:"Configure PayPal Client ID and Secret Key first."},{status:400});
     if(provider==="nowpayments"&&!s.nowpayments.configured)return NextResponse.json({ok:false,error:"NOWPayments is not configured on the server."},{status:400});
-    if(provider==="binance"&&!s.binance.configured)return NextResponse.json({ok:false,error:"Configure BINANCE_API_KEY and BINANCE_SECRET_KEY in Vercel Production first."},{status:400});
+    if(provider==="binance"&&!s.binance.configured)return NextResponse.json({ok:false,error:"Save valid Binance API credentials and Webshare proxy details first."},{status:400});
     await setActivePaymentProvider(provider);return NextResponse.json({ok:true,activeProvider:provider});
   }
-  if(action==="save_paypal"){
+  if(action==="save_binance_connection"){\n    const saved=await saveBinanceConnectionConfig({webshareHost:b.webshareHost,websharePort:b.websharePort,webshareUsername:b.webshareUsername,websharePassword:b.websharePassword,apiKey:b.apiKey,apiSecret:b.apiSecret});\n    return NextResponse.json({ok:true,binance:saved.binance,message:"Webshare proxy and Binance API settings saved securely."});\n  }\n  if(action==="save_paypal"){
     const clientId=String(b.clientId||"").trim(),secretKey=String(b.secretKey||"").trim();
     if(clientId.length<10||secretKey.length<10)return NextResponse.json({ok:false,error:"Enter a valid PayPal Client ID and Secret Key."},{status:400});
     const current=await getPaymentSettings();
@@ -107,7 +107,7 @@ export async function POST(req:Request){
     BINANCE_USDT_DEPOSIT_DISABLED:"USDT deposits are disabled for available networks in your Binance account.",
     BINANCE_DEPOSIT_ADDRESS_UNAVAILABLE:"Binance returned no address. Check wallet/deposit read permissions."
   };
-  if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
+  if(message==="BINANCE_CREDENTIALS_REQUIRED")return NextResponse.json({ok:false,error:"Enter both Binance API key and API secret."},{status:400});\n  if(message==="WEBSHARE_CONFIGURATION_INVALID")return NextResponse.json({ok:false,error:"Enter a valid Webshare host, port, username and password."},{status:400});\n  if(binanceErrors[message])return NextResponse.json({ok:false,error:binanceErrors[message]},{status:502});
   const apiCode=message.match(/^BINANCE_API_REQUEST_ERROR_(.+)$/)?.[1];
   if(apiCode)return NextResponse.json({ok:false,error:"Binance rejected the signed request (API code/status "+apiCode+"). Check the Binance API permissions, account eligibility, and enabled deposit network.",diagnosticCode:apiCode},{status:502});
   const m=e instanceof Error?e.message:"";
