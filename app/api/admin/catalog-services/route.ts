@@ -26,15 +26,21 @@ export async function POST(req:Request){
     const catalog=await settings.findOne({_id:"serviceCatalog"});
     const hidden=new Set<string>(Array.isArray(catalog?.hiddenServices)?catalog.hiddenServices:[]);
     const zeroStock:string[]=[];
-    for(const service of services){
-      const id=String(service?.id??service?.code??service?.name??service?.title??"");
-      if(!id)continue;
-      try{
-        const prices=await servicePrices(id,countries);
-        const hasStock=Object.values(prices||{}).some((p:any)=>Number(p?.count||0)>0&&Number(p?.cost||0)>0);
-        if(!hasStock){hidden.add(normalize(id));zeroStock.push(id);}
-      }catch(error){console.error("[REMOVE ZERO STOCK CHECK]",id,error);}
-    }
+    let cursor=0;
+    const worker=async()=>{
+      while(true){
+        const index=cursor++;
+        if(index>=services.length)return;
+        const service=services[index],id=String(service?.id??service?.code??service?.name??service?.title??"");
+        if(!id)continue;
+        try{
+          const prices=await servicePrices(id,countries);
+          const hasStock=Object.values(prices||{}).some((p:any)=>Number(p?.count||0)>0&&Number(p?.cost||0)>0);
+          if(!hasStock){hidden.add(normalize(id));zeroStock.push(id);}
+        }catch(error){console.error("[REMOVE ZERO STOCK CHECK]",id,error);}
+      }
+    };
+    await Promise.all(Array.from({length:Math.min(4,services.length)},()=>worker()));
     await settings.updateOne({_id:"serviceCatalog"},{$set:{hiddenServices:[...hidden],updatedAt:new Date()}},{upsert:true});
     return NextResponse.json({ok:true,removed:zeroStock.length,services:hidden.size,removedServices:zeroStock,hiddenServices:[...hidden]});
   }
