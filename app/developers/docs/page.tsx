@@ -2,7 +2,7 @@
 
 import {useState} from "react";
 
-const BASE="https://numelixa.com/api/v1";
+const BASE="https://www.numelixa.com/api/v1";
 const KEY="$NUMELIXA_API_KEY";
 
 const samples:Record<string,string>={
