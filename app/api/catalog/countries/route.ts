@@ -19,7 +19,7 @@ export async function GET(req:Request){
       const p=prices[String(c.id)];
       const cost=Number(p?.cost||0),count=Number(p?.count||0),coins=cost>0?sellCoins(cost,settings):0;
       return {...c,flag:flag(c.iso),stock:{count,physicalCount:count,sellCoins:coins,usdPrice:coins/settings.coinsPerUsd}};
-    });
+    }).filter((c:any)=>Number(c?.stock?.count||0)>0);
     return NextResponse.json({ok:true,live:true,countryCount:result.length,countries:result});
   }catch(e){
     return NextResponse.json({ok:false,live:false,countries:[],error:"Unable to load live countries."},{status:502});
