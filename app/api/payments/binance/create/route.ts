@@ -15,7 +15,7 @@ export async function POST(req:Request){
   const user=await requireUser();
   if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before buying coins."},{status:403});
   const ps=await getPaymentSettings();
-  if(ps.activeProvider!=="binance"||!personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
+  if(ps.activeProvider!=="binance"||!await personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
   const body=await req.json(),coins=Math.floor(Number(body.coins)),settings=await getSettings();
   const pack=settings.coinPackages.find((x:any)=>Number(x.coins)===coins);
   const baseAmount=Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
@@ -61,7 +61,7 @@ export async function POST(req:Request){
   if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});
   const messages:Record<string,string>={
    BINANCE_PERSONAL_API_NOT_CONFIGURED:"Crypto payments are temporarily unavailable. Please try again later.",
-   BINANCE_FIXIE_URL_NOT_CONFIGURED:"Add FIXIE_URL to Vercel Production Environment Variables, then redeploy.",
+   BINANCE_WEBSHARE_NOT_CONFIGURED:"The payment service proxy is not configured. Please contact support.",
    BINANCE_NETWORK_ERROR:"Numelixa could not connect to Binance. Please try again.",
    BINANCE_API_TIMESTAMP_ERROR:"Binance rejected the request timestamp. Please retry shortly.",
    BINANCE_API_RATE_LIMIT:"Binance rate-limited this request. Please wait a moment and try again.",
