@@ -1,9 +1,10 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {listServices} from "@/lib/sms-provider";
+import {listServices,listCountries,servicePrices} from "@/lib/sms-provider";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
+export const maxDuration=60;
 const normalize=(v:unknown)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
 export async function GET(){
  try{
@@ -19,6 +20,24 @@ export async function POST(req:Request){
  try{
   await requireAdmin();
   const body=await req.json();
+  if(body?.action==="remove_zero_stocks"){
+    const [services,countries]=await Promise.all([listServices(),listCountries()]);
+    const settings=await collection<any>("settings");
+    const catalog=await settings.findOne({_id:"serviceCatalog"});
+    const hidden=new Set<string>(Array.isArray(catalog?.hiddenServices)?catalog.hiddenServices:[]);
+    const zeroStock:string[]=[];
+    for(const service of services){
+      const id=String(service?.id??service?.code??service?.name??service?.title??"");
+      if(!id)continue;
+      try{
+        const prices=await servicePrices(id,countries);
+        const hasStock=Object.values(prices||{}).some((p:any)=>Number(p?.count||0)>0&&Number(p?.cost||0)>0);
+        if(!hasStock){hidden.add(normalize(id));zeroStock.push(id);}
+      }catch(error){console.error("[REMOVE ZERO STOCK CHECK]",id,error);}
+    }
+    await settings.updateOne({_id:"serviceCatalog"},{$set:{hiddenServices:[...hidden],updatedAt:new Date()}},{upsert:true});
+    return NextResponse.json({ok:true,removed:zeroStock.length,services:hidden.size,removedServices:zeroStock,hiddenServices:[...hidden]});
+  }
   const name=String(body?.name??"").trim();
   const action=body?.action==="restore"?"restore":"hide";
   if(!name||name.length>120)return NextResponse.json({ok:false,error:"Enter a valid exact service name."},{status:400});
