@@ -60,7 +60,7 @@ export async function getPaymentSettings():Promise<PaymentSettings>{
     activeProvider:s?.activeProvider==="paypal"?"paypal":s?.activeProvider==="binance"?"binance":"nowpayments",
     paypal:{clientId,secretKey,webhookId:String(s?.paypalWebhookId||""),configured:Boolean(clientId&&secretKey&&s?.paypalWebhookId)},
     nowpayments:{configured:Boolean(process.env.NOWPAYMENTS_API_KEY&&process.env.NOWPAYMENTS_IPN_SECRET)},
-    binance:{configured,webshareConfigured,webshareHost:binance.webshareHost,websharePort:binance.websharePort,webshareUsernamePreview:binance.webshareUsername?binance.webshareUsername.slice(0,2)+"•••":"",apiKeyPreview:binance.apiKey?binance.apiKey.slice(0,5)+"••••••":""),
+    binance:{configured,webshareConfigured,webshareHost:binance.webshareHost,websharePort:binance.websharePort,webshareUsernamePreview:binance.webshareUsername?binance.webshareUsername.slice(0,2)+"•••":"",apiKeyPreview:binance.apiKey?binance.apiKey.slice(0,5)+"••••••":""},
     updatedAt:s?.updatedAt
   };
 }
