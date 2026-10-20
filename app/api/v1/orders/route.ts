@@ -2,11 +2,21 @@ import {NextResponse} from "next/server";
 import {POST as purchaseOrder} from "@/app/api/orders/route";
 import {requireUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
+import {deliverDeveloperWebhook} from "@/lib/developer-webhook";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-export async function POST(req:Request){return purchaseOrder(req)}
+export async function POST(req:Request){
+ const response=await purchaseOrder(req);
+ if(response.ok){
+  try{
+   const u=await requireUser(),payload=await response.clone().json();
+   if(payload?.ok&&payload?.order)await deliverDeveloperWebhook(u.id,"order.created",{order:payload.order});
+  }catch(error){console.error("[API ORDER WEBHOOK]",error)}
+ }
+ return response;
+}
 
 export async function GET(req:Request){
  try{
