@@ -4,11 +4,30 @@ import {collection} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const CURRENT_VERSION="1.0.2";
-const CURRENT_VERSION_CODE=3;
-const CURRENT_SIZE_BYTES=55988681;
-const CURRENT_RELEASE_NOTES="Numelixa Android 1.0.2: improved app update flow, launcher icon assets, and Android installer handoff.";
+const CURRENT_VERSION="1.0.5";
+const CURRENT_VERSION_CODE=6;
+const CURRENT_SIZE_BYTES=0;
+const CURRENT_RELEASE_NOTES="A cleaner update experience, improved download progress, and stability improvements.";
 const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/app-release.apk";
+
+function cleanReleaseNotes(raw:unknown){
+  const text=String(raw||"")
+    .replace(/\\*\\*Full Changelog\\*\\*:?[^\\n]*/gi,"")
+    .replace(/Full Changelog:?[^\\n]*/gi,"")
+    .replace(/https?:\\/\\/\\S+/gi,"")
+    .replace(/github\\.com\\/[^\\s]*/gi,"");
+  const seen=new Set<string>();
+  const lines:string[]=[];
+  for(let line of text.split(/\\r?\\n/)){
+    line=line.replace(/^\\s*[-*•>]+\\s*/,"").replace(/[\\x60*_]{1,3}/g,"").replace(/\\s+/g," ").trim();
+    const lower=line.toLowerCase();
+    if(line.length<8||lower.includes("full changelog")||lower.includes("commits/android-latest")||lower.includes("github.com/manager-cpu6")||["yo","infc","una","hom"].includes(lower))continue;
+    const key=lower.replace(/[^a-z0-9]+/g," ").trim();
+    if(!key||seen.has(key))continue;
+    seen.add(key);lines.push(line);if(lines.length===4)break;
+  }
+  return lines.join("\\n")||"A cleaner update experience, improved download progress, and stability improvements.";
+}
 
 function compareVersions(left:string,right:string){
   const normalize=(value:string)=>value.split("+")[0].split("-")[0].split(".").map(part=>Number.parseInt(part,10)||0);
@@ -34,7 +53,7 @@ export async function GET(){
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           apkUrl:String(latest.apkUrl||CURRENT_APK_URL),
-          releaseNotes:String(latest.releaseNotes||""),
+          releaseNotes:cleanReleaseNotes(latest.releaseNotes),
           force:Boolean(latest.force),
           publishedAt:latest.publishedAt||null
         }
