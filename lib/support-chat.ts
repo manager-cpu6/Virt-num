@@ -3,9 +3,10 @@ import {collection} from "@/lib/mongo";
 export async function ensureSupportConversation(userId:string,userName=""){
  const conversations=await collection<any>("supportChatConversations");
  const existing=await conversations.findOne({userId});
- if(existing)return existing;
  const users=await collection<any>("users");
  const agents=await users.find({role:"support_admin",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
+ if(existing&&existing.assignedAdminId)return existing;
+ if(existing&&!agents.length)return existing;
  let assignedAdminId:string|null=null;
  if(agents.length){
   const counts=await conversations.aggregate([
@@ -19,11 +20,15 @@ export async function ensureSupportConversation(userId:string,userName=""){
  }
  const user=await users.findOne({_id:String(userId)});
  const now=new Date();
- await conversations.updateOne({userId:String(userId)},{$setOnInsert:{
-  userId:String(userId),userName:String(userName||user?.name||"Numelixa user"),
-  userEmail:String(user?.email||""),assignedAdminId,createdAt:now,updatedAt:now,
-  status:"open",rating:null,reaction:null
- }},{upsert:true});
+ if(existing){
+  await conversations.updateOne({userId:String(userId)},{$set:{assignedAdminId,userName:String(userName||user?.name||existing.userName||"Numelixa user"),userEmail:String(user?.email||existing.userEmail||""),updatedAt:now}});
+ }else{
+  await conversations.updateOne({userId:String(userId)},{$setOnInsert:{
+   userId:String(userId),userName:String(userName||user?.name||"Numelixa user"),
+   userEmail:String(user?.email||""),assignedAdminId,createdAt:now,updatedAt:now,
+   status:"open",rating:null,reaction:null
+  }},{upsert:true});
+ }
  return conversations.findOne({userId:String(userId)});
 }
 
