@@ -2,7 +2,7 @@ name: Numelixa Web Build
 
 on:
   push:
-    branches: [main, redesign/complete-auth-services-push, feat/mobile-api-sessions-commerce, support-chat-upgrade, support-chat-hardening]
+    branches: [main, redesign/complete-auth-services-push, feat/mobile-api-sessions-commerce, support-chat-upgrade, support-chat-hardening, android-1.0.8-update-metadata]
   workflow_dispatch:
 
 jobs:
