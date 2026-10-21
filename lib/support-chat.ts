@@ -4,7 +4,8 @@ export async function ensureSupportConversation(userId:string,userName=""){
  const conversations=await collection<any>("supportChatConversations");
  const existing=await conversations.findOne({userId});
  const users=await collection<any>("users");
- const agents=await users.find({role:"support_admin",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
+ let agents=await users.find({role:"support_agent",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
+ if(!agents.length)agents=await users.find({role:"support_admin",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
  if(existing&&existing.assignedAdminId)return existing;
  if(existing&&!agents.length)return existing;
  let assignedAdminId:string|null=null;
@@ -33,8 +34,8 @@ export async function ensureSupportConversation(userId:string,userName=""){
 }
 
 export async function canAccessSupportConversation(actor:{id:string;role:string},conversationId:string){
- if(actor.role==="admin")return true;
- if(actor.role!=="support_admin")return false;
+ if(actor.role==="admin"||actor.role==="support_admin")return true;
+ if(actor.role!=="support_agent")return false;
  const conversation=await (await collection<any>("supportChatConversations")).findOne({userId:String(conversationId)});
  return Boolean(conversation&&String(conversation.assignedAdminId||"")===String(actor.id));
 }
