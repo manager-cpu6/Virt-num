@@ -3,10 +3,10 @@ import {collection} from "@/lib/mongo";
 export async function ensureSupportConversation(userId:string,userName=""){
  const conversations=await collection<any>("supportChatConversations");
  const existing=await conversations.findOne({userId});
+ if(existing&&existing.assignedAdminId)return existing;
  const users=await collection<any>("users");
  let agents=await users.find({role:"support_agent",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
  if(!agents.length)agents=await users.find({role:"support_admin",supportActive:{$ne:false},suspendedAt:{$exists:false}}).sort({createdAt:1,_id:1}).toArray();
- if(existing&&existing.assignedAdminId)return existing;
  if(existing&&!agents.length)return existing;
  let assignedAdminId:string|null=null;
  if(agents.length){
