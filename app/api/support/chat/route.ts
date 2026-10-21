@@ -6,7 +6,7 @@ import {backfillSupportConversations,canAccessSupportConversation,ensureSupportC
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const clean=(x:unknown,n=4000)=>String(x??"").trim().slice(0,n);
-const isStaff=(role:string)=>role==="admin"||role==="support_admin";
+const isStaff=(role:string)=>role==="admin"||role==="support_admin"||role==="support_agent";
 function visible(m:any){return {id:String(m._id),conversationId:String(m.conversationId||""),senderRole:m.senderRole==="admin"?"admin":"user",senderId:String(m.senderId||""),senderName:String(m.senderName||""),text:String(m.text||""),attachments:Array.isArray(m.attachments)?m.attachments:[],createdAt:m.createdAt,readAt:m.readAt||null};}
 
 export async function GET(req:Request){
@@ -30,7 +30,7 @@ export async function GET(req:Request){
    ]).toArray();
    const ids=rows.map(x=>String(x._id));
    const filters:any={userId:{$in:ids}};
-   if(user.role==="support_admin")filters.assignedAdminId=String(user.id);
+   if(user.role==="support_agent")filters.assignedAdminId=String(user.id);
    const convRows=await conversations.find(filters).toArray();
    const convByUser=new Map(convRows.map((x:any)=>[String(x.userId),x]));
    const allowedIds=new Set(convRows.map((x:any)=>String(x.userId)));
