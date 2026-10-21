@@ -26,7 +26,7 @@ export default function Login(){
  const[email,setEmail]=useState(""),[secret,setSecret]=useState(""),[error,setError]=useState(""),[loading,setLoading]=useState(false),[next,setNext]=useState(""),[approval,setApproval]=useState<any>(null),[emailCode,setEmailCode]=useState(""),[emailCodeSent,setEmailCodeSent]=useState(false),[emailCodeBusy,setEmailCodeBusy]=useState(false),[emailCodeMessage,setEmailCodeMessage]=useState(""),[method,setMethod]=useState<"email"|"phone">("email"),[phoneEnabled,setPhoneEnabled]=useState(false),[success,setSuccess]=useState(""),router=useRouter();
  useEffect(()=>{setNext(new URLSearchParams(window.location.search).get("next")||"")},[]);
  useEffect(()=>{let active=true;fetch("/api/auth/methods",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(active){const enabled=d.phoneEnabled!==false;setPhoneEnabled(enabled);if(!enabled)setMethod("email")}}).catch(()=>{});return()=>{active=false}},[]);
- function finishLogin(message="You're signed in successfully."){
+ function finishLogin(message="You're signed in successfully.",role="user"){
   setSuccess(message);playSuccessTone();window.dispatchEvent(new Event("numelixa-auth-ready"));
   window.setTimeout(()=>router.push((role==="support_admin"||role==="support_agent")?"/admin/support":(next&&next.startsWith("/")?next:"/dashboard")),650);
  }
