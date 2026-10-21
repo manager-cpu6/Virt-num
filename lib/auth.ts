@@ -61,7 +61,13 @@ export async function ensureSupportAdmin(){
 
 export async function requireSupportAccess(){
  const u=await requireUser();
- if(u.role!=="admin"&&u.role!=="support_admin")throw new Error("SUPPORT_ACCESS_REQUIRED");
+ if(u.role!=="admin"&&u.role!=="support_admin"&&u.role!=="support_agent")throw new Error("SUPPORT_ACCESS_REQUIRED");
+ return u;
+}
+
+export async function requireSupportManager(){
+ const u=await requireUser();
+ if(u.role!=="admin"&&u.role!=="support_admin")throw new Error("SUPPORT_MANAGER_REQUIRED");
  return u;
 }
 
