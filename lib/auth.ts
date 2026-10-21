@@ -53,8 +53,8 @@ export async function ensureSupportAdmin(){
   await users.insertOne({_id:id,email,name:"Support Admin",password_hash,role:"support_admin",supportActive:true,coins:0,verifiedAt:new Date(),createdAt:new Date()});
   return id;
  }
- // Never demote the primary administrator if both environment emails were configured alike.
- if(existing.role==="admin")return String(existing._id);
+ // Preserve the primary administrator only when both environment emails refer to the same account.
+ if(existing.role==="admin"&&email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())return String(existing._id);
  await users.updateOne({_id:existing._id},{$set:{role:"support_admin",supportActive:existing.supportActive!==false,password_hash,name:existing.name||"Support Admin"}});
  return String(existing._id);
 }

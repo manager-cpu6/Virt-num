@@ -8,6 +8,7 @@ export const dynamic="force-dynamic";
 const clean=(x:unknown,n=4000)=>String(x??"").trim().slice(0,n);
 const isStaff=(role:string)=>role==="admin"||role==="support_admin"||role==="support_agent";
 function visible(m:any){return {id:String(m._id),conversationId:String(m.conversationId||""),senderRole:m.senderRole==="admin"?"admin":"user",senderId:String(m.senderId||""),senderName:String(m.senderName||""),text:String(m.text||""),attachments:Array.isArray(m.attachments)?m.attachments:[],createdAt:m.createdAt,readAt:m.readAt||null};}
+function listPreview(m:any){const value=visible(m);return {...value,attachments:value.attachments.map((a:any)=>({name:String(a.name||""),mime:String(a.mime||""),kind:String(a.kind||"file")}))};}
 
 export async function GET(req:Request){
  try{
@@ -40,7 +41,7 @@ export async function GET(req:Request){
    const byId=new Map(userRows.map((x:any)=>[String(x._id),x]));
    return NextResponse.json({ok:true,conversations:visibleRows.map((x:any)=>{
     const id=String(x._id),u=byId.get(id),conv=convByUser.get(id);
-    return {id,userName:String(u?.name||x.last.senderName||"Numelixa user"),userEmail:String(u?.email||""),lastMessage:visible(x.last),unread:Number(x.unread||0),status:conv?.status||"open",rating:conv?.rating??null,reaction:conv?.reaction??null,assignedAdminId:conv?.assignedAdminId||null};
+    return {id,userName:String(u?.name||x.last.senderName||"Numelixa user"),userEmail:String(u?.email||""),lastMessage:listPreview(x.last),unread:Number(x.unread||0),status:conv?.status||"open",rating:conv?.rating??null,reaction:conv?.reaction??null,assignedAdminId:conv?.assignedAdminId||null};
    })});
   }
   const ownId=String(user.id);
