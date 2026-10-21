@@ -7,6 +7,7 @@ import AdminAppUpdate from "@/components/AdminAppUpdate";
 import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods from "@/components/AdminAuthMethods";
 import AdminSupport from "@/components/AdminSupport";
 import AdminHelpChat from "@/components/AdminHelpChat";
+import AdminSupportTeam from "@/components/AdminSupportTeam";
 import AdminServiceCatalog from "@/components/AdminServiceCatalog";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
@@ -99,7 +100,7 @@ export default function AdminPanel(){
   {tab==="authentication"&&<AdminAuthMethods/>}
   {tab==="app update"&&<AdminAppUpdate/>}
   {tab==="security"&&<AdminSecurity/>}
-  {tab==="support"&&<><AdminHelpChat/><AdminSupport/></>}
+  {tab==="support"&&<><AdminHelpChat/><AdminSupportTeam/><AdminSupport/></>}
  </div>
 }
 
