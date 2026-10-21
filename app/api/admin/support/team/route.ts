@@ -19,7 +19,7 @@ export async function GET(){
 
 export async function POST(req:Request){
  try{
-  await requireAdmin();
+  await requireSupportManager();
   const body=await req.json(),name=String(body.name||"").trim().slice(0,80),email=String(body.email||"").trim().toLowerCase(),password=String(body.password||"");
   if(name.length<2||!/^\S+@\S+\.\S+$/.test(email)||password.length<10)return NextResponse.json({ok:false,error:"Enter a name, valid email and password with at least 10 characters."},{status:400});
   if(email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())return NextResponse.json({ok:false,error:"Use a separate email for each support agent."},{status:409});
@@ -34,7 +34,7 @@ export async function POST(req:Request){
 
 export async function PATCH(req:Request){
  try{
-  await requireAdmin();
+  await requireSupportManager();
   const body=await req.json(),id=String(body.id||""),active=body.active;
   if(!id||typeof active!=="boolean")return NextResponse.json({ok:false,error:"Choose a support admin and active status."},{status:400});
   const r=await (await collection<any>("users")).updateOne({_id:id,role:"support_agent"},{$set:{supportActive:active,updatedAt:new Date()}});
