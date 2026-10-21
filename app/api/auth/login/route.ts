@@ -1,6 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
-import {createSession,createMobileSession,passwordCheck,ensureAdmin,requestMeta} from "@/lib/auth";
+import {createSession,createMobileSession,passwordCheck,ensureAdmin,ensureSupportAdmin,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {extraSecurityEnabled,createLoginApproval} from "@/lib/login-security";
 
@@ -11,6 +11,7 @@ export async function POST(req:Request){
   const b=await req.json(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||"");
   if(!email||!password)return NextResponse.json({ok:false,error:"Email and password are required."},{status:400});
   if(email===(process.env.ADMIN_EMAIL||"").trim().toLowerCase())await ensureAdmin();
+  if(email===(process.env.EMAIL_SUPPORT_ADMIN||"").trim().toLowerCase())await ensureSupportAdmin();
   const u=await (await collection<any>("users")).findOne({email});
   if(!u||!(await passwordCheck(password,u.password_hash)))return NextResponse.json({ok:false,error:"Invalid email or password."},{status:401});
   if(u.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Reason: "+String(u.suspensionReason||"Your account requires review.")+" If you believe this is a mistake, contact https://support.numelixa.com to request a review."},{status:403});
