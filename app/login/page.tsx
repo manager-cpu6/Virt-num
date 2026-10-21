@@ -28,7 +28,7 @@ export default function Login(){
  useEffect(()=>{let active=true;fetch("/api/auth/methods",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(active){const enabled=d.phoneEnabled!==false;setPhoneEnabled(enabled);if(!enabled)setMethod("email")}}).catch(()=>{});return()=>{active=false}},[]);
  function finishLogin(message="You're signed in successfully."){
   setSuccess(message);playSuccessTone();window.dispatchEvent(new Event("numelixa-auth-ready"));
-  window.setTimeout(()=>router.push(next&&next.startsWith("/")?next:((role==="support_admin"||role==="support_agent")?"/admin/support":"/dashboard")),650);
+  window.setTimeout(()=>router.push((role==="support_admin"||role==="support_agent")?"/admin/support":(next&&next.startsWith("/")?next:"/dashboard")),650);
  }
  async function go(){
   setError("");if(!email.trim()||!secret){setError("Enter your email and password.");return}setLoading(true);
