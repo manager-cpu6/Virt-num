@@ -41,6 +41,30 @@ export async function ensureAdmin(){
  return String(existing._id);
 }
 
+export async function ensureSupportAdmin(){
+ const email=(process.env.EMAIL_SUPPORT_ADMIN||"").trim().toLowerCase();
+ const password=process.env.PASSWORD_SUPPORT_ADMIN||"";
+ if(!email||!password||!email.includes("@")||password.length<8)return null;
+ const users=await collection<any>("users");
+ const existing=await users.findOne({email});
+ const password_hash=await bcrypt.hash(password,12);
+ if(!existing){
+  const id=mongoId();
+  await users.insertOne({_id:id,email,name:"Support Admin",password_hash,role:"support_admin",supportActive:true,coins:0,verifiedAt:new Date(),createdAt:new Date()});
+  return id;
+ }
+ // Never demote the primary administrator if both environment emails were configured alike.
+ if(existing.role==="admin")return String(existing._id);
+ await users.updateOne({_id:existing._id},{$set:{role:"support_admin",supportActive:existing.supportActive!==false,password_hash,name:existing.name||"Support Admin"}});
+ return String(existing._id);
+}
+
+export async function requireSupportAccess(){
+ const u=await requireUser();
+ if(u.role!=="admin"&&u.role!=="support_admin")throw new Error("SUPPORT_ACCESS_REQUIRED");
+ return u;
+}
+
 export async function createSession(userId:string,meta?:SessionMeta){
  const raw=crypto.randomBytes(32).toString("hex");
  const now=new Date();
