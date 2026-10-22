@@ -32,7 +32,8 @@ const serviceBrands:Record<string,{slug:string;color:string}>={
  instagram:{slug:"instagram",color:"E4405F"},facebook:{slug:"facebook",color:"0866FF"},
  google:{slug:"google",color:"4285F4"},tiktok:{slug:"tiktok",color:"FFFFFF"},
  amazon:{slug:"amazon",color:"FF9900"},openai:{slug:"openai",color:"FFFFFF"},
- discord:{slug:"discord",color:"5865F2"},snapchat:{slug:"snapchat",color:"FFFC00"},
+ discord:{slug:"discord",color:"5865F2"},snapchat:{slug:"snapchat",color:"FFFC00"}
+};
 
 
 export default function HomeLiveBoard(){
