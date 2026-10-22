@@ -1088,3 +1088,16 @@ body:after{background:rgba(113,59,255,.09)!important}
 .nx-coin-choice b{font-size:13px}.nx-coin-choice small{font-size:10px;color:#91a8c4;overflow-wrap:anywhere}
 .nx-coin-choice i{font-style:normal;color:#00d9ff;font-weight:900}
 @media(max-width:500px){.nx-coin-choice-grid{grid-template-columns:1fr}}
+
+/* Dashboard: keep the entire home screen in one continuous midnight environment. */
+body:has(.reference-dashboard){background-color:#050b18!important;background-image:radial-gradient(ellipse at 50% -12%,rgba(22,119,255,.12),transparent 42%),radial-gradient(ellipse at 100% 42%,rgba(113,59,255,.055),transparent 35%)!important;background-attachment:fixed}
+body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{background:transparent!important}
+.reference-dashboard .hero-card,.reference-dashboard .quick-card,.reference-dashboard .home-live-board-v2,.reference-dashboard .nx-whatsapp-help{backdrop-filter:blur(14px)}
+.reference-dashboard .quick-card{border-color:rgba(104,151,207,.18);background:rgba(7,19,41,.48);box-shadow:0 12px 30px rgba(0,0,0,.12)}
+.reference-dashboard .quick-card:hover{transform:translateY(-2px);border-color:rgba(22,119,255,.45);box-shadow:0 16px 36px rgba(0,0,0,.2)}
+.reference-dashboard .nx-network-visual{flex:0 0 min(36%,340px);min-width:230px}
+.stock-status{display:flex;align-items:center;gap:9px;margin:10px 0;padding:10px 12px;border:1px solid rgba(104,151,207,.2);border-radius:12px;background:rgba(7,19,41,.52);color:#a7b7d0;font-size:12px;line-height:1.5}
+.stock-error{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:10px 0;padding:10px 12px;border:1px solid rgba(255,120,140,.32);border-radius:12px;background:rgba(70,20,37,.25);color:#ffd0d8;font-size:12px;line-height:1.5}
+.stock-error button{flex:0 0 auto;border:1px solid rgba(255,120,140,.36);border-radius:9px;padding:7px 12px;background:rgba(255,120,140,.09);color:#fff;font-weight:700}
+@media(max-width:650px){.reference-dashboard .home-hero-refresh{flex-direction:column;align-items:stretch}.reference-dashboard .nx-network-visual{flex:0 0 auto;min-width:0}.reference-dashboard .hero-card p{max-width:100%}}
+@media(prefers-reduced-motion:reduce){.reference-dashboard .quick-card{transition:none}}
