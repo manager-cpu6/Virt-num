@@ -2,13 +2,15 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { getUser } from "@/lib/auth";
 import AccountSessions from "@/components/AccountSessions";
+import {getSettings} from "@/lib/settings";
 
 export default async function AccountPage(){
  const user=await getUser();
  if(!user)return <div className="auth-page"><div className="brand-mark">N</div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
  const name=(user.name||"User").trim();
  const initial=name.charAt(0).toUpperCase()||"U";
- const coins=Number(user.coins||0).toLocaleString();
+ const pricing=await getSettings();
+ const balanceUsd=(Number(user.coins||0)/(Number(pricing.coinsPerUsd)||100)).toFixed(2);
  return <div className="account-premium-page"><TopBar title="Account"/>
   <main className="account-premium-shell">
    <section className="account-profile-card">
@@ -22,8 +24,8 @@ export default async function AccountPage(){
    </section>
    <section className="account-wallet-card">
     <div className="account-wallet-orb">◈</div>
-    <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>{coins}</strong><small>Coins ready to use</small></div>
-    <Link href="/wallet" className="account-wallet-action">Add coins <b>↗</b></Link>
+    <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>${balanceUsd}</strong><small>USD available to spend</small></div>
+    <Link href="/wallet" className="account-wallet-action">Add funds <b>↗</b></Link>
    </section>
    {!user.verified_at&&<section className="account-security-card"><div className="security-icon">!</div><div><b>Verify your email</b><small>Verification is required before purchasing a number.</small></div><Link href="/verify-email">Verify</Link></section>}
    {user.verified_at&&<section className="account-security-card verified"><div className="security-icon">✓</div><div><b>Account verified</b><small>Your email is verified and your account is ready.</small></div><span>Secure</span></section>}
