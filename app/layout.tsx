@@ -26,5 +26,6 @@ export const metadata:Metadata={
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
- return <html lang="en"><body><MobileAppBootstrap/><LoginApprovalGate/><div className={isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main><AppChrome docs={isDocsHost}/></div></body></html>;
+ const isCheckoutHost=host==="checkout.numelixa.com";
+ return <html lang="en"><body><MobileAppBootstrap/><LoginApprovalGate/><div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
 }
