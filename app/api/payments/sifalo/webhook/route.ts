@@ -27,7 +27,7 @@ export async function POST(req:Request){
    await payments.updateOne({_id:p._id,credited:{$ne:true}},{$set:{status:verifiedCode===603?"pending":verifiedCode===600||verifiedCode===604?"failed":"pending",txid:String(body.sid||p.txid||""),raw:body,updatedAt:new Date()}});
    return NextResponse.json({ok:true});
   }
-  if(Math.abs(Number(body.amount)-Number(p.amountUsd))>0.01||String(body.currency||"USD").toUpperCase()!=="USD")return NextResponse.json({ok:false,error:"Payment amount mismatch"},{status:400});
+  if(!Number.isFinite(Number(body.amount))||Math.round(Number(body.amount)*100)!==Math.round(Number(p.amountUsd)*100)||String(body.currency||"USD").toUpperCase()!=="USD")return NextResponse.json({ok:false,error:"Payment amount mismatch"},{status:400});
   const client=getMongoClient();
   const session=client.startSession();
   let creditedNow=false;
