@@ -23,8 +23,8 @@ export default function LocalPaymentsAdmin(){
     </div>
     <div style={{marginTop:20,padding:14,background:"#081B36",borderRadius:14,color:"#A7B7D0",fontSize:13,lineHeight:1.6}}>API configuration: <strong style={{color:state.configured?"#00E5C3":"#FF9DAF"}}>{state.configured?"Configured":"Missing"}</strong>. {state.configured?"Credentials are read only by the server.":"Set SIFALO_API_USER and SIFALO_API_KEY in Vercel server environment before opening checkout."}</div>
     <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:22}}>
-     <button disabled={busy||!state.configured||state.open} onClick={()=>change(true)} style={{border:0,borderRadius:14,padding:"14px 20px",fontWeight:800,color:"#03111C",background:"#00E5C3",opacity:busy||!state.configured||state.open?.55:1,cursor:"pointer"}}>{busy?"Saving…":"Open Local Payments"}</button>
-     <button disabled={busy||!state.open} onClick={()=>change(false)} style={{border:"1px solid #37506F",borderRadius:14,padding:"14px 20px",fontWeight:800,color:"#F5F8FF",background:"#0D2345",opacity:busy||!state.open?.55:1,cursor:"pointer"}}>{busy?"Saving…":"Close Local Payments"}</button>
+     <button disabled={busy||!state.configured||state.open} onClick={()=>change(true)} style={{border:0,borderRadius:14,padding:"14px 20px",fontWeight:800,color:"#03111C",background:"#00E5C3",opacity:busy||!state.configured||state.open ? .55 : 1,cursor:"pointer"}}>{busy?"Saving…":"Open Local Payments"}</button>
+     <button disabled={busy||!state.open} onClick={()=>change(false)} style={{border:"1px solid #37506F",borderRadius:14,padding:"14px 20px",fontWeight:800,color:"#F5F8FF",background:"#0D2345",opacity:busy||!state.open ? .55 : 1,cursor:"pointer"}}>{busy?"Saving…":"Close Local Payments"}</button>
     </div>
    </section>}
   </div>
