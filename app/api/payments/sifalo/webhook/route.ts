@@ -44,7 +44,7 @@ export async function POST(req:Request){
    });
   }finally{await session.endSession();}
   if(creditedNow){
-   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with "+Number(p.coins).toLocaleString()+" coins.",{paymentId:String(p._id),type:"payment"});}catch(e){console.error("[SIFALO PUSH]",e);}
+   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(e){console.error("[SIFALO PUSH]",e);}
   }
   return NextResponse.json({ok:true});
  }catch(e){console.error("[SIFALO WEBHOOK]",e);return NextResponse.json({ok:false,error:"Webhook processing failed."},{status:500});}
