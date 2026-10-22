@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {POST as purchaseOrder} from "@/app/api/orders/route";
 import {requireUser} from "@/lib/auth";
+import {getSettings} from "@/lib/settings";
 import {collection} from "@/lib/mongo";
 import {deliverDeveloperWebhook} from "@/lib/developer-webhook";
 
@@ -21,6 +22,7 @@ export async function POST(req:Request){
 export async function GET(req:Request){
  try{
   const u=await requireUser();
+  const pricing=await getSettings();
   const q=new URL(req.url).searchParams;
   const limit=Math.min(Math.max(Number(q.get("limit")||25),1),100);
   const status=q.get("status")||"";
@@ -32,7 +34,7 @@ export async function GET(req:Request){
    orders:rows.map((o:any)=>({
     id:String(o._id),service:o.service,
     country:o.country,countryCode:o.countryCode,phone:o.phoneNumber,
-    price:Number(o.priceCoins||0),currency:"coins",status:o.status,code:o.code||null,
+    price:Number(((Number(o.priceCoins)||0)/(Number(pricing.coinsPerUsd)||100)).toFixed(2)),currency:"USD",status:o.status,code:o.code||null,
     fullSms:o.fullSms||null,
     expiresAt:o.expiresAt,createdAt:o.createdAt,completedAt:o.completedAt||null
    })),
