@@ -1073,3 +1073,8 @@ body:after{background:rgba(113,59,255,.09)!important}
 .coin-package-admin .nx-package-field input{margin:0;min-width:0}
 .coin-package-admin .coin-package-row button{white-space:nowrap}
 @media(max-width:500px){.nx-network-choice-grid{grid-template-columns:1fr}.coin-package-admin .coin-package-row{align-items:stretch}.coin-package-admin .nx-package-field{flex-basis:calc(50% - 8px)}}
+
+.nx-gradient-text{background:linear-gradient(100deg,#55b8ff 0%,#8b7aff 72%,#b58cff 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.nx-whatsapp-icon img{display:block;object-fit:contain}
+.nx-earth-globe:before,.nx-earth-globe:after{opacity:.22}
+@media(prefers-reduced-motion:no-preference){.home-hero-refresh{animation:nx-hero-arrive .55s ease-out both}.quick-card,.service-card,.nx-whatsapp-help{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}@keyframes nx-hero-arrive{from{opacity:.7;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}}
