@@ -26,8 +26,7 @@ export async function GET(){
     status:"operational",
     authenticated:Boolean(u),
     authentication:"Bearer nx_live_* or x-api-key",
-    currency:"coins",
-    coinsPerUsd:Number(settings?.coinsPerUsd||100),
+    currency:"USD",
     endpoints:{
       account:"GET /api/v1/account",
       balance:"GET /api/v1/balance",
