@@ -106,7 +106,7 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  function addOperator(){const v=newOperator.trim().toLowerCase();if(!v||operators.includes(v))return;setOperators([...operators,v]);setNewOperator("")}
  function removeOperator(v:string){if(v==="any")return;setOperators(operators.filter(x=>x!==v))}
  function updatePackage(index:number,field:"coins"|"priceUsd",value:number){setPackages(items=>items.map((p,i)=>i===index?{...p,[field]:value}:p))}
- function addPackage(){if(packages.length>=8)return;setPackages(items=>[...items,{coins:100,priceUsd:1,popular:items.length===0}])}
+ function addPackage(){if(packages.length>=8)return;setPackages(items=>[...items,{coins:Math.max(0,...items.map(p=>Number(p.coins)||0))+1,priceUsd:1,popular:items.length===0}])}
  function removePackage(index:number){setPackages(items=>items.filter((_,i)=>i!==index).map((p,i)=>({...p,popular:i===0?true:p.popular})))}
  function markPopular(index:number){setPackages(items=>items.map((p,i)=>({...p,popular:i===index})))}
  return <Table title="Numelixa pricing & SMS providers">
