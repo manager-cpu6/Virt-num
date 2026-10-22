@@ -1078,3 +1078,13 @@ body:after{background:rgba(113,59,255,.09)!important}
 .nx-whatsapp-icon img{display:block;object-fit:contain}
 .nx-earth-globe:before,.nx-earth-globe:after{opacity:.22}
 @media(prefers-reduced-motion:no-preference){.home-hero-refresh{animation:nx-hero-arrive .55s ease-out both}.quick-card,.service-card,.nx-whatsapp-help{transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}@keyframes nx-hero-arrive{from{opacity:.7;transform:translateY(7px)}to{opacity:1;transform:translateY(0)}}}
+
+.nx-coin-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0 16px}
+.nx-coin-choice{display:flex;align-items:center;gap:10px;min-width:0;padding:12px;border-radius:15px;border:1px solid rgba(104,151,207,.22);background:rgba(7,19,41,.86);color:#f5f8ff;text-align:left;transition:transform .16s,border-color .16s,background .16s}
+.nx-coin-choice:hover{transform:translateY(-1px);border-color:rgba(22,119,255,.55)}
+.nx-coin-choice.selected{border-color:#00d9ff;background:linear-gradient(120deg,rgba(22,119,255,.18),rgba(113,59,255,.12))}
+.nx-coin-choice img{width:34px;height:34px;object-fit:contain;flex:0 0 auto;border-radius:50%;background:#fff;padding:3px}
+.nx-coin-choice span{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.nx-coin-choice b{font-size:13px}.nx-coin-choice small{font-size:10px;color:#91a8c4;overflow-wrap:anywhere}
+.nx-coin-choice i{font-style:normal;color:#00d9ff;font-weight:900}
+@media(max-width:500px){.nx-coin-choice-grid{grid-template-columns:1fr}}
