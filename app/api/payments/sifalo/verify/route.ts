@@ -16,7 +16,7 @@ export async function GET(req:Request){
   const payments=await collection<any>("payments");
   const p=await payments.findOne({orderId,provider:"sifalo",userId:String(user.id)});
   if(!p)return NextResponse.json({ok:false,error:"Payment request was not found."},{status:404});
-  if(p.status==="paid"&&p.credited===true)return NextResponse.json({ok:true,status:"paid",coins:Number(p.coins),paidAt:p.paidAt||null});
+  if(p.status==="paid"&&p.credited===true)return NextResponse.json({ok:true,status:"paid",amountUsd:Number(p.amountUsd||0),paidAt:p.paidAt||null});
   const apiBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"
    ?"https://spay-api.sifalo.net/gateway/verify.php"
    :"https://api.sifalopay.com/gateway/verify.php";
@@ -29,7 +29,7 @@ export async function GET(req:Request){
   const callbackResponse=await handleSifaloWebhook(new Request(new URL("../webhook",req.url),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(callbackBody)}));
   if(!callbackResponse.ok)return NextResponse.json({ok:false,error:"Payment status was received but wallet reconciliation needs another check."},{status:502});
   const latest=await payments.findOne({orderId:p.orderId,provider:"sifalo",userId:String(user.id)});
-  return NextResponse.json({ok:true,status:String(latest?.status||"pending"),coins:Number(latest?.coins||p.coins),paidAt:latest?.paidAt||null},{headers:{"Cache-Control":"no-store, max-age=0"}});
+  return NextResponse.json({ok:true,status:String(latest?.status||"pending"),amountUsd:Number(latest?.amountUsd||p.amountUsd||0),paidAt:latest?.paidAt||null},{headers:{"Cache-Control":"no-store, max-age=0"}});
  }catch(e){
   if(e instanceof Error&&e.message==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to check this payment."},{status:401});
   console.error("[SIFALO VERIFY]",e instanceof Error?e.message:"verification failed");
