@@ -16,10 +16,14 @@ export async function POST(req:Request){
   if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before buying coins."},{status:403});
   const ps=await getPaymentSettings();
   if(ps.activeProvider!=="binance"||!await personalApiConfigured())return NextResponse.json({ok:false,error:"Crypto payments are temporarily unavailable."},{status:503});
-  const body=await req.json(),coins=Math.floor(Number(body.coins)),settings=await getSettings();
+  const body=await req.json(),settings=await getSettings();
+  const customAmount=body.amountUsd!==undefined&&body.amountUsd!==null&&String(body.amountUsd).trim()!=="";
+  const requestedAmount=customAmount?Number(body.amountUsd):NaN;
+  const coins=customAmount?Math.round(requestedAmount*settings.coinsPerUsd):Math.floor(Number(body.coins));
   const pack=settings.coinPackages.find((x:any)=>Number(x.coins)===coins);
-  const baseAmount=Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
-  if(!Number.isFinite(baseAmount)||baseAmount<=0)return NextResponse.json({ok:false,error:"This coin package is no longer available."},{status:400});
+  const baseAmount=customAmount?requestedAmount:Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
+  if(!Number.isFinite(baseAmount)||baseAmount<=0||Math.round(baseAmount*100)!==baseAmount*100||baseAmount<settings.minTopupUsd||baseAmount>settings.maxTopupUsd||baseAmount>10000)return NextResponse.json({ok:false,error:"Enter a valid USD amount within the wallet top-up limits."},{status:400});
+  if(!Number.isSafeInteger(coins)||coins<1)return NextResponse.json({ok:false,error:"The USD amount is too small for this wallet."},{status:400});
   const currency=String(body.currency||"USDT").toUpperCase();
   if(!/^[A-Z0-9]{2,15}$/.test(currency))return NextResponse.json({ok:false,error:"Choose a supported cryptocurrency."},{status:400});
   const payments=await collection<any>("payments"),now=new Date();
