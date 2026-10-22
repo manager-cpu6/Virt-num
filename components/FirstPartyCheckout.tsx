@@ -5,6 +5,18 @@ type Method="waafi"|"edahab"|"premier"|"card"|"crypto";
 type AssetNetwork={network:string;networkName:string;isDefault?:boolean};
 type Asset={coin:string;name:string;logo?:string;usdPrice:number;networks:AssetNetwork[]};
 const money=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number.isFinite(n)?n:0);
+const networkLogo=(n:AssetNetwork)=>{
+ const key=(n.network+" "+n.networkName).toLowerCase().replace(/[^a-z0-9]/g,"");
+ const aliases:[string,string][]=[
+  ["erc20","ethereum"],["ethereum","ethereum"],["eth","ethereum"],["trc20","tron"],["tron","tron"],
+  ["bep20","binance"],["bsc","binance"],["bnbsmartchain","binance"],["polygon","polygon"],["matic","polygon"],
+  ["solana","solana"],["sol","solana"],["avalanche","avalanche"],["avaxc","avalanche"],["arbitrum","arbitrum"],
+  ["optimism","optimism"],["base","coinbase"],["ton","ton"],["bitcoin","bitcoin"],["btc","bitcoin"],
+  ["litecoin","litecoin"],["dogecoin","dogecoin"],["xrp","xrpl"],["ripple","xrpl"],["aptos","aptos"],["sui","sui"]
+ ];
+ const slug=aliases.find(([needle])=>key.includes(needle))?.[1]||"blockchaindotcom";
+ return "https://cdn.simpleicons.org/"+slug;
+};
 
 export default function FirstPartyCheckout(){
  const [amount,setAmount]=useState("5.00"),[minAmount,setMinAmount]=useState(1),[maxAmount,setMaxAmount]=useState(10000),[rate,setRate]=useState(100);
@@ -68,7 +80,7 @@ export default function FirstPartyCheckout(){
     </section>}
 
     {method==="crypto"&&<section className="nx-payment-form">
-     {!assets.length?<p>Loading supported crypto assets…</p>:<><label htmlFor="nx-asset">Crypto asset</label><select id="nx-asset" value={asset} onChange={e=>{const v=e.target.value;setAsset(v);const a=assets.find(x=>x.coin===v);setNetwork(a?.networks?.find(n=>n.isDefault)?.network||a?.networks?.[0]?.network||"");setDeposit(null);}}>{assets.map(a=><option key={a.coin} value={a.coin}>{a.coin} · {a.name}</option>)}</select><label htmlFor="nx-network">Network</label><select id="nx-network" value={network} onChange={e=>setNetwork(e.target.value)}>{networks.map(n=><option key={n.network} value={n.network}>{n.networkName}</option>)}</select><button type="button" className="nx-checkout-pay" disabled={busy||!validAmount||!network} onClick={startCrypto}>{busy?"Preparing secure deposit…":"Continue with crypto · "+money(amountNumber)} <span>→</span></button></>}
+     {!assets.length?<p>Loading supported crypto assets…</p>:<><label htmlFor="nx-asset">Crypto asset</label><select id="nx-asset" value={asset} onChange={e=>{const v=e.target.value;setAsset(v);const a=assets.find(x=>x.coin===v);setNetwork(a?.networks?.find(n=>n.isDefault)?.network||a?.networks?.[0]?.network||"");setDeposit(null);}}>{assets.map(a=><option key={a.coin} value={a.coin}>{a.coin} · {a.name}</option>)}</select><label>Choose deposit network</label><div className="nx-network-choice-grid">{networks.map(n=><button type="button" key={n.network} className={"nx-network-choice "+(network===n.network?"selected":"")} onClick={()=>setNetwork(n.network)}><img src={networkLogo(n)} alt="" width="28" height="28" loading="lazy" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="https://cdn.simpleicons.org/blockchaindotcom"}}/><span><b>{n.networkName}</b><small>{n.network}{n.isDefault?" · Recommended":""}</small></span><i>{network===n.network?"✓":"›"}</i></button>)}</div><button type="button" className="nx-checkout-pay" disabled={busy||!validAmount||!network} onClick={startCrypto}>{busy?"Preparing secure deposit…":"Continue with crypto · "+money(amountNumber)} <span>→</span></button></>}
     </section>}
 
     {error&&<div className="nx-checkout-error" role="alert">{error}</div>}
