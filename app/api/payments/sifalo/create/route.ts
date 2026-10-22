@@ -3,6 +3,7 @@ import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
+import {POST as handleSifaloWebhook} from "../webhook/route";
 export const runtime="nodejs"; export const dynamic="force-dynamic";
 const FALLBACK_PACKS={36:0.77,75:1.65,250:5.49,499:10.99} as Record<number,number>;
 export async function POST(req:Request){
@@ -32,11 +33,10 @@ export async function POST(req:Request){
    checkoutUrl=host+"?key="+encodeURIComponent(String(data.key))+"&token="+encodeURIComponent(String(data.token));
   }
   if(!checkoutUrl||!/^https:\/\/(pay\.sifalo\.com|pay\.sifalo\.net)\//i.test(checkoutUrl))return NextResponse.json({ok:false,error:"Sifalo returned an invalid checkout link."},{status:502});
-  await (await collection<any>("payments")).insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:String(data.sid||data.key||orderId),orderId,amountUsd:amount,coins,status:Number(data.code)===601?"paid":"pending",txid:String(data.sid||""),packageId:String(coins),raw:{code:data.code,response:data.response},createdAt:new Date(),paidAt:Number(data.code)===601?new Date():null});
+  await (await collection<any>("payments")).insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:String(data.sid||data.key||orderId),orderId,amountUsd:amount,coins,status:"pending",txid:String(data.sid||""),packageId:String(coins),raw:{code:data.code,response:data.response},createdAt:new Date(),paidAt:null});
   if(Number(data.code)===601){
-   const payments=await collection<any>("payments");
-   const claimed=await payments.findOneAndUpdate({orderId,provider:"sifalo",status:"paid",credited:{$ne:true}},{$set:{credited:true,updatedAt:new Date()}},{returnDocument:"before"});
-   if(claimed){const users=await collection<any>("users"),u=await users.findOneAndUpdate({_id:String(user.id)},{$inc:{coins}},{returnDocument:"after"});if(u)await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(user.id),type:"credit",amount:coins,balanceAfter:Number(u.coins),reference:orderId,description:"Sifalo local payment top-up",createdAt:new Date()});}
+   const callback=await handleSifaloWebhook(new Request(new URL("../webhook",req.url),{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data,order_id:orderId,amount:data.amount??amount,currency:data.currency??"USD",status:"success",code:601})}));
+   if(!callback.ok){const result:any=await callback.json().catch(()=>null);console.error("[SIFALO IMMEDIATE CREDIT]",result);return NextResponse.json({ok:false,error:"Payment succeeded but wallet confirmation is delayed. Please check wallet status before paying again.",orderId},{status:502});}
   }
   return NextResponse.json({ok:true,url:checkoutUrl,orderId,coins,amount,status:Number(data.code)===603?"pending":"created"});
  }catch(e){
