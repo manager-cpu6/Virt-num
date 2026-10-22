@@ -23,7 +23,7 @@ export default function Wallet(){
     const params=new URLSearchParams(window.location.search),orderId=params.get("order_id");
     if(params.get("local_payment")!=="return"||!orderId)return;
     setLocalPaymentNotice("Checking your Sifalo payment…");
-    fetch("/api/payments/sifalo/verify?orderId="+encodeURIComponent(orderId),{cache:"no-store",credentials:"same-origin"})
+    fetch("/api/payments/sifalo/verify?orderId="+encodeURIComponent(orderId)+(params.get("sid")?"&sid="+encodeURIComponent(params.get("sid")!):""),{cache:"no-store",credentials:"same-origin"})
       .then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to verify payment");if(d.status==="paid"){setLocalPaymentNotice("Payment confirmed — "+Number(d.coins||0).toLocaleString()+" coins added.");return fetch("/api/me",{cache:"no-store"}).then(x=>x.json()).then(me=>{if(me.user)setU(me.user);});}setLocalPaymentNotice("Payment is still pending. Approve it in your payment app, then refresh this page to check again.");})
       .catch(e=>setLocalPaymentNotice(e instanceof Error?e.message:"Unable to verify payment. Please try again."));
     const clean=new URL(window.location.href);clean.searchParams.delete("local_payment");clean.searchParams.delete("order_id");window.history.replaceState({}, "", clean.pathname+clean.search+clean.hash);
