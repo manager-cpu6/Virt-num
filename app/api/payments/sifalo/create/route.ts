@@ -22,8 +22,8 @@ export async function POST(req:Request){
   const method=String(body.method||"").toLowerCase();
   const gateway=METHODS[method];
   if(!gateway)return NextResponse.json({ok:false,error:"Choose Waafi / EVC / ZAAD / SAHAL, eDahab or Premier Wallet. Direct card processing is not enabled by the current Sifalo API."},{status:400});
-  const account=String(body.phone||"").replace(/[\s()-]/g,"");
-  if(!/^\+?[0-9]{7,18}$/.test(account))return NextResponse.json({ok:false,error:"Enter a valid wallet phone number with country code."},{status:400});
+  const account=String(body.phone||"").replace(/[\s()-]/g,"").replace(/^\+/,"");
+  if(!/^[0-9]{7,18}$/.test(account))return NextResponse.json({ok:false,error:"Enter a valid wallet phone number with country code."},{status:400});
   const settings=await getSettings();
   const amount=Number(body.amountUsd);
   if(!Number.isFinite(amount)||Math.abs(Math.round(amount*100)/100-amount)>0.000001||amount<settings.minTopupUsd||amount>settings.maxTopupUsd||amount>10000)
