@@ -26,7 +26,7 @@ export default async function DashboardPage(){
    <Link href="/numbers" className="quick-card"><span>▣</span><div><b>My orders</b><small>Live activations and SMS status</small></div><i>→</i></Link>
    <Link href="/account" className="quick-card"><span>◉</span><div><b>Account</b><small>Profile and session</small></div><i>→</i></Link>
   </div>
-  <a className="nx-whatsapp-help" href="https://wa.me/252907868526" target="_blank" rel="noopener noreferrer" aria-label="Contact Numelixa support on WhatsApp"><span className="nx-whatsapp-icon" aria-hidden="true">◔</span><span><b>Need help?</b><small>Chat with us on WhatsApp</small></span><strong>→</strong></a>
+  <a className="nx-whatsapp-help" href="https://wa.me/252907868526" target="_blank" rel="noopener noreferrer" aria-label="Contact Numelixa support on WhatsApp"><span className="nx-whatsapp-icon" aria-hidden="true"><img src="https://cdn.simpleicons.org/whatsapp/FFFFFF" alt="" width="25" height="25" /></span><span><b>Need help?</b><small>Chat with us on WhatsApp</small></span><strong>→</strong></a>
   <MobileAppDownloadCTA/>
  </div>
 }
