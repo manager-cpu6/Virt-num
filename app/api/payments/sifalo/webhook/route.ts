@@ -8,8 +8,6 @@ export async function POST(req:Request){
  try{
   let body:any=await req.json();
   const orderId=String(body.order_id||"");
-  const code=Number(body.code);
-  const status=String(body.status||"").toLowerCase();
   if(!orderId)return NextResponse.json({ok:true});
   const payments=await collection<any>("payments");
   const p=await payments.findOne({orderId,provider:"sifalo"});
