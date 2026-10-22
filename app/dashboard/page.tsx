@@ -12,7 +12,7 @@ export default async function DashboardPage(){
  return <div className="reference-dashboard">
   <TopBar/>
   <section className="hero-card home-hero-refresh">
-   <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Your global numbers, made simple.</h1><p>Explore live number availability, track SMS in real time, and manage your USD wallet from one secure workspace.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
+   <div className="hero-copy"><span className="eyebrow">NUMELIXA • LIVE</span><h1>Your global numbers, <span className="nx-gradient-text">made simple.</span></h1><p>Explore live number availability, track SMS in real time, and manage your USD wallet from one secure workspace.</p><Link className="primary-btn" href="/services">Get a number <span>→</span></Link></div>
    <div className="nx-earth-illustration nx-network-visual" aria-hidden="true"><span className="nx-earth-globe"/><span className="nx-earth-orbit"/><span className="nx-earth-satellite"/><span className="nx-network-ring nx-ring-one"/><span className="nx-network-ring nx-ring-two"/><span className="nx-network-node nx-node-one"/><span className="nx-network-node nx-node-two"/><span className="nx-network-node nx-node-three"/><span className="nx-network-label nx-network-label-top">GLOBAL SMS</span><span className="nx-network-label nx-network-label-bottom">LIVE CONNECTIVITY</span></div>
   </section>
   <DashboardWalletCard/>
