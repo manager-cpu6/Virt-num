@@ -13,9 +13,11 @@ export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
   const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false),[openingCheckout,setOpeningCheckout]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
-  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null);
+  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null),[localOpen,setLocalOpen]=useState(false),[payMethod,setPayMethod]=useState<"crypto"|"local">("crypto");
 
   useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(timer)},[]);
+
+  useEffect(()=>{fetch("/api/payments/sifalo/status",{cache:"no-store"}).then(r=>r.json()).then(d=>setLocalOpen(d.ok===true&&d.open===true&&d.configured===true)).catch(()=>setLocalOpen(false));},[]);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
@@ -35,6 +37,7 @@ export default function Wallet(){
     if(!u){location.href="/login?next=/wallet";return}
     if(!u.verified_at){location.href="/verify-email";return}
     if(!selectedPack)return;
+    if(payMethod==="local"){setLoading(true);setError("");try{const d=await fetch("/api/payments/sifalo/create",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());if(!d.ok)throw new Error(d.error||"Unable to start local payment.");location.href=d.url;}catch(err){setError(err instanceof Error?err.message:"Unable to start local payment.");setLoading(false)}return;}
     if(provider==="binance"){
       setLoading(true);setError("");
       try{
@@ -91,8 +94,9 @@ export default function Wallet(){
       </button>)}</div>}
     {selectedPack&&<section className="wallet-checkout">
       <div><span className="eyebrow">SELECTED PACKAGE</span><strong>{selectedPack.coins.toLocaleString()} coins</strong><small>{"Payment required: $"+selectedPack.priceUsd.toFixed(2)}</small></div>
-
-      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":u?provider==="paypal"?"Continue with PayPal":provider==="binance"?"Get "+selectedPack.coins.toLocaleString()+" coins":"Continue to secure payment":"Sign in to continue"}<span>→</span></button>
+      {localOpen&&<div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,margin:"16px 0"}}><button type="button" onClick={()=>setPayMethod("crypto")} className={payMethod==="crypto"?"primary-btn":"secondary-btn"}>₿ Crypto payment</button><button type="button" onClick={()=>setPayMethod("local")} className={payMethod==="local"?"primary-btn":"secondary-btn"}>◈ Local payment</button></div>}
+      {localOpen&&payMethod==="local"&&<div style={{border:"1px solid #1e4770",borderRadius:14,padding:14,marginBottom:14,background:"rgba(22,119,255,.08)"}}><strong style={{display:"block",marginBottom:6}}>Local payment methods</strong><small>Card · Premier Wallet · eDahab · Waafi</small><p style={{margin:"8px 0 0",opacity:.72,fontSize:12}}>Secure checkout hosted by Sifalo Pay. Coins are added after payment confirmation.</p></div>}
+      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":!u?"Sign in to continue":payMethod==="local"?"Continue to local payment":provider==="paypal"?"Continue with PayPal":provider==="binance"?"Get "+selectedPack.coins.toLocaleString()+" coins":"Continue to secure payment"}<span>→</span></button>
     </section>}
     {deposit&&<section className="wallet-checkout" style={{display:"block",marginTop:20}}>
       <div style={{display:"grid",gap:12}}>
