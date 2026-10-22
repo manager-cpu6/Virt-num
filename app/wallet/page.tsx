@@ -11,6 +11,7 @@ export default function Wallet(){
  const valid=Number.isFinite(value)&&Math.round(value*100)===value*100&&value>=min&&value<=max;
  const presets=useMemo(()=>[1,5,10,25,50].filter(x=>x>=min&&x<=max),[min,max]);
  useEffect(()=>{fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>{setUser(d.user||null);setPricing(d.pricing||null);}).catch(()=>setError("Unable to load wallet. Please refresh the page.")).finally(()=>setLoaded(true));},[]);
+ useEffect(()=>{const v=new URLSearchParams(window.location.search).get("amount");if(v&&/^\d+(?:\.\d{1,2})?$/.test(v))setAmount(Number(v).toFixed(2));},[]);
  function checkout(){setError("");if(!user){window.location.href="/login?next="+encodeURIComponent("https://checkout.numelixa.com/?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!valid){setError("Enter an amount between "+money(min)+" and "+money(max)+".");return;}setBusy(true);window.location.href="https://checkout.numelixa.com/?amount="+encodeURIComponent(value.toFixed(2));}
  return <div className="nx-wallet-page">
   <TopBar title="Wallet"/>
