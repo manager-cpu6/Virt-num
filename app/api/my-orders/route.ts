@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {cancelOrAlreadyClosed} from "@/lib/sms-provider";
+import {getSettings} from "@/lib/settings";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function GET(){
  try{
@@ -25,7 +26,8 @@ export async function GET(){
    }
   }
   const refreshed=await ordersCollection.find({userId:u.id}).sort({createdAt:-1}).limit(100).toArray();
-  const result=refreshed.map(o=>({id:o._id,service:o.service,country:o.country,country_code:o.countryCode,phone_number:o.phoneNumber,price_coins:o.priceCoins,status:o.status,code:o.code,expires_at:o.expiresAt,created_at:o.createdAt}));
+  const settings=await getSettings();
+  const result=refreshed.map(o=>({id:o._id,service:o.service,country:o.country,country_code:o.countryCode,phone_number:o.phoneNumber,price_usd:Number((Number(o.priceCoins||0)/(Number(settings.coinsPerUsd)||100)).toFixed(2)),status:o.status,code:o.code,expires_at:o.expiresAt,created_at:o.createdAt}));
   return NextResponse.json({ok:true,orders:result});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Not signed in"},{status:401})}
 }
