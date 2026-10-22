@@ -22,7 +22,7 @@ export async function POST(req:Request){
   const coins=customAmount?Math.round(requestedAmount*settings.coinsPerUsd):Math.floor(Number(body.coins));
   const pack=settings.coinPackages.find((x:any)=>Number(x.coins)===coins);
   const baseAmount=customAmount?requestedAmount:Number(pack?.priceUsd??FALLBACK_PACKS[coins]);
-  if(!Number.isFinite(baseAmount)||baseAmount<=0||Math.round(baseAmount*100)!==baseAmount*100||baseAmount<settings.minTopupUsd||baseAmount>settings.maxTopupUsd||baseAmount>10000)return NextResponse.json({ok:false,error:"Enter a valid USD amount within the wallet top-up limits."},{status:400});
+  if(!Number.isFinite(baseAmount)||baseAmount<=0||Math.abs(Math.round(baseAmount*100)/100-baseAmount)>0.000001||baseAmount<settings.minTopupUsd||baseAmount>settings.maxTopupUsd||baseAmount>10000)return NextResponse.json({ok:false,error:"Enter a valid USD amount within the wallet top-up limits."},{status:400});
   if(!Number.isSafeInteger(coins)||coins<1)return NextResponse.json({ok:false,error:"The USD amount is too small for this wallet."},{status:400});
   const currency=String(body.currency||"USDT").toUpperCase();
   if(!/^[A-Z0-9]{2,15}$/.test(currency))return NextResponse.json({ok:false,error:"Choose a supported cryptocurrency."},{status:400});
