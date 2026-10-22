@@ -26,7 +26,7 @@ export default function AdminPanel(){
  async function saveSettings(e:FormEvent<HTMLFormElement>){
    e.preventDefault();if(!stats)return;
    const f=new FormData(e.currentTarget);
-   const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:stats.settings.coinsPerUsd,coinPackages:stats.settings.coinPackages,minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),paymentExpiryMinutes:Number(f.get("paymentExpiryMinutes")),providerOperator:String(f.get("providerOperator")||"any"),smsProvider:String(f.get("smsProvider")||"5sim"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
+   let coinPackages=stats.settings.coinPackages;try{const raw=String(f.get("coinPackagesJson")||"");if(raw)coinPackages=JSON.parse(raw)}catch{setError("Wallet packages are invalid. Check the amount and USD price.");return}const body={markupPercent:Number(f.get("markupPercent")),coinsPerUsd:stats.settings.coinsPerUsd,coinPackages,minTopupUsd:Number(f.get("minTopupUsd")),maxTopupUsd:Number(f.get("maxTopupUsd")),paymentExpiryMinutes:Number(f.get("paymentExpiryMinutes")),providerOperator:String(f.get("providerOperator")||"any"),smsProvider:String(f.get("smsProvider")||"5sim"),providerOperators:String(f.get("providerOperators")||"any").split(",").map(x=>x.trim().toLowerCase()).filter(Boolean)};
    const r=await fetch("/api/admin/stats",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)}),d=await r.json();
    if(d.ok){setStats({...stats,settings:d.settings});setSaved("Pricing saved.");setTimeout(()=>setSaved(""),2500)}else setError(d.error||"Unable to save")
  }
@@ -100,22 +100,35 @@ export default function AdminPanel(){
 }
 
 function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormElement>)=>void}){
- 
  const [operators,setOperators]=useState<string[]>(Array.from(new Set([...(stats.settings.providerOperators||[]),"any"])).map(x=>String(x).toLowerCase()));
  const [newOperator,setNewOperator]=useState("");
+ const [packages,setPackages]=useState<Pack[]>(stats.settings.coinPackages||[]);
  function addOperator(){const v=newOperator.trim().toLowerCase();if(!v||operators.includes(v))return;setOperators([...operators,v]);setNewOperator("")}
- function removeOperator(v:string){if(v==="any")return;const next=operators.filter(x=>x!==v);setOperators(next);}
+ function removeOperator(v:string){if(v==="any")return;setOperators(operators.filter(x=>x!==v))}
+ function updatePackage(index:number,field:"coins"|"priceUsd",value:number){setPackages(items=>items.map((p,i)=>i===index?{...p,[field]:value}:p))}
+ function addPackage(){if(packages.length>=8)return;setPackages(items=>[...items,{coins:100,priceUsd:1,popular:items.length===0}])}
+ function removePackage(index:number){setPackages(items=>items.filter((_,i)=>i!==index).map((p,i)=>({...p,popular:i===0?true:p.popular})))}
+ function markPopular(index:number){setPackages(items=>items.map((p,i)=>({...p,popular:i===index})))}
  return <Table title="Numelixa pricing & SMS providers">
   <form onSubmit={onSave} className="admin-form">
    <label>Active SMS purchase provider<select name="smsProvider" defaultValue={stats.settings.smsProvider||"5sim"}><option value="5sim">5SIM — New Protocol</option><option value="tiger">Tiger SMS</option></select><small>Switching affects new purchases, prices, countries and services. Existing activations stay pinned to the provider they were purchased from.</small></label>
    <label>Provider markup %<input name="markupPercent" type="number" min="0" step="0.1" defaultValue={stats.settings.markupPercent}/><small>This percentage is added to the active provider cost before the final USD price is calculated.</small></label>
    <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses the provider's default operator. Named operators apply only where supported.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
+   <div className="coin-package-admin">
+    <div className="coin-package-admin-head"><div><b>Wallet top-up options</b><small>Add, remove, or change the USD price. Up to 8 options can be saved.</small></div><button type="button" className="secondary-btn" onClick={addPackage} disabled={packages.length>=8}>+ Add option</button></div>
+    <input type="hidden" name="coinPackagesJson" value={JSON.stringify(packages)}/>
+    {packages.map((p,index)=><div className="coin-package-row" key={index}>
+      <label className="nx-package-field">Wallet units<input type="number" min="1" step="1" value={p.coins} onChange={e=>updatePackage(index,"coins",Number(e.target.value))}/></label>
+      <label className="nx-package-field">Price (USD)<input type="number" min="0.01" step="0.01" value={p.priceUsd} onChange={e=>updatePackage(index,"priceUsd",Number(e.target.value))}/></label>
+      <button type="button" className="secondary-btn" onClick={()=>markPopular(index)}>{p.popular?"★ Popular":"Set popular"}</button>
+      <button type="button" className="secondary-btn" onClick={()=>removePackage(index)} disabled={packages.length<=1}>Remove</button>
+    </div>)}
+   </div>
    <label>Minimum custom top-up USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
    <label>Maximum custom top-up USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label>
    <label>Crypto payment checkout timer (minutes)<input name="paymentExpiryMinutes" type="number" min="1" max="1440" step="1" defaultValue={(stats.settings as any).paymentExpiryMinutes??15}/><small>Choose 1–1440 minutes. When a user cancels or leaves checkout, the amount reservation is released immediately; this timer controls only the visible checkout window.</small></label>
-
-   <button className="primary-btn" type="submit">Save pricing & operator</button>
+   <button className="primary-btn" type="submit">Save pricing & wallet options</button>
   </form>
  </Table>
 }
