@@ -21,7 +21,7 @@ export async function POST(req:Request){
   const base=String(process.env.NEXT_PUBLIC_APP_URL||"https://numelixa.com").replace(/\/$/,"");
   const apiBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"?"https://spay-api.sifalo.net/gateway/":"https://api.sifalopay.com/gateway/";
   const auth=Buffer.from(apiUser+":"+apiKey).toString("base64");
-  const response=await fetch(apiBase,{method:"POST",headers:{Authorization:"Basic "+auth,"Content-Type":"application/json"},body:JSON.stringify({amount:amount.toFixed(2),currency:"USD",gateway:"checkout",order_id:orderId,return_url:base+"/wallet?local_payment=return&order_id="+encodeURIComponent(orderId),webhook_url:base+"/hooks/sifalopay"}),cache:"no-store",signal:AbortSignal.timeout(25000)});
+  const response=await fetch(apiBase,{method:"POST",headers:{Authorization:"Basic "+auth,"Content-Type":"application/json"},body:JSON.stringify({amount:amount.toFixed(2),currency:"USD",gateway:"checkout",order_id:orderId,return_url:base+"/wallet?local_payment=return&order_id="+encodeURIComponent(orderId),webhook_url:"https://numelixa.com/hooks/sifalopay"}),cache:"no-store",signal:AbortSignal.timeout(25000)});
   const data:any=await response.json().catch(()=>null);
   if(!response.ok||!data||Number(data.code)>=600&&Number(data.code)!==601&&Number(data.code)!==603){
    console.error("[SIFALO CHECKOUT]",response.status,data);
