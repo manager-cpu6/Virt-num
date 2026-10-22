@@ -19,8 +19,9 @@ export default function LocalPaymentsAdmin(){
      <div aria-label={state.open?"Local payments open":"Local payments closed"} style={{width:66,height:66,borderRadius:20,display:"grid",placeItems:"center",background:state.open?"rgba(0,229,195,.12)":"rgba(113,133,165,.12)",fontSize:30}}>{state.open?"✓":"Ⅱ"}</div>
     </div>
     <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(145px,1fr))",gap:10,marginTop:24}}>
-     {["Card","Premier Wallet","eDahab","Waafi"].map(method=><div key={method} style={{border:"1px solid #1A3658",borderRadius:14,padding:14,background:"#081B36"}}><div style={{color:"#00D9FF",fontSize:11,letterSpacing:1}}>SIFALO PAY</div><strong style={{display:"block",marginTop:7}}>{method}</strong></div>)}
+     {["Waafi · EVC · ZAAD · SAHAL","eDahab","Premier Wallet"].map(method=><div key={method} style={{border:"1px solid #1A3658",borderRadius:14,padding:14,background:"#081B36"}}><div style={{color:"#00D9FF",fontSize:11,letterSpacing:1}}>SIFALO PAY</div><strong style={{display:"block",marginTop:7}}>{method}</strong></div>)}
     </div>
+    <div style={{marginTop:12,padding:14,background:"#081B36",borderRadius:14,color:"#A7B7D0",fontSize:12,lineHeight:1.6}}>Visa/Mastercard direct charging is not available in the current Sifalo e-Wallet API. Keep cards disabled unless a direct card processor is configured.</div>
     <div style={{marginTop:20,padding:14,background:"#081B36",borderRadius:14,color:"#A7B7D0",fontSize:13,lineHeight:1.6}}>API configuration: <strong style={{color:state.configured?"#00E5C3":"#FF9DAF"}}>{state.configured?"Configured":"Missing"}</strong>. {state.configured?"Credentials are read only by the server.":"Set SIFALO_API_USER and SIFALO_API_KEY in Vercel server environment before opening checkout."}</div>
     <div style={{display:"flex",gap:12,flexWrap:"wrap",marginTop:22}}>
      <button disabled={busy||!state.configured||state.open} onClick={()=>change(true)} style={{border:0,borderRadius:14,padding:"14px 20px",fontWeight:800,color:"#03111C",background:"#00E5C3",opacity:busy||!state.configured||state.open ? .55 : 1,cursor:"pointer"}}>{busy?"Saving…":"Open Local Payments"}</button>
