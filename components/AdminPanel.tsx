@@ -116,7 +116,8 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
    <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses the provider's default operator. Named operators apply only where supported.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
    <div className="coin-package-admin">
-    <div className="coin-package-admin-head"><div><b>Wallet top-up options</b><small>Add, remove, or change the USD price. Use 4–6 simple options.</small></div><button type="button" className="secondary-btn" onClick={addPackage} disabled={packages.length>=6}>+ Add option</button></div>
+    <div className="coin-package-admin-head"><div><b>Wallet top-up options</b><small>Use exactly 4 or 6 clear options. Change prices or add/remove packages here.</small></div><button type="button" className="secondary-btn" onClick={addPackage} disabled={packages.length>=6}>+ Add option</button></div>
+    {packages.length!==4&&packages.length!==6&&<small className="wallet-package-count-warning">Choose 4 or 6 options before saving. Add one option or remove one more.</small>}
     <input type="hidden" name="coinPackagesJson" value={JSON.stringify(packages)}/>
     {packages.map((p,index)=><div className="coin-package-row" key={index}>
       <label className="nx-package-field">Wallet units<input type="number" min="1" step="1" value={p.coins} onChange={e=>updatePackage(index,"coins",Number(e.target.value))}/></label>
@@ -128,7 +129,7 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
    <label>Minimum custom top-up USD<input name="minTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.minTopupUsd}/></label>
    <label>Maximum custom top-up USD<input name="maxTopupUsd" type="number" min="0.01" step="0.01" defaultValue={stats.settings.maxTopupUsd}/></label>
    <label>Crypto payment checkout timer (minutes)<input name="paymentExpiryMinutes" type="number" min="1" max="1440" step="1" defaultValue={(stats.settings as any).paymentExpiryMinutes??15}/><small>Choose 1–1440 minutes. When a user cancels or leaves checkout, the amount reservation is released immediately; this timer controls only the visible checkout window.</small></label>
-   <button className="primary-btn" type="submit">Save pricing & wallet options</button>
+   <button className="primary-btn" type="submit" disabled={packages.length!==4&&packages.length!==6}>Save pricing & wallet options</button>
   </form>
  </Table>
 }
