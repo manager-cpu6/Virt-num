@@ -37,10 +37,19 @@ const defaults:PricingSettings={
 export async function getSettings():Promise<PricingSettings>{
   const s=await (await collection<any>("settings")).findOne({_id:"pricing"});
   const raw=Array.isArray(s?.coinPackages)?s.coinPackages:[];
-  const coinPackages=raw
+  let coinPackages:CoinPackage[]=raw
     .map((p:any)=>({coins:Math.floor(Number(p?.coins)),priceUsd:Number(p?.priceUsd),popular:Boolean(p?.popular)}))
     .filter((p:CoinPackage)=>Number.isFinite(p.coins)&&p.coins>0&&Number.isFinite(p.priceUsd)&&p.priceUsd>0)
     .slice(0,8);
+  // Keep the wallet's package picker balanced: use 4 or 6 options, never 5.
+  // If legacy admin settings contain five options, append an editable starter tier.
+  if(coinPackages.length===5){
+    const largest=coinPackages.reduce((best,p)=>p.coins>best.coins?p:best,coinPackages[0]);
+    const highestPrice=coinPackages.reduce((best,p)=>p.priceUsd>best.priceUsd?p:best,coinPackages[0]);
+    const nextCoins=Math.max(largest.coins*2,largest.coins+1);
+    const nextPrice=Number((highestPrice.priceUsd*2).toFixed(2));
+    coinPackages=[...coinPackages,{coins:nextCoins,priceUsd:nextPrice,popular:false}];
+  }
   return {
     markupPercent:Number(s?.markupPercent??defaults.markupPercent),
     coinsPerUsd:Number(s?.coinsPerUsd??defaults.coinsPerUsd),
