@@ -1054,3 +1054,22 @@ body:after{background:rgba(113,59,255,.09)!important}
 @media(min-width:700px){.reference-dashboard{padding-top:22px}.home-hero-refresh{align-items:center}.nx-network-visual{min-width:280px}}
 @media(max-width:650px){.reference-dashboard{padding:10px 14px 140px}.home-hero-refresh{min-height:0!important;padding:24px 20px!important}.home-hero-refresh .hero-copy{max-width:100%}.hero-card h1{font-size:clamp(35px,10vw,48px)!important}.nx-network-visual{min-height:150px;align-self:center;width:100%;max-width:260px;margin:10px auto 0}.nx-network-label-top{right:0;top:0}.nx-network-label-bottom{left:0;bottom:0}.nx-ring-one{width:210px;height:210px}.nx-ring-two{width:180px;height:180px}.topbar{gap:6px}.brand-copy small{display:none}.brand-logo{width:38px;height:38px}.nx-balance-pill{min-width:84px;padding:0 8px;gap:4px}.nx-balance-pill span:not(.coin-icon){font-size:12px}.nx-balance-pill small{font-size:8px}}
 @media(max-width:380px){.reference-dashboard{padding-left:11px;padding-right:11px}.brand-copy b{font-size:16px}.topbar-actions{gap:5px}.nx-balance-pill{min-width:77px}.nx-network-label{font-size:8px;padding:6px 7px}.nx-whatsapp-help{padding:12px}.nx-whatsapp-help small{font-size:11px}}
+
+
+/* Clear network choices and editable USD wallet packs */
+.nx-network-choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:10px 0 16px}
+.nx-network-choice{display:flex;align-items:center;gap:10px;min-width:0;text-align:left;padding:12px;border-radius:15px;border:1px solid rgba(104,151,207,.22);background:rgba(7,19,41,.86);color:#f5f8ff;transition:border-color .16s,background .16s,transform .16s}
+.nx-network-choice:hover{transform:translateY(-1px);border-color:rgba(22,119,255,.55)}
+.nx-network-choice.selected{border-color:#00d9ff;background:linear-gradient(120deg,rgba(22,119,255,.18),rgba(113,59,255,.12));box-shadow:inset 0 0 0 1px rgba(0,217,255,.08)}
+.nx-network-choice img{object-fit:contain;flex:0 0 auto;border-radius:9px;background:#102844;padding:3px}
+.nx-network-choice span{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.nx-network-choice b{font-size:12px;line-height:1.3;overflow-wrap:anywhere}
+.nx-network-choice small{font-size:10px;color:#91a8c4;overflow-wrap:anywhere}
+.nx-network-choice i{font-style:normal;color:#00d9ff;font-weight:900}
+.nx-checkout-root .nx-payment-form select{background:#071329;color:#f5f8ff;border:1px solid rgba(104,151,207,.26);border-radius:13px;min-height:46px;padding:0 12px;width:100%}
+.coin-package-admin .coin-package-admin-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.coin-package-admin .coin-package-row{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:12px 0;padding:12px;border:1px solid rgba(104,151,207,.18);border-radius:14px;background:rgba(7,19,41,.55)}
+.coin-package-admin .nx-package-field{display:flex;flex:1 1 120px;flex-direction:column;gap:6px;margin:0}
+.coin-package-admin .nx-package-field input{margin:0;min-width:0}
+.coin-package-admin .coin-package-row button{white-space:nowrap}
+@media(max-width:500px){.nx-network-choice-grid{grid-template-columns:1fr}.coin-package-admin .coin-package-row{align-items:stretch}.coin-package-admin .nx-package-field{flex-basis:calc(50% - 8px)}}
