@@ -34,7 +34,7 @@ export default function FirstPartyCheckout(){
  async function startCrypto(){setError("");setNotice("");if(!user){window.location.href="https://numelixa.com/login?next="+encodeURIComponent("/wallet?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!validAmount){setError("Enter an amount between "+money(minAmount)+" and "+money(maxAmount)+".");return;}if(!network){setError("Choose a deposit network.");return;}setBusy(true);try{const r=await fetch("/api/payments/binance/create",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({amountUsd:Number(amount),currency:asset,network})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to create crypto payment.");setDeposit(d);setDepositStatus("pending");}catch(e){setError(e instanceof Error?e.message:"Unable to start crypto payment.");}finally{setBusy(false)}}
 
  const methods=useMemo(()=>[
-  {id:"card" as const,title:"Visa / Mastercard",detail:"Bank card",icon:"▰",disabled:true},
+  {id:"card" as const,title:"Visa / Mastercard",detail:"Direct card processing awaits a supported card gateway",icon:"▰",disabled:true},
   {id:"waafi" as const,title:"Waafi · EVC · ZAAD · SAHAL",detail:"Enter your number, then approve the request on your phone",icon:"◉",disabled:false},
   {id:"edahab" as const,title:"eDahab",detail:"Use your registered eDahab number and confirm on your phone",icon:"◈",disabled:false},
   {id:"premier" as const,title:"Premier Wallet",detail:"USD wallet · approve using your Premier Wallet account",icon:"✦",disabled:false},
