@@ -24,7 +24,7 @@ Never expose an API key in browser JavaScript, Android/iOS source code or public
 
 - JSON request and response bodies.
 - All resources are scoped to the authenticated account.
-- Wallet balance is charged only for a successful activation.
+- Wallet balance is charged only for a successful activation and all public balances and prices are expressed in USD.
 - Public API responses never expose internal network/provider identity, credentials or internal routing choices.
 - Number routing and network selection are managed automatically by Numelixa.
 - Use the returned order ID for all later SMS, status and cancellation operations.
@@ -53,8 +53,8 @@ Example:
     "email": "user@example.com",
     "name": "Example User",
     "verified": true,
-    "balance": 850,
-    "currency": "coins"
+    "balance": 8.50,
+    "currency": "USD"
   }
 }
 ```
@@ -95,7 +95,7 @@ Country objects include fields such as:
 - `name` — display name.
 - `iso` — ISO country code when available.
 - `stock.count` — current available quantity.
-- `stock.sellCoins` — amount charged from the wallet.
+- `stock.price` — live price in USD, with `currency: "USD"`.
 
 Do not calculate a purchase price from a stale country response. Refresh the stock/price before purchasing.
 
@@ -120,8 +120,8 @@ Example:
     "count": 12,
     "country": "usa",
     "service": "whatsapp",
-    "price": 85,
-    "currency": "coins"
+    "price": 0.85,
+    "currency": "USD"
   }
 }
 ```
@@ -156,14 +156,14 @@ Successful response:
   "order": {
     "id": "ORDER_ID",
     "number": "+15551234567",
-    "price": 85,
+    "price": 0.85,
     "expiresIn": 600,
     "stockAfter": 11
   }
 }
 ```
 
-The API validates live stock and price immediately before charging the wallet. If the activation cannot be completed safely, the wallet debit is reversed when cancellation is confirmed.
+All public API prices and wallet amounts use USD. The API validates live stock and price immediately before charging the wallet. If the activation cannot be completed safely, the wallet debit is reversed when cancellation is confirmed.
 
 ## 6. Orders
 
@@ -232,7 +232,8 @@ Successful response:
 {
   "ok": true,
   "status": "cancelled",
-  "refundedCoins": 85
+  "refundedUsd": 0.85,
+  "currency": "USD"
 }
 ```
 
