@@ -13,11 +13,21 @@ export default function Wallet(){
   const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
   const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false),[openingCheckout,setOpeningCheckout]=useState(false);
   const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
-  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null),[localOpen,setLocalOpen]=useState(false),[payMethod,setPayMethod]=useState<"crypto"|"local">("crypto");
+  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null),[localOpen,setLocalOpen]=useState(false),[payMethod,setPayMethod]=useState<"crypto"|"local">("crypto"),[localPaymentNotice,setLocalPaymentNotice]=useState("");
 
   useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(timer)},[]);
 
   useEffect(()=>{fetch("/api/payments/sifalo/status",{cache:"no-store"}).then(r=>r.json()).then(d=>setLocalOpen(d.ok===true&&d.open===true&&d.configured===true)).catch(()=>setLocalOpen(false));},[]);
+
+  useEffect(()=>{
+    const params=new URLSearchParams(window.location.search),orderId=params.get("order_id");
+    if(params.get("local_payment")!=="return"||!orderId)return;
+    setLocalPaymentNotice("Checking your Sifalo payment…");
+    fetch("/api/payments/sifalo/verify?orderId="+encodeURIComponent(orderId),{cache:"no-store",credentials:"same-origin"})
+      .then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to verify payment");if(d.status==="paid"){setLocalPaymentNotice("Payment confirmed — "+Number(d.coins||0).toLocaleString()+" coins added.");return fetch("/api/me",{cache:"no-store"}).then(x=>x.json()).then(me=>{if(me.user)setU(me.user);});}setLocalPaymentNotice("Payment is still pending. Approve it in your payment app, then refresh this page to check again.");})
+      .catch(e=>setLocalPaymentNotice(e instanceof Error?e.message:"Unable to verify payment. Please try again."));
+    const clean=new URL(window.location.href);clean.searchParams.delete("local_payment");clean.searchParams.delete("order_id");window.history.replaceState({}, "", clean.pathname+clean.search+clean.hash);
+  },[]);
 
   useEffect(()=>{
     fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
@@ -88,6 +98,7 @@ export default function Wallet(){
     </section>
     <div className="wallet-section-head"><div><span className="eyebrow">COIN STORE</span><h2>Choose your coins</h2><p>Pick a package set by the admin. Payment is securely processed.</p></div></div>
     {error&&<div className="error-box">{error}</div>}
+    {localPaymentNotice&&<div role="status" aria-live="polite" style={{marginTop:12,padding:14,borderRadius:12,border:"1px solid #1e4770",background:"rgba(22,119,255,.08)",color:"#DCEBFF"}}>{localPaymentNotice}</div>}
     {!loaded?<div className="wallet-loading">Loading coin packages…</div>:!packs.length?<div className="helper-card"><b>No coin packages available</b><span>Please check back shortly.</span></div>:
       <div className="coin-store-grid">{packs.map(p=><button key={p.coins} type="button" className={"coin-store-card "+(selected===p.coins?"selected":"")} onClick={()=>setSelected(p.coins)}>
         {p.popular&&<span className="popular-badge">POPULAR</span>}<span className="coin-glyph">◈</span><strong>{p.coins.toLocaleString()}</strong><small>coins</small><b className="coin-price">{"$"+p.priceUsd.toFixed(2)}</b>
