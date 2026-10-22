@@ -1,6 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
+import {getSettings} from "@/lib/settings";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -20,11 +21,12 @@ export async function GET(){
   try{
     const u=await requireUser();
     const user=await (await collection<any>("users")).findOne({_id:u.id});
+    const pricing=await getSettings();
     if(!user)return NextResponse.json({ok:false,error:"Account not found."},{status:404,headers});
     return NextResponse.json({
       ok:true,
-      balance:Number(user.coins||0),
-      currency:"coins",
+      balance:Number(((Number(user.coins)||0)/(Number(pricing.coinsPerUsd)||100)).toFixed(2)),
+      currency:"USD",
       accountId:String(user._id)
     },{headers});
   }catch(e){
