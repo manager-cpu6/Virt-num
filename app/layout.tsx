@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./first-party-checkout.css";
 import "./numelixa-polish.css";
 import "./numelixa-nextgen.css";
 import "./numelixa-live.css";
