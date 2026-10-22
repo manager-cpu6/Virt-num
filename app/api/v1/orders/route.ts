@@ -10,12 +10,16 @@ export const dynamic="force-dynamic";
 
 export async function POST(req:Request){
  const response=await purchaseOrder(req);
- if(response.ok){
-  try{
-   const u=await requireUser(),payload=await response.clone().json();
-   if(payload?.ok&&payload?.order)await deliverDeveloperWebhook(u.id,"order.created",{order:payload.order});
-  }catch(error){console.error("[API ORDER WEBHOOK]",error)}
- }
+ if(!response.ok)return response;
+ try{
+  const payload=await response.clone().json();
+  if(payload?.ok&&payload?.order){
+   const pricing=await getSettings(),rate=Number(pricing.coinsPerUsd)||100;
+   const order={...payload.order,price:Number(((Number(payload.order.price)||0)/rate).toFixed(2)),currency:"USD"};
+   try{const u=await requireUser();await deliverDeveloperWebhook(u.id,"order.created",{order});}catch(error){console.error("[API ORDER WEBHOOK]",error)}
+   return NextResponse.json({...payload,order},{status:response.status});
+  }
+ }catch(error){console.error("[API ORDER RESPONSE]",error)}
  return response;
 }
 
