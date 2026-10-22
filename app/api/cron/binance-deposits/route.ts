@@ -34,8 +34,8 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
   });
  }finally{await session.endSession();}
  if(credited){
-  try{await notifyUser(credited.userId,"💰 Payment confirmed","Your crypto deposit was confirmed and "+credited.coins.toLocaleString()+" coins were added to your Numelixa wallet.",{paymentId:credited.paymentId,type:"payment"});}catch(e){console.error("[BINANCE DEPOSIT PUSH]",e);}
-  try{if(credited.email)await sendEmail(credited.email,"Payment successful — Numelixa coins added",coinPaymentSuccessEmail(credited.name,credited.coins,credited.amountUsd,credited.currency,credited.orderId));}catch(e){console.error("[BINANCE DEPOSIT EMAIL]",e instanceof Error?e.message:"send failed");}
+  try{await notifyUser(credited.userId,"💰 Payment confirmed","Your crypto deposit was confirmed and $"+Number(credited.amountUsd||0).toFixed(2)+" USD was added to your Numelixa wallet.",{paymentId:credited.paymentId,type:"payment"});}catch(e){console.error("[BINANCE DEPOSIT PUSH]",e);}
+  try{if(credited.email)await sendEmail(credited.email,"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(credited.name,credited.coins,credited.amountUsd,credited.currency,credited.orderId));}catch(e){console.error("[BINANCE DEPOSIT EMAIL]",e instanceof Error?e.message:"send failed");}
  }
  return Boolean(credited);
 }
