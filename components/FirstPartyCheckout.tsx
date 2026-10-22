@@ -35,9 +35,9 @@ export default function FirstPartyCheckout(){
 
  const methods=useMemo(()=>[
   {id:"card" as const,title:"Visa / Mastercard",detail:"Bank card",icon:"▰",disabled:true},
-  {id:"waafi" as const,title:"Waafi · EVC · ZAAD · SAHAL",detail:"Mobile wallet",icon:"◉",disabled:false},
-  {id:"edahab" as const,title:"eDahab",detail:"Mobile wallet",icon:"◈",disabled:false},
-  {id:"premier" as const,title:"Premier Wallet",detail:"USD wallet",icon:"✦",disabled:false},
+  {id:"waafi" as const,title:"Waafi · EVC · ZAAD · SAHAL",detail:"Enter your number, then approve the request on your phone",icon:"◉",disabled:false},
+  {id:"edahab" as const,title:"eDahab",detail:"Use your registered eDahab number and confirm on your phone",icon:"◈",disabled:false},
+  {id:"premier" as const,title:"Premier Wallet",detail:"USD wallet · approve using your Premier Wallet account",icon:"✦",disabled:false},
   {id:"crypto" as const,title:"Crypto",detail:"USDT, BNB and supported networks",icon:"₿",disabled:false}
  ],[]);
 
@@ -58,7 +58,7 @@ export default function FirstPartyCheckout(){
 
     <div className="nx-checkout-kicker nx-payment-kicker"><span>02</span> PAYMENT METHOD</div>
     <h2>How would you like to pay?</h2>
-    <div className="nx-payment-methods">{methods.filter(m=>m.id==="crypto"||localOpen).map(m=><button type="button" key={m.id} disabled={m.disabled} className={"nx-payment-method "+(method===m.id?"selected":"")+(m.disabled?" disabled":"")} onClick={()=>{setMethod(m.id);setError("");setNotice("");}}><span className="nx-method-icon">{m.icon}</span><span className="nx-method-copy"><b>{m.title}</b><small>{m.disabled?"Direct card API is not enabled yet":m.detail}</small></span><span className="nx-method-check">{m.disabled?"Soon":method===m.id?"✓":"›"}</span></button>)}</div>
+    <div className="nx-method-group"><span className="nx-method-group-label">LOCAL PAYMENTS</span><div className="nx-payment-methods">{localOpen?methods.filter(m=>m.id!=="crypto").map(m=><button type="button" key={m.id} disabled={m.disabled} className={"nx-payment-method "+(method===m.id?"selected":"")+(m.disabled?" disabled":"")} onClick={()=>{setMethod(m.id);setError("");setNotice("");}}><span className="nx-method-icon">{m.icon}</span><span className="nx-method-copy"><b>{m.title}</b><small>{m.detail}</small></span><span className="nx-method-check">{m.disabled?"Soon":method===m.id?"✓":"›"}</span></button>):<div className="nx-local-closed">Local wallet payments are currently closed. Cryptocurrency is still available.</div>}</div></div><div className="nx-method-group"><span className="nx-method-group-label">CRYPTOCURRENCY</span><div className="nx-payment-methods">{methods.filter(m=>m.id==="crypto").map(m=><button type="button" key={m.id} className={"nx-payment-method "+(method===m.id?"selected":"")} onClick={()=>{setMethod(m.id);setError("");setNotice("");}}><span className="nx-method-icon">{m.icon}</span><span className="nx-method-copy"><b>{m.title}</b><small>{m.detail}</small></span><span className="nx-method-check">{method===m.id?"✓":"›"}</span></button>)}</div></div>
 
     {method!=="crypto"&&method!=="card"&&localOpen&&<section className="nx-payment-form">
      <label htmlFor="nx-phone">Mobile wallet number</label>
