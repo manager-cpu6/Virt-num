@@ -10,7 +10,7 @@ type Order={
  service?:string|null;
  country?:string|null;
  code?:string|null;
- price_coins?:number;
+ price_usd?:number;
  expires_at?:string|null;
  created_at?:string|null;
 };
@@ -118,7 +118,7 @@ export default function Numbers(){
        {x.code&&<div className="order-code-box"><span>OTP CODE</span><strong>{x.code}</strong><b>✓ SMS RECEIVED</b></div>}
 
        <div className="order-card-footer">
-        <span>{x.price_coins?Number(x.price_coins).toLocaleString()+" coins":"Order"}{x.expires_at?" · Expires "+new Date(x.expires_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):""}</span>
+        <span>{Number.isFinite(Number(x.price_usd))?"$"+Number(x.price_usd).toFixed(2)+" USD":"Order"}{x.expires_at?" · Expires "+new Date(x.expires_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}):""}</span>
         {waiting?<Link href={"/get-code/"+x.id}>Get code <b>→</b></Link>:<span className="order-complete">Completed</span>}
        </div>
       </article>
