@@ -106,7 +106,7 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  function addOperator(){const v=newOperator.trim().toLowerCase();if(!v||operators.includes(v))return;setOperators([...operators,v]);setNewOperator("")}
  function removeOperator(v:string){if(v==="any")return;setOperators(operators.filter(x=>x!==v))}
  function updatePackage(index:number,field:"coins"|"priceUsd",value:number){setPackages(items=>items.map((p,i)=>i===index?{...p,[field]:value}:p))}
- function addPackage(){if(packages.length>=8)return;setPackages(items=>[...items,{coins:Math.max(0,...items.map(p=>Number(p.coins)||0))+1,priceUsd:1,popular:items.length===0}])}
+ function addPackage(){if(packages.length>=6)return;setPackages(items=>[...items,{coins:Math.max(0,...items.map(p=>Number(p.coins)||0))+1,priceUsd:1,popular:items.length===0}])}
  function removePackage(index:number){setPackages(items=>items.filter((_,i)=>i!==index).map((p,i)=>({...p,popular:i===0?true:p.popular})))}
  function markPopular(index:number){setPackages(items=>items.map((p,i)=>({...p,popular:i===index})))}
  return <Table title="Numelixa pricing & SMS providers">
@@ -116,7 +116,7 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
    <label>5SIM purchase operator<select name="providerOperator" defaultValue={stats.settings.providerOperator||"any"}>{operators.map(x=><option key={x} value={x}>{x==="any"?"Any operator":x}</option>)}</select><small>Any uses the provider's default operator. Named operators apply only where supported.</small></label>
    <div className="coin-package-admin"><div className="coin-package-admin-head"><div><b>5SIM operators</b><small>Add or remove operator names. “any” cannot be removed.</small></div></div><div className="coin-package-row"><input value={newOperator} onChange={e=>setNewOperator(e.target.value)} placeholder="e.g. tele2, mts, beeline"/><button type="button" className="secondary-btn" onClick={addOperator}>+ Add</button></div><input type="hidden" name="providerOperators" value={operators.join(",")}/><div className="admin-tags">{operators.map(x=><span className="admin-tag" key={x}>{x}<button type="button" onClick={()=>removeOperator(x)} disabled={x==="any"}>×</button></span>)}</div></div>
    <div className="coin-package-admin">
-    <div className="coin-package-admin-head"><div><b>Wallet top-up options</b><small>Add, remove, or change the USD price. Up to 8 options can be saved.</small></div><button type="button" className="secondary-btn" onClick={addPackage} disabled={packages.length>=8}>+ Add option</button></div>
+    <div className="coin-package-admin-head"><div><b>Wallet top-up options</b><small>Add, remove, or change the USD price. Use 4–6 simple options.</small></div><button type="button" className="secondary-btn" onClick={addPackage} disabled={packages.length>=6}>+ Add option</button></div>
     <input type="hidden" name="coinPackagesJson" value={JSON.stringify(packages)}/>
     {packages.map((p,index)=><div className="coin-package-row" key={index}>
       <label className="nx-package-field">Wallet units<input type="number" min="1" step="1" value={p.coins} onChange={e=>updatePackage(index,"coins",Number(e.target.value))}/></label>
