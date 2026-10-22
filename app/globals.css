@@ -1101,3 +1101,7 @@ body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{b
 .stock-error button{flex:0 0 auto;border:1px solid rgba(255,120,140,.36);border-radius:9px;padding:7px 12px;background:rgba(255,120,140,.09);color:#fff;font-weight:700}
 @media(max-width:650px){.reference-dashboard .home-hero-refresh{flex-direction:column;align-items:stretch}.reference-dashboard .nx-network-visual{flex:0 0 auto;min-width:0}.reference-dashboard .hero-card p{max-width:100%}}
 @media(prefers-reduced-motion:reduce){.reference-dashboard .quick-card{transition:none}}
+
+.live-v2-service-logo{position:relative;display:grid;place-items:center;overflow:hidden}
+.live-v2-service-logo img{position:absolute;inset:0;width:100%;height:100%;padding:9px;object-fit:contain;background:transparent}
+.live-v2-service-fallback{display:none;place-items:center;width:100%;height:100%;font-weight:800}
