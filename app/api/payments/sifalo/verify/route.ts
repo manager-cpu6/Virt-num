@@ -9,7 +9,9 @@ export const dynamic="force-dynamic";
 export async function GET(req:Request){
  try{
   const user=await requireUser();
-  const orderId=new URL(req.url).searchParams.get("orderId")||"";
+  const verifyUrl=new URL(req.url);
+  const orderId=verifyUrl.searchParams.get("orderId")||"";
+  const returnedSid=String(verifyUrl.searchParams.get("sid")||"").trim();
   if(!orderId)return NextResponse.json({ok:false,error:"Payment order is required."},{status:400});
   const payments=await collection<any>("payments");
   const p=await payments.findOne({orderId,provider:"sifalo",userId:String(user.id)});
@@ -19,7 +21,7 @@ export async function GET(req:Request){
    ?"https://spay-api.sifalo.net/gateway/verify.php"
    :"https://api.sifalopay.com/gateway/verify.php";
   const verifyBody:any={order_id:p.orderId};
-  if(p.txid)verifyBody.sid=String(p.txid);
+  if(p.txid||returnedSid)verifyBody.sid=String(p.txid||returnedSid);
   const response=await fetch(apiBase,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(verifyBody),cache:"no-store",signal:AbortSignal.timeout(20000)});
   const result:any=await response.json().catch(()=>null);
   if(!response.ok||!result)return NextResponse.json({ok:false,error:"Sifalo could not verify this payment yet."},{status:502});
