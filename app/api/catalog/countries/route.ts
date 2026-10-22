@@ -18,7 +18,7 @@ export async function GET(req:Request){
     const result=countries.map((c:any)=>{
       const p=prices[String(c.id)];
       const cost=Number(p?.cost||0),count=Number(p?.count||0),coins=cost>0?sellCoins(cost,settings):0;
-      return {...c,flag:flag(c.iso),stock:{count,physicalCount:count,sellCoins:coins,usdPrice:coins/settings.coinsPerUsd}};
+      return {...c,flag:flag(c.iso),stock:{count,physicalCount:count,usdPrice:Number((coins/(Number(settings.coinsPerUsd)||100)).toFixed(2)),currency:"USD"}};
     }).filter((c:any)=>Number(c?.stock?.count||0)>0);
     return NextResponse.json({ok:true,live:true,countryCount:result.length,countries:result});
   }catch(e){
