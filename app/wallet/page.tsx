@@ -1,130 +1,33 @@
 "use client";
-
 import TopBar from "@/components/TopBar";
-import {Capacitor} from "@capacitor/core";
 import {useEffect,useMemo,useState} from "react";
-
-type Pack={coins:number;priceUsd:number;popular?:boolean;paymentUrl?:string};
-type Me={coins?:number;verified_at?:string|null};
-type Pricing={coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[]};
-function formatCryptoAmount(value:unknown){const n=Number(value);if(!Number.isFinite(n))return String(value??"");return n.toFixed(12).replace(/0+$/,"").replace(/\.$/,"");}
-
+type User={coins?:number;verified_at?:string|null};
+type Pricing={coinsPerUsd?:number;minTopupUsd?:number;maxTopupUsd?:number};
+const money=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number.isFinite(n)?n:0);
 export default function Wallet(){
-  const[u,setU]=useState<Me|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[clock,setClock]=useState(Date.now());
-  const[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState(""),[checkingDeposit,setCheckingDeposit]=useState(false),[openingCheckout,setOpeningCheckout]=useState(false);
-  const fixedPacks:Pack[]=[{coins:36,priceUsd:0.77},{coins:75,priceUsd:1.65},{coins:250,priceUsd:5.49},{coins:499,priceUsd:10.99}];
-  const[selected,setSelected]=useState<number|null>(null),[error,setError]=useState(""),[loading,setLoading]=useState(false),[provider,setProvider]=useState<"paypal"|"nowpayments"|"binance"|null>(null),[localOpen,setLocalOpen]=useState(false),[payMethod,setPayMethod]=useState<"crypto"|"local">("crypto"),[localPaymentNotice,setLocalPaymentNotice]=useState("");
-
-  useEffect(()=>{const timer=window.setInterval(()=>setClock(Date.now()),1000);return()=>window.clearInterval(timer)},[]);
-
-  useEffect(()=>{fetch("/api/payments/sifalo/status",{cache:"no-store"}).then(r=>r.json()).then(d=>setLocalOpen(d.ok===true&&d.open===true&&d.configured===true)).catch(()=>setLocalOpen(false));},[]);
-
-  useEffect(()=>{
-    const params=new URLSearchParams(window.location.search),orderId=params.get("order_id");
-    if(params.get("local_payment")!=="return"||!orderId)return;
-    setLocalPaymentNotice("Checking your Sifalo payment…");
-    fetch("/api/payments/sifalo/verify?orderId="+encodeURIComponent(orderId)+(params.get("sid")?"&sid="+encodeURIComponent(params.get("sid")!):""),{cache:"no-store",credentials:"same-origin"})
-      .then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to verify payment");if(d.status==="paid"){setLocalPaymentNotice("Payment confirmed — "+Number(d.coins||0).toLocaleString()+" coins added.");return fetch("/api/me",{cache:"no-store"}).then(x=>x.json()).then(me=>{if(me.user)setU(me.user);});}setLocalPaymentNotice("Payment is still pending. Approve it in your payment app, then refresh this page to check again.");})
-      .catch(e=>setLocalPaymentNotice(e instanceof Error?e.message:"Unable to verify payment. Please try again."));
-    const clean=new URL(window.location.href);clean.searchParams.delete("local_payment");clean.searchParams.delete("order_id");window.history.replaceState({}, "", clean.pathname+clean.search+clean.hash);
-  },[]);
-
-  useEffect(()=>{
-    fetch("/api/me",{cache:"no-store"}).then(r=>r.json()).then(d=>{
-      setU(d.user||null);setPricing(d.pricing||null);setProvider(d.paymentProvider==="paypal"?"paypal":d.paymentProvider==="binance"?"binance":"nowpayments");
-      const packs:Array<Pack>=d.pricing?.coinPackages||[];
-      if(fixedPacks.length)setSelected(fixedPacks[0].coins);
-
-    }).catch(()=>setError("Unable to load wallet right now.")).finally(()=>setLoaded(true));
-  },[]);
-
-  const packs=useMemo(()=>fixedPacks,[fixedPacks]);
-  const selectedPack=packs.find(p=>p.coins===selected)||null;
-  const secondsLeft=deposit?.expiresAt?Math.max(0,Math.ceil((new Date(deposit.expiresAt).getTime()-clock)/1000)):0;
-  const expiryLabel=String(Math.floor(secondsLeft/60)).padStart(2,"0")+":"+String(secondsLeft%60).padStart(2,"0");
-
-  async function pay(){
-    if(!u){location.href="/login?next=/wallet";return}
-    if(!u.verified_at){location.href="/verify-email";return}
-    if(!selectedPack)return;
-    if(payMethod==="local"){setLoading(true);setError("");try{const d=await fetch("/api/payments/sifalo/create",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());if(!d.ok)throw new Error(d.error||"Unable to start local payment.");location.href=d.url;}catch(err){setError(err instanceof Error?err.message:"Unable to start local payment.");setLoading(false)}return;}
-    if(provider==="binance"){
-      setLoading(true);setError("");
-      try{
-        const tokenResponse=await fetch("/api/payments/checkout-token",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"same-origin",cache:"no-store"}).then(r=>r.json());
-        if(!tokenResponse.ok||!tokenResponse.token)throw new Error(tokenResponse.error||"Unable to start secure checkout.");
-        const nativeApp=Capacitor.isNativePlatform();
-        const returnTo=nativeApp?"com.numelixa.app://auth/callback?payment=success":"https://numelixa.com/wallet?payment=success";
-        const checkoutUrl="https://payment.numelixa.com/?coins="+encodeURIComponent(String(selectedPack.coins))+"&token="+encodeURIComponent(String(tokenResponse.token))+"&returnTo="+encodeURIComponent(returnTo);
-        location.href=checkoutUrl;
-      }catch(err){setError(err instanceof Error?err.message:"Unable to start secure checkout");setLoading(false);setOpeningCheckout(false)}
-      return;
-    }
-    setLoading(true);setError("");
-    try{
-      const d=await fetch("/api/payments/create",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({coins:selectedPack.coins})}).then(r=>r.json());
-      if(!d.ok){setError(d.error||"Unable to create payment");return}
-      if(d.depositRequired){setDeposit(d);setDepositStatus("waiting");return}
-      location.href=d.url;
-    }catch(err){setError(err instanceof Error?err.message:"Unable to create payment")}
-    finally{setLoading(false)}
-  }
-
-  async function copyValue(value:string){
-    try{await navigator.clipboard.writeText(value);setDepositStatus("copied");window.setTimeout(()=>setDepositStatus("waiting"),1800);}
-    catch{setError("Copy failed. Please select and copy the value manually.");}
-  }
-  async function checkDeposit(){
-    if(!deposit?.orderId)return;
-    setCheckingDeposit(true);setError("");
-    try{
-      const d=await fetch("/api/payments/binance/status?orderId="+encodeURIComponent(deposit.orderId),{cache:"no-store"}).then(r=>r.json());
-      if(!d.ok){setError(d.error||"Unable to check deposit.");return}
-      setDepositStatus(d.status);
-      if(d.status==="paid"){
-        const me=await fetch("/api/me",{cache:"no-store"}).then(r=>r.json());
-        if(me.user)setU(me.user);
-      }else if(d.status==="expired")setError("This deposit request expired. Please create a new payment request.");
-    }catch{setError("Unable to check deposit status. Try again.");}
-    finally{setCheckingDeposit(false);}
-  }
-
-  return <div>
-    <TopBar title="Wallet"/>
-    <section className="wallet-hero wallet-hero-new">
-      <div className="wallet-orbit" aria-hidden="true">◈</div>
-      <div className="wallet-balance-copy"><span>AVAILABLE COINS</span><strong>{u?Number(u.coins||0).toLocaleString():"—"}</strong><small>Coins are used for number purchases.</small></div>
-      <div className="wallet-rate">{pricing?pricing.coinsPerUsd.toLocaleString()+" coins / $1":""}</div>
-    </section>
-    <div className="wallet-section-head"><div><span className="eyebrow">COIN STORE</span><h2>Choose your coins</h2><p>Pick a package set by the admin. Payment is securely processed.</p></div></div>
-    {error&&<div className="error-box">{error}</div>}
-    {localPaymentNotice&&<div role="status" aria-live="polite" style={{marginTop:12,padding:14,borderRadius:12,border:"1px solid #1e4770",background:"rgba(22,119,255,.08)",color:"#DCEBFF"}}>{localPaymentNotice}</div>}
-    {!loaded?<div className="wallet-loading">Loading coin packages…</div>:!packs.length?<div className="helper-card"><b>No coin packages available</b><span>Please check back shortly.</span></div>:
-      <div className="coin-store-grid">{packs.map(p=><button key={p.coins} type="button" className={"coin-store-card "+(selected===p.coins?"selected":"")} onClick={()=>setSelected(p.coins)}>
-        {p.popular&&<span className="popular-badge">POPULAR</span>}<span className="coin-glyph">◈</span><strong>{p.coins.toLocaleString()}</strong><small>coins</small><b className="coin-price">{"$"+p.priceUsd.toFixed(2)}</b>
-      </button>)}</div>}
-    {selectedPack&&<section className="wallet-checkout">
-      <div><span className="eyebrow">SELECTED PACKAGE</span><strong>{selectedPack.coins.toLocaleString()} coins</strong><small>{"Payment required: $"+selectedPack.priceUsd.toFixed(2)}</small></div>
-      {localOpen&&<div style={{display:"grid",gridTemplateColumns:"repeat(2,minmax(0,1fr))",gap:10,margin:"16px 0"}}><button type="button" onClick={()=>setPayMethod("crypto")} className={payMethod==="crypto"?"primary-btn":"secondary-btn"}>₿ Crypto payment</button><button type="button" onClick={()=>setPayMethod("local")} className={payMethod==="local"?"primary-btn":"secondary-btn"}>◈ Local payment</button></div>}
-      {localOpen&&payMethod==="local"&&<div style={{border:"1px solid #1e4770",borderRadius:14,padding:14,marginBottom:14,background:"rgba(22,119,255,.08)"}}><strong style={{display:"block",marginBottom:6}}>Local payment methods</strong><small>Card · Premier Wallet · eDahab · Waafi</small><p style={{margin:"8px 0 0",opacity:.72,fontSize:12}}>Secure checkout hosted by Sifalo Pay. Coins are added after payment confirmation.</p></div>}
-      <button className="primary-btn wallet-pay-btn" onClick={pay} disabled={loading}>{loading?"Opening secure checkout…":!u?"Sign in to continue":payMethod==="local"?"Continue to local payment":provider==="paypal"?"Continue with PayPal":provider==="binance"?"Get "+selectedPack.coins.toLocaleString()+" coins":"Continue to secure payment"}<span>→</span></button>
-    </section>}
-    {deposit&&<section className="wallet-checkout" style={{display:"block",marginTop:20}}>
-      <div style={{display:"grid",gap:12}}>
-        <span className="eyebrow">SECURE USDT PAYMENT</span>
-        <h2 style={{margin:0}}>Send the exact amount</h2>
-        {depositStatus!=="paid"&&<div className="wallet-expiry-countdown" role="timer" aria-live="polite" style={{display:"grid",gap:4,padding:14,borderRadius:14,background:"#101d32",border:"1px solid #263b5a"}}><small>TIME LEFT TO PAY</small><strong>{expiryLabel}</strong>{secondsLeft===0&&<span>This payment request has expired. Create a new request to pay.</span>}</div>}
-        {depositStatus==="paid"?<div className="success-box">Deposit confirmed. {Number(deposit.coins).toLocaleString()} coins have been credited to your wallet.</div>:<p>Send only USDT on the exact network shown below. Your coins are credited after Binance confirms the deposit. This payment request expires in 15 minutes. Payments received after expiry are not accepted.</p>}
-        <div><small>Exact amount</small><strong style={{display:"block",fontSize:26}}>{formatCryptoAmount(deposit.amount)} {deposit.currency||"USDT"} <button type="button" className="secondary-btn" onClick={()=>copyValue(formatCryptoAmount(deposit.amount))}>Copy amount</button></strong></div>
-        <div><small>Network — must match exactly</small><strong style={{display:"block"}}>{deposit.networkName||deposit.network}</strong></div>
-        <div><small>Deposit address QR</small><div style={{display:"flex",justifyContent:"center",padding:14}}><img src={"https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=8&data="+encodeURIComponent(String(deposit.address||""))} alt="USDT deposit address QR code" width="220" height="220" style={{background:"#fff",padding:8,borderRadius:12,maxWidth:"100%"}}/></div><small>Binance deposit address</small><div style={{overflowWrap:"anywhere",fontWeight:700}}>{deposit.address}</div><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.address))}>Copy address</button></div>
-        {deposit.memo&&<div><small>Memo / Tag (required)</small><strong>{deposit.memo}</strong><button type="button" className="secondary-btn" onClick={()=>copyValue(String(deposit.memo))}>Copy memo</button></div>}
-        <p className="wallet-footnote">Do not send another coin or use a different network. Send the exact amount, including all decimal digits. Binance Personal API only checks confirmed USDT deposits.</p>
-        <button className="primary-btn" type="button" onClick={checkDeposit} disabled={checkingDeposit||depositStatus==="paid"}>{checkingDeposit?"Checking deposit…":depositStatus==="paid"?"Deposit confirmed ✓":"Check deposit status"}</button>
-        {depositStatus==="waiting"&&<small>Current status: waiting for a confirmed Binance deposit. Automatic checks run periodically.</small>}
-        {depositStatus==="expired"&&<small>This request has expired. Start a new payment from the coin store.</small>}
-      </div>
-    </section>}
-    <p className="wallet-footnote">{provider==="paypal"?"You will be redirected to PayPal to approve the payment. Coins are added only after PayPal confirms the completed payment.":provider==="binance"?"Send the exact USDT amount to the displayed address within 15 minutes. Coins are added only after a matching deposit is confirmed.":"Coins are added only after the payment is confirmed."}</p>
-  </div>
+ const [user,setUser]=useState<User|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false);
+ const [amount,setAmount]=useState("5.00"),[error,setError]=useState(""),[busy,setBusy]=useState(false);
+ const rate=Number(pricing?.coinsPerUsd)||100,min=Number(pricing?.minTopupUsd)||1,max=Math.min(Number(pricing?.maxTopupUsd)||10000,10000),value=Number(amount);
+ const valid=Number.isFinite(value)&&Math.round(value*100)===value*100&&value>=min&&value<=max;
+ const presets=useMemo(()=>[1,5,10,25,50].filter(x=>x>=min&&x<=max),[min,max]);
+ useEffect(()=>{fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>{setUser(d.user||null);setPricing(d.pricing||null);}).catch(()=>setError("Unable to load wallet. Please refresh the page.")).finally(()=>setLoaded(true));},[]);
+ function checkout(){setError("");if(!user){window.location.href="/login?next="+encodeURIComponent("https://checkout.numelixa.com/?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!valid){setError("Enter an amount between "+money(min)+" and "+money(max)+".");return;}setBusy(true);window.location.href="https://checkout.numelixa.com/?amount="+encodeURIComponent(value.toFixed(2));}
+ return <div className="nx-wallet-page">
+  <TopBar title="Wallet"/>
+  <section className="nx-wallet-hero">
+   <div className="nx-wallet-orb" aria-hidden="true">＄</div>
+   <div className="nx-wallet-eyebrow">YOUR NUMELIXA WALLET</div>
+   <div className="nx-wallet-balance">{loaded&&user?money(Number(user.coins||0)/rate):"—"}</div>
+   <p>Your available balance, shown in USD.</p>
+   <div className="nx-wallet-hero-foot"><span><i/> Wallet secured</span><span>USD · United States Dollar</span></div>
+  </section>
+  <section className="nx-wallet-content">
+   <div className="nx-wallet-heading"><div><span className="eyebrow">ADD FUNDS</span><h1>How much would you like to add?</h1><p>Choose a quick amount or enter your own. Payment happens on Numelixa’s private checkout page.</p></div><span className="nx-wallet-lock">⌑ Secure</span></div>
+   {error&&<div className="nx-checkout-error" role="alert">{error}</div>}
+   <div className="nx-wallet-amount-grid">{presets.map(v=><button type="button" key={v} className={Number(amount)===v?"selected":""} onClick={()=>{setAmount(v.toFixed(2));setError("");}}><small>TOP UP</small><strong>{money(v)}</strong><span>{v===5?"Popular":v===10?"Recommended":"USD balance"}</span></button>)}</div>
+   <section className="nx-wallet-custom"><label htmlFor="nx-wallet-custom-amount">Custom amount (USD)</label><div><span>$</span><input id="nx-wallet-custom-amount" type="number" inputMode="decimal" min={min} max={max} step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);setError("");}}/><small>USD</small></div><p>Minimum {money(min)} · Maximum {money(max)}</p>{!valid&&<small className="nx-validation">Enter an amount between {money(min)} and {money(max)}.</small>}</section>
+   <section className="nx-wallet-checkout-summary"><div><span>Top-up amount</span><strong>{money(value)}</strong></div><div><span>Processing fee</span><strong>$0.00</strong></div><div className="total"><span>Total</span><strong>{money(value)}</strong></div><button type="button" disabled={!loaded||busy||!valid} onClick={checkout}>{busy?"Opening secure checkout…":"Continue to checkout"} <span>→</span></button><small><i/> Payments are verified server-side before your USD wallet balance is updated.</small></section>
+   <div className="nx-wallet-methods"><div><span>▰</span><div><b>Visa / Mastercard</b><small>Bank cards where direct processing is enabled</small></div></div><div><span>◉</span><div><b>Waafi · EVC · ZAAD · SAHAL</b><small>Approve directly from your mobile wallet</small></div></div><div><span>₿</span><div><b>Crypto</b><small>Supported assets and networks</small></div></div></div>
+  </section>
+ </div>;
 }
