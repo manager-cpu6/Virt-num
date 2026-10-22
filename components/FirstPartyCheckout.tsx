@@ -41,7 +41,7 @@ export default function FirstPartyCheckout(){
   {id:"crypto" as const,title:"Crypto",detail:"USDT, BNB and supported networks",icon:"₿",disabled:false}
  ],[]);
 
- return <main className="nx-checkout-root">
+ return <div className="nx-checkout-root">
   <header className="nx-checkout-nav"><a className="nx-checkout-brand" href="https://numelixa.com/dashboard"><span className="nx-checkout-logo">N</span><span><b>Numelixa</b><small>Secure checkout</small></span></a><span className="nx-secure-label"><i/> ENCRYPTED CHECKOUT</span></header>
   <div className="nx-checkout-layout">
    <section className="nx-checkout-main">
@@ -83,5 +83,5 @@ export default function FirstPartyCheckout(){
    </aside>
   </div>
   <footer className="nx-checkout-footer"><span>© 2026 Numelixa</span><span>Secure · Verified · USD</span><a href="https://numelixa.com/support">Need help?</a></footer>
- </main>;
+ </div>;
 }
