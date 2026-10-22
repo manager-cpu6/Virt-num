@@ -57,7 +57,7 @@ export async function POST(req:Request){
     );
     if(!updated){
       return NextResponse.json(
-        {ok:false,error:"Insufficient coins. Please top up your wallet."},
+        {ok:false,error:"Your USD wallet balance is too low. Add funds to continue."},
         {status:402}
       );
     }
@@ -309,7 +309,7 @@ export async function POST(req:Request){
     if(/HTTP 401|HTTP 403|unauthorized|invalid token|invalid api/i.test(m))
       return NextResponse.json({ok:false,error:"The number service is temporarily unavailable. Please try again later."},{status:502});
     if(m==="ORDER_SAVE_FAILED_REFUNDED")
-      return NextResponse.json({ok:false,error:"The number service could not be saved, so your coins were refunded. Please try again."},{status:502});
+      return NextResponse.json({ok:false,error:"The number service could not be saved, so your wallet balance was refunded. Please try again."},{status:502});
     if(m.startsWith("ORDER_SAVE_FAILED_ACTIVATION_ACTIVE:")){
       const parts=m.split(":");
       return NextResponse.json({
