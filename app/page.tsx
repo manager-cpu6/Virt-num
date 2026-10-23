@@ -3,13 +3,15 @@ import {getUser} from "@/lib/auth";
 import {redirect} from "next/navigation";
 import {headers} from "next/headers";
 import FirstPartyCheckout from "@/components/FirstPartyCheckout";
+import CryptoPaymentPage from "@/components/CryptoPaymentPage";
 import LivePhoneDemo from "@/components/LivePhoneDemo";
 
 export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
-  if(host==="checkout.numelixa.com"||host==="payment.numelixa.com")return <FirstPartyCheckout/>;
+  if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
+  if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
   const user = await getUser().catch(() => null);
   if (user) redirect("/dashboard");
 
