@@ -21,7 +21,7 @@ const networkLogo=(n:AssetNetwork)=>{
 export default function FirstPartyCheckout(){
  const [amount,setAmount]=useState("5.00"),[minAmount,setMinAmount]=useState(1),[maxAmount,setMaxAmount]=useState(10000),[rate,setRate]=useState(100);
  const [user,setUser]=useState<any>(null),[localOpen,setLocalOpen]=useState(false),[method,setMethod]=useState<Method>("waafi"),[phone,setPhone]=useState("");
- const [step,setStep]=useState<"amount"|"method"|"details">("amount"),[cryptoSearch,setCryptoSearch]=useState(""),[copied,setCopied]=useState(false),[now,setNow]=useState(Date.now());
+ const [step,setStep]=useState<"amount"|"method"|"details">("details"),[cryptoSearch,setCryptoSearch]=useState(""),[copied,setCopied]=useState(false),[now,setNow]=useState(Date.now());
  const [busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[order,setOrder]=useState<any>(null);
  const [assets,setAssets]=useState<Asset[]>([]),[asset,setAsset]=useState("USDT"),[network,setNetwork]=useState(""),[deposit,setDeposit]=useState<any>(null),[depositStatus,setDepositStatus]=useState("pending");
  const checking=useRef(false);
@@ -55,41 +55,33 @@ export default function FirstPartyCheckout(){
   {id:"sahal" as const,title:"SAHAL",detail:"Approve the payment using SAHAL",icon:"sahal",disabled:false},
   {id:"edahab" as const,title:"eDahab",detail:"Confirm payment using your eDahab account",icon:"edahab",disabled:false},
   {id:"premier" as const,title:"Premier Wallet",detail:"Pay from your Premier USD wallet",icon:"premier",disabled:false},
-  {id:"crypto" as const,title:"Cryptocurrency",detail:"Search coins and choose the correct blockchain network",icon:"crypto",disabled:false}
  ],[]);
 
  return <div className="nx-checkout-root">
-  <header className="nx-checkout-nav"><a className="nx-checkout-brand" href="https://numelixa.com/dashboard"><span className="nx-checkout-logo">N</span><span><b>Numelixa</b><small>Secure checkout</small></span></a><span className="nx-secure-label"><i/> ENCRYPTED CHECKOUT</span></header>
+  <header className="nx-checkout-nav"><a className="nx-checkout-brand" href="https://numelixa.com/wallet"><span className="nx-checkout-logo">N</span><span><b>Numelixa</b><small>Secure checkout</small></span></a><span className="nx-secure-label"><i/> ENCRYPTED CHECKOUT</span></header>
   <div className="nx-checkout-layout">
    <section className="nx-checkout-main">
     <div className="nx-checkout-kicker"><span>01</span> WALLET TOP-UP</div>
     <h1>Fund your wallet.<br/><em>Stay in Numelixa.</em></h1>
-    <p className="nx-checkout-intro">Choose an amount and pay through our secure checkout. You will never be sent to a Sifalo website for mobile-wallet payments.</p>
-    <section className="nx-amount-panel">
-     <label htmlFor="nx-amount">Amount to add</label>
-     <div className="nx-amount-input"><span>$</span><input id="nx-amount" inputMode="decimal" type="number" min={minAmount} max={maxAmount} step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);setStep("amount");setOrder(null);setDeposit(null);setError("");setNotice("");}}/><span>USD</span></div>
-     <div className="nx-amount-presets">{[5,10,25,50].filter(x=>x>=minAmount&&x<=maxAmount).map(v=><button type="button" key={v} className={Number(amount)===v?"active":""} onClick={()=>{setAmount(v.toFixed(2));setStep("amount");setError("");setNotice("");setOrder(null);setDeposit(null)}}>{money(v)}</button>)}</div>
-     <div className="nx-amount-foot"><span>Wallet credit</span><strong>{money(amountNumber)}</strong></div>
-     {!validAmount&&<small className="nx-validation">Enter an amount between {money(minAmount)} and {money(maxAmount)}.</small>}
+    <p className="nx-checkout-intro">Enter your mobile wallet number and approve the secure payment request on your phone.</p>
+    <section className="nx-amount-panel nx-local-amount-summary">
+     <div className="nx-local-summary-label"><span>WALLET TOP-UP</span><span>USD</span></div>
+     <div className="nx-local-summary-value">{money(amountNumber)}</div>
+     <p>Selected amount from your Numelixa wallet.</p>
     </section>
 
-    {step==="amount"&&<button type="button" className="nx-checkout-pay nx-amount-continue" disabled={!validAmount} onClick={()=>{setStep("method");setError("");setNotice("");}}>Continue to payment methods <span>→</span></button>}
+    <div className="nx-checkout-kicker nx-payment-kicker"><span>02</span> LOCAL PAYMENT</div>
+    <h2>Choose your mobile wallet</h2>
+    <p className="nx-method-intro-copy">Select the service you want to use, then enter the number linked to that wallet.</p>
+    <div className="nx-payment-methods nx-local-service-grid">{methods.map(m=><button type="button" key={m.id} className={"nx-payment-method "+(method===m.id?"selected":"")} onClick={()=>{setMethod(m.id);setError("");setNotice("");setOrder(null);}}><span className="nx-method-icon">{m.id==="edahab"?<span className="nx-local-brand nx-edahab-brand">eD</span>:m.id==="premier"?<span className="nx-local-brand nx-premier-brand">P</span>:m.id==="evc"?<span className="nx-local-brand nx-evc-brand">EVC+</span>:m.id==="zaad"?<span className="nx-local-brand nx-zaad-brand">ZAAD</span>:m.id==="sahal"?<span className="nx-local-brand nx-sahal-brand">SAHAL</span>:<span className="nx-local-brand nx-waafi-brand">W</span>}</span><span className="nx-method-copy"><b>{m.title}</b><small>{m.detail}</small></span><span className="nx-method-check">{method===m.id?"✓":"›"}</span></button>)}</div>
 
-    {step==="method"&&<><div className="nx-checkout-kicker nx-payment-kicker"><span>02</span> PAYMENT METHOD</div>
-    <h2>Choose how to pay</h2><p className="nx-method-intro-copy">Select a method to open its dedicated, secure payment screen.</p>
-    <div className="nx-method-group"><span className="nx-method-group-label">LOCAL PAYMENTS</span><div className="nx-payment-methods">{methods.filter(m=>m.id!=="crypto").map(m=><button type="button" key={m.id} disabled={m.disabled} className={"nx-payment-method "+(method===m.id?"selected":"")+(m.disabled?" disabled":"")} onClick={()=>{setMethod(m.id);setStep("details");setError("");setNotice("");}}><span className="nx-method-icon">{m.id==="card"?<span className="nx-card-brands"><img src="https://cdn.simpleicons.org/visa/1A1F71" alt="Visa"/><img src="https://cdn.simpleicons.org/mastercard/EB001B" alt="Mastercard"/></span>:m.id==="edahab"?<span className="nx-local-brand nx-edahab-brand">eD</span>:m.id==="premier"?<span className="nx-local-brand nx-premier-brand">P</span>:m.id==="evc"?<span className="nx-local-brand nx-evc-brand">EVC+</span>:m.id==="zaad"?<span className="nx-local-brand nx-zaad-brand">ZAAD</span>:m.id==="sahal"?<span className="nx-local-brand nx-sahal-brand">SAHAL</span>:<span className="nx-local-brand nx-waafi-brand">W</span>}</span><span className="nx-method-copy"><b>{m.title}</b><small>{m.detail}</small></span><span className={"nx-method-check "+(m.disabled?"nx-coming-soon":"")}>{m.disabled?"Coming soon":"›"}</span></button>)}</div></div><div className="nx-method-group"><span className="nx-method-group-label">CRYPTOCURRENCY</span><div className="nx-payment-methods">{methods.filter(m=>m.id==="crypto").map(m=><button type="button" key={m.id} className={"nx-payment-method "+(method===m.id?"selected":"")} onClick={()=>{setMethod(m.id);setStep("details");setError("");setNotice("");}}><span className="nx-method-icon"><img className="nx-method-brand-img" src="https://cdn.simpleicons.org/bitcoin/F7931A" alt="Crypto"/></span><span className="nx-method-copy"><b>{m.title}</b><small>{m.detail}</small></span><span className="nx-method-check">›</span></button>)}</div></div></>}
-    {step==="details"&&<div className="nx-payment-detail-page"><button type="button" className="nx-payment-back" onClick={()=>{setStep("method");setError("");setNotice("");}}>← <span>All payment methods</span></button><div className="nx-payment-detail-heading"><span className="nx-detail-eyebrow">SECURE PAYMENT · {money(amountNumber)}</span><h2>{method==="crypto"?"Choose your cryptocurrency":method==="waafi"?"Pay with Waafi":method==="evc"?"Pay with EVC Plus":method==="zaad"?"Pay with ZAAD":method==="sahal"?"Pay with SAHAL":method==="edahab"?"Pay with eDahab":"Pay with Premier Wallet"}</h2><p>{method==="crypto"?"Search for a coin, then choose its exact blockchain network.":"Follow the steps below to complete your wallet top-up securely inside Numelixa."}</p></div></div>}
-
-    {step==="details"&&method!=="crypto"&&method!=="card"&&<section className="nx-payment-form">
+    <div className="nx-payment-detail-heading nx-local-detail-heading"><span className="nx-detail-eyebrow">SECURE PAYMENT · {money(amountNumber)}</span><h2>{method==="waafi"?"Pay with Waafi":method==="evc"?"Pay with EVC Plus":method==="zaad"?"Pay with ZAAD":method==="sahal"?"Pay with SAHAL":method==="edahab"?"Pay with eDahab":"Pay with Premier Wallet"}</h2><p>Enter the phone number connected to your selected wallet.</p></div>
+    <section className="nx-payment-form">
      <label htmlFor="nx-phone">Mobile wallet number</label>
      <input id="nx-phone" type="tel" autoComplete="tel" placeholder="+252 6X XXX XXXX" value={phone} onChange={e=>setPhone(e.target.value)} />
-     <small>{localOpen?<>Use the number registered with {method==="waafi"?"Waafi":method==="evc"?"EVC Plus":method==="zaad"?"ZAAD":method==="sahal"?"SAHAL":method==="edahab"?"eDahab":"Premier Wallet"}. Confirm that the wallet can pay in USD.</>: "Local wallet payments are currently unavailable. You can still choose another payment method."}</small>
-     <button type="button" className="nx-checkout-pay" disabled={busy||!validAmount||!localOpen} onClick={startLocal}>{busy?"Sending secure request…":!localOpen?"Local payments unavailable":"Request payment · "+money(amountNumber)} <span>→</span></button>
-    </section>}
-
-    {step==="details"&&method==="crypto"&&<section className="nx-payment-form">
-     {!assets.length?<p>Loading supported crypto assets…</p>:<><label htmlFor="nx-crypto-search">Search cryptocurrency</label><input id="nx-crypto-search" type="search" value={cryptoSearch} onChange={e=>setCryptoSearch(e.target.value)} placeholder="Search Bitcoin, USDT, Ethereum…"/><label>Choose cryptocurrency · {filteredAssets.length} available</label><div className="nx-coin-choice-grid">{filteredAssets.map(a=><button type="button" key={a.coin} className={"nx-coin-choice "+(asset===a.coin?"selected":"")} onClick={()=>{setAsset(a.coin);setNetwork(a.networks?.find(n=>n.isDefault)?.network||a.networks?.[0]?.network||"");setDeposit(null);}}><img src={a.logo||("https://assets.coincap.io/assets/icons/"+a.coin.toLowerCase()+"@2x.png")} alt={a.name+" logo"} width="34" height="34" loading="lazy" onError={e=>{const img=e.currentTarget;const step=Number(img.dataset.logoFallbackStep||"0");const fallbacks=["https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/"+a.coin.toLowerCase()+".png","https://cdn.simpleicons.org/blockchaindotcom"];if(step<fallbacks.length){img.dataset.logoFallbackStep=String(step+1);img.src=fallbacks[step];return}img.onerror=null;img.src="data:image/svg+xml;charset=UTF-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Ccircle cx='20' cy='20' r='19' fill='%231677ff'/%3E%3Cpath d='M20 8v24M8 20h24' stroke='white' stroke-width='3'/%3E%3C/svg%3E";}}/><span><b>{a.coin}</b><small>{a.name}</small></span><i>{asset===a.coin?"✓":"›"}</i></button>)}</div><label>Choose deposit network</label><div className="nx-network-choice-grid">{networks.map(n=><button type="button" key={n.network} className={"nx-network-choice "+(network===n.network?"selected":"")} onClick={()=>setNetwork(n.network)}><img src={networkLogo(n)} alt="" width="28" height="28" loading="lazy" onError={e=>{e.currentTarget.onerror=null;e.currentTarget.src="https://cdn.simpleicons.org/blockchaindotcom"}}/><span><b>{n.networkName}</b><small>{n.network}{n.isDefault?" · Recommended":""}</small></span><i>{network===n.network?"✓":"›"}</i></button>)}</div><button type="button" className="nx-checkout-pay" disabled={busy||!validAmount||!network} onClick={startCrypto}>{busy?"Preparing secure deposit…":"Continue with crypto · "+money(amountNumber)} <span>→</span></button></>}
-    </section>}
+     <small>{localOpen?"Use the number registered with "+(method==="waafi"?"Waafi":method==="evc"?"EVC Plus":method==="zaad"?"ZAAD":method==="sahal"?"SAHAL":method==="edahab"?"eDahab":"Premier Wallet")+". Confirm that the wallet can pay in USD.":"Local wallet payments are currently unavailable. Please try again later."}</small>
+     <button type="button" className="nx-checkout-pay" disabled={busy||!validAmount||!localOpen||!phone.trim()} onClick={startLocal}>{busy?"Sending secure request…":!localOpen?"Local payments unavailable":"Continue securely · "+money(amountNumber)} <span>→</span></button>
+    </section>
 
     {error&&<div className="nx-checkout-error" role="alert">{error}</div>}
     {notice&&<div className={"nx-checkout-notice "+(order?.status==="paid"||depositStatus==="paid"?"success":"")} role="status">{notice}</div>}
