@@ -9,7 +9,7 @@ export default function Wallet(){
  const [amount,setAmount]=useState("5.00"),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const rate=Number(pricing?.coinsPerUsd)||100,min=Number(pricing?.minTopupUsd)||1,max=Math.min(Number(pricing?.maxTopupUsd)||10000,10000),value=Number(amount);
  const valid=Number.isFinite(value)&&Math.round(value*100)===value*100&&value>=min&&value<=max;
- const presets=useMemo(()=>[1,5,10,25,50].filter(x=>x>=min&&x<=max),[min,max]);
+ const presets=useMemo(()=>[5,10,25,50].filter(x=>x>=min&&x<=max),[min,max]);
  useEffect(()=>{fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>{setUser(d.user||null);setPricing(d.pricing||null);}).catch(()=>setError("Unable to load wallet. Please refresh the page.")).finally(()=>setLoaded(true));},[]);
  useEffect(()=>{const v=new URLSearchParams(window.location.search).get("amount");if(v&&/^\d+(?:\.\d{1,2})?$/.test(v))setAmount(Number(v).toFixed(2));},[]);
  function checkout(){setError("");if(!user){window.location.href="https://numelixa.com/login?next="+encodeURIComponent("/wallet?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!valid){setError("Enter an amount between "+money(min)+" and "+money(max)+".");return;}setBusy(true);window.location.href="https://payment.numelixa.com/?amount="+encodeURIComponent(value.toFixed(2));}
