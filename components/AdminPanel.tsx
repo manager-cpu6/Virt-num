@@ -89,7 +89,7 @@ export default function AdminPanel(){
   {tab==="orders"&&<OrdersTable orders={orders} coinsPerUsd={stats?.settings.coinsPerUsd} title={"All orders ("+orders.length+")"} onCancel={cancelWaitingOrder}/>}
   {tab==="providers"&&<Providers stats={stats}/>}
   {tab==="services"&&<AdminServiceCatalog/>}
-  {tab==="payments"&&<AdminPayments/>}\n  {tab==="local payments"&&<Table title="Sifalo Local Payments"><p className="admin-help">Open or close Sifalo local checkout independently from cryptocurrency payments. When closed, customers only see crypto.</p><a href="/admin/local-payments" className="primary-btn" style={{display:"inline-flex",textDecoration:"none",alignItems:"center",justifyContent:"center"}}>Manage Local Payments →</a></Table>}
+  {tab==="payments"&&<AdminPayments/>}\n  {tab==="local payments"&&<Table title="Local Payments"><p className="admin-help">Open or close Local Payment independently from Crypto Payment. When closed, customers only see Crypto Payment.</p><a href="/admin/local-payments" className="primary-btn" style={{display:"inline-flex",textDecoration:"none",alignItems:"center",justifyContent:"center"}}>Manage Local Payments →</a></Table>}
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="authentication"&&<AdminAuthMethods/>}
