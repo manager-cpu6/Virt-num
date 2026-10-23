@@ -50,7 +50,6 @@ export default function FirstPartyCheckout(){
  async function startCrypto(){setError("");setNotice("");if(!user){window.location.href="https://numelixa.com/login?next="+encodeURIComponent("/wallet?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!validAmount){setError("Enter an amount between "+money(minAmount)+" and "+money(maxAmount)+".");return;}if(!network){setError("Choose a deposit network.");return;}setBusy(true);try{const r=await fetch("/api/payments/binance/create",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({amountUsd:Number(amount),currency:asset,network})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to create crypto payment.");setDeposit(d);setDepositStatus("pending");setNow(Date.now());setCopied(false);}catch(e){setError(e instanceof Error?e.message:"Unable to start crypto payment.");}finally{setBusy(false)}}
 
  const methods=useMemo(()=>[
-  {id:"card" as const,title:"Visa / Mastercard",detail:"Card payments are coming soon",icon:"card",disabled:true},
   {id:"waafi" as const,title:"Waafi",detail:"Pay securely using your Waafi wallet",icon:"waafi",disabled:false},
   {id:"evc" as const,title:"EVC Plus",detail:"Approve the payment using EVC Plus",icon:"evc",disabled:false},
   {id:"zaad" as const,title:"ZAAD",detail:"Approve the payment using ZAAD",icon:"zaad",disabled:false},
