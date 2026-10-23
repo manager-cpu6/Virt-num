@@ -11,7 +11,7 @@ export default function PaymentPage(){
  const audioContextRef=useRef<AudioContext|null>(null),successSoundPlayed=useRef(false),checkInFlight=useRef(false),copiedPaymentRef=useRef(false);
  useEffect(()=>{(async()=>{try{
   const query=new URLSearchParams(window.location.search);
-  const amountParam=query.get("amount");if(amountParam&&/^\\d+(?:\\.\\d{1,2})?$/.test(amountParam)&&Number(amountParam)>0)setRequestedAmount(Number(amountParam));
+  const amountParam=query.get("amount");const parsedAmount=Number(amountParam);if(amountParam&&Number.isFinite(parsedAmount)&&parsedAmount>0&&Math.round(parsedAmount*100)===parsedAmount*100)setRequestedAmount(parsedAmount);
   const checkoutToken=query.get("token");
   if(checkoutToken){
    const redeemed=await fetch("/api/payments/checkout-token/redeem",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",cache:"no-store",body:JSON.stringify({token:checkoutToken})}).then(async r=>({httpOk:r.ok,data:await r.json()}));
