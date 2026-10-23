@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
-  if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
+  if(host==="checkout.numelixa.com"||host==="payment.numelixa.com")return <FirstPartyCheckout/>;
   const user = await getUser().catch(() => null);
   if (user) redirect("/dashboard");
 
