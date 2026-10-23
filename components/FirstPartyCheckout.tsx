@@ -67,8 +67,8 @@ export default function FirstPartyCheckout(){
     <p className="nx-checkout-intro">Choose an amount and pay through our secure checkout. You will never be sent to a Sifalo website for mobile-wallet payments.</p>
     <section className="nx-amount-panel">
      <label htmlFor="nx-amount">Amount to add</label>
-     <div className="nx-amount-input"><span>$</span><input id="nx-amount" inputMode="decimal" type="number" min={minAmount} max={maxAmount} step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);setOrder(null);setDeposit(null);setError("");setNotice("");}}/><span>USD</span></div>
-     <div className="nx-amount-presets">{[5,10,25,50].filter(x=>x>=minAmount&&x<=maxAmount).map(v=><button type="button" key={v} className={Number(amount)===v?"active":""} onClick={()=>{setAmount(v.toFixed(2));setError("");setNotice("");setOrder(null);setDeposit(null)}}>{money(v)}</button>)}</div>
+     <div className="nx-amount-input"><span>$</span><input id="nx-amount" inputMode="decimal" type="number" min={minAmount} max={maxAmount} step="0.01" value={amount} onChange={e=>{setAmount(e.target.value);setStep("amount");setOrder(null);setDeposit(null);setError("");setNotice("");}}/><span>USD</span></div>
+     <div className="nx-amount-presets">{[5,10,25,50].filter(x=>x>=minAmount&&x<=maxAmount).map(v=><button type="button" key={v} className={Number(amount)===v?"active":""} onClick={()=>{setAmount(v.toFixed(2));setStep("amount");setError("");setNotice("");setOrder(null);setDeposit(null)}}>{money(v)}</button>)}</div>
      <div className="nx-amount-foot"><span>Wallet credit</span><strong>{money(amountNumber)}</strong></div>
      {!validAmount&&<small className="nx-validation">Enter an amount between {money(minAmount)} and {money(maxAmount)}.</small>}
     </section>
