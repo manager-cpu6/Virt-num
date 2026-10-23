@@ -53,3 +53,9 @@
 .nx-deposit-timer small{font-size:10px;text-align:center;color:#91a8c4;line-height:1.5}
 .nx-payment-footer-note{margin:12px 0;padding:12px;border-radius:13px;background:rgba(0,217,255,.045);border:1px solid rgba(0,217,255,.12);font-size:10px;line-height:1.6;color:#9db9d8}
 @media(max-width:560px){.nx-payment-detail-page{padding:14px;border-radius:18px}.nx-payment-detail-heading{padding-top:16px}.nx-deposit-timer strong{font-size:30px}}
+
+.nx-local-brand-strip{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:5px}
+.nx-local-brand-strip i{font-style:normal;font-size:8px;letter-spacing:.035em;font-weight:950;padding:5px 6px;border-radius:6px;color:#f5f8ff;background:#10374b;border:1px solid rgba(104,151,207,.2)}
+.nx-local-brand-strip i:nth-child(2){background:#164f45;color:#a6ffe9}
+.nx-local-brand-strip i:nth-child(3){background:#3d2f65;color:#e0d4ff}
+.nx-local-brand-strip i:nth-child(4){background:#3e3420;color:#ffe0a1}
