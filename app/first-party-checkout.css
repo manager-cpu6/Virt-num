@@ -59,3 +59,16 @@
 .nx-local-brand-strip i:nth-child(2){background:#164f45;color:#a6ffe9}
 .nx-local-brand-strip i:nth-child(3){background:#3d2f65;color:#e0d4ff}
 .nx-local-brand-strip i:nth-child(4){background:#3e3420;color:#ffe0a1}
+
+
+/* Explicit amount -> payment-method -> provider-detail flow */
+.nx-amount-presets{grid-template-columns:repeat(4,minmax(0,1fr))}
+.nx-amount-continue{margin-top:14px}
+.nx-local-brand{width:38px;height:38px;border-radius:12px;font-size:9px;letter-spacing:-.035em}
+.nx-evc-brand{background:linear-gradient(145deg,#13a66b,#075f4b);color:#fff;font-size:10px}
+.nx-zaad-brand{background:linear-gradient(145deg,#7445c4,#3d2477);color:#fff;font-size:9px}
+.nx-sahal-brand{background:linear-gradient(145deg,#edb744,#a96512);color:#1a2336;font-size:8px}
+.nx-waafi-brand{background:linear-gradient(145deg,#11b8a5,#076b7d);color:#fff;font-size:13px}
+.nx-method-group+.nx-method-group{margin-top:20px}
+.nx-payment-method .nx-method-copy b{font-size:12px}
+@media(max-width:560px){.nx-amount-presets{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}.nx-amount-presets button{font-size:10px;padding:0 4px}.nx-method-group-label{margin-bottom:8px}}
