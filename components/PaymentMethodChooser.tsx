@@ -14,7 +14,7 @@ export default function PaymentMethodChooser(){
    <section className="nx-chooser-hero"><span className="nx-chooser-eyebrow">WALLET TOP-UP · {money(Number(amount))}</span><h1>Choose how<br/><em>you want to pay.</em></h1><p>Select one of the payment options below. You’ll continue to a secure page for the method you choose.</p></section>
    {error&&<div className="nx-chooser-error" role="alert">{error}</div>}
    <section className="nx-chooser-options" aria-label="Payment methods">
-    {localAvailable&&<button className="nx-chooser-card nx-chooser-local" type="button" onClick={goLocal}>
+    {(localAvailable||loading)&&<button className="nx-chooser-card nx-chooser-local" type="button" onClick={goLocal}>
       <span className="nx-chooser-card-top"><span className="nx-chooser-icon nx-local-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="7" y="10" width="34" height="28" rx="8" fill="none" stroke="currentColor" strokeWidth="2.5"/><path d="M7 19h34M15 29h9" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/></svg></span><span className="nx-chooser-arrow">↗</span></span>
       <strong>Local Payment</strong><span className="nx-chooser-desc">Pay directly using your mobile wallet.</span>
       <span className="nx-chooser-logos"><i className="nx-logo-waafi">W</i><i className="nx-logo-evc">EVC+</i><i className="nx-logo-zaad">ZAAD</i><i className="nx-logo-sahal">S</i><i className="nx-logo-edahab">eD</i><i className="nx-logo-premier">P</i></span>
