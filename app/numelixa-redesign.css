@@ -734,3 +734,72 @@ input::placeholder,textarea::placeholder{color:#7185a5!important}
  .account-profile-card{padding:16px!important}
 }
 @media(prefers-reduced-motion:reduce){.quick-card,.service-card,.country-card,.order-card,.account-action-card{transition:none!important}}
+
+
+/* NUMELIXA SIGNATURE UI — wallet + payment selection visual overhaul */
+.brand-lockup .brand-logo,.topbar .brand-logo,.nx-brand-mark{
+ background:linear-gradient(145deg,#071b35,#0a2345)!important;
+ border:1px solid rgba(0,217,255,.38)!important;
+ box-shadow:0 0 0 3px rgba(0,217,255,.045),0 0 25px rgba(0,217,255,.16),inset 0 1px rgba(255,255,255,.09)!important;
+}
+.brand-lockup .brand-logo svg path,.topbar .brand-logo svg path,.nx-brand-mark svg path{fill:#49dfff!important}
+.brand-lockup .brand-logo svg defs,.topbar .brand-logo svg defs,.nx-brand-mark svg defs{display:none!important}
+.brand-copy b,.topbar .brand-copy b{color:#f5f8ff!important;background:none!important;-webkit-text-fill-color:#f5f8ff!important}
+.brand-copy small{color:#93b6d8!important}
+
+/* Wallet: bold premium balance hero and purpose-built amount selector */
+.nx-wallet-page{max-width:1000px!important;padding:0 16px calc(130px + env(safe-area-inset-bottom,0px))!important}
+.nx-wallet-page>.topbar{max-width:1000px!important}
+.nx-wallet-hero{
+ min-height:245px!important;padding:clamp(24px,5vw,42px)!important;border-radius:30px!important;
+ background:radial-gradient(ellipse at 84% 10%,rgba(0,217,255,.24),transparent 35%),radial-gradient(ellipse at 100% 100%,rgba(236,59,168,.17),transparent 42%),linear-gradient(125deg,#071a37 0%,#092b4a 48%,#17103a 100%)!important;
+ border:1px solid rgba(0,217,255,.34)!important;box-shadow:0 24px 75px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.08),0 0 35px rgba(22,119,255,.09)!important
+}
+.nx-wallet-hero:before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(110deg,transparent 20%,rgba(255,255,255,.035) 48%,transparent 72%);pointer-events:none}
+.nx-wallet-orb{width:58px!important;height:58px!important;border-radius:19px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,#00d9ff,#1677ff 58%,#713bff)!important;color:#fff!important;font-size:27px!important;font-weight:900!important;box-shadow:0 8px 30px rgba(22,119,255,.3)!important;border:1px solid rgba(255,255,255,.3)!important}
+.nx-wallet-eyebrow{color:#65eaff!important;font-size:11px!important;letter-spacing:.2em!important}
+.nx-wallet-balance{font-size:clamp(3rem,9vw,4.5rem)!important;line-height:1!important;margin:14px 0 9px!important;letter-spacing:-.07em!important;text-shadow:0 0 34px rgba(0,217,255,.2)!important}
+.nx-wallet-hero p{font-size:14px!important;color:#b8cde6!important}
+.nx-wallet-hero-foot{display:flex!important;justify-content:space-between!important;gap:10px!important;flex-wrap:wrap!important;margin-top:24px!important;padding-top:16px!important;border-top:1px solid rgba(164,215,255,.16)!important}
+.nx-wallet-hero-foot span{font-size:11px!important;color:#b5d7ee!important}
+.nx-wallet-content{display:grid!important;grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr)!important;gap:16px!important;align-items:start!important}
+.nx-wallet-heading{grid-column:1/-1!important;display:flex!important;align-items:end!important;justify-content:space-between!important;gap:16px!important;margin:12px 0 2px!important}
+.nx-wallet-heading h1{font-size:clamp(1.7rem,4vw,2.45rem)!important;line-height:1.08!important;letter-spacing:-.055em!important;color:#f5f8ff!important;margin:9px 0!important}
+.nx-wallet-heading p{max-width:610px!important;color:#a7b7d0!important;line-height:1.65!important}
+.nx-wallet-amount-grid{grid-column:1!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;margin:0!important}
+.nx-wallet-amount-grid>button{min-height:125px!important;position:relative!important;overflow:hidden!important;text-align:left!important;padding:18px!important;border-radius:21px!important;background:linear-gradient(145deg,rgba(10,32,64,.96),rgba(5,13,32,.96))!important;border:1px solid rgba(119,169,255,.19)!important;box-shadow:0 12px 30px rgba(0,0,0,.14)!important}
+.nx-wallet-amount-grid>button:after{content:"";position:absolute;width:100px;height:100px;right:-40px;top:-42px;border-radius:50%;background:radial-gradient(circle,rgba(0,217,255,.16),transparent 70%);pointer-events:none}
+.nx-wallet-amount-grid>button.selected{background:radial-gradient(ellipse at 100% 0%,rgba(0,217,255,.19),transparent 58%),linear-gradient(145deg,rgba(19,55,99,.98),rgba(23,17,58,.98))!important;border-color:#00d9ff!important;box-shadow:0 0 0 1px rgba(0,217,255,.17),0 10px 30px rgba(22,119,255,.12),inset 0 1px rgba(255,255,255,.07)!important}
+.nx-wallet-amount-grid>button small{color:#72dff5!important;font-size:9px!important;letter-spacing:.15em!important}
+.nx-wallet-amount-grid>button strong{display:block!important;font-size:clamp(1.5rem,4vw,2rem)!important;letter-spacing:-.05em!important;margin:10px 0 7px!important}
+.nx-wallet-amount-grid>button span{font-size:11px!important;color:#a7b7d0!important}
+.nx-wallet-custom{grid-column:1!important;background:linear-gradient(145deg,rgba(9,26,53,.94),rgba(4,12,29,.94))!important;border:1px solid rgba(119,169,255,.18)!important;border-radius:22px!important;padding:20px!important;margin:0!important}
+.nx-wallet-custom label{display:block!important;color:#e5f4ff!important;font-weight:800!important;font-size:13px!important;margin-bottom:12px!important}
+.nx-wallet-custom>div{height:58px!important;display:flex!important;align-items:center!important;gap:10px!important;padding:0 15px!important;border:1px solid rgba(0,217,255,.27)!important;background:rgba(2,8,23,.65)!important;border-radius:15px!important}
+.nx-wallet-custom>div>span{font-size:23px!important;font-weight:850!important;color:#53e4ff!important}
+.nx-wallet-custom>div input{font-size:20px!important;font-weight:800!important;min-width:0!important}
+.nx-wallet-custom>div small{color:#75a8c9!important;font-size:10px!important;font-weight:800!important}
+.nx-wallet-checkout-summary{grid-column:2!important;grid-row:3 / span 2!important;position:sticky!important;top:18px!important;padding:22px!important;border-radius:23px!important;background:radial-gradient(ellipse at 100% 0%,rgba(113,59,255,.18),transparent 45%),linear-gradient(145deg,rgba(10,27,56,.98),rgba(4,11,27,.98))!important;border:1px solid rgba(113,145,255,.26)!important;box-shadow:0 18px 45px rgba(0,0,0,.2)!important}
+.nx-wallet-checkout-summary>div{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:12px!important;padding:13px 0!important;color:#a7b7d0!important;font-size:12px!important}
+.nx-wallet-checkout-summary>div strong{font-size:14px!important;color:#eaf6ff!important}
+.nx-wallet-checkout-summary>div.total{margin-top:5px!important;padding:18px 0!important;border-top:1px solid rgba(135,170,225,.18)!important;color:#fff!important}
+.nx-wallet-checkout-summary>div.total strong{font-size:28px!important;letter-spacing:-.05em!important}
+.nx-wallet-checkout-summary>button{min-height:58px!important;border-radius:17px!important;background:linear-gradient(105deg,#1677ff 0%,#713bff 60%,#e83aa8 100%)!important;box-shadow:0 10px 30px rgba(93,66,255,.28)!important;font-size:14px!important}
+.nx-wallet-checkout-summary>small{display:block!important;margin-top:13px!important;color:#8da9c9!important;line-height:1.6!important;font-size:10px!important}
+.nx-wallet-methods{grid-column:1/-1!important;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:11px!important;margin-top:4px!important}
+.nx-wallet-methods>div{min-width:0!important;min-height:86px!important;padding:14px!important;display:flex!important;align-items:center!important;gap:11px!important;border-radius:18px!important;background:linear-gradient(145deg,rgba(9,27,54,.95),rgba(5,13,31,.95))!important;border:1px solid rgba(119,169,255,.17)!important}
+.nx-wallet-methods b{display:block!important;font-size:12px!important;line-height:1.35!important}
+.nx-wallet-methods small{display:block!important;margin-top:5px!important;font-size:10px!important;line-height:1.4!important}
+.nx-card-brands{display:flex!important;align-items:center!important;gap:4px!important;flex:0 0 auto!important}
+.nx-card-brands img{width:26px!important;height:19px!important;object-fit:contain!important}
+.nx-local-brand,.nx-method-brand-img{width:37px!important;height:37px!important;flex:0 0 auto!important;display:grid!important;place-items:center!important;border-radius:12px!important;background:linear-gradient(145deg,#00bba6,#087d9c)!important;color:#fff!important;font-weight:900!important;border:1px solid rgba(0,229,195,.35)!important}
+.nx-method-brand-img{background:linear-gradient(145deg,#f5a623,#8b4aff)!important}
+.nx-wallet-payment-success{grid-column:1/-1!important}
+@media(max-width:700px){
+ .nx-wallet-content{grid-template-columns:minmax(0,1fr)!important}
+ .nx-wallet-heading,.nx-wallet-amount-grid,.nx-wallet-custom,.nx-wallet-checkout-summary,.nx-wallet-methods{grid-column:1!important}
+ .nx-wallet-checkout-summary{grid-row:auto!important;position:static!important}
+ .nx-wallet-methods{grid-template-columns:1fr!important}
+ .nx-wallet-methods>div{min-height:72px!important}
+ .nx-wallet-amount-grid>button{min-height:115px!important}
+}
