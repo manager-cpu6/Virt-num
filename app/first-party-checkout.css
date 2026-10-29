@@ -103,3 +103,67 @@
 .nx-local-detail-heading{margin:22px 0 13px}.nx-local-detail-heading h2{margin:8px 0;font-size:20px}.nx-local-detail-heading p{color:#9bb0cc;font-size:12px;line-height:1.6;margin:0}
 .nx-wallet-payment-success{display:flex;align-items:center;gap:12px;margin:0 0 18px;padding:15px;border-radius:15px;border:1px solid #00e5c344;background:#00e5c310;color:#baffec}.nx-wallet-payment-success>span{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:#00e5c324;color:#00e5c3;font-weight:950}.nx-wallet-payment-success>div{display:grid;gap:4px}.nx-wallet-payment-success b{font-size:12px}.nx-wallet-payment-success small{font-size:11px;color:#9debdc;line-height:1.5}
 @media(max-width:640px){.nx-chooser-nav{min-height:72px}.nx-chooser-secure{font-size:8px;letter-spacing:.08em}.nx-chooser-logo{width:38px;height:38px}.nx-chooser-options{grid-template-columns:1fr;gap:12px}.nx-chooser-card{min-height:0;padding:21px;border-radius:21px}.nx-chooser-card-top{margin-bottom:15px}.nx-chooser-hero{padding-top:38px}.nx-chooser-hero h1{font-size:clamp(40px,11vw,54px)}.nx-chooser-desc{min-height:0}.nx-local-service-grid{grid-template-columns:1fr}.nx-checkout-layout{grid-template-columns:1fr}.nx-checkout-aside{position:static}.nx-chooser-footer{font-size:9px}}
+
+
+/* Payment method screen — a dedicated premium checkout decision experience */
+.nx-method-chooser{
+ min-height:100vh!important;padding:0 18px 34px!important;color:#f5f8ff!important;
+ background:radial-gradient(ellipse 70% 42% at 100% 0%,rgba(22,119,255,.22),transparent 66%),radial-gradient(ellipse 58% 42% at 0% 48%,rgba(0,217,255,.1),transparent 66%),radial-gradient(ellipse 65% 45% at 100% 100%,rgba(113,59,255,.2),transparent 66%),linear-gradient(145deg,#030817,#06152f 48%,#080b20)!important;
+}
+.nx-method-chooser-wrap{width:min(100%,980px)!important;margin:0 auto!important}
+.nx-chooser-nav{min-height:88px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;border-bottom:1px solid rgba(120,171,255,.13)!important;margin-bottom:clamp(28px,6vw,58px)!important}
+.nx-chooser-brand{display:flex!important;align-items:center!important;gap:12px!important}
+.nx-chooser-logo{width:47px!important;height:47px!important;display:grid!important;place-items:center!important;border-radius:16px!important;background:linear-gradient(145deg,#071b35,#0a2345)!important;color:#49dfff!important;border:1px solid rgba(0,217,255,.4)!important;box-shadow:0 0 26px rgba(0,217,255,.14)!important;font-size:23px!important;font-weight:950!important}
+.nx-chooser-brand b{display:block!important;font-size:19px!important;letter-spacing:-.04em!important;color:#f5f8ff!important}
+.nx-chooser-brand small{display:block!important;margin-top:4px!important;font-size:11px!important;color:#8ca8ca!important}
+.nx-chooser-secure{display:flex!important;align-items:center!important;gap:8px!important;padding:9px 12px!important;border:1px solid rgba(0,229,195,.22)!important;background:rgba(0,229,195,.055)!important;border-radius:999px!important;color:#87f5d9!important;font-size:9px!important;font-weight:850!important;letter-spacing:.12em!important;white-space:nowrap!important}
+.nx-chooser-secure i,.nx-wallet-hero-foot i{width:7px!important;height:7px!important;display:inline-block!important;border-radius:50%!important;background:#00e5c3!important;box-shadow:0 0 12px #00e5c3!important}
+.nx-chooser-hero{max-width:720px!important;margin:0 auto 28px!important;text-align:center!important}
+.nx-chooser-eyebrow{display:inline-flex!important;align-items:center!important;padding:9px 13px!important;border:1px solid rgba(0,217,255,.24)!important;background:rgba(0,217,255,.06)!important;border-radius:999px!important;color:#75eaff!important;font-size:10px!important;font-weight:850!important;letter-spacing:.16em!important}
+.nx-chooser-hero h1{font-size:clamp(2.65rem,7vw,5rem)!important;line-height:.98!important;letter-spacing:-.075em!important;margin:23px 0 18px!important;color:#f5f8ff!important;font-weight:900!important}
+.nx-chooser-hero h1 em{font-style:normal!important;background:linear-gradient(100deg,#42dcff 0%,#5f8dff 43%,#b36aff 73%,#f04ba9 100%)!important;-webkit-background-clip:text!important;background-clip:text!important;color:transparent!important}
+.nx-chooser-hero p{max-width:550px!important;margin:0 auto!important;color:#a7b7d0!important;font-size:14px!important;line-height:1.75!important}
+.nx-chooser-options{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:18px!important;max-width:850px!important;margin:0 auto!important}
+.nx-chooser-card{position:relative!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;text-align:left!important;min-width:0!important;min-height:340px!important;padding:25px!important;overflow:hidden!important;border-radius:27px!important;color:#f5f8ff!important;cursor:pointer!important;transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease!important}
+.nx-chooser-card:before{content:"";position:absolute;inset:0;pointer-events:none;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.045),transparent 42%,rgba(255,255,255,.018))}
+.nx-chooser-card:hover{transform:translateY(-5px)!important}
+.nx-chooser-local{background:radial-gradient(ellipse at 0% 0%,rgba(0,229,195,.16),transparent 52%),linear-gradient(145deg,rgba(5,45,54,.98),rgba(5,17,37,.98) 68%,rgba(7,18,39,.98))!important;border:1px solid rgba(0,229,195,.33)!important;box-shadow:inset 0 1px rgba(255,255,255,.07),0 22px 55px rgba(0,0,0,.23)!important}
+.nx-chooser-local:hover{border-color:rgba(0,229,195,.68)!important;box-shadow:0 22px 60px rgba(0,229,195,.09),0 25px 60px rgba(0,0,0,.28)!important}
+.nx-chooser-crypto{background:radial-gradient(ellipse at 100% 0%,rgba(113,59,255,.25),transparent 55%),linear-gradient(145deg,rgba(20,22,65,.98),rgba(8,15,39,.98) 66%,rgba(24,10,46,.98))!important;border:1px solid rgba(144,115,255,.39)!important;box-shadow:inset 0 1px rgba(255,255,255,.07),0 22px 55px rgba(0,0,0,.23)!important}
+.nx-chooser-crypto:hover{border-color:rgba(197,124,255,.72)!important;box-shadow:0 22px 60px rgba(113,59,255,.13),0 25px 60px rgba(0,0,0,.28)!important}
+.nx-chooser-card-top{display:flex!important;align-items:center!important;justify-content:space-between!important;margin-bottom:25px!important}
+.nx-chooser-icon{width:62px!important;height:62px!important;display:grid!important;place-items:center!important;border-radius:20px!important}
+.nx-chooser-icon svg{width:34px!important;height:34px!important}
+.nx-local-icon{background:linear-gradient(145deg,rgba(0,229,195,.2),rgba(0,217,255,.08))!important;color:#67f5d9!important;border:1px solid rgba(0,229,195,.32)!important;box-shadow:0 0 30px rgba(0,229,195,.07)!important}
+.nx-crypto-icon{background:linear-gradient(145deg,rgba(113,59,255,.3),rgba(236,59,168,.1))!important;color:#c9a5ff!important;border:1px solid rgba(174,123,255,.38)!important;box-shadow:0 0 30px rgba(113,59,255,.12)!important}
+.nx-chooser-arrow{width:39px!important;height:39px!important;display:grid!important;place-items:center!important;border-radius:13px!important;background:rgba(255,255,255,.055)!important;border:1px solid rgba(255,255,255,.1)!important;color:#c8eaff!important;font-size:20px!important}
+.nx-chooser-card>strong{font-size:clamp(1.45rem,3vw,1.85rem)!important;line-height:1.1!important;letter-spacing:-.05em!important;color:#fff!important}
+.nx-chooser-desc{display:block!important;min-height:48px!important;margin-top:10px!important;color:#a7b7d0!important;font-size:13px!important;line-height:1.65!important}
+.nx-chooser-logos{display:flex!important;align-items:center!important;gap:7px!important;flex-wrap:wrap!important;margin:20px 0 23px!important}
+.nx-chooser-logos i{min-width:34px!important;height:34px!important;padding:0 8px!important;display:grid!important;place-items:center!important;border-radius:11px!important;background:rgba(255,255,255,.07)!important;border:1px solid rgba(255,255,255,.1)!important;font-style:normal!important;font-size:11px!important;font-weight:900!important;color:#eaf7ff!important}
+.nx-chooser-logos .nx-logo-waafi{color:#65f2d5!important}.nx-chooser-logos .nx-logo-evc{color:#ffcf72!important}.nx-chooser-logos .nx-logo-zaad{color:#76e2a2!important}.nx-chooser-logos .nx-logo-sahal{color:#7edcff!important}.nx-chooser-logos .nx-logo-edahab{color:#f4d278!important}.nx-chooser-logos .nx-logo-premier{color:#b7a1ff!important}
+.nx-chooser-logos .nx-coin-btc{color:#ffbe65!important}.nx-chooser-logos .nx-coin-usdt{color:#69e7bd!important}.nx-chooser-logos .nx-coin-eth{color:#a9bcff!important}.nx-chooser-logos .nx-coin-bnb{color:#ffe17c!important}.nx-chooser-logos .nx-coin-usdc{color:#78baff!important}
+.nx-chooser-cta{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;margin-top:auto!important;padding-top:16px!important;border-top:1px solid rgba(255,255,255,.1)!important;font-size:12px!important;font-weight:850!important;color:#b9f9ef!important}
+.nx-chooser-crypto .nx-chooser-cta{color:#d3bdff!important}
+.nx-chooser-cta b{font-size:19px!important}
+.nx-chooser-note{max-width:800px!important;margin:22px auto 0!important;padding:12px 15px!important;border-radius:14px!important;border:1px solid rgba(119,169,255,.16)!important;background:rgba(5,15,35,.72)!important;color:#a7b7d0!important;text-align:center!important;font-size:12px!important}
+.nx-chooser-footer{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;flex-wrap:wrap!important;margin:38px auto 0!important;padding-top:18px!important;border-top:1px solid rgba(119,169,255,.12)!important;color:#7185a5!important;font-size:10px!important}
+.nx-chooser-footer a{color:#a7cfff!important;font-weight:800!important}
+@media(max-width:650px){
+ .nx-method-chooser{padding:0 12px 26px!important}
+ .nx-chooser-nav{min-height:73px!important;margin-bottom:35px!important}
+ .nx-chooser-logo{width:42px!important;height:42px!important;border-radius:14px!important}
+ .nx-chooser-brand b{font-size:17px!important}
+ .nx-chooser-secure{font-size:8px!important;padding:8px 9px!important}
+ .nx-chooser-hero{text-align:left!important;margin-bottom:23px!important}
+ .nx-chooser-hero h1{font-size:clamp(2.7rem,12vw,4rem)!important;margin:19px 0 14px!important}
+ .nx-chooser-hero p{font-size:13px!important;line-height:1.65!important}
+ .nx-chooser-options{grid-template-columns:minmax(0,1fr)!important;gap:13px!important}
+ .nx-chooser-card{min-height:0!important;padding:21px!important;border-radius:23px!important}
+ .nx-chooser-card-top{margin-bottom:18px!important}
+ .nx-chooser-icon{width:54px!important;height:54px!important;border-radius:17px!important}
+ .nx-chooser-logos{margin:16px 0 19px!important}
+ .nx-chooser-desc{min-height:0!important}
+ .nx-chooser-footer{margin-top:28px!important}
+}
+@media(prefers-reduced-motion:reduce){.nx-chooser-card{transition:none!important}}
