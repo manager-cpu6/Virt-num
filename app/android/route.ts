@@ -5,7 +5,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const maxDuration=300;
 
-const CURRENT_VERSION="1.0.12+13";
+const CURRENT_VERSION="1.0.13+14";
 const CURRENT_RELEASE_APK="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk";
 const ALLOWED_HOSTS=new Set([
   "github.com","www.github.com",
