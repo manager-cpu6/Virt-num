@@ -36,7 +36,7 @@ export default function AdminAppUpdate(){
    <span className="eyebrow">APP UPDATE CENTER</span>
    <h2>Send new update</h2>
    <form onSubmit={publish} className="admin-form">
-    <label>Version<input value={version} onChange={e=>setVersion(e.target.value)} placeholder="e.g. 2.4.0" required/></label>
+    <label>Version<input value={version} onChange={e=>setVersion(e.target.value)} placeholder="e.g. 1.0.12+13" required/></label>
         <label>APK HTTPS URL<input value={apkUrl} onChange={e=>setApkUrl(e.target.value)} type="url" placeholder="https://..." required/></label>
     <label>What's new<textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={1200} rows={5} placeholder="Performance, notifications, fixes…"/></label>
     <label className="admin-check"><input type="checkbox" checked={force} onChange={e=>setForce(e.target.checked)}/> Required update</label>
