@@ -23,7 +23,8 @@ export async function GET(){
     }},{headers:{"Cache-Control":"no-store"}});
   }catch(error){
     const message=error instanceof Error?error.message:"";
-    return NextResponse.json({ok:false,error:message==="AUTH_REQUIRED"||message==="ADMIN_REQUIRED"?"Unauthorized":"Unable to load mobile access settings."},{status:401});
+    const status=message==="AUTH_REQUIRED"||message==="ADMIN_REQUIRED"?401:500;
+    return NextResponse.json({ok:false,error:status===401?"Unauthorized":"Unable to load mobile access settings."},{status});
   }
 }
 
