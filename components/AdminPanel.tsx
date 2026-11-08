@@ -4,6 +4,7 @@ import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import AdminNotifications from "@/components/AdminNotifications";
 import AdminAppUpdate from "@/components/AdminAppUpdate";
+import AdminMobileAccess from "@/components/AdminMobileAccess";
 import AdminSecurity from "@/components/AdminSecurity";import AdminAuthMethods from "@/components/AdminAuthMethods";
 import AdminSupport from "@/components/AdminSupport";
 import AdminHelpChat from "@/components/AdminHelpChat";
@@ -82,7 +83,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","services","payments","local payments","notifications","authentication","app update","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x}</button>)}</div>
+  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","services","payments","local payments","notifications","authentication","app update","app access","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
@@ -94,6 +95,7 @@ export default function AdminPanel(){
   {tab==="notifications"&&<AdminNotifications/>}
   {tab==="authentication"&&<AdminAuthMethods/>}
   {tab==="app update"&&<AdminAppUpdate/>}
+  {tab==="app access"&&<AdminMobileAccess/>}
   {tab==="security"&&<AdminSecurity/>}
   {tab==="support"&&<><AdminHelpChat/><AdminSupportTeam/><AdminSupport/></>}
  </div>
