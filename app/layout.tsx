@@ -13,6 +13,7 @@ import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
 import MobileAppBootstrap from "@/components/MobileAppBootstrap";
 import LoginApprovalGate from "@/components/LoginApprovalGate";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 
 export const metadata:Metadata={
  metadataBase:new URL("https://numelixa.com"),
@@ -30,5 +31,5 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
  const isCheckoutHost=host==="checkout.numelixa.com"||host==="payment.numelixa.com";
- return <html lang="en"><body>{!isCheckoutHost&&<><MobileAppBootstrap/><LoginApprovalGate/></>}<div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
+ return <html lang="en"><body>{!isCheckoutHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
 }
