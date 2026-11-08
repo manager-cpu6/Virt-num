@@ -35,8 +35,8 @@ export default function AdminMobileAccess(){
  }
  return <div className="admin-notifications">
   <div className="admin-card">
-   <h2>Android availability & country restrictions</h2>
-   <p className="admin-help">Blocked users see a clear availability message and a WhatsApp support button. Rules are checked by the server when the app starts.</p>
+   <h2>App Control Center</h2>
+   <p className="admin-help">Control which countries, device models, Android versions and app builds can access Numelixa. Saved rules are enforced by the server when the Android app starts.</p>
    <label>Search all countries<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search country or ISO code…"/></label>
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:8,maxHeight:300,overflowY:"auto",padding:"8px 2px"}}>
     {countries.map(c=><label key={c.code} style={{display:"flex",alignItems:"center",gap:9,padding:"8px 10px",border:"1px solid rgba(120,160,210,.18)",borderRadius:12,background:settings.bannedCountries.includes(c.code)?"rgba(190,55,80,.14)":"rgba(10,25,48,.55)"}}>
