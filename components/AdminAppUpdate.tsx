@@ -36,7 +36,7 @@ export default function AdminAppUpdate(){
    <span className="eyebrow">APP UPDATE CENTER</span>
    <h2>Send new update</h2>
    <form onSubmit={publish} className="admin-form">
-    <label>Version<input value={version} onChange={e=>setVersion(e.target.value)} placeholder="e.g. 1.0.12+13" required/></label>
+    <label>Version<input value={version} onChange={e=>setVersion(e.target.value)} placeholder="e.g. 1.0.12+13" required/><small>Use the complete Android version and build code. The number after + is required for older APKs to detect the update.</small></label>
         <label>APK HTTPS URL<input value={apkUrl} onChange={e=>setApkUrl(e.target.value)} type="url" placeholder="https://..." required/></label>
     <label>What's new<textarea value={notes} onChange={e=>setNotes(e.target.value)} maxLength={1200} rows={5} placeholder="Performance, notifications, fixes…"/></label>
     <label className="admin-check"><input type="checkbox" checked={force} onChange={e=>setForce(e.target.checked)}/> Required update</label>
@@ -46,7 +46,7 @@ export default function AdminAppUpdate(){
    </form>
   </div>
   <div className="admin-card"><h2>Update history</h2>
-   {updates.length?updates.map(x=><div className="admin-notification-history" key={x.id}><div><b>v{x.version} · {Number(x.sizeMb||0).toFixed(2)} MB</b><p>{x.releaseNotes||"No release notes."}</p><small>{x.publishedAt?new Date(x.publishedAt).toLocaleString():"—"} · {x.pushSent||0} push sent · {x.pushFailed||0} failed</small></div></div>):<div className="country-loading">No updates published yet.</div>}
+   {updates.length?updates.map(x=><div className="admin-notification-history" key={x.id}><div><b>v{x.version} · Build {Number(x.versionCode||0)} · {Number(x.sizeMb||0).toFixed(2)} MB</b><p>{x.releaseNotes||"No release notes."}</p><small>{x.publishedAt?new Date(x.publishedAt).toLocaleString():"—"} · {x.pushSent||0} push sent · {x.pushFailed||0} failed</small></div></div>):<div className="country-loading">No updates published yet.</div>}
   </div>
  </div>;
 }
