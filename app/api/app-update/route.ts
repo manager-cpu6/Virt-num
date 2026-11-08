@@ -98,7 +98,7 @@ export async function GET(){
         ok:true,
         update:{
           version,
-          versionCode:Number(latest.versionCode||Number(version.match(/\\+(\\d+)$/)?.[1]||0)),
+          versionCode:Number(latest.versionCode||Number(version.match(/\+(\d+)$/)?.[1]||0)),
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           sha256:String(latest.sha256||""),
