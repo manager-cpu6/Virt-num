@@ -5,7 +5,7 @@ const COUNTRY_CODES=["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT"
 const countryNames=new Intl.DisplayNames(["en"],{type:"region"});
 type Settings={bannedCountries:string[];blockedDevices:string[];blockedAppVersions:string[];blockedAndroidSdk:number[];minAndroidSdk:number;whatsapp:string};
 const empty:Settings={bannedCountries:[],blockedDevices:[],blockedAppVersions:[],blockedAndroidSdk:[],minAndroidSdk:0,whatsapp:"252907868526"};
-const androidVersions=[["No minimum",0],["Android 8.0 Oreo",26],["Android 9 Pie",28],["Android 10",29],["Android 11",30],["Android 12",31],["Android 12L",32],["Android 13",33],["Android 14",34],["Android 15",35],["Android 16",36]] as const;
+const androidVersions=[["No minimum",0],["Android 5.0 Lollipop",21],["Android 5.1 Lollipop",22],["Android 6.0 Marshmallow",23],["Android 7.0 Nougat",24],["Android 7.1 Nougat",25],["Android 8.0 Oreo",26],["Android 8.1 Oreo",27],["Android 9 Pie",28],["Android 10",29],["Android 11",30],["Android 12",31],["Android 12L",32],["Android 13",33],["Android 14",34],["Android 15",35],["Android 16",36]] as const;
 
 type AccessSection="all"|"countries"|"devices";
 export default function AdminMobileAccess({section="all"}:{section?:AccessSection}){
