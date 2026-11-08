@@ -5,8 +5,8 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const FALLBACK_RELEASE={
-  version:"1.0.11+12",
-  versionCode:12,
+  version:"1.0.12+13",
+  versionCode:13,
   sizeBytes:58396063,
   apkUrl:"https://www.numelixa.com/android",
   sha256:"",
@@ -82,8 +82,13 @@ async function getRollingRelease(){
   }
 }
 
-export async function GET(){
+export async function GET(req:Request){
   try{
+    // Build 13 is the minimum supported native app. Older installations
+    // (including 1.0.1-era builds) must install the current APK before access
+    // policy is evaluated by newer clients.
+    const clientVersionCode=Number(new URL(req.url).searchParams.get("versionCode")||0);
+    const requiresUpgrade=clientVersionCode<13;
     const [latest,rollingRelease]=await Promise.all([
       (await collection<any>("appUpdates")).findOne({published:true},{sort:{publishedAt:-1}}),
       getRollingRelease()
@@ -104,7 +109,7 @@ export async function GET(){
           sha256:String(latest.sha256||""),
           apkUrl:"https://www.numelixa.com/android",
           releaseNotes:cleanReleaseNotes(latest.releaseNotes),
-          force:Boolean(latest.force),
+          force:Boolean(latest.force)||requiresUpgrade,
           publishedAt:latest.publishedAt||null
         }
       },{headers:{"Cache-Control":"no-store"}});
@@ -117,13 +122,16 @@ export async function GET(){
         ok:true,
         update:{
           ...current,
-          force:Boolean(latest.force),
+          force:Boolean(latest.force)||requiresUpgrade,
           releaseNotes:cleanReleaseNotes(latest.releaseNotes)||current.releaseNotes,
           publishedAt:latest.publishedAt||current.publishedAt||null
         }
       },{headers:{"Cache-Control":"no-store"}});
     }
-    return NextResponse.json({ok:true,update:current},{headers:{"Cache-Control":"no-store"}});
+    return NextResponse.json({
+      ok:true,
+      update:{...current,force:requiresUpgrade}
+    },{headers:{"Cache-Control":"no-store"}});
   }catch(error){
     console.error("[APP UPDATE]",error);
     return NextResponse.json({ok:false,update:null},{status:200,headers:{"Cache-Control":"no-store"}});
