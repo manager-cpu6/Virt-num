@@ -3,8 +3,8 @@ import {useEffect,useMemo,useState} from "react";
 
 const COUNTRY_CODES=["AD","AE","AF","AG","AI","AL","AM","AO","AQ","AR","AS","AT","AU","AW","AX","AZ","BA","BB","BD","BE","BF","BG","BH","BI","BJ","BL","BM","BN","BO","BQ","BR","BS","BT","BV","BW","BY","BZ","CA","CC","CD","CF","CG","CH","CI","CK","CL","CM","CN","CO","CR","CU","CV","CW","CX","CY","CZ","DE","DJ","DK","DM","DO","DZ","EC","EE","EG","EH","ER","ES","ET","FI","FJ","FK","FM","FO","FR","GA","GB","GD","GE","GF","GG","GH","GI","GL","GM","GN","GP","GQ","GR","GS","GT","GU","GW","GY","HK","HM","HN","HR","HT","HU","ID","IE","IL","IM","IN","IO","IQ","IR","IS","IT","JE","JM","JO","JP","KE","KG","KH","KI","KM","KN","KP","KR","KW","KY","KZ","LA","LB","LC","LI","LK","LR","LS","LT","LU","LV","LY","MA","MC","MD","ME","MF","MG","MH","MK","ML","MM","MN","MO","MP","MQ","MR","MS","MT","MU","MV","MW","MX","MY","MZ","NA","NC","NE","NF","NG","NI","NL","NO","NP","NR","NU","NZ","OM","PA","PE","PF","PG","PH","PK","PL","PM","PN","PR","PS","PT","PW","PY","QA","RE","RO","RS","RU","RW","SA","SB","SC","SD","SE","SG","SH","SI","SJ","SK","SL","SM","SN","SO","SR","SS","ST","SV","SX","SY","SZ","TC","TD","TF","TG","TH","TJ","TK","TL","TM","TN","TO","TR","TT","TV","TW","TZ","UA","UG","UM","US","UY","UZ","VA","VC","VE","VG","VI","VN","VU","WF","WS","YE","YT","ZA","ZM","ZW"];
 const countryNames=new Intl.DisplayNames(["en"],{type:"region"});
-type Settings={bannedCountries:string[];blockedDevices:string[];blockedAppVersions:string[];minAndroidSdk:number;whatsapp:string};
-const empty:Settings={bannedCountries:[],blockedDevices:[],blockedAppVersions:[],minAndroidSdk:0,whatsapp:"252907868526"};
+type Settings={bannedCountries:string[];blockedDevices:string[];blockedAppVersions:string[];blockedAndroidSdk:number[];minAndroidSdk:number;whatsapp:string};
+const empty:Settings={bannedCountries:[],blockedDevices:[],blockedAppVersions:[],blockedAndroidSdk:[],minAndroidSdk:0,whatsapp:"252907868526"};
 const androidVersions=[["No minimum",0],["Android 8.0 Oreo",26],["Android 9 Pie",28],["Android 10",29],["Android 11",30],["Android 12",31],["Android 12L",32],["Android 13",33],["Android 14",34],["Android 15",35],["Android 16",36]] as const;
 
 export default function AdminMobileAccess(){
@@ -12,6 +12,7 @@ export default function AdminMobileAccess(){
  const [query,setQuery]=useState("");
  const [device,setDevice]=useState("");
  const [version,setVersion]=useState("");
+ const [blockedSdk,setBlockedSdk]=useState(35);
  const [busy,setBusy]=useState(false);
  const [message,setMessage]=useState("");
  const [error,setError]=useState("");
@@ -55,6 +56,9 @@ export default function AdminMobileAccess(){
    <h2>Android OS and app-version restrictions</h2>
    <label>Minimum supported Android version<select value={settings.minAndroidSdk} onChange={e=>setSettings(s=>({...s,minAndroidSdk:Number(e.target.value)}))}>{androidVersions.map(([label,sdk])=><option key={sdk} value={sdk}>{label}</option>)}</select></label>
    <p className="admin-help">Example: Android 15 requires API level 35 or newer. Leave “No minimum” to allow all supported Android versions.</p>
+   <label>Block a specific Android release<select value={blockedSdk} onChange={e=>setBlockedSdk(Number(e.target.value))}>{androidVersions.filter(([,sdk])=>sdk>0).map(([label,sdk])=><option key={sdk} value={sdk}>{label}</option>)}</select></label>
+   <button type="button" className="secondary-btn" onClick={()=>setSettings(s=>({...s,blockedAndroidSdk:Array.from(new Set([...s.blockedAndroidSdk,blockedSdk]))}))} disabled={settings.blockedAndroidSdk.includes(blockedSdk)}>Block selected Android version</button>
+   {settings.blockedAndroidSdk.map(sdk=><div className="admin-row" key={sdk}><span>{androidVersions.find(([,value])=>value===sdk)?.[0]||("Android API "+sdk)} blocked</span><button type="button" onClick={()=>setSettings(s=>({...s,blockedAndroidSdk:s.blockedAndroidSdk.filter(v=>v!==sdk)}))}>Allow</button></div>)}
    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><input value={version} onChange={e=>setVersion(e.target.value)} placeholder="Exact app version, e.g. 1.0.10" style={{flex:"1 1 220px"}}/><button type="button" className="secondary-btn" onClick={addVersion}>Block version</button></div>
    {settings.blockedAppVersions.map(x=><div className="admin-row" key={x}><span>App version {x}</span><button type="button" onClick={()=>setSettings(s=>({...s,blockedAppVersions:s.blockedAppVersions.filter(v=>v!==x)}))}>Remove</button></div>)}
    <label style={{marginTop:14}}>WhatsApp support number (include country code)<input value={settings.whatsapp} onChange={e=>setSettings(s=>({...s,whatsapp:e.target.value}))} placeholder="252907868526"/></label>
