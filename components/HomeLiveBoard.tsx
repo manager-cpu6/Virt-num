@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import ServiceLogo from "@/components/ServiceLogo";
 import {useEffect,useMemo,useState} from "react";
 
 type Activity={id:string;service:string;country:string;phone:string;type:string;time:string};
@@ -27,14 +28,6 @@ function ago(value:string){
 }
 
 function serviceLetter(name:string){return (name.trim()[0]||"N").toUpperCase()}
-const serviceBrands:Record<string,{slug:string;color:string}>={
- whatsapp:{slug:"whatsapp",color:"25D366"},telegram:{slug:"telegram",color:"26A5E4"},
- instagram:{slug:"instagram",color:"E4405F"},facebook:{slug:"facebook",color:"0866FF"},
- google:{slug:"google",color:"4285F4"},tiktok:{slug:"tiktok",color:"FFFFFF"},
- amazon:{slug:"amazon",color:"FF9900"},openai:{slug:"openai",color:"FFFFFF"},
- discord:{slug:"discord",color:"5865F2"},snapchat:{slug:"snapchat",color:"FFFC00"}
-};
-
 
 export default function HomeLiveBoard(){
  const[data,setData]=useState<{popular:Popular[];activeNumbers:ActiveNumber[];activity:Activity[]}>({popular:[],activeNumbers:[],activity:[]});
@@ -88,7 +81,7 @@ export default function HomeLiveBoard(){
      {service:"google",country:"US",label:"Google",flag:"🇺🇸"},
      {service:"tiktok",country:"NG",label:"TikTok",flag:"🇳🇬"}
     ]).map(s=><Link key={s.service+s.country} href={"/countries?service="+encodeURIComponent(s.service)} className="live-v2-service">
-      <span className="live-v2-service-logo"><span className="live-v2-service-fallback">{serviceLetter(s.label)}</span>{serviceBrands[String(s.service||"").toLowerCase()]&&<img src={"https://cdn.simpleicons.org/"+serviceBrands[String(s.service||"").toLowerCase()].slug+"/"+serviceBrands[String(s.service||"").toLowerCase()].color} alt="" loading="lazy" onError={e=>{e.currentTarget.style.display="none";const fallback=e.currentTarget.previousElementSibling as HTMLElement|null;if(fallback)fallback.style.display="grid"}}/>}</span>
+      <ServiceLogo id={String(s.service)} name={s.label} className="live-v2-service-logo"/>
       <span><b>{s.label}</b><small>{s.flag} {s.country}</small></span>
       <i>↗</i>
     </Link>)}
