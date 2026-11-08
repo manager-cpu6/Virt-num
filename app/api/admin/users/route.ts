@@ -13,7 +13,7 @@ export async function GET(){
   const activeDevices=await (await collection<any>("deviceTokens")).find({platform:"android",enabled:{$ne:false},userId:{$type:"string",$ne:""}},{projection:{userId:1}}).toArray();
   const pushUserIds=new Set(activeDevices.map(d=>String(d.userId||"")).filter(Boolean));
   return NextResponse.json({ok:true,users:rows.map(u=>({
-   id:String(u._id),email:u.email,name:u.name,role:u.role,coins:Number(u.coins||0),
+   id:String(u._id),email:u.email||null,phone:u.phone||null,name:u.name||null,role:u.role,coins:Number(u.coins||0),
    hasAndroidPush:pushUserIds.has(String(u._id)),
    verified_at:u.verifiedAt||null,created_at:u.createdAt,suspended_at:u.suspendedAt||null,suspension_reason:u.suspensionReason||""
   }))},{headers:{"Cache-Control":"no-store"}});
