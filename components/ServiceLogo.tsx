@@ -11,7 +11,7 @@ const aliases:Record<string,string>={
  rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",vb:"viber",viber:"viber",sg:"signal",signal:"signal",
  vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",ebay:"ebay",uber:"uber",airbnb:"airbnb",pinterest:"pinterest",twitch:"twitch",
  steam:"steam",dropbox:"dropbox",slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail",
- "1xbet":"1xbet",vercel:"vercel"
+ "1xbet":"1xbet","1bet":"1xbet",vercel:"vercel"
 };
 const domains:Record<string,string>={
  whatsapp:"whatsapp.com",facebook:"facebook.com",instagram:"instagram.com",threads:"threads.net",telegram:"telegram.org",tiktok:"tiktok.com",
