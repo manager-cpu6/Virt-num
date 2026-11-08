@@ -5,8 +5,8 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const FALLBACK_RELEASE={
-  version:"1.0.12+13",
-  versionCode:13,
+  version:"1.0.13+14",
+  versionCode:14,
   sizeBytes:58396063,
   apkUrl:"https://www.numelixa.com/android",
   sha256:"",
@@ -84,11 +84,11 @@ async function getRollingRelease(){
 
 export async function GET(req:Request){
   try{
-    // Build 13 is the minimum supported native app. Older installations
+    // Build 14 is the minimum supported native app. Older installations
     // (including 1.0.1-era builds) must install the current APK before access
     // policy is evaluated by newer clients.
     const clientVersionCode=Number(new URL(req.url).searchParams.get("versionCode")||0);
-    const requiresUpgrade=clientVersionCode<13;
+    const requiresUpgrade=clientVersionCode<14;
     const [latest,rollingRelease]=await Promise.all([
       (await collection<any>("appUpdates")).findOne({published:true},{sort:{publishedAt:-1}}),
       getRollingRelease()
