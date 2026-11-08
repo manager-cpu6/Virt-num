@@ -5,22 +5,22 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const countryIso:Record<string,string>={
-  argentina:"AR",argentines:"AR",argentina vip:"AR",
-  "united states":"US","united states of america":"US","united states vip":"US",usa:"US",
-  "united kingdom":"GB","great britain":"GB",uk:"GB",
+  argentina:"AR",argentines:"AR",argentinavip:"AR",
+  unitedstates:"US",unitedstatesofamerica:"US",unitedstatesvip:"US",usa:"US",
+  unitedkingdom:"GB",greatbritain:"GB",uk:"GB",
   canada:"CA",australia:"AU",ethiopia:"ET",somalia:"SO",kenya:"KE",
   germany:"DE",france:"FR",spain:"ES",italy:"IT",netherlands:"NL",
   brazil:"BR",mexico:"MX",india:"IN",pakistan:"PK",bangladesh:"BD",
   turkey:"TR",russia:"RU",ukraine:"UA",japan:"JP",china:"CN",
-  "south korea":"KR",indonesia:"ID",malaysia:"MY",thailand:"TH",
+  southkorea:"KR",indonesia:"ID",malaysia:"MY",thailand:"TH",
   philippines:"PH",vietnam:"VN",nigeria:"NG",ghana:"GH",egypt:"EG",
-  "south africa":"ZA",morocco:"MA",saudiarabia:"SA","saudi arabia":"SA",
-  "united arab emirates":"AE",uae:"AE",qatar:"QA",kuwait:"KW",
+  southafrica:"ZA",morocco:"MA",saudiarabia:"SA",
+  unitedarabemirates:"AE",uae:"AE",qatar:"QA",kuwait:"KW",
   sweden:"SE",norway:"NO",denmark:"DK",finland:"FI",switzerland:"CH",
   poland:"PL",portugal:"PT",ireland:"IE",belgium:"BE",austria:"AT",
   greece:"GR",romania:"RO",serbia:"RS",croatia:"HR",bulgaria:"BG",
   colombia:"CO",chile:"CL",peru:"PE",venezuela:"VE",ecuador:"EC",
-  "new zealand":"NZ",singapore:"SG",taiwan:"TW",israel:"IL",iran:"IR",
+  newzealand:"NZ",singapore:"SG",taiwan:"TW",israel:"IL",iran:"IR",
   iraq:"IQ",jordan:"JO",lebanon:"LB",nepal:"NP",srilanka:"LK"
 };
 function resolveIso(country:any){
