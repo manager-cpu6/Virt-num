@@ -5,9 +5,12 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const countryIso:Record<string,string>={
-  argentina:"AR",argentines:"AR",argentinavip:"AR",
-  unitedstates:"US",unitedstatesofamerica:"US",unitedstatesvip:"US",usa:"US",
+  argentina:"AR",argentinas:"AR",argentines:"AR",argentinavip:"AR",
+  unitedstates:"US",unitedstatesofamerica:"US",unitedstatesvip:"US",unitedstatesvirt:"US",usa:"US",
   unitedkingdom:"GB",greatbritain:"GB",uk:"GB",
+  bruneidarussalam:"BN",caymanislands:"KY",drcongo:"CD",cotedivoireivorycoast:"CI",reunion:"RE",
+  saintkittsandnevis:"KN",saintlucia:"LC",saintvincent:"VC",samoa:"WS",saotomeandprincipe:"ST",
+  syrianarabrepublic:"SY",timorleste:"TL",
   canada:"CA",australia:"AU",ethiopia:"ET",somalia:"SO",kenya:"KE",
   germany:"DE",france:"FR",spain:"ES",italy:"IT",netherlands:"NL",
   brazil:"BR",mexico:"MX",india:"IN",pakistan:"PK",bangladesh:"BD",
