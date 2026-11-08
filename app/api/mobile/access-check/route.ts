@@ -15,12 +15,14 @@ export async function GET(req:Request){
     const bannedCountries=Array.isArray(saved?.bannedCountries)?saved.bannedCountries.map((x:any)=>String(x).toUpperCase()):[];
     const blockedDevices=Array.isArray(saved?.blockedDevices)?saved.blockedDevices.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):[];
     const blockedVersions=Array.isArray(saved?.blockedAppVersions)?saved.blockedAppVersions.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):[];
+    const blockedAndroidSdk=Array.isArray(saved?.blockedAndroidSdk)?saved.blockedAndroidSdk.map((x:any)=>Math.floor(Number(x))):[];
     const minSdk=Math.max(0,Math.floor(Number(saved?.minAndroidSdk||0)));
     const whatsapp=String(saved?.whatsapp||"252907868526").replace(/[^0-9]/g,"");
     let reason="";
     if(country&&bannedCountries.includes(country))reason="country";
     else if(device&&blockedDevices.some((x:string)=>device===x||device.includes(x)))reason="device";
     else if(appVersion&&blockedVersions.includes(appVersion))reason="version";
+    else if(blockedAndroidSdk.includes(sdk))reason="android-version";
     else if(minSdk>0&&sdk>0&&sdk<minSdk)reason="android-version";
     return NextResponse.json({ok:true,allowed:!reason,reason,country,whatsapp,contactUrl:"https://wa.me/"+whatsapp},{headers:{"Cache-Control":"no-store"}});
   }catch{
