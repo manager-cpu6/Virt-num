@@ -32,7 +32,7 @@ function resolveIso(country:any){
     const code=String(candidate||"").trim().toUpperCase();
     if(/^[A-Z]{2}$/.test(code))return code;
   }
-  const normalize=(value:any)=>String(value||"").toLowerCase().replace(/\b(vip|premium|new|best|special)\b/g," ").replace(/[^a-z]/g,"").trim();
+  const normalize=(value:any)=>String(value||"").toLowerCase().replace(/\b(vip|premium|best|special)\b/g," ").replace(/[^a-z]/g,"").trim();
   const names=[country?.name,country?.title,country?.country,country?.id].map(normalize).filter(Boolean);
   for(const name of names){if(countryIso[name])return countryIso[name];}
   return "";
