@@ -1128,3 +1128,9 @@ body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{b
 /* Keep the brand tile on one calm, consistent surface behind the official mark. */
 .brand-logo,.nx-brand-mark{background:#071329!important;border:1px solid rgba(104,151,207,.22)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 22px rgba(0,0,0,.22)!important}
 .brand-logo img{display:block;width:100%;height:100%;object-fit:contain;padding:3px;box-sizing:border-box}
+
+/* Popular-service logos use the same real-brand resolver as the full service catalog. */
+.live-v2-service-logo{width:44px;height:44px;flex:0 0 44px;border-radius:14px;background:linear-gradient(145deg,rgba(18,42,75,.96),rgba(6,19,39,.92));border:1px solid rgba(90,166,255,.24);box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 22px rgba(0,0,0,.22)}
+.live-v2-service-logo img{position:relative;inset:auto;width:100%;height:100%;padding:5px;object-fit:contain;background:transparent}
+.live-v2-section-label a{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:34px;padding:0 13px;border:1px solid rgba(68,160,255,.3);border-radius:999px;background:linear-gradient(135deg,rgba(22,119,255,.17),rgba(113,59,255,.14));color:#a9d5ff;font-size:11px;font-weight:900;text-decoration:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 8px 20px rgba(0,0,0,.15);transition:transform .18s,border-color .18s,box-shadow .18s}
+.live-v2-section-label a:hover{transform:translateY(-1px);border-color:rgba(0,217,255,.55);box-shadow:0 10px 24px rgba(22,119,255,.15)}
