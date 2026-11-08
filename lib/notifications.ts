@@ -82,6 +82,7 @@ async function deliverPushOutbox(outboxId:string):Promise<{sent:number;configure
  const legacyDevices=isCodePush?validDevices.filter(d=>!versionAtLeast(String(d.appVersion||""),"1.0.11")):validDevices;
  const tokenList=(list:any[])=>[...new Set(list.map(d=>String(d.token||"").trim()).filter(token=>token.length>=20))];
  const copyTokens=tokenList(copyCodeDevices),legacyTokens=tokenList(legacyDevices);
+ const tokens=tokenList(validDevices);
  let result:Awaited<ReturnType<typeof sendPush>>;
  try{
   const sends=await Promise.all([
