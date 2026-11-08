@@ -59,9 +59,9 @@ async function getRollingRelease(){
     const release=await response.json();
     if(release.draft||release.prerelease)return null;
     const name=String(release.name||release.tag_name||"").trim();
-    const versionMatch=name.match(/(\\d+\\.\\d+\\.\\d+\\+\\d+)/);
+    const versionMatch=name.match(/(\d+\.\d+\.\d+\+\d+)/);
     const version=versionMatch?.[1]||"";
-    const versionCode=Number(version.match(/\\+(\\d+)$/)?.[1]||0);
+    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
     const assets=Array.isArray(release.assets)?release.assets:[];
     const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk")
       ||assets.find((asset:any)=>String(asset.name||"").toLowerCase().endsWith(".apk"));
