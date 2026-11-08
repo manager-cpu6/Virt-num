@@ -23,6 +23,12 @@ export async function GET(){
       orders.aggregate([{$group:{_id:"$status",count:{$sum:1}}},{$sort:{count:-1}}]).toArray(),
       orders.aggregate([{$group:{_id:"$service",count:{$sum:1},coins:{$sum:{$convert:{input:"$priceCoins",to:"double",onError:0,onNull:0}}}}},{$sort:{count:-1}},{$limit:8}]).toArray()
     ]);
+    const analyticsEvents=await collection<any>("analyticsEvents");
+    const [pageViews,clicks,uniqueVisitors]=await Promise.all([
+      analyticsEvents.countDocuments({event:"pageview"}),
+      analyticsEvents.countDocuments({event:"click"}),
+      analyticsEvents.distinct("visitorId",{event:"pageview"})
+    ]);
     const settings=await getSettings();
     const activeProviderName=await providerName();
     let sms:any={name:"5SIM",status:settings.provider5simEnabled?(activeProviderName==="5SIM"?"active":"standby"):"disabled",enabled:settings.provider5simEnabled};
@@ -39,6 +45,7 @@ export async function GET(){
       walletCoins:Number(wallet[0]?.total||0),
       orderStatuses:orderStatuses.map((x:any)=>({status:String(x._id||"unknown"),count:Number(x.count||0)})),
       topServices:topServices.map((x:any)=>({service:String(x._id||"unknown"),count:Number(x.count||0),coins:Number(x.coins||0)})),
+      analytics:{pageViews,clicks,uniqueVisitors:uniqueVisitors.length},
       settings,
       providers:[sms,tiger,
         {name:"Cryptomus",status:(process.env.CRYPTOMUS_PAYMENT_API_KEY||process.env.CRYPTOMUS_API_KEY)?"configured":"missing"},
