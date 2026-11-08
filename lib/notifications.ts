@@ -77,7 +77,7 @@ async function deliverPushOutbox(outboxId:string):Promise<{sent:number;configure
   return true;
  };
  const isCodePush=["sms","verification","verification_code"].includes(String(data.type||"").toLowerCase())
-  && Boolean(String(data.code||data.otp||data.verificationCode||data.smsCode||message.match(/(?<!\\d)\\d{4,8}(?!\\d)/)?.[0]||""));
+  && Boolean(String(data.code||data.otp||data.verificationCode||data.smsCode||message.match(/(?<!\d)\d{4,8}(?!\d)/)?.[0]||""));
  const copyCodeDevices=isCodePush?validDevices.filter(d=>versionAtLeast(String(d.appVersion||""),"1.0.11")):[];
  const legacyDevices=isCodePush?validDevices.filter(d=>!versionAtLeast(String(d.appVersion||""),"1.0.11")):validDevices;
  const tokenList=(list:any[])=>[...new Set(list.map(d=>String(d.token||"").trim()).filter(token=>token.length>=20))];
