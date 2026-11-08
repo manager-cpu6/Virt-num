@@ -25,7 +25,9 @@ export async function POST(req:Request){
   try{
     await requireAdmin();
     const body=await req.json();
-    const version=String(body.version||"").trim().slice(0,30);\n    const versionCode=Number(version.match(/\\+(\\d+)$/)?.[1]||0);\n    const sha256=String(body.sha256||"").trim().toLowerCase();
+    const version=String(body.version||"").trim().slice(0,30);
+    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
+    const sha256=String(body.sha256||"").trim().toLowerCase();
     const apkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
     
