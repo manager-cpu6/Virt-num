@@ -4,12 +4,12 @@ import {collection} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const CURRENT_VERSION="1.0.8+9";
-const CURRENT_VERSION_CODE=9;
-const CURRENT_SIZE_BYTES=57961863;
-const CURRENT_RELEASE_NOTES="Help Team chat now supports zoomable images, video and voice playback, voice deletion, and customer ratings. Support managers can assign conversations to support agents. Push notifications remain enabled.";
+const CURRENT_VERSION="1.0.11+12";
+const CURRENT_VERSION_CODE=12;
+const CURRENT_SIZE_BYTES=58396063;
+const CURRENT_RELEASE_NOTES="Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.";
 const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk";
-const CURRENT_SHA256="c3511cb8532a00571ca9f11b57858170aa373309117f03f901b4322b1c2a455e";
+const CURRENT_SHA256="a2fb2745b6b15881976a74d8e60afecf809d7bb9b72e6823d6bec0fec5fdc7de";
 
 function cleanReleaseNotes(raw:unknown){
   const text=String(raw||"")
@@ -57,7 +57,7 @@ export async function GET(){
         ok:true,
         update:{
           version,
-          versionCode:Number(latest.versionCode||0),
+          versionCode:Number(latest.versionCode||Number(version.match(/\\+(\\d+)$/)?.[1]||0)),
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           sha256:String(latest.sha256||""),
