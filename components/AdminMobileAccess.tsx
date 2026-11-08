@@ -7,7 +7,8 @@ type Settings={bannedCountries:string[];blockedDevices:string[];blockedAppVersio
 const empty:Settings={bannedCountries:[],blockedDevices:[],blockedAppVersions:[],blockedAndroidSdk:[],minAndroidSdk:0,whatsapp:"252907868526"};
 const androidVersions=[["No minimum",0],["Android 8.0 Oreo",26],["Android 9 Pie",28],["Android 10",29],["Android 11",30],["Android 12",31],["Android 12L",32],["Android 13",33],["Android 14",34],["Android 15",35],["Android 16",36]] as const;
 
-export default function AdminMobileAccess(){
+type AccessSection="all"|"countries"|"devices";
+export default function AdminMobileAccess({section="all"}:{section?:AccessSection}){
  const [settings,setSettings]=useState<Settings>(empty);
  const [query,setQuery]=useState("");
  const [device,setDevice]=useState("");
@@ -34,8 +35,8 @@ export default function AdminMobileAccess(){
   finally{setBusy(false)}
  }
  return <div className="admin-notifications">
-  <div className="admin-card">
-   <h2>App Control Center</h2>
+  {section!=="devices"&&<div className="admin-card">
+   <h2>App Countries</h2>
    <p className="admin-help">Control which countries, device models, Android versions and app builds can access Numelixa. Saved rules are enforced by the server when the Android app starts.</p>
    <label>Search all countries<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search country or ISO code…"/></label>
    <div style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:8,maxHeight:300,overflowY:"auto",padding:"8px 2px"}}>
@@ -45,9 +46,10 @@ export default function AdminMobileAccess(){
     </label>)}
    </div>
    <p className="admin-help">{settings.bannedCountries.length} countries blocked · {COUNTRY_CODES.length} country/territory codes available</p>
-  </div>
+  </div>}
+  {section!=="countries"&&<>
   <div className="admin-card">
-   <h2>Device model restrictions</h2>
+   <h2>App Devices</h2>
    <p className="admin-help">Enter an exact model name or a model fragment such as SM-A155F or Samsung Galaxy A15.</p>
    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><input value={device} onChange={e=>setDevice(e.target.value)} placeholder="Device model / model code" style={{flex:"1 1 220px"}}/><button type="button" className="secondary-btn" onClick={addDevice}>Add device</button></div>
    {settings.blockedDevices.map(x=><div className="admin-row" key={x}><span>{x}</span><button type="button" onClick={()=>setSettings(s=>({...s,blockedDevices:s.blockedDevices.filter(v=>v!==x)}))}>Remove</button></div>)}
@@ -62,7 +64,7 @@ export default function AdminMobileAccess(){
    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><input value={version} onChange={e=>setVersion(e.target.value)} placeholder="Exact app version, e.g. 1.0.10" style={{flex:"1 1 220px"}}/><button type="button" className="secondary-btn" onClick={addVersion}>Block version</button></div>
    {settings.blockedAppVersions.map(x=><div className="admin-row" key={x}><span>App version {x}</span><button type="button" onClick={()=>setSettings(s=>({...s,blockedAppVersions:s.blockedAppVersions.filter(v=>v!==x)}))}>Remove</button></div>)}
    <label style={{marginTop:14}}>WhatsApp support number (include country code)<input value={settings.whatsapp} onChange={e=>setSettings(s=>({...s,whatsapp:e.target.value}))} placeholder="252907868526"/></label>
-  </div>
+  </>}
   {error&&<div className="error-box">{error}</div>}{message&&<div className="success-box">{message}</div>}
   <button className="primary-btn" disabled={busy} onClick={save}>{busy?"Saving…":"Save app availability rules"}</button>
  </div>;
