@@ -109,6 +109,20 @@ export async function GET(){
         }
       },{headers:{"Cache-Control":"no-store"}});
     }
+    // Keep the admin's mandatory-update policy attached to the live release
+    // even when both records have the same version. This lets legacy installs
+    // be forced forward without publishing a fake higher version.
+    if(latest&&version&&compareVersions(version,current.version)===0){
+      return NextResponse.json({
+        ok:true,
+        update:{
+          ...current,
+          force:Boolean(latest.force),
+          releaseNotes:cleanReleaseNotes(latest.releaseNotes)||current.releaseNotes,
+          publishedAt:latest.publishedAt||current.publishedAt||null
+        }
+      },{headers:{"Cache-Control":"no-store"}});
+    }
     return NextResponse.json({ok:true,update:current},{headers:{"Cache-Control":"no-store"}});
   }catch(error){
     console.error("[APP UPDATE]",error);
