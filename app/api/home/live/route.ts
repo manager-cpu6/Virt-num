@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
 import {getUser} from "@/lib/auth";
-import {listServices} from "@/lib/fivesim";
+import {listServices} from "@/lib/sms-provider";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -28,8 +28,14 @@ export async function GET(){
  try{
   const user=await getUser().catch(()=>null);
   let services:any[]=[];
-  try{services=(await listServices()).map((s:any)=>String(s.id||""))}catch{}
-  const popular=POPULAR.map(p=>({...p,available:services.includes(p.service)}));
+  try{services=await listServices()}catch{}
+  const aliases:Record<string,string[]>={whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],instagram:["instagram","ig"],facebook:["facebook","fb"],google:["google","go"],tiktok:["tiktok","tt"]};
+  const normalize=(v:any)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
+  const popular=POPULAR.map(p=>{
+   const wanted=aliases[p.service]||[p.service];
+   const match=services.find((item:any)=>wanted.includes(normalize(item.id||item.code))||wanted.includes(normalize(item.name)));
+   return match?{...p,service:String(match.id||match.code||p.service),available:true}:null;
+  }).filter(Boolean);
   if(!user)return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular,activeNumbers:[],activity:[]});
   const orders=await collection<any>("orders");
   const userId=String(user.id||"");
