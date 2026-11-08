@@ -11,7 +11,7 @@ export async function GET(){
     await requireAdmin();
     const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(20).toArray();
     return NextResponse.json({ok:true,updates:rows.map(x=>({
-      id:String(x._id),version:x.version,sizeMb:x.sizeMb,apkUrl:x.apkUrl,
+      id:String(x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),sha256:String(x.sha256||""),apkUrl:x.apkUrl,
       releaseNotes:x.releaseNotes,force:Boolean(x.force),published:Boolean(x.published),
       publishedAt:x.publishedAt,pushSent:Number(x.pushSent||0),pushFailed:Number(x.pushFailed||0)
     }))});
@@ -25,7 +25,7 @@ export async function POST(req:Request){
   try{
     await requireAdmin();
     const body=await req.json();
-    const version=String(body.version||"").trim().slice(0,30);
+    const version=String(body.version||"").trim().slice(0,30);\n    const versionCode=Number(version.match(/\\+(\\d+)$/)?.[1]||0);\n    const sha256=String(body.sha256||"").trim().toLowerCase();
     const apkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
     
