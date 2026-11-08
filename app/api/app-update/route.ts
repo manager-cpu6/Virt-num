@@ -8,7 +8,7 @@ const FALLBACK_RELEASE={
   version:"1.0.11+12",
   versionCode:12,
   sizeBytes:58396063,
-  apkUrl:"https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk",
+  apkUrl:"https://www.numelixa.com/android",
   sha256:"",
   releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
   publishedAt:"2026-11-08T00:00:00.000Z"
@@ -73,7 +73,7 @@ async function getRollingRelease(){
     return {
       version,versionCode,sizeBytes,
       sizeMb:Number((sizeBytes/(1024*1024)).toFixed(2)),
-      sha256,apkUrl,
+      sha256,apkUrl:"https://www.numelixa.com/android",
       releaseNotes:cleanReleaseNotes(release.body),
       publishedAt:release.published_at||null
     };
@@ -102,7 +102,7 @@ export async function GET(){
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           sha256:String(latest.sha256||""),
-          apkUrl:String(latest.apkUrl||current.apkUrl),
+          apkUrl:"https://www.numelixa.com/android",
           releaseNotes:cleanReleaseNotes(latest.releaseNotes),
           force:Boolean(latest.force),
           publishedAt:latest.publishedAt||null
