@@ -16,25 +16,21 @@ export async function POST(req:Request){
   if(!token||token.length<20)return NextResponse.json({ok:false,error:"Invalid device token."},{status:400});
   if(!String(process.env.MONGODB_URI||"").trim())return NextResponse.json({ok:false,error:"PUSH_STORAGE_NOT_CONFIGURED"},{status:503});
 
-  // Push registration is email-account-only. Do not persist tokens for
-  // anonymous installs or phone-only sessions. Existing email accounts remain eligible even if created before email verification was introduced.
+  // Link notifications to any authenticated Numelixa account, including phone-only users.
   const user=await requireUser();
   const email=String(user.email||"").trim().toLowerCase();
-  if(!email.includes("@")){
-   return NextResponse.json({ok:false,error:"VERIFIED_EMAIL_REQUIRED",message:"Sign in to your email account to enable notifications."},{status:403});
-  }
 
   const devices=await collection<any>("deviceTokens"),now=new Date();
   const existingByDevice=deviceId?await devices.findOne({deviceId}):null;
   const existing=existingByDevice||await devices.findOne({token});
   const filter=existing?{_id:existing._id}:deviceId?{deviceId}:{token};
-  const fields:any={token,platform,updatedAt:now,lastSeenAt:now,enabled:true,userId:String(user.id),email};
+  const fields:any={token,platform,updatedAt:now,lastSeenAt:now,enabled:true,userId:String(user.id),...(email.includes("@")?{email}:{})};
   if(deviceId)fields.deviceId=deviceId;
   if(appVersion)fields.appVersion=appVersion;
   if(deviceName)fields.deviceName=deviceName;
   await devices.updateOne(filter,{$set:fields,$setOnInsert:{createdAt:now}},{upsert:true});
 
-  console.info("[FCM_TOKEN_REGISTERED]",{authenticated:true,verifiedEmail:true,linked:true,platform,deviceIdentityPresent:Boolean(deviceId),appVersion:appVersion||undefined});
+  console.info("[FCM_TOKEN_REGISTERED]",{authenticated:true,linked:true,accountType:email.includes("@")?"email":"phone",platform,deviceIdentityPresent:Boolean(deviceId),appVersion:appVersion||undefined});
   const users=await collection<any>("users");
   const account=await users.findOne({_id:String(user.id)},{projection:{pushWelcomeSentAt:1}});
   if(!account?.pushWelcomeSentAt){
