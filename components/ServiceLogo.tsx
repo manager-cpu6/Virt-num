@@ -10,7 +10,8 @@ const aliases:Record<string,string>={
  oi:"openai",sn:"snapchat",snapchat:"snapchat",ds:"discord",discord:"discord",li:"linkedin",linkedin:"linkedin",pp:"paypal",paypal:"paypal",
  rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",vb:"viber",viber:"viber",sg:"signal",signal:"signal",
  vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",ebay:"ebay",uber:"uber",airbnb:"airbnb",pinterest:"pinterest",twitch:"twitch",
- steam:"steam",dropbox:"dropbox",slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail"
+ steam:"steam",dropbox:"dropbox",slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail",
+ "1xbet":"1xbet",vercel:"vercel"
 };
 const domains:Record<string,string>={
  whatsapp:"whatsapp.com",facebook:"facebook.com",instagram:"instagram.com",threads:"threads.net",telegram:"telegram.org",tiktok:"tiktok.com",
@@ -19,7 +20,8 @@ const domains:Record<string,string>={
  snapchat:"snapchat.com",discord:"discord.com",linkedin:"linkedin.com",paypal:"paypal.com",reddit:"reddit.com",spotify:"spotify.com",
  netflix:"netflix.com",viber:"viber.com",signal:"signal.org",vk:"vk.com",yandex:"yandex.com",binance:"binance.com",bybit:"bybit.com",
  okx:"okx.com",ebay:"ebay.com",uber:"uber.com",airbnb:"airbnb.com",pinterest:"pinterest.com",twitch:"twitch.tv",steam:"steampowered.com",
- dropbox:"dropbox.com",slack:"slack.com",zoom:"zoom.us",notion:"notion.so",canva:"canva.com",figma:"figma.com",capcut:"capcut.com",protonmail:"proton.me"
+ dropbox:"dropbox.com",slack:"slack.com",zoom:"zoom.us",notion:"notion.so",canva:"canva.com",figma:"figma.com",capcut:"capcut.com",protonmail:"proton.me",
+ "1xbet":"1xbet.com",vercel:"vercel.com"
 };
 export function canonicalServiceBrand(id:string,name:string){
  const normalize=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
@@ -29,11 +31,15 @@ export function canonicalServiceBrand(id:string,name:string){
  return a||b||"service";
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [failed,setFailed]=useState(false);
+ const [attempt,setAttempt]=useState(0);
  const brand=canonicalServiceBrand(id,name);
  const domain=domains[brand]||domains[brand.replace(/(lite|business|prime|shop|app)$/,"")]||((brand&&brand!=="service")?brand+".com":"google.com");
- const src=failed?"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128":"https://cdn.simpleicons.org/"+encodeURIComponent(brand);
+ const sources=[
+  "https://logo.clearbit.com/"+encodeURIComponent(domain)+"?size=128",
+  "https://cdn.simpleicons.org/"+encodeURIComponent(brand),
+  "https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"
+ ];
  return <span className={className||"service-icon"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden"}}>
-  <img src={src} alt={name+" logo"} loading="lazy" onError={()=>{if(!failed)setFailed(true)}} style={{width:"100%",height:"100%",objectFit:"contain",padding:5,boxSizing:"border-box"}}/>
+  <img src={sources[Math.min(attempt,sources.length-1)]} alt={name+" logo"} loading="lazy" onError={()=>setAttempt(value=>Math.min(value+1,sources.length-1))} style={{width:"100%",height:"100%",objectFit:"contain",padding:2,boxSizing:"border-box"}}/>
  </span>
 }
