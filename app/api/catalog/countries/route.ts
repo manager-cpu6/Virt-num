@@ -8,6 +8,7 @@ const countryIso:Record<string,string>={
   argentina:"AR",argentinas:"AR",argentines:"AR",argentinavip:"AR",
   unitedstates:"US",unitedstatesofamerica:"US",unitedstatesvip:"US",unitedstatesvirt:"US",usa:"US",
   unitedkingdom:"GB",greatbritain:"GB",uk:"GB",
+  frenchguiana:"GF",guadeloupe:"GP",guineabissau:"GW",korea:"KR",laopeoples:"LA",macedonia:"MK",montserrat:"MS",newcaledonia:"NC",
   bruneidarussalam:"BN",caymanislands:"KY",drcongo:"CD",cotedivoireivorycoast:"CI",reunion:"RE",
   saintkittsandnevis:"KN",saintlucia:"LC",saintvincent:"VC",samoa:"WS",saotomeandprincipe:"ST",
   syrianarabrepublic:"SY",timorleste:"TL",
