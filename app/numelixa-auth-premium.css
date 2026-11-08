@@ -44,3 +44,6 @@
 @media(max-height:760px){.auth-page.auth-modern{justify-content:flex-start!important;padding-top:22px!important}.auth-modern .auth-brand{margin-bottom:20px!important}.auth-modern .auth-intro{margin-bottom:18px!important}}
 @media(max-width:420px){.auth-page.auth-modern{padding-left:15px!important;padding-right:15px!important}.auth-modern .auth-intro h1{font-size:30px!important}.auth-modern .form-card,.auth-modern .phone-auth-card{padding:17px!important}}
 @media(prefers-reduced-motion:reduce){.auth-modern *{transition:none!important;animation:none!important}}
+
+/* Final mobile auth pass: preserve safe-area spacing and touch-sized controls. */
+@media(max-width:700px){.auth-modern .auth-method-switch button{min-height:48px!important}.auth-modern .primary-btn.full,.auth-modern .secondary-btn.full{min-height:52px!important}}
