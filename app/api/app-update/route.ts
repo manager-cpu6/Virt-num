@@ -4,13 +4,15 @@ import {collection} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const CURRENT_VERSION="1.0.8+9";
-const CURRENT_VERSION_CODE=9;
-const CURRENT_SIZE_BYTES=57961863;
-const CURRENT_RELEASE_NOTES="Help Team chat now supports zoomable images, video and voice playback, voice deletion, and customer ratings. Support managers can assign conversations to support agents. Push notifications remain enabled.";
-const CURRENT_APK_URL="https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk";
-const CURRENT_SHA256="c3511cb8532a00571ca9f11b57858170aa373309117f03f901b4322b1c2a455e";
-
+const FALLBACK_RELEASE={
+  version:"1.0.11+12",
+  versionCode:12,
+  sizeBytes:58396063,
+  apkUrl:"https://github.com/manager-cpu6/Numelixa-app/releases/download/android-latest/Numelixa.apk",
+  sha256:"",
+  releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
+  publishedAt:"2026-11-08T00:00:00.000Z"
+};
 function cleanReleaseNotes(raw:unknown){
   const text=String(raw||"")
     .replace(/\*\*Full Changelog\*\*:?[^\n]*/gi,"")
@@ -47,41 +49,67 @@ function compareVersions(left:string,right:string){
   return a.build-b.build;
 }
 
+async function getRollingRelease(){
+  try{
+    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
+      headers:{Accept:"application/vnd.github+json"},
+      next:{revalidate:300}
+    });
+    if(!response.ok)return null;
+    const release=await response.json();
+    if(release.draft||release.prerelease)return null;
+    const name=String(release.name||release.tag_name||"").trim();
+    const versionMatch=name.match(/(\d+\.\d+\.\d+\+\d+)/);
+    const version=versionMatch?.[1]||"";
+    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
+    const assets=Array.isArray(release.assets)?release.assets:[];
+    const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk")
+      ||assets.find((asset:any)=>String(asset.name||"").toLowerCase().endsWith(".apk"));
+    const apkUrl=String(apk?.browser_download_url||"");
+    const sizeBytes=Number(apk?.size||0);
+    if(!version||!versionCode||!apkUrl.startsWith("https://")||!sizeBytes)return null;
+    const digest=String(apk?.digest||"");
+    const sha256=digest.startsWith("sha256:")?digest.slice(7).toLowerCase():"";
+    return {
+      version,versionCode,sizeBytes,
+      sizeMb:Number((sizeBytes/(1024*1024)).toFixed(2)),
+      sha256,apkUrl,
+      releaseNotes:cleanReleaseNotes(release.body),
+      publishedAt:release.published_at||null
+    };
+  }catch{
+    return null;
+  }
+}
+
 export async function GET(){
   try{
-    const latest=await (await collection<any>("appUpdates"))
-      .findOne({published:true},{sort:{publishedAt:-1}});
+    const [latest,rollingRelease]=await Promise.all([
+      (await collection<any>("appUpdates")).findOne({published:true},{sort:{publishedAt:-1}}),
+      getRollingRelease()
+    ]);
+    const current=rollingRelease||{
+      ...FALLBACK_RELEASE,
+      sizeMb:Number((FALLBACK_RELEASE.sizeBytes/(1024*1024)).toFixed(2))
+    };
     const version=String(latest?.version||"").trim();
-    if(latest&&version&&compareVersions(version,CURRENT_VERSION)>0){
+    if(latest&&version&&compareVersions(version,current.version)>0){
       return NextResponse.json({
         ok:true,
         update:{
           version,
-          versionCode:Number(latest.versionCode||0),
+          versionCode:Number(latest.versionCode||Number(version.match(/\+(\d+)$/)?.[1]||0)),
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           sha256:String(latest.sha256||""),
-          apkUrl:String(latest.apkUrl||CURRENT_APK_URL),
+          apkUrl:String(latest.apkUrl||current.apkUrl),
           releaseNotes:cleanReleaseNotes(latest.releaseNotes),
           force:Boolean(latest.force),
           publishedAt:latest.publishedAt||null
         }
       },{headers:{"Cache-Control":"no-store"}});
     }
-    return NextResponse.json({
-      ok:true,
-      update:{
-        version:CURRENT_VERSION,
-        versionCode:CURRENT_VERSION_CODE,
-        sizeMb:Number((CURRENT_SIZE_BYTES/(1024*1024)).toFixed(2)),
-        sizeBytes:CURRENT_SIZE_BYTES,
-        sha256:CURRENT_SHA256,
-        apkUrl:CURRENT_APK_URL,
-        releaseNotes:CURRENT_RELEASE_NOTES,
-        force:false,
-        publishedAt:"2026-10-20T00:00:00.000Z"
-      }
-    },{headers:{"Cache-Control":"no-store"}});
+    return NextResponse.json({ok:true,update:current},{headers:{"Cache-Control":"no-store"}});
   }catch(error){
     console.error("[APP UPDATE]",error);
     return NextResponse.json({ok:false,update:null},{status:200,headers:{"Cache-Control":"no-store"}});

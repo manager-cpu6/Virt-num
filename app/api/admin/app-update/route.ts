@@ -11,7 +11,7 @@ export async function GET(){
     await requireAdmin();
     const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(20).toArray();
     return NextResponse.json({ok:true,updates:rows.map(x=>({
-      id:String(x._id),version:x.version,sizeMb:x.sizeMb,apkUrl:x.apkUrl,
+      id:String(x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),sha256:String(x.sha256||""),apkUrl:x.apkUrl,
       releaseNotes:x.releaseNotes,force:Boolean(x.force),published:Boolean(x.published),
       publishedAt:x.publishedAt,pushSent:Number(x.pushSent||0),pushFailed:Number(x.pushFailed||0)
     }))});
@@ -26,14 +26,19 @@ export async function POST(req:Request){
     await requireAdmin();
     const body=await req.json();
     const version=String(body.version||"").trim().slice(0,30);
+    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
+    const sha256=String(body.sha256||"").trim().toLowerCase();
     const apkUrl=String(body.apkUrl||"").trim();
     const releaseNotes=String(body.releaseNotes||"").trim().slice(0,1200);
     
     const force=Boolean(body.force);
     const sendAll=body.sendAll!==false;
 
-    if(!version||!apkUrl)
-      return NextResponse.json({ok:false,error:"Version and APK URL are required."},{status:400});
+    if(!/^\d+\.\d+\.\d+\+\d+$/.test(version)||!versionCode)
+      return NextResponse.json({ok:false,error:"Enter the full app version including build number, for example 1.0.12+13."},{status:400});
+    if(!apkUrl) return NextResponse.json({ok:false,error:"APK URL is required."},{status:400});
+    if(sha256&&!/^[a-f0-9]{64}$/.test(sha256))
+      return NextResponse.json({ok:false,error:"SHA-256 must contain exactly 64 hexadecimal characters."},{status:400});
 
     if(!/^https:\/\//i.test(apkUrl))
       return NextResponse.json({ok:false,error:"APK URL must use HTTPS."},{status:400});
@@ -52,7 +57,7 @@ export async function POST(req:Request){
     const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
     const now=new Date();
     const doc={
-      _id:mongoId(),version,sizeMb,sizeBytes,apkUrl,releaseNotes,force,published:true,
+      _id:mongoId(),version,versionCode,sizeMb,sizeBytes,apkUrl,releaseNotes,sha256,force,published:true,
       publishedAt:now,createdAt:now,pushSent:0,pushFailed:0
     };
     const updates=await collection<any>("appUpdates");

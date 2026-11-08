@@ -68,11 +68,38 @@ async function deliverPushOutbox(outboxId:string):Promise<{sent:number;configure
   platform:"android",
   enabled:{$ne:false}
  }).toArray();
- const tokens=[...new Set(devices.map((d)=>String(d.token||"").trim()).filter(token=>token.length>=20))];
+ const title=String(job.title||"Numelixa"),message=String(job.message||""),data=job.data||{};
+ const validDevices=devices.filter((d)=>String(d.token||"").trim().length>=20);
+ const versionAtLeast=(value:string,minimum:string)=>{
+  const parse=(v:string)=>v.split(/[.+-]/).slice(0,3).map(x=>Number.parseInt(x,10)||0);
+  const a=parse(value),b=parse(minimum);
+  for(let i=0;i<3;i++){if((a[i]||0)>(b[i]||0))return true;if((a[i]||0)<(b[i]||0))return false;}
+  return true;
+ };
+ const isCodePush=["sms","verification","verification_code"].includes(String(data.type||"").toLowerCase())
+  && Boolean(String(data.code||data.otp||data.verificationCode||data.smsCode||message.match(/(?<!\d)\d{4,8}(?!\d)/)?.[0]||""));
+ const copyCodeDevices=isCodePush?validDevices.filter(d=>versionAtLeast(String(d.appVersion||""),"1.0.11")):[];
+ const legacyDevices=isCodePush?validDevices.filter(d=>!versionAtLeast(String(d.appVersion||""),"1.0.11")):validDevices;
+ const tokenList=(list:any[])=>[...new Set(list.map(d=>String(d.token||"").trim()).filter(token=>token.length>=20))];
+ const copyTokens=tokenList(copyCodeDevices),legacyTokens=tokenList(legacyDevices);
+ const tokens=tokenList(validDevices);
  let result:Awaited<ReturnType<typeof sendPush>>;
  try{
-  result=await sendPush(tokens,String(job.title||"Numelixa"),String(job.message||""),job.data||{});
+  const sends=await Promise.all([
+   ...(copyTokens.length?[sendPush(copyTokens,title,message,{...data,copyCode:"true"})]:[]),
+   ...(legacyTokens.length?[sendPush(legacyTokens,title,message,data)]:[])
+  ]);
+  result={
+   configured:sends.length===0||sends.every(x=>x.configured),
+   successCount:sends.reduce((sum,x)=>sum+x.successCount,0),
+   failureCount:sends.reduce((sum,x)=>sum+x.failureCount,0),
+   invalidTokens:[...new Set(sends.flatMap(x=>x.invalidTokens))],
+   errors:sends.flatMap(x=>x.errors).slice(0,20),
+   successfulTokens:sends.flatMap(x=>x.successfulTokens||[]),
+   messageIds:sends.flatMap(x=>x.messageIds||[])
+  };
  }catch(error){
+  const tokens=tokenList(validDevices);
   result={configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"push-send-failed",message:error instanceof Error?error.message:"Push send failed"}]};
  }
  if(result.invalidTokens.length){

@@ -47,3 +47,19 @@
 
 /* Final mobile auth pass: preserve safe-area spacing and touch-sized controls. */
 @media(max-width:700px){.auth-modern .auth-method-switch button{min-height:48px!important}.auth-modern .primary-btn.full,.auth-modern .secondary-btn.full{min-height:52px!important}}
+
+/* Six-position OTP entry: clear digit cells on desktop and narrow phones. */
+.auth-modern .phone-auth-card input[autocomplete="one-time-code"],
+.auth-modern input[placeholder="6-digit code"]{
+  background-color:rgba(2,9,25,.92)!important;
+  background-image:repeating-linear-gradient(90deg,transparent 0,transparent calc(16.666666% - 1px),rgba(111,159,218,.24) calc(16.666666% - 1px),rgba(111,159,218,.24) 16.666666%)!important;
+  background-size:100% 100%!important;
+  border:1px solid rgba(0,217,255,.30)!important;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.25),0 0 0 3px rgba(0,217,255,.045)!important;
+  border-radius:16px!important;
+}
+.auth-modern .phone-auth-card input[autocomplete="one-time-code"]:focus,
+.auth-modern input[placeholder="6-digit code"]:focus{
+  border-color:rgba(0,217,255,.78)!important;
+  box-shadow:0 0 0 3px rgba(0,217,255,.12),0 0 22px rgba(0,217,255,.08)!important;
+}

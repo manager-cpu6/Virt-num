@@ -1,4 +1,4 @@
-import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,requestMeta} from "@/lib/auth";import {claimDeviceTokenForUser} from "@/lib/notifications";import {getAuthSettings} from "@/lib/auth-methods";import crypto from "crypto";
+import {NextResponse} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {createSession,createMobileSession,requestMeta} from "@/lib/auth";import {claimDeviceTokenForUser} from "@/lib/notifications";import {getAuthSettings} from "@/lib/auth-methods";import crypto from "crypto";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 const hash=(v:string)=>crypto.createHash("sha256").update(v).digest("hex");
 export async function POST(req:Request){
@@ -13,8 +13,19 @@ export async function POST(req:Request){
   if(t.purpose==="signup"){
    if(u)return NextResponse.json({ok:false,error:"This phone number is already registered."},{status:409});
    const id=mongoId();await users.insertOne({_id:id,phone,name:name||t.name||"Numelixa user",email:null,password_hash:null,role:"user",coins:0,verifiedAt:new Date(),phoneVerifiedAt:new Date(),createdAt:new Date()});u=await users.findOne({_id:id});
-  }else{if(!u)return NextResponse.json({ok:false,error:"Account not found."},{status:404});await users.updateOne({_id:u._id},{$set:{phoneVerifiedAt:new Date()}})}
-  await otps.deleteOne({_id:t._id});await createSession(String(u._id),requestMeta(req.headers));await claimDeviceTokenForUser(String(u._id));
+  }else{
+   if(!u)return NextResponse.json({ok:false,error:"Account not found."},{status:404});
+   if(u.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Contact support for a review."},{status:403});
+   await users.updateOne({_id:u._id},{$set:{phoneVerifiedAt:new Date()}});
+  }
+  if(u?.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Contact support for a review."},{status:403});
+  await otps.deleteOne({_id:t._id});
+  await createSession(String(u._id),requestMeta(req.headers));
+  await claimDeviceTokenForUser(String(u._id));
+  if(req.headers.get("x-numelixa-client")==="android-app"){
+   const accessToken=await createMobileSession(String(u._id),requestMeta(req.headers));
+   return NextResponse.json({ok:true,role:u.role,accessToken,user:{id:String(u._id),phone:u.phone,name:u.name,role:u.role,verified_at:u.verifiedAt||u.phoneVerifiedAt||new Date()}},{headers:{"Cache-Control":"no-store"}});
+  }
   return NextResponse.json({ok:true,role:u.role});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error?e.message:"Phone verification failed"},{status:500})}
 }
