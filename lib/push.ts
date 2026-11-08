@@ -81,7 +81,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const batch=unique.slice(i,i+500);
   const type=String(data.type||"").toLowerCase();
   const codeCandidate=String(data.code||data.otp||data.verificationCode||data.smsCode||"").trim();
-  const code= /^\\d{4,8}$/.test(codeCandidate) ? codeCandidate : (body.match(/(?<!\\d)\\d{4,8}(?!\\d)/)||[])[0]||"";
+  const code= /^\d{4,8}$/.test(codeCandidate) ? codeCandidate : (body.match(/(?<!\d)\d{4,8}(?!\d)/)||[])[0]||"";
   const copyCodePush=["sms","verification","verification_code"].includes(type)&&Boolean(code);
   const messageData=Object.fromEntries(Object.entries({url:data.url||"/",...data,title,body,...(copyCodePush?{code}:{})}).map(([key,value])=>[key,String(value)]));
   const payload={
