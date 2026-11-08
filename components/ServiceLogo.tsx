@@ -39,7 +39,7 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
   "https://cdn.simpleicons.org/"+encodeURIComponent(brand),
   "https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"
  ];
- return <span className={className||"service-icon"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden"}}>
-  <img src={sources[Math.min(attempt,sources.length-1)]} alt={name+" logo"} loading="lazy" onError={()=>setAttempt(value=>Math.min(value+1,sources.length-1))} style={{width:"100%",height:"100%",objectFit:"contain",padding:2,boxSizing:"border-box"}}/>
+ return <span className={className||"service-icon"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
+  {attempt<sources.length?<img src={sources[attempt]} alt={name+" logo"} loading="lazy" onError={()=>setAttempt(value=>Math.min(value+1,sources.length))} style={{width:"100%",height:"100%",objectFit:"contain",padding:2,boxSizing:"border-box"}}/>:<span aria-hidden="true" style={{fontSize:20,fontWeight:900,color:"#A9D5FF"}}>{name.trim().slice(0,1).toUpperCase()||"N"}</span>}
  </span>
 }
