@@ -64,6 +64,7 @@ export default function AdminMobileAccess({section="all"}:{section?:AccessSectio
    <div style={{display:"flex",gap:8,flexWrap:"wrap"}}><input value={version} onChange={e=>setVersion(e.target.value)} placeholder="Exact app version, e.g. 1.0.10" style={{flex:"1 1 220px"}}/><button type="button" className="secondary-btn" onClick={addVersion}>Block version</button></div>
    {settings.blockedAppVersions.map(x=><div className="admin-row" key={x}><span>App version {x}</span><button type="button" onClick={()=>setSettings(s=>({...s,blockedAppVersions:s.blockedAppVersions.filter(v=>v!==x)}))}>Remove</button></div>)}
    <label style={{marginTop:14}}>WhatsApp support number (include country code)<input value={settings.whatsapp} onChange={e=>setSettings(s=>({...s,whatsapp:e.target.value}))} placeholder="252907868526"/></label>
+  </div>
   </>}
   {error&&<div className="error-box">{error}</div>}{message&&<div className="success-box">{message}</div>}
   <button className="primary-btn" disabled={busy} onClick={save}>{busy?"Saving…":"Save app availability rules"}</button>
