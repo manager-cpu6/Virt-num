@@ -1,7 +1,7 @@
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 
-const apkUrl = "https://www.numelixa.com/android";
+const apkUrl = "https://www.numelixa.com/api/mobile/apk";
 
 export default function DownloadPage() {
   return <div>
