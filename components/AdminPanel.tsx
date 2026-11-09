@@ -10,6 +10,7 @@ import AdminSupport from "@/components/AdminSupport";
 import AdminHelpChat from "@/components/AdminHelpChat";
 import AdminSupportTeam from "@/components/AdminSupportTeam";
 import AdminServiceCatalog from "@/components/AdminServiceCatalog";
+import AdminTrafficAnalytics from "@/components/AdminTrafficAnalytics";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];analytics?:{pageViews:number;clicks:number;uniqueVisitors:number};settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
@@ -83,8 +84,9 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","users","active otp","orders","pricing","providers","services","payments","local payments","notifications","authentication","app update","app control","app countries","app devices","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x}</button>)}</div>
+  <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","local payments","notifications","authentication","app update","app control","app countries","app devices","security","support"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
+  {tab==="traffic sources"&&<AdminTrafficAnalytics/>}
   {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
   {tab==="orders"&&<OrdersTable orders={orders} coinsPerUsd={stats?.settings.coinsPerUsd} title={"All orders ("+orders.length+")"} onCancel={cancelWaitingOrder}/>}
