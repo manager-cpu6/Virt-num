@@ -1,8 +1,24 @@
 import {NextResponse} from "next/server";
+
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-// Keep the browser on Numelixa's own domain. The /android route streams the APK
-// from the release origin server-side, so no GitHub host is exposed to users.
-const APK="https://www.numelixa.com/android";
-export async function GET(){return NextResponse.redirect(APK,302);}
-export async function HEAD(){return NextResponse.redirect(APK,302);}
+
+// Canonicalize the download host first. Once on www.numelixa.com, internally
+// rewrite to /android so the browser never follows the GitHub release redirect.
+const CANONICAL="https://www.numelixa.com";
+
+function downloadResponse(request:Request){
+  const incoming=new URL(request.url);
+  if(incoming.hostname.toLowerCase()!=="www.numelixa.com"){
+    return NextResponse.redirect(new URL("/api/mobile/apk",CANONICAL),302);
+  }
+  return NextResponse.rewrite(new URL("/android",CANONICAL));
+}
+
+export async function GET(request:Request){
+  return downloadResponse(request);
+}
+
+export async function HEAD(request:Request){
+  return downloadResponse(request);
+}
