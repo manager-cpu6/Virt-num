@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {NextResponse} from "next/server";
 import {requireUser,tokenHash,mongoId} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
@@ -72,7 +73,7 @@ export async function POST(req:Request){
    }
   }
 
-  const code=String(Math.floor(100000+Math.random()*900000));
+  const code=crypto.randomInt(100000,1000000).toString();
   const expiresAt=new Date(Date.now()+TTL_MS);
 
   // Send first. Only replace the stored token after the provider accepts the
