@@ -19,7 +19,7 @@ export default async function LandingPage() {
   return (
     <div className="public-landing">
       <header className="landing-nav">
-        <Link href="/" className="landing-brand"><span className="landing-logo">N</span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
+        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-icon.svg" alt="" width="37" height="37"/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
         <nav><a href="#features">Features</a><a href="#how">How it works</a><a href="#security">Security</a></nav>
         <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div>
       </header>
