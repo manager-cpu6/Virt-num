@@ -26,6 +26,12 @@ export function proxy(req:NextRequest){
     return NextResponse.rewrite(url);
   }
 
+  if(host==="app.numelixa.com"&&(pathname==="/"||pathname==="")){
+    const url=req.nextUrl.clone();
+    url.pathname="/android";
+    return NextResponse.rewrite(url);
+  }
+
   if(host==="apk.numelixa.com"){
     const url=req.nextUrl.clone();
     if(pathname==="/"||pathname==="") url.pathname="/android";
