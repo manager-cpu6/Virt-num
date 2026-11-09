@@ -20,7 +20,7 @@ export default function MobileAppsPage(){
      <div style={{fontSize:36,marginBottom:14}}>▣</div><span className="eyebrow" style={{color:"#00d9ff"}}>ANDROID · OFFICIAL</span>
      <h2 style={{fontSize:29,letterSpacing:"-1px",margin:"8px 0"}}>Numelixa for Android</h2>
      <p style={{color:"#a7b7d0",fontSize:14,lineHeight:1.75}}>Get the newest Numelixa mobile release. The download link serves the app release configured for this website rather than the previous mobile build.</p>
-     <a href="/api/mobile/apk" className="primary-btn full" style={{boxSizing:"border-box",display:"flex",justifyContent:"center",alignItems:"center",gap:10,textDecoration:"none",marginTop:20}}>Download Android APK <span>↓</span></a>
+     <a href="https://www.numelixa.com/api/mobile/apk" className="primary-btn full" style={{boxSizing:"border-box",display:"flex",justifyContent:"center",alignItems:"center",gap:10,textDecoration:"none",marginTop:20}}>Download Android APK <span>↓</span></a>
      <small style={{display:"block",marginTop:12,color:"#7185a5"}}>Package: com.numelixa.app · Android installation may ask you to allow this source.</small>
     </article>
 
