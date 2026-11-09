@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {NextResponse} from "next/server";
 import {requireUser,tokenHash,mongoId} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
@@ -17,7 +18,7 @@ export async function POST(){
   const fresh=await users.findOne({_id:String(user.id)},{projection:{passwordChangeLastAttemptAt:1,verifiedAt:1}});
   const last=new Date(fresh?.passwordChangeLastAttemptAt||0).getTime();
   if(now.getTime()-last<60*1000)return NextResponse.json({ok:false,error:"Wait 60 seconds before requesting another password code."},{status:429});
-  const code=String(Math.floor(100000+Math.random()*900000));
+  const code=crypto.randomInt(100000,1000000).toString();
   await users.updateOne({_id:String(user.id)},{$set:{passwordChangeLastAttemptAt:now}});
   await sendEmail(email,"Your Numelixa password change code",verificationEmail(code));
   const tokens=await collection<any>("emailTokens");

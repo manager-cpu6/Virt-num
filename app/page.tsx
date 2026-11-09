@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
+  if(host==="app.numelixa.com")redirect("/android");
   if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
   if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
   const user = await getUser().catch(() => null);
@@ -18,8 +19,8 @@ export default async function LandingPage() {
   return (
     <div className="public-landing">
       <header className="landing-nav">
-        <Link href="/" className="landing-brand"><span className="landing-logo">N</span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
-        <nav><a href="#features">Features</a><a href="#how">How it works</a><a href="#security">Security</a></nav>
+        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-icon.svg" alt="" width="37" height="37"/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
+        <nav><a href="#features">Features</a><a href="#how">How it works</a><a href="#security">Security</a><Link href="/android">Download APK</Link></nav>
         <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div>
       </header>
 

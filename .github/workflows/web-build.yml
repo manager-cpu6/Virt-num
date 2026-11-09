@@ -2,7 +2,7 @@ name: Numelixa Web Build
 
 on:
   push:
-    branches: [main, redesign/complete-auth-services-push, feat/mobile-api-sessions-commerce, support-chat-upgrade, support-chat-hardening, android-1.0.8-update-metadata]
+    branches: [main, redesign/complete-auth-services-push, feat/mobile-api-sessions-commerce, support-chat-upgrade, support-chat-hardening, android-1.0.8-update-metadata, feat/numelixa-major-brand-security-2026]
   workflow_dispatch:
 
 jobs:
@@ -15,5 +15,18 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Dependency security audit
+        continue-on-error: true
+        shell: bash
+        run: |
+          npm audit --json > /tmp/numelixa-npm-audit.json || true
+          node - <<'NODE'
+          const fs = require('fs');
+          const report = JSON.parse(fs.readFileSync('/tmp/numelixa-npm-audit.json', 'utf8'));
+          console.log('Dependency audit summary:', JSON.stringify(report.metadata?.vulnerabilities || {}));
+          for (const [name, item] of Object.entries(report.vulnerabilities || {})) {
+            console.log(JSON.stringify({ package: name, severity: item.severity, direct: item.isDirect, range: item.range, fixAvailable: item.fixAvailable }));
+          }
+          NODE
       - name: Production build
         run: npm run build
