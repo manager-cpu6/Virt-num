@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 
 export default async function LandingPage() {
   const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
+  if(host==="app.numelixa.com")redirect("/android");
   if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
   if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
   const user = await getUser().catch(() => null);
