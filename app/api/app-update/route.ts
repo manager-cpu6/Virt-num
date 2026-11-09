@@ -7,8 +7,8 @@ export const dynamic="force-dynamic";
 const FALLBACK_RELEASE={
   version:"1.0.13+14",
   versionCode:14,
-  sizeBytes:58396063,
-  apkUrl:"https://www.numelixa.com/android",
+  sizeBytes:58396043,
+  apkUrl:"https://www.numelixa.com/api/mobile/apk",
   sha256:"",
   releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
   publishedAt:"2026-11-08T00:00:00.000Z"
@@ -67,13 +67,13 @@ async function getRollingRelease(){
       ||assets.find((asset:any)=>String(asset.name||"").toLowerCase().endsWith(".apk"));
     const apkUrl=String(apk?.browser_download_url||"");
     const sizeBytes=Number(apk?.size||0);
-    if(!version||!versionCode||!apkUrl.startsWith("https://")||!sizeBytes)return null;
+    if(!version||!versionCode||!apkUrl.startsWith("https://")||sizeBytes<20*1024*1024)return null;
     const digest=String(apk?.digest||"");
     const sha256=digest.startsWith("sha256:")?digest.slice(7).toLowerCase():"";
     return {
       version,versionCode,sizeBytes,
       sizeMb:Number((sizeBytes/(1024*1024)).toFixed(2)),
-      sha256,apkUrl:"https://www.numelixa.com/android",
+      sha256,apkUrl:"https://www.numelixa.com/api/mobile/apk",
       releaseNotes:cleanReleaseNotes(release.body),
       publishedAt:release.published_at||null
     };
@@ -98,7 +98,7 @@ export async function GET(req:Request){
       sizeMb:Number((FALLBACK_RELEASE.sizeBytes/(1024*1024)).toFixed(2))
     };
     const version=String(latest?.version||"").trim();
-    if(latest&&version&&compareVersions(version,current.version)>0){
+    if(latest&&version&&Number(latest.sizeBytes||0)>=20*1024*1024&&compareVersions(version,current.version)>0){
       return NextResponse.json({
         ok:true,
         update:{
@@ -107,7 +107,7 @@ export async function GET(req:Request){
           sizeMb:Number(latest.sizeMb||0),
           sizeBytes:Number(latest.sizeBytes||0),
           sha256:String(latest.sha256||""),
-          apkUrl:"https://www.numelixa.com/android",
+          apkUrl:"https://www.numelixa.com/api/mobile/apk",
           releaseNotes:cleanReleaseNotes(latest.releaseNotes),
           force:Boolean(latest.force)||requiresUpgrade,
           publishedAt:latest.publishedAt||null
@@ -117,7 +117,7 @@ export async function GET(req:Request){
     // Keep the admin's mandatory-update policy attached to the live release
     // even when both records have the same version. This lets legacy installs
     // be forced forward without publishing a fake higher version.
-    if(latest&&version&&compareVersions(version,current.version)===0){
+    if(latest&&version&&Number(latest.sizeBytes||0)>=20*1024*1024&&compareVersions(version,current.version)===0){
       return NextResponse.json({
         ok:true,
         update:{

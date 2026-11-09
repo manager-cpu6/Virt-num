@@ -26,10 +26,14 @@ export function proxy(req:NextRequest){
     return NextResponse.rewrite(url);
   }
 
-  if(host==="apk.numelixa.com"){
+  if(host==="app.numelixa.com"&&(pathname==="/"||pathname==="")){
     const url=req.nextUrl.clone();
-    if(pathname==="/"||pathname==="") url.pathname="/android";
+    url.pathname="/android";
     return NextResponse.rewrite(url);
+  }
+
+  if(host==="apk.numelixa.com"){
+    return NextResponse.redirect(new URL("https://www.numelixa.com/api/mobile/apk"),302);
   }
 
   if(host==="api.numelixa.com"){
