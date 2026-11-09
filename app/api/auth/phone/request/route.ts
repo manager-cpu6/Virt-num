@@ -15,7 +15,7 @@ async function send(req:Request,mode:"sms"|"voice"){
  const now=new Date(),otps=await collection<any>("phoneOtps");
  const recent=await otps.findOne({phone,createdAt:{$gt:new Date(Date.now()-60*1000)}});
  if(recent)return NextResponse.json({ok:false,error:"Please wait 60 seconds before requesting another code.",retryAfter:60},{status:429});
- const code=String(Math.floor(100000+Math.random()*900000));
+ const code=crypto.randomInt(100000,1000000).toString();
  await otps.deleteMany({phone});
  await otps.insertOne({_id:mongoId(),phone,name,purpose,codeHash:hash(code),expiresAt:new Date(Date.now()+10*60*1000),createdAt:now,attempts:0});
  try{if(mode==="voice")await sendVoiceOtp(phone,code);else await sendSmsOtp(phone,code)}
