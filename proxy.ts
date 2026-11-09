@@ -33,9 +33,7 @@ export function proxy(req:NextRequest){
   }
 
   if(host==="apk.numelixa.com"){
-    const url=req.nextUrl.clone();
-    if(pathname==="/"||pathname==="") url.pathname="/android";
-    return NextResponse.rewrite(url);
+    return NextResponse.redirect(new URL("https://www.numelixa.com/api/mobile/apk"),302);
   }
 
   if(host==="api.numelixa.com"){
