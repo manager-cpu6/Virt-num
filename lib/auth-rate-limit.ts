@@ -12,7 +12,7 @@ function bucketKeys(email:string,headers:Headers){
   const identity=digest(email.trim().toLowerCase());
   const ip=String(headers.get("x-real-ip")||headers.get("x-forwarded-for")||"unknown").split(",")[0].trim();
   return {
-    identityKey:"login:"+windowId+":identity:"+identity,
+    identityKey:"login:"+windowId+":identity:"+identity+":"+digest(ip||"unknown"),
     ipKey:"login:"+windowId+":ip:"+digest(ip||"unknown"),
     expiresAt:new Date((windowId+2)*WINDOW_MS)
   };
