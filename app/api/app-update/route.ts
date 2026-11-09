@@ -84,11 +84,12 @@ async function getRollingRelease(){
 
 export async function GET(req:Request){
   try{
-    // Build 14 is the minimum supported native app. Older installations
-    // (including 1.0.1-era builds) must install the current APK before access
-    // policy is evaluated by newer clients.
+    // The minimum supported Android build is admin-controlled. Default 15
+    // migrates earlier builds to the redesigned, centrally managed app.
     const clientVersionCode=Number(new URL(req.url).searchParams.get("versionCode")||0);
-    const requiresUpgrade=clientVersionCode<14;
+    const accessSettings=await (await collection<any>("settings")).findOne({_id:"mobileAccess"},{projection:{minAppVersionCode:1}});
+    const minimumBuild=Math.max(0,Math.floor(Number(accessSettings?.minAppVersionCode??15)));
+    const requiresUpgrade=minimumBuild>0&&clientVersionCode<minimumBuild;
     const [latest,rollingRelease]=await Promise.all([
       (await collection<any>("appUpdates")).findOne({published:true},{sort:{publishedAt:-1}}),
       getRollingRelease()
