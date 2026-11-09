@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import {NextResponse} from "next/server";
 import {collection,mongoId} from "@/lib/mongo";
 import {createSession,createMobileSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
@@ -34,7 +35,7 @@ export async function POST(req:Request){
   await claimDeviceTokenForUser(id);
   const accessToken=nativeClient?await createMobileSession(id,requestMeta(req.headers)):null;
 
-  const code=String(Math.floor(100000+Math.random()*900000));
+  const code=crypto.randomInt(100000,1000000).toString();
   await users.updateOne({_id:id},{$set:{verificationEmailLastAttemptAt:now}});
 
   // Do not save a verification code until the mail provider accepts it.
