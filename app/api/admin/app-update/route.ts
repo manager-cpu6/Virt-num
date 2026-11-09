@@ -54,6 +54,8 @@ export async function POST(req:Request){
     }
     if(!Number.isFinite(sizeBytes)||sizeBytes<=0)
       return NextResponse.json({ok:false,error:"Unable to detect the exact APK file size. Check the APK URL and try again."},{status:400});
+    if(sizeBytes<20*1024*1024)
+      return NextResponse.json({ok:false,error:"This file is too small to be the official Numelixa Android APK. Upload the full official APK (at least 20 MB)."}, {status:400});
     const sizeMb=Number((sizeBytes/(1024*1024)).toFixed(2));
     const now=new Date();
     const doc={
