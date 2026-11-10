@@ -14,7 +14,7 @@ export async function generateMetadata():Promise<Metadata>{
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  if(host==="app.numelixa.com")return {
   metadataBase:new URL("https://app.numelixa.com"),
-  title:"Numelixa APK Download | Official Numelixa Android App",
+  title:{absolute:"Numelixa APK Download | Official Numelixa Android App"},
   description:"Download the official Numelixa APK for Android. Get the Numelixa app to manage virtual numbers, SMS verification, wallet, orders and notifications. Safe, direct APK download from app.numelixa.com.",
   keywords:["Numelixa APK","APK Numelixa","Numelixa app","app Numelixa","Numelixa Android app","download Numelixa APK","Numelixa download","Numelixa mobile app","Numelixa Android"],
   alternates:{canonical:"https://app.numelixa.com/"},
