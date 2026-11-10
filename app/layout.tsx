@@ -1,4 +1,5 @@
-import "./globals.css";\nimport "./numelixa-download.css";
+import "./globals.css";
+import "./numelixa-download.css";
 import "./numelixa-auth-premium.css";
 import "./first-party-checkout.css";
 import "./usd-wallet.css";
