@@ -5,12 +5,30 @@ import {headers} from "next/headers";
 import FirstPartyCheckout from "@/components/FirstPartyCheckout";
 import CryptoPaymentPage from "@/components/CryptoPaymentPage";
 import LivePhoneDemo from "@/components/LivePhoneDemo";
+import AndroidDownloadPage from "@/components/AndroidDownloadPage";
+import type {Metadata} from "next";
 
 export const dynamic = "force-dynamic";
 
+export async function generateMetadata():Promise<Metadata>{
+ const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
+ if(host==="app.numelixa.com")return {
+  metadataBase:new URL("https://app.numelixa.com"),
+  title:"Numelixa APK Download | Official Numelixa Android App",
+  description:"Download the official Numelixa APK for Android. Get the Numelixa app to manage virtual numbers, SMS verification, wallet, orders and notifications. Safe, direct APK download from app.numelixa.com.",
+  keywords:["Numelixa APK","APK Numelixa","Numelixa app","app Numelixa","Numelixa Android app","download Numelixa APK","Numelixa download","Numelixa mobile app","Numelixa Android"],
+  alternates:{canonical:"https://app.numelixa.com/"},
+  robots:{index:true,follow:true,googleBot:{index:true,follow:true}},
+  openGraph:{type:"website",url:"https://app.numelixa.com/",siteName:"Numelixa",title:"Numelixa APK Download | Official Android App",description:"Get the official Numelixa Android app for virtual numbers, SMS, wallet and order updates.",images:[{url:"https://numelixa.com/numelixa-favicon.png",width:512,height:512,alt:"Numelixa Android app icon"}]},
+  twitter:{card:"summary_large_image",title:"Numelixa APK Download | Official Android App",description:"Download the official Numelixa Android app.",images:["https://numelixa.com/numelixa-favicon.png"]},
+  icons:{icon:"https://numelixa.com/numelixa-favicon.png",apple:"https://numelixa.com/numelixa-favicon.png"}
+ };
+ return {};
+}
+
 export default async function LandingPage() {
   const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
-  if(host==="app.numelixa.com")redirect("/api/mobile/apk");
+  if(host==="app.numelixa.com")return <AndroidDownloadPage/>;
   if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
   if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
   const user = await getUser().catch(() => null);
