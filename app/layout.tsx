@@ -1,4 +1,4 @@
-import "./globals.css";
+import "./globals.css";\nimport "./numelixa-download.css";
 import "./numelixa-auth-premium.css";
 import "./first-party-checkout.css";
 import "./usd-wallet.css";
@@ -29,7 +29,7 @@ export const metadata:Metadata={
 };
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
- const isDocsHost=host==="docs.numelixa.com";
+ const isDocsHost=host==="docs.numelixa.com";\n const isDownloadHost=host==="app.numelixa.com";
  const isCheckoutHost=host==="checkout.numelixa.com"||host==="payment.numelixa.com";
- return <html lang="en"><body>{!isCheckoutHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
+ return <html lang="en"><body>{!isCheckoutHost&&!isDownloadHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&!isDownloadHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
 }
