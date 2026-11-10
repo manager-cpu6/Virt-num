@@ -5,13 +5,13 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const FALLBACK_RELEASE={
-  version:"1.0.13+14",
-  versionCode:14,
-  sizeBytes:58396043,
+  version:"1.0.15+16",
+  versionCode:16,
+  sizeBytes:58478507,
   apkUrl:"https://www.numelixa.com/api/mobile/apk",
   sha256:"",
   releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
-  publishedAt:"2026-11-08T00:00:00.000Z"
+  publishedAt:"2026-11-10T13:55:01.000Z"
 };
 function cleanReleaseNotes(raw:unknown){
   const text=String(raw||"")
@@ -51,31 +51,34 @@ function compareVersions(left:string,right:string){
 
 async function getRollingRelease(){
   try{
-    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
-      headers:{Accept:"application/vnd.github+json"},
-      next:{revalidate:300}
-    });
-    if(!response.ok)return null;
-    const release=await response.json();
+    const [releaseResponse,sourceResponse]=await Promise.all([
+      fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
+        headers:{Accept:"application/vnd.github+json"},
+        cache:"no-store"
+      }),
+      fetch("https://raw.githubusercontent.com/manager-cpu6/Numelixa-app/main/pubspec.yaml",{cache:"no-store"})
+    ]);
+    if(!releaseResponse.ok||!sourceResponse.ok)return null;
+    const [release,source]=await Promise.all([releaseResponse.json(),sourceResponse.text()]);
     if(release.draft||release.prerelease)return null;
-    const name=String(release.name||release.tag_name||"").trim();
-    const versionMatch=name.match(/(\d+\.\d+\.\d+\+\d+)/);
-    const version=versionMatch?.[1]||"";
+    // The release asset can be replaced while GitHub keeps the original release
+    // title/body. Read the authoritative app version from the exact main source
+    // that produced the latest APK, rather than trusting stale release metadata.
+    const version=String(source.match(/^version:\s*([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)\s*$/m)?.[1]||"");
     const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
     const assets=Array.isArray(release.assets)?release.assets:[];
-    const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk")
-      ||assets.find((asset:any)=>String(asset.name||"").toLowerCase().endsWith(".apk"));
+    const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk");
     const apkUrl=String(apk?.browser_download_url||"");
     const sizeBytes=Number(apk?.size||0);
-    if(!version||!versionCode||!apkUrl.startsWith("https://")||sizeBytes<20*1024*1024)return null;
+    if(!version||!versionCode||!apkUrl.startsWith("https://github.com/manager-cpu6/Numelixa-app/releases/download/")||sizeBytes<20*1024*1024)return null;
     const digest=String(apk?.digest||"");
     const sha256=digest.startsWith("sha256:")?digest.slice(7).toLowerCase():"";
     return {
       version,versionCode,sizeBytes,
       sizeMb:Number((sizeBytes/(1024*1024)).toFixed(2)),
       sha256,apkUrl:"https://www.numelixa.com/api/mobile/apk",
-      releaseNotes:cleanReleaseNotes(release.body),
-      publishedAt:release.published_at||null
+      releaseNotes:"Numelixa "+version+" — latest Android release with refreshed mobile experience and reliability improvements.",
+      publishedAt:apk.updated_at||release.published_at||null
     };
   }catch{
     return null;
@@ -88,7 +91,7 @@ export async function GET(req:Request){
     // (including 1.0.1-era builds) must install the current APK before access
     // policy is evaluated by newer clients.
     const clientVersionCode=Number(new URL(req.url).searchParams.get("versionCode")||0);
-    const requiresUpgrade=clientVersionCode<14;
+    const requiresUpgrade=clientVersionCode<16;
     const [latest,rollingRelease]=await Promise.all([
       (await collection<any>("appUpdates")).findOne({published:true},{sort:{publishedAt:-1}}),
       getRollingRelease()
