@@ -1138,3 +1138,60 @@ body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{b
 /* The top navigation uses one solid brand surface rather than a two-tone gradient. */
 .topbar{background:#071329!important}
 .topbar-inner{background:transparent!important}
+
+
+/* Numelixa unified brand and wallet dashboard finishing pass */
+.reference-dashboard .nx-dashboard-balance-v2{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(150px,.8fr) auto;align-items:center;gap:18px;margin:16px 0 22px;padding:22px 24px;border-radius:24px;border:1px solid rgba(0,217,255,.2);background:radial-gradient(ellipse at 0 0,rgba(22,119,255,.17),transparent 52%),linear-gradient(135deg,rgba(9,28,56,.96),rgba(5,13,29,.96));box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06)}
+.nx-dashboard-balance-v2 .nx-dashboard-balance-label{display:block;color:#72dfff;font-size:10px;font-weight:900;letter-spacing:.17em}
+.nx-dashboard-balance-v2 .nx-dashboard-balance-copy strong{display:block;margin:7px 0 3px;color:#fff;font-size:clamp(27px,4vw,38px);font-weight:900;letter-spacing:-.055em;font-variant-numeric:tabular-nums}
+.nx-dashboard-balance-v2 .nx-dashboard-balance-copy small{color:#91a8c4;font-size:11px}
+.nx-dashboard-coin-total{display:flex;align-items:center;gap:11px;padding:11px 14px;border:1px solid rgba(113,59,255,.28);border-radius:16px;background:linear-gradient(135deg,rgba(113,59,255,.14),rgba(22,119,255,.08))}
+.nx-dashboard-coin-symbol{width:37px;height:37px;display:grid;place-items:center;border-radius:12px;color:#fff;font-size:21px;background:linear-gradient(145deg,#1677ff,#8b54ff);box-shadow:0 7px 20px rgba(113,59,255,.25)}
+.nx-dashboard-coin-total b{display:block;color:#f6f8ff;font-size:19px;line-height:1.1;font-variant-numeric:tabular-nums}
+.nx-dashboard-coin-total small{display:block;margin-top:4px;color:#aabbd4;font-size:9px;font-weight:900;letter-spacing:.13em}
+.nx-dashboard-balance-v2 .nx-dashboard-topup{min-height:46px;padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:8px;white-space:nowrap;border-radius:14px;color:white;background:linear-gradient(105deg,#1677ff,#4d5bff 60%,#713bff);font-size:12px;font-weight:900;box-shadow:0 9px 25px rgba(22,119,255,.23)}
+.nx-dashboard-balance-v2 .nx-dashboard-topup span{font-size:18px}.nx-dashboard-balance-v2 .nx-dashboard-topup b{font-size:17px}
+.reference-dashboard .home-live-board-v2{margin-top:28px}
+.reference-dashboard .live-v2-heading h2,.reference-dashboard .section-head h2{color:#f5f8ff;letter-spacing:-.045em}
+.reference-dashboard .live-v2-heading p{color:#91a8c4}
+.reference-dashboard .quick-card{min-height:94px;border-radius:20px!important}
+.reference-dashboard .quick-card>span{color:#a8d9ff;background:linear-gradient(145deg,rgba(22,119,255,.2),rgba(113,59,255,.15));border-color:rgba(104,151,207,.24)}
+.reference-dashboard .quick-card b{color:#f5f8ff}.reference-dashboard .quick-card small{color:#91a8c4}
+.reference-dashboard .quick-card i{color:#65caff}
+.reference-dashboard .nx-whatsapp-help{border:1px solid rgba(0,229,195,.2)!important;background:linear-gradient(135deg,rgba(5,37,43,.92),rgba(6,20,37,.95))!important;color:#f5f8ff!important;border-radius:20px!important}
+.reference-dashboard .nx-whatsapp-help small{color:#9bb5cb!important}
+.reference-dashboard .section-head{margin-top:30px}
+.reference-dashboard .topbar{border:1px solid rgba(104,151,207,.14);border-radius:18px;padding:0 10px;box-shadow:0 12px 35px rgba(0,0,0,.16)}
+.reference-dashboard .coin-pill{border-color:rgba(0,217,255,.35)!important}
+@media(max-width:620px){
+ .reference-dashboard{padding:10px 13px 130px}
+ .reference-dashboard .nx-dashboard-balance-v2{grid-template-columns:1fr auto;gap:13px;padding:18px;border-radius:21px}
+ .nx-dashboard-coin-total{grid-column:1;grid-row:2;max-width:210px}
+ .nx-dashboard-balance-v2 .nx-dashboard-topup{grid-column:2;grid-row:1 / span 2;align-self:center;padding:0 13px}
+ .reference-dashboard .home-hero-refresh{min-height:0!important;padding:25px 21px!important}
+ .reference-dashboard .home-hero-refresh h1{font-size:clamp(35px,9vw,48px)!important}
+ .reference-dashboard .nx-network-visual{height:180px;transform:scale(.88);transform-origin:center}
+}
+@media(max-width:390px){
+ .reference-dashboard .nx-dashboard-balance-v2{grid-template-columns:1fr;gap:12px}
+ .nx-dashboard-coin-total{grid-column:1;grid-row:auto}
+ .nx-dashboard-balance-v2 .nx-dashboard-topup{grid-column:1;grid-row:auto;width:100%}
+}
+.public-landing{background:radial-gradient(ellipse at 50% 0,rgba(22,119,255,.1),transparent 42%),#050b18!important;color:#f5f8ff!important}
+.public-landing .landing-nav{background:rgba(6,17,36,.88)!important;border:1px solid rgba(104,151,207,.22)!important;box-shadow:0 18px 55px rgba(0,0,0,.25)!important}
+.public-landing .landing-brand b,.public-landing .landing-copy h1,.public-landing .landing-section-head h2,.public-landing .landing-final h2{color:#f5f8ff!important}
+.public-landing .landing-brand small,.public-landing .landing-copy p,.public-landing .landing-section p,.public-landing .landing-final p{color:#9bb1cc!important}
+.public-landing .landing-logo{background:linear-gradient(145deg,#1677ff,#713bff)!important;color:#fff!important;border:1px solid rgba(255,255,255,.18);box-shadow:0 0 26px rgba(22,119,255,.25)!important}
+.public-landing .landing-start,.public-landing .landing-primary{background:linear-gradient(105deg,#1677ff,#4b5bff 58%,#713bff)!important;color:#fff!important;box-shadow:0 12px 30px rgba(22,119,255,.24)!important}
+.public-landing .landing-secondary,.public-landing .landing-login{color:#dceaff!important}
+.public-landing .landing-badge{background:rgba(0,217,255,.08)!important;border-color:rgba(0,217,255,.2)!important;color:#64dcff!important}
+.public-landing .landing-copy h1 em,.public-landing .landing-section-head h2 em{color:#53caff!important}
+.public-landing .landing-stats,.public-landing .landing-feature-grid article,.public-landing .landing-steps article,.public-landing .security-panel{background:rgba(8,20,42,.78)!important;border:1px solid rgba(104,151,207,.18)!important;color:#f5f8ff!important;box-shadow:0 16px 45px rgba(0,0,0,.2)!important}
+.public-landing .landing-stats strong,.public-landing .landing-feature-grid b,.public-landing .landing-steps b,.public-landing .security-panel strong{color:#f5f8ff!important}
+.public-landing .landing-stats span,.public-landing .landing-feature-grid p,.public-landing .landing-steps p,.public-landing .security-panel small{color:#91a8c4!important}
+.public-landing .landing-feature-grid article>div{background:linear-gradient(145deg,rgba(22,119,255,.22),rgba(113,59,255,.18))!important}
+.public-landing .landing-security{background:radial-gradient(ellipse at 85% 15%,rgba(22,119,255,.22),transparent 45%),linear-gradient(135deg,#071329,#050b18)!important;border:1px solid rgba(104,151,207,.2)!important}
+.public-landing .landing-final{background:radial-gradient(ellipse at 90% 0,rgba(113,59,255,.4),transparent 45%),linear-gradient(115deg,#0b2b55,#071329 72%)!important;border:1px solid rgba(0,217,255,.18)}
+.public-landing .landing-footer{color:#91a8c4!important;border-top-color:rgba(104,151,207,.16)!important}
+.public-landing .landing-footer a{color:#b8cbe2!important}
+@media(max-width:700px){.public-landing .landing-nav{background:rgba(6,17,36,.94)!important}.public-landing .landing-copy h1{font-size:clamp(44px,12vw,62px)!important}}
