@@ -6,10 +6,10 @@ function digest(s:string){return crypto.createHash("sha256").update(s).digest();
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
 function parse(body:string){
- const amountMatch=body.match(/(?:ETB|Birr|Amount|paid|received|credited)\\s*[:=]?\\s*([\\d,]+(?:\\.\\d{1,2})?)|([\\d,]+(?:\\.\\d{1,2})?)\\s*(?:ETB|Birr)/i);
+ const amountMatch=body.match(/(?:ETB|Birr|Amount|paid|received|credited)\s*[:=]?\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)/i);
  const amount=Number((amountMatch?.[1]||amountMatch?.[2]||"").replace(/,/g,""));
- const ref=body.match(/(?:reference|ref|txn(?:\\s*id)?|transaction\\s*id)\\s*[:#= -]*([A-Z0-9-]{6,})/i)?.[1]||"";
- const payer=body.match(/(?:from|sender|payer|customer)\\D{0,16}(\\+?251[79]\\d{8}|0[79]\\d{8})/i)?.[1]||"";
+ const ref=body.match(/(?:reference|ref|txn(?:\s*id)?|transaction\s*id)\s*[:#= -]*([A-Z0-9-]{6,})/i)?.[1]||"";
+ const payer=body.match(/(?:from|sender|payer|customer)\D{0,16}(\+?251[79]\d{8}|0[79]\d{8})/i)?.[1]||"";
  const positive=/(received|credited|deposit|transfer successful|payment successful|you have received)/i.test(body);
  return {amount,reference:ref,payerPhone:payer?phone(payer):"",positive};
 }
