@@ -27,6 +27,7 @@ export async function POST(req:Request){
    await settings.updateOne({_id:"payments"},{$set:{ebirrDeviceTokenHash:hash,ebirrDevicePairedAt:new Date(),updatedAt:new Date()}},{upsert:true});
    return NextResponse.json({ok:true,deviceToken:token,message:"Copy this pairing token into Ebirr-Numelixa. It is shown once."});
   }
+  if(action==="revoke_device"){await settings.updateOne({_id:"payments"},{$unset:{ebirrDeviceTokenHash:"",ebirrDevicePairedAt:""},$set:{updatedAt:new Date()}},{upsert:true});return NextResponse.json({ok:true,message:"The paired Ebirr-Numelixa device has been revoked."});}
   if(action==="review"){
    const orderId=String(b.orderId||"").trim(),decision=String(b.decision||"");
    if(!orderId||!["approve","reject"].includes(decision))return NextResponse.json({ok:false,error:"Choose a valid payment decision."},{status:400});
