@@ -4,7 +4,7 @@ import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
 export const runtime="nodejs";export const dynamic="force-dynamic";
-function normalizePhone(v:string){return v.replace(/[\\s()-]/g,"").replace(/^\\+?251/,"0");}
+function normalizePhone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
 export async function POST(req:Request){
  try{
   const user=await requireUser();
