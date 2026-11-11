@@ -15,7 +15,7 @@ export async function POST(req:Request){
   if(!receiver||!(rate>0))return NextResponse.json({ok:false,error:"eBirr receiving details are not configured."},{status:503});
   const body=await req.json(),amount=Number(body.amountUsd),phone=normalizePhone(String(body.payerPhone||""));
   const settings=await getSettings();
-  if(!Number.isFinite(amount)||Math.round(amount*100)!==amount*100||amount<settings.minTopupUsd||amount>Math.min(settings.maxTopupUsd,10000))return NextResponse.json({ok:false,error:"Enter a valid USD amount within the wallet limits."},{status:400});
+  if(!Number.isFinite(amount)||Math.abs(Math.round(amount*100)/100-amount)>0.000001||amount<settings.minTopupUsd||amount>Math.min(settings.maxTopupUsd,10000))return NextResponse.json({ok:false,error:"Enter a valid USD amount within the wallet limits."},{status:400});
   if(!/^0[79][0-9]{8}$/.test(phone))return NextResponse.json({ok:false,error:"Enter a valid Ethiopian mobile number."},{status:400});
   const amountEtb=Number((amount*rate).toFixed(2)),coins=Math.round(amount*settings.coinsPerUsd);
   const orderId="ebirr_"+crypto.randomUUID(),now=new Date();
