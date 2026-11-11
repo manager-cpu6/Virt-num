@@ -25,7 +25,7 @@ export async function POST(req:Request){
   const payments=await collection<any>("payments");
   let matched=false,reason="sms_does_not_contain_completed_payment_details";
   if(parsed.positive&&parsed.amount&&parsed.reference){
-   const order=await payments.findOne({provider:"ebirr_manual",transactionReference:parsed.reference,status:"pending_review",credited:{$ne:true}});
+   const order=await payments.findOne({provider:"ebirr_manual",method:{$in:["ebirr","coopay_ebirr","kaafi_ebirr"]},transactionReference:parsed.reference,status:"pending_review",credited:{$ne:true}});
    reason="no_order_reference_match";
    if(order){
     const amountMatches=Math.abs(Number(order.amountEtb)-parsed.amount)<0.01;
