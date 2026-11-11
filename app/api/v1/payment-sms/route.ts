@@ -28,7 +28,8 @@ export async function POST(req:Request){
   let matched=false,reason="no_order_reference_match";
   if(order){
    const amountMatches=Math.abs(Number(order.amountEtb)-parsed.amount)<0.01;
-   const payerMatches=!!parsed.payerPhone&&phone(String(order.payerPhone||""))===parsed.payerPhone;\n   const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(settings?.ebirrReceiver||""));
+   const payerMatches=!!parsed.payerPhone&&phone(String(order.payerPhone||""))===parsed.payerPhone;
+   const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(settings?.ebirrReceiver||""));
    if(amountMatches&&payerMatches&&receiverMatches){
     await payments.updateOne({_id:order._id,status:"pending_review",credited:{$ne:true}},{$set:{smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone||null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,updatedAt:new Date()}});
     matched=true;reason="reference_amount_and_available_payer_match";
