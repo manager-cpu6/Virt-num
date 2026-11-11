@@ -6,7 +6,8 @@ const money=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency
 export default function PaymentMethodChooser(){
  const [amount,setAmount]=useState("5.00"),[localAvailable,setLocalAvailable]=useState(false),[ebirrAvailable,setEbirrAvailable]=useState(false),[loading,setLoading]=useState(true),[error,setError]=useState("");
  useEffect(()=>{const params=new URLSearchParams(window.location.search);const raw=params.get("amount")||"5.00";if(/^\d+(?:\.\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));Promise.all([fetch("/api/payments/sifalo/status",{cache:"no-store"}).then(r=>r.json()),fetch("/api/payments/ebirr/status",{cache:"no-store"}).then(r=>r.json())]).then(([local,ebirr])=>{setLocalAvailable(local?.ok===true&&local?.open===true&&local?.configured===true);setEbirrAvailable(ebirr?.ok===true&&ebirr?.open===true&&Number(ebirr?.etbPerUsd)>0)}).catch(()=>{setLocalAvailable(false);setEbirrAvailable(false)}).finally(()=>setLoading(false));},[]);
- function goLocal(){window.location.href="https://checkout.numelixa.com/?amount="+encodeURIComponent(amount);}\n function goEbirr(){window.location.href="/ebirr-checkout?amount="+encodeURIComponent(amount);}
+ function goLocal(){window.location.href="https://checkout.numelixa.com/?amount="+encodeURIComponent(amount);}
+ function goEbirr(){window.location.href="/ebirr-checkout?amount="+encodeURIComponent(amount);}
  function goCrypto(){window.location.href="https://payment.numelixa.com/?amount="+encodeURIComponent(amount)+"&returnTo="+encodeURIComponent("https://numelixa.com/wallet?payment=success");}
  return <main className="nx-method-chooser">
   <div className="nx-method-chooser-wrap">
