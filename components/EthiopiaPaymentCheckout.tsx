@@ -1,6 +1,5 @@
 "use client";
 import {useEffect,useState} from "react";
-import {useSearchParams} from "next/navigation";
 type Lang="so"|"am"|"en";
 type Method="coopay_ebirr"|"kaafi_ebirr"|"cbe_birr"|"cbe_bank";
 const copy:any={
@@ -16,10 +15,9 @@ const methods:any={
 };
 const money=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 export default function EthiopiaPaymentCheckout(){
- const params=useSearchParams();const initial=(params.get("method")||"coopay_ebirr") as Method;
- const [lang,setLang]=useState<Lang>("so"),[method,setMethod]=useState<Method>(methods[initial]?initial:"coopay_ebirr"),[amount,setAmount]=useState(params.get("amount")||"5.00"),[phone,setPhone]=useState(""),[settings,setSettings]=useState<any>(null),[order,setOrder]=useState<any>(null),[reference,setReference]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[copied,setCopied]=useState("");
+ const [lang,setLang]=useState<Lang>("so"),[method,setMethod]=useState<Method>("coopay_ebirr"),[amount,setAmount]=useState("5.00"),[phone,setPhone]=useState(""),[settings,setSettings]=useState<any>(null),[order,setOrder]=useState<any>(null),[reference,setReference]=useState(""),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[copied,setCopied]=useState("");
  const t=copy[lang],m=methods[method];
- useEffect(()=>{fetch("/api/payments/ebirr/status",{cache:"no-store"}).then(r=>r.json()).then(setSettings).catch(()=>setError("Unable to load payment rate."));},[]);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search),initial=(params.get("method")||"coopay_ebirr") as Method,raw=params.get("amount")||"5.00";if(methods[initial])setMethod(initial);if(/^\\d+(?:\\.\\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));fetch("/api/payments/ebirr/status",{cache:"no-store"}).then(r=>r.json()).then(setSettings).catch(()=>setError("Unable to load payment rate."));},[]);
  useEffect(()=>{if(!order?.orderId||order.status==="paid")return;const timer=window.setInterval(async()=>{try{const r=await fetch("/api/payments/ethiopia/status?orderId="+encodeURIComponent(order.orderId),{cache:"no-store",credentials:"include"});const d=await r.json();if(d.ok&&d.status==="paid"){setOrder((old:any)=>({...old,status:"paid"}));setNotice(t.success);window.setTimeout(()=>location.href="/wallet?payment=success",2200);}else if(d.ok&&d.status==="rejected"){setError("Payment was rejected. Please contact support.");}}catch{}},5000);return()=>window.clearInterval(timer);},[order?.orderId,order?.status,t.success]);
  const rate=Number(settings?.etbPerUsd||0),due=Number(amount)*rate,validAmount=/^\d+(?:\.\d{1,2})?$/.test(amount)&&Number(amount)>0;
  async function create(){setBusy(true);setError("");setNotice("");try{const me=await fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json());if(!me.user){location.href="/login?next="+encodeURIComponent(location.pathname+location.search);return;}if(!me.user.verified_at){location.href="/verify-email";return;}const r=await fetch("/api/payments/ethiopia/create",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({amountUsd:Number(amount),payerPhone:phone,method})});const d=await r.json();if(!r.ok||!d.ok)throw Error(d.error||"Unable to create payment order.");setOrder(d);setNotice(t.pending);}catch(e){setError(e instanceof Error?e.message:"Unable to prepare payment.");}finally{setBusy(false);}}
