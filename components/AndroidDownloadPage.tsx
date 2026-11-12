@@ -19,7 +19,7 @@ async function getRelease(){
 function PhonePreview({variant="home"}:{variant?:string}){
  return <div className={`nxdl-phone nxdl-phone-${variant}`}>
   <div className="nxdl-phone-top"><span>9:41</span><span>● ● ● ▰</span></div>
-  <div className="nxdl-appbar"><img src="/numelixa-favicon.png" alt="Numelixa app icon"/><b>Numelixa</b><span>•••</span></div>
+  <div className="nxdl-appbar"><img src="/numelixa-brand.svg" alt="Numelixa app icon"/><b>Numelixa</b><span>•••</span></div>
   {variant==="home"?<><div className="nxdl-greeting"><small>YOUR NUMELIXA WALLET</small><strong>$24.80</strong><span>Available balance</span></div><div className="nxdl-quick"><i>＋</i><i>⌕</i><i>◷</i></div><div className="nxdl-phone-label">Choose a service</div><div className="nxdl-services"><span>◉<b>WhatsApp</b></span><span>✉<b>Telegram</b></span><span>◎<b>Other</b></span><span>✦<b>More</b></span></div><div className="nxdl-order"><span>Recent activity</span><b>Verification ready</b><small>Your number is waiting for a code</small></div></>:<><div className="nxdl-screen-title">Your number is ready</div><div className="nxdl-number">+1 202 ••• 0184</div><div className="nxdl-code"><small>VERIFICATION CODE</small><b>482 915</b><span>Message received securely</span></div><div className="nxdl-progress"><i/></div><div className="nxdl-order"><b>Live SMS updates</b><small>Stay up to date as your order changes</small></div></>}
   <div className="nxdl-bottom"><span>⌂</span><span>▣</span><span>◉</span><span>☻</span></div>
  </div>
@@ -30,7 +30,7 @@ export default async function AndroidDownloadPage(){
  return <div className="nxdl-page">
   <div className="nxdl-glow nxdl-glow-one"/><div className="nxdl-glow nxdl-glow-two"/>
   <header className="nxdl-nav">
-   <Link href="/" className="nxdl-brand"><img src="/numelixa-favicon.png" alt="Numelixa logo"/><span><b>Numelixa</b><small>ANDROID APP</small></span></Link>
+   <Link href="/" className="nxdl-brand"><img src="/numelixa-brand.svg" alt="Numelixa logo"/><span><b>Numelixa</b><small>ANDROID APP</small></span></Link>
    <nav><a href="#features">Features</a><a href="#screens">App preview</a><a href="#faq">FAQ</a></nav>
    <a className="nxdl-nav-cta" href="/api/mobile/apk">Download APK <span>↓</span></a>
   </header>
@@ -79,7 +79,7 @@ export default async function AndroidDownloadPage(){
     <article><b>How do I install it?</b><p>Download the APK, open the downloaded file and follow Android's installation prompts. Only install updates from official Numelixa links.</p></article>
     <article><b>Will my existing account work?</b><p>Sign in with your existing Numelixa account. Keep your app updated to receive the latest improvements.</p></article>
    </div></section>
-   <section className="nxdl-last"><img src="/numelixa-favicon.png" alt="Numelixa icon"/><h2>One app. Your Numelixa workspace.</h2><a href="/api/mobile/apk">Download the Android app <span>↓</span></a></section>
+   <section className="nxdl-last"><img src="/numelixa-brand.svg" alt="Numelixa icon"/><h2>One app. Your Numelixa workspace.</h2><a href="/api/mobile/apk">Download the Android app <span>↓</span></a></section>
   </main>
   <footer className="nxdl-footer"><span>© 2026 Numelixa. All rights reserved.</span><div><a href="https://www.numelixa.com/privacy">Privacy</a><a href="https://www.numelixa.com/terms">Terms</a><a href="https://www.numelixa.com/faq">Help center</a><a href="https://www.numelixa.com">Main website</a></div></footer>
   <script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify({"@context":"https://schema.org","@type":"SoftwareApplication","name":"Numelixa","alternateName":["Numelixa APK","Numelixa Android App","Numelixa App"],"applicationCategory":"BusinessApplication","operatingSystem":"Android","description":"Official Numelixa Android app for managing virtual numbers, SMS verification, wallet, orders and account notifications.","downloadUrl":"https://app.numelixa.com/api/mobile/apk","installUrl":"https://app.numelixa.com/","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"Numelixa","url":"https://numelixa.com"},"image":"https://numelixa.com/numelixa-favicon.png","softwareVersion":release?.version||undefined,"fileSize":release?.size?release.size+" MB":undefined})}}/>
