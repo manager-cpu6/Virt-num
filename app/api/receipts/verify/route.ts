@@ -1,5 +1,6 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
+import {getSettings} from "@/lib/settings";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(req:Request){
@@ -13,7 +14,8 @@ export async function GET(req:Request){
    :await transactions.findOne({receiptId:code,type:"credit"});
   if(!transaction)return NextResponse.json({ok:true,valid:false,receiptId:code},{headers:{"Cache-Control":"no-store"}});
   const service=String(payment?.methodName||payment?.method||payment?.provider||transaction.description||"Numelixa wallet credit");
-  const amountUsd=Number(payment?.amountUsd??transaction.amount??0);
+  const pricing=await getSettings(),rate=Number(pricing.coinsPerUsd)||100;
+  const amountUsd=Number(payment?.amountUsd??(Number(transaction.amount||0)/rate));
   const amountEtb=Number(payment?.amountEtb||0);
   const paidAt=payment?.paidAt||payment?.smsMatchedAt||transaction.createdAt||null;
   const reference=String(payment?.transactionReference||payment?.txid||payment?.orderId||"");
