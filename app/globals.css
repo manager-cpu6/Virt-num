@@ -1195,3 +1195,28 @@ body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{b
 .public-landing .landing-footer{color:#91a8c4!important;border-top-color:rgba(104,151,207,.16)!important}
 .public-landing .landing-footer a{color:#b8cbe2!important}
 @media(max-width:700px){.public-landing .landing-nav{background:rgba(6,17,36,.94)!important}.public-landing .landing-copy h1{font-size:clamp(44px,12vw,62px)!important}}
+
+
+/* Unified home header palette: use the site's standard surface color. */
+.topbar-brand .topbar-inner{
+  background:var(--surface)!important;
+  border:1px solid var(--line)!important;
+  border-radius:18px!important;
+  padding:8px 12px!important;
+  box-shadow:var(--shadow-soft)!important;
+}
+.topbar-brand .brand-copy b{color:var(--ink)!important}
+.topbar-brand .brand-copy small{color:var(--muted)!important}
+.topbar-brand .nx-balance-pill{
+  background:var(--surface)!important;
+  color:var(--ink)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:none!important;
+}
+.topbar-brand .nx-balance-pill .coin-icon{color:var(--ink)!important}
+.topbar-brand .home-menu-btn{
+  background:var(--surface)!important;
+  color:var(--ink)!important;
+  border:1px solid var(--line)!important;
+  box-shadow:none!important;
+}
