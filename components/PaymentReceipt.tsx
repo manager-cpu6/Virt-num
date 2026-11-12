@@ -5,7 +5,7 @@ const code39:Record<string,string>={"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnn
 function Barcode({value}:{value:string}){
  const encoded="*"+value.toUpperCase().replace(/[^0-9A-Z. $/+%-]/g,"")+"*";
  const bits=useMemo(()=>{let total=0;const bars:boolean[]=[],widths:number[]=[];for(const ch of encoded){const pattern=code39[ch]||code39["-"];for(let i=0;i<pattern.length;i++){const width=pattern[i]==="w"?3:1;widths.push(width);bars.push(i%2===0);total+=width;}widths.push(1);bars.push(false);total++;}return{bars,widths,total};},[encoded]);
- let cursor=0;return <svg role="img" aria-label={"Barcode for receipt "+value} viewBox={"0 0 "+bits.total+" 58"} width="100%" height="58" preserveAspectRatio="none" shapeRendering="crispEdges">{bits.bars.map((bar,i)=>{const x=cursor;cursor+=bits.widths[i];return bar?<rect key={i} x={x} y="0" width={bits.widths[i]} height="48" fill="#111827"/>:null;})}</svg>;
+ let cursor=10;return <svg role="img" aria-label={"Barcode for receipt "+value} viewBox={"0 0 "+(bits.total+20)+" 58"} width="100%" height="58" preserveAspectRatio="none" shapeRendering="crispEdges">{bits.bars.map((bar,i)=>{const x=cursor;cursor+=bits.widths[i];return bar?<rect key={i} x={x} y="0" width={bits.widths[i]} height="48" fill="#111827"/>:null;})}</svg>;
 }
 const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
 const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
