@@ -16,13 +16,13 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
  return <section className="nx-payment-receipt" aria-label="Verified Numelixa payment receipt">
   <div className="nx-receipt-top"><div className="nx-receipt-brand"><span className="nx-receipt-brandmark">N</span><span><b>NUMELIXA</b><small>GLOBAL DIGITAL SERVICES</small></span></div><div className="nx-receipt-status"><i/> VERIFIED PAYMENT</div></div>
   <div className="nx-receipt-title"><span>OFFICIAL PAYMENT RECEIPT</span><h2>Payment received.</h2><p>Your wallet top-up has been verified and credited successfully.</p></div>
-  <div className="nx-receipt-amount"><small>AMOUNT PAID</small><strong>{usd(receipt.amountUsd)}</strong><span>{etb(receipt.amountEtb)} ETB</span></div>
+  <div className="nx-receipt-amount"><small>AMOUNT PAID</small><strong>{usd(receipt.amountUsd)}</strong><span>{receipt.amountEtb>0?etb(receipt.amountEtb)+" ETB":"Payment confirmed in USD"}</span></div>
   <div className="nx-receipt-stamp" aria-label="Numelixa verified official stamp"><div className="nx-stamp-ring"><span>NUMELIXA</span><b>✓</b><small>PAYMENT VERIFIED</small></div></div>
   <div className="nx-receipt-grid">
    <div><small>RECEIPT NUMBER</small><b>{receipt.receiptId}</b></div><div><small>PAYMENT METHOD</small><b>{receipt.service}</b></div>
    <div><small>SENDER NUMBER</small><b>{receipt.payerPhone||"Not provided"}</b></div><div><small>RECEIVING NUMBER</small><b>{receipt.receiverPhone||"—"}</b></div>
    <div><small>TRANSACTION REFERENCE</small><b>{receipt.transactionReference||"—"}</b></div><div><small>DATE & TIME (ADDIS ABABA)</small><b>{receipt.paidAt?new Intl.DateTimeFormat("en-ET",{dateStyle:"medium",timeStyle:"medium",timeZone:"Africa/Addis_Ababa"}).format(new Date(receipt.paidAt)):"—"}</b></div>
-   <div><small>EXCHANGE RATE</small><b>1 USD = {etb(receipt.exchangeRate)} ETB</b></div><div><small>WALLET CREDIT</small><b>{receipt.walletCredit.toLocaleString("en-US")} credits</b></div>
+   {receipt.amountEtb>0&&<div><small>LOCAL AMOUNT PAID</small><b>{etb(receipt.amountEtb)} ETB</b></div>}{receipt.exchangeRate>0&&<div><small>EXCHANGE RATE</small><b>1 USD = {etb(receipt.exchangeRate)} ETB</b></div>}<div><small>WALLET CREDIT</small><b>{receipt.walletCredit.toLocaleString("en-US")} credits</b></div>
    {receipt.balanceAfter!==null&&<div className="wide"><small>UPDATED WALLET BALANCE</small><b>{receipt.balanceAfter.toLocaleString("en-US")} credits</b></div>}
   </div>
   <div className="nx-receipt-barcode"><Barcode value={receipt.receiptId}/><b>{receipt.receiptId}</b><small>Scan the barcode, then verify this code at</small><a href={"/receipt/verify?code="+encodeURIComponent(receipt.receiptId)}>numelixa.com/receipt/verify</a></div>
