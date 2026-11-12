@@ -39,8 +39,8 @@ export async function POST(req:Request){
     try{await notifyUser(String(order.userId),"eBirr payment not approved","Your eBirr payment could not be verified. Contact Numelixa support if you believe this is an error.",{type:"payment",orderId});}catch{}
     return NextResponse.json({ok:true,status:"rejected"});
    }
-   if(!String(order.transactionReference||"").trim())return NextResponse.json({ok:false,error:"The customer has not submitted a transaction reference."},{status:409});
-   if(!order.smsMatched&&b.manualConfirmed!==true)return NextResponse.json({ok:false,error:"No matching incoming SMS was detected. Confirm that you checked the official eBirr transaction record."},{status:409});
+   
+   if(!order.smsMatched&&b.manualConfirmed!==true)return NextResponse.json({ok:false,error:"No matching incoming SMS was detected. Confirm the official payment record before manual approval."},{status:409});
    const duplicate=await payments.findOne({provider:"ebirr_manual",transactionReference:order.transactionReference,credited:true,orderId:{$ne:orderId}});
    if(duplicate)return NextResponse.json({ok:false,error:"This eBirr transaction reference has already been credited."},{status:409});
    const session=getMongoClient().startSession();let credited=false;
@@ -49,7 +49,7 @@ export async function POST(req:Request){
     if(!claimed)return;
     const users=await collection<any>("users"),user=await users.findOneAndUpdate({_id:String(order.userId)},{$inc:{coins:Number(order.coins)}},{session,returnDocument:"after"});
     if(!user)throw new Error("Payment user not found");
-    await (await collection<any>("coinTransactions")).insertOne({_id:mongoId(),userId:String(order.userId),type:"credit",amount:Number(order.coins),balanceAfter:Number(user.coins),reference:orderId,description:"eBirr ETB manual payment top-up",createdAt:new Date()},{session});
+    await (await collection<any>("coinTransactions")).insertOne({_id:mongoId(),userId:String(order.userId),type:"credit",amount:Number(order.coins),balanceAfter:Number(user.coins),reference:orderId,description:"Ethiopia ETB manual payment top-up",createdAt:new Date()},{session});
     credited=true;
    });}finally{await session.endSession();}
    if(!credited)return NextResponse.json({ok:false,error:"Payment was already processed by another admin action."},{status:409});
