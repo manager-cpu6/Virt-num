@@ -30,19 +30,28 @@ export async function POST(req:Request){
   if(action==="revoke_device"){await settings.updateOne({_id:"payments"},{$unset:{ebirrDeviceTokenHash:"",ebirrDevicePairedAt:""},$set:{updatedAt:new Date()}},{upsert:true});return NextResponse.json({ok:true,message:"The paired Ebirr-Numelixa device has been revoked."});}
   if(action==="review"){
    const orderId=String(b.orderId||"").trim(),decision=String(b.decision||"");
-   if(!orderId||!["approve","reject"].includes(decision))return NextResponse.json({ok:false,error:"Choose a valid payment decision."},{status:400});
+   if(!orderId||!["approve","reject","close"].includes(decision))return NextResponse.json({ok:false,error:"Choose a valid payment decision."},{status:400});
    const payments=await collection<any>("payments"),order=await payments.findOne({orderId,provider:"ebirr_manual"});
-   if(!order)return NextResponse.json({ok:false,error:"eBirr order not found."},{status:404});
+   if(!order)return NextResponse.json({ok:false,error:"Ethiopia payment order not found."},{status:404});
+   if(order.status==="closed")return NextResponse.json({ok:false,error:"This payment order is already closed."},{status:409});
    if(order.credited||order.status==="paid")return NextResponse.json({ok:false,error:"This order has already been credited."},{status:409});
+   if(decision==="close"){
+    const closed=await payments.updateOne({_id:order._id,credited:{$ne:true},status:{$nin:["paid","rejected","closed"]}},{$set:{status:"closed",closedAt:new Date(),reviewedAt:new Date(),reviewedBy:"admin",updatedAt:new Date()}});
+    if(!closed.modifiedCount)return NextResponse.json({ok:false,error:"This payment order can no longer be closed."},{status:409});
+    try{await notifyUser(String(order.userId),"Payment order closed","Your Ethiopia payment request was closed by the administrator. No wallet credit was made.",{type:"payment",orderId});}catch{}
+    return NextResponse.json({ok:true,status:"closed"});
+   }
    if(decision==="reject"){
     await payments.updateOne({_id:order._id,credited:{$ne:true}},{$set:{status:"rejected",rejectedAt:new Date(),reviewedAt:new Date(),reviewedBy:"admin",updatedAt:new Date()}});
-    try{await notifyUser(String(order.userId),"eBirr payment not approved","Your eBirr payment could not be verified. Contact Numelixa support if you believe this is an error.",{type:"payment",orderId});}catch{}
+    try{await notifyUser(String(order.userId),"Payment not approved","Your Ethiopia payment could not be verified. Contact support if you believe this is an error.",{type:"payment",orderId});}catch{}
     return NextResponse.json({ok:true,status:"rejected"});
    }
    
    if(!order.smsMatched&&b.manualConfirmed!==true)return NextResponse.json({ok:false,error:"No matching incoming SMS was detected. Confirm the official payment record before manual approval."},{status:409});
-   const duplicate=await payments.findOne({provider:"ebirr_manual",transactionReference:order.transactionReference,credited:true,orderId:{$ne:orderId}});
-   if(duplicate)return NextResponse.json({ok:false,error:"This eBirr transaction reference has already been credited."},{status:409});
+   if(String(order.transactionReference||"").trim()){
+    const duplicate=await payments.findOne({provider:"ebirr_manual",transactionReference:String(order.transactionReference).trim(),credited:true,orderId:{$ne:orderId}});
+    if(duplicate)return NextResponse.json({ok:false,error:"This transaction reference has already been credited."},{status:409});
+   }
    const session=getMongoClient().startSession();let credited=false;
    try{await session.withTransaction(async()=>{
     const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$nin:["paid","rejected"]}},{$set:{status:"paid",credited:true,paidAt:new Date(),reviewedAt:new Date(),reviewedBy:"admin",updatedAt:new Date()}},{session,returnDocument:"before"});
