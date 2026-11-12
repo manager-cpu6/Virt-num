@@ -10,7 +10,7 @@ export async function GET(req:Request){
   const payments=await collection<any>("payments"),payment=await payments.findOne({receiptId:code,status:"paid"});
   const transactions=await collection<any>("coinTransactions");
   const transaction=payment
-   ?await transactions.findOne({userId:String(payment.userId),reference:String(payment.orderId),type:"credit"})
+   ?await transactions.findOne({userId:String(payment.userId),reference:String(payment.orderId||payment.providerId||""),type:"credit"})
    :await transactions.findOne({receiptId:code,type:"credit"});
   if(!transaction)return NextResponse.json({ok:true,valid:false,receiptId:code},{headers:{"Cache-Control":"no-store"}});
   const service=String(payment?.methodName||payment?.method||payment?.provider||transaction.description||"Numelixa wallet credit");
