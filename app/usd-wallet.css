@@ -49,3 +49,15 @@
 .nx-wallet-receipt-note small{margin-top:5px;color:#8faec5;font-size:9px;line-height:1.6}
 @media(max-width:800px){.nx-wallet-guide-grid{grid-template-columns:1fr}}
 @media(max-width:520px){.nx-wallet-methods{grid-template-columns:1fr}.nx-wallet-guide{padding:17px;border-radius:20px}.nx-wallet-guide-grid{gap:8px}.nx-wallet-guide-grid article{padding:14px}.nx-wallet-hero{box-shadow:0 22px 60px rgba(0,0,0,.24)}}
+
+.nx-wallet-history{width:min(100%,1120px);margin:22px auto 0;padding:22px;border:1px solid rgba(104,151,207,.18);border-radius:23px;background:linear-gradient(145deg,rgba(8,25,49,.84),rgba(5,16,34,.84));backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);box-shadow:0 18px 45px rgba(0,0,0,.13)}
+.nx-wallet-history-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:14px}.nx-wallet-history-head h2{margin:7px 0 4px;color:#f4f8ff;font-size:24px;letter-spacing:-.05em}.nx-wallet-history-head p{margin:0;color:#91a8c4;font-size:10px;line-height:1.6}.nx-wallet-history-head>span{color:#83cfff;font-size:9px;font-weight:900;white-space:nowrap}
+.nx-wallet-history-row{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:11px;padding:13px 0;border-top:1px solid rgba(104,151,207,.12)}
+.nx-wallet-history-row>span:first-child{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:rgba(0,229,195,.1);color:#6ff0d7;font-size:20px;font-weight:900}
+.nx-wallet-history-row>span:first-child.debit{background:rgba(255,190,92,.09);color:#ffd28c}
+.nx-wallet-history-row>div{min-width:0}.nx-wallet-history-row>div b,.nx-wallet-history-row>div small{display:block}.nx-wallet-history-row>div b{color:#edf6ff;font-size:11px;overflow-wrap:anywhere}.nx-wallet-history-row>div small{margin-top:4px;color:#819bbd;font-size:9px;overflow-wrap:anywhere}
+.nx-wallet-history-row>strong{font-size:12px;font-variant-numeric:tabular-nums;white-space:nowrap}.nx-wallet-history-row .credit{color:#65e9ce}.nx-wallet-history-row .debit{color:#ffd28c}
+.nx-wallet-history-row>a{grid-column:2/-1;justify-self:start;color:#7dcaff;font-size:9px;font-weight:900}.nx-wallet-history-muted{grid-column:2/-1;color:#7189a8;font-size:9px}
+.nx-wallet-history-empty{padding:24px 12px;text-align:center;color:#8da5c4;font-size:11px;border:1px dashed rgba(104,151,207,.2);border-radius:15px}
+.nx-receipt-barcode a{display:block;margin-top:5px;color:#1677a9;font-size:9px;font-weight:900;text-decoration:underline}
+@media(max-width:520px){.nx-wallet-history{padding:16px;border-radius:20px}.nx-wallet-history-head{align-items:flex-start}.nx-wallet-history-row{grid-template-columns:32px minmax(0,1fr) auto;gap:8px}.nx-wallet-history-row>div b{font-size:10px}.nx-wallet-history-row>strong{font-size:10px}}
