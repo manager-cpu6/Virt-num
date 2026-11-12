@@ -25,7 +25,7 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
    <div><small>EXCHANGE RATE</small><b>1 USD = {etb(receipt.exchangeRate)} ETB</b></div><div><small>WALLET CREDIT</small><b>{receipt.walletCredit.toLocaleString("en-US")} credits</b></div>
    {receipt.balanceAfter!==null&&<div className="wide"><small>UPDATED WALLET BALANCE</small><b>{receipt.balanceAfter.toLocaleString("en-US")} credits</b></div>}
   </div>
-  <div className="nx-receipt-barcode"><Barcode value={receipt.receiptId}/><b>{receipt.receiptId}</b><small>Scan barcode to identify this receipt reference</small></div>
+  <div className="nx-receipt-barcode"><Barcode value={receipt.receiptId}/><b>{receipt.receiptId}</b><small>Scan the barcode, then verify this code at</small><a href={"/receipt/verify?code="+encodeURIComponent(receipt.receiptId)}>numelixa.com/receipt/verify</a></div>
   <div className="nx-receipt-proof"><b>Verification record</b><p>{receipt.verification}</p><span>Receipt issued from the Numelixa payment ledger after successful server-side credit.</span></div>
   <div className="nx-receipt-actions"><button type="button" onClick={()=>window.print()}>Print / Save PDF</button><button type="button" onClick={share}>Share receipt</button></div>
   {message&&<p className="nx-receipt-message" role="status">{message}</p>}
