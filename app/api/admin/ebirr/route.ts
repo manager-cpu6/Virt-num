@@ -47,8 +47,7 @@ export async function POST(req:Request){
     return NextResponse.json({ok:true,status:"rejected"});
    }
    
-   return NextResponse.json({ok:false,error:"Manual eBirr approval is disabled. A matching incoming SMS credits the wallet automatically."},{status:409});
-   if(!order.smsMatched&&b.manualConfirmed!==true)return NextResponse.json({ok:false,error:"No matching incoming SMS was detected. Confirm the official payment record before manual approval."},{status:409});
+   if(b.manualConfirmed!==true)return NextResponse.json({ok:false,error:"Explicit administrator confirmation is required after checking the official receiving account."},{status:409});
    if(String(order.transactionReference||"").trim()){
     const duplicate=await payments.findOne({provider:"ebirr_manual",transactionReference:String(order.transactionReference).trim(),credited:true,orderId:{$ne:orderId}});
     if(duplicate)return NextResponse.json({ok:false,error:"This transaction reference has already been credited."},{status:409});
