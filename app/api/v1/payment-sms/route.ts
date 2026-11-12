@@ -27,7 +27,7 @@ export async function POST(req:Request){
   let matched=false,reason="sms_missing_completed_amount_or_sender_phone",creditedOrderId="";
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
    const cutoff=new Date(Date.now()-30*60*1000);
-   const candidates=await payments.find({provider:"ebirr_manual",method:{$in:["coopay_ebirr","kaafi_ebirr","cbe_birr"]},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(2).toArray();
+   const candidates=await payments.find({provider:"ebirr_manual",method:{$in:["ebirr","coopay_ebirr","kaafi_ebirr","cbe_birr"]},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(2).toArray();
    reason=candidates.length===0?"no_unique_recent_order_match":candidates.length>1?"multiple_matching_orders":"receiver_sim_check_failed";
    const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(settings?.ebirrReceiver||""));
    if(candidates.length===1&&receiverMatches){
