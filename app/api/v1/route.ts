@@ -9,7 +9,7 @@ const headers={
   "Cache-Control":"no-store",
   "Access-Control-Allow-Origin":"*",
   "Access-Control-Allow-Methods":"GET,OPTIONS",
-  "Access-Control-Allow-Headers":"Authorization,Content-Type,X-API-Key",
+  "Access-Control-Allow-Headers":"Authorization,Content-Type,X-API-Key,X-Numelixa-Device-Token",
 };
 
 export async function OPTIONS(){
