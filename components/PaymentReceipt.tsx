@@ -11,7 +11,7 @@ const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"
 const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
 export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData|null;onContinue:()=>void}){
  const [message,setMessage]=useState("");
- async function share(){if(!receipt)return;const text="Numelixa verified payment receipt "+receipt.receiptId+" · "+usd(receipt.amountUsd)+" · "+etb(receipt.amountEtb)+" ETB";try{if(navigator.share)await navigator.share({title:"Numelixa payment receipt",text});else{await navigator.clipboard.writeText(text);setMessage("Receipt details copied.");}}catch{}}
+ async function share(){if(!receipt)return;const text="Numelixa verified payment receipt "+receipt.receiptId+" · "+usd(receipt.amountUsd)+(receipt.amountEtb>0?" · "+etb(receipt.amountEtb)+" ETB":"");try{if(navigator.share)await navigator.share({title:"Numelixa payment receipt",text});else{await navigator.clipboard.writeText(text);setMessage("Receipt details copied.");}}catch{}}
  if(!receipt)return <section className="nx-receipt-loading" aria-live="polite"><span className="nx-receipt-loader"/>Preparing your verified Numelixa receipt…</section>;
  return <section className="nx-payment-receipt" aria-label="Verified Numelixa payment receipt">
   <div className="nx-receipt-top"><div className="nx-receipt-brand"><span className="nx-receipt-brandmark">N</span><span><b>NUMELIXA</b><small>GLOBAL DIGITAL SERVICES</small></span></div><div className="nx-receipt-status"><i/> VERIFIED PAYMENT</div></div>
