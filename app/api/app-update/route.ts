@@ -51,21 +51,22 @@ function compareVersions(left:string,right:string){
 
 async function getRollingRelease(){
   try{
-    const [releaseResponse,sourceResponse]=await Promise.all([
-      fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
-        headers:{Accept:"application/vnd.github+json"},
-        cache:"no-store"
-      }),
-      fetch("https://raw.githubusercontent.com/manager-cpu6/Numelixa-app/android-latest/pubspec.yaml",{cache:"no-store"})
-    ]);
-    if(!releaseResponse.ok||!sourceResponse.ok)return null;
-    const [release,source]=await Promise.all([releaseResponse.json(),sourceResponse.text()]);
+    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
+      headers:{Accept:"application/vnd.github+json"},
+      cache:"no-store"
+    });
+    if(!response.ok)return null;
+    const release=await response.json();
     if(release.draft||release.prerelease)return null;
-    // The release asset can be replaced while GitHub keeps the original release
-    // title/body. Read the authoritative app version from the exact main source
-    // that produced the latest APK, rather than trusting stale release metadata.
-    const version=String(source.match(/^version:\s*([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)\s*$/m)?.[1]||"");
-    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
+    // The rolling GitHub release's title/body are updated by the same CI job
+    // that uploads Numelixa.apk. The lightweight tag itself can remain old
+    // when an existing release has its asset replaced, so never read pubspec
+    // from that stale tag or from unbuilt main-branch source.
+    const titleVersion=String(release.name||"").match(/([0-9]+\\.[0-9]+\\.[0-9]+\\+[0-9]+)/)?.[1]||"";
+    const bodyVersion=String(release.body||"").match(/\\bVersion\\s+([0-9]+\\.[0-9]+\\.[0-9]+\\+[0-9]+)/i)?.[1]||"";
+    const version=titleVersion||bodyVersion;
+    if(!version||(titleVersion&&bodyVersion&&titleVersion!==bodyVersion))return null;
+    const versionCode=Number(version.match(/\\+(\\d+)$/)?.[1]||0);
     const assets=Array.isArray(release.assets)?release.assets:[];
     const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk");
     const apkUrl=String(apk?.browser_download_url||"");
