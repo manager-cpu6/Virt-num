@@ -4,12 +4,15 @@ import {requireAdmin} from "@/lib/auth";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
+const methodNames:Record<string,string>={coopay_ebirr:"Coopay eBirr",kaafi_ebirr:"Kaafi eBirr",cbe_birr:"CBE Birr",cbe_bank:"CBE Bank Transfer",mpesa:"M-Pesa",telebirr:"Telebirr"};
+function methodsFor(s:any){const saved=s?.ethiopiaPaymentMethods||{};return Object.fromEntries(Object.entries(methodNames).map(([id,name])=>{const x=saved[id]||{},legacy=s?.ebirrOpen===true&&id==="coopay_ebirr";return [id,{name,open:typeof x.open==="boolean"?x.open:legacy,receiver:String(x.receiver??(id==="coopay_ebirr"?String(s?.ebirrReceiver||""):(id==="kaafi_ebirr"||id==="cbe_birr")?"0905881300":id==="cbe_bank"?"1000812965518":"")),instructions:String(x.instructions??s?.ebirrInstructions??"")}];}));}
+
 export async function GET(){
  try{
   await requireAdmin();
   const settings=await (await collection<any>("settings")).findOne({_id:"payments"});
   const [orders,events]=await Promise.all([(await collection<any>("payments")).find({provider:"ebirr_manual"}).sort({createdAt:-1}).limit(100).toArray(),(await collection<any>("ebirrSmsEvents")).find({}).sort({receivedAt:-1}).limit(30).toArray()]);
-  return NextResponse.json({ok:true,settings:{open:settings?.ebirrOpen===true,rate:Number(settings?.ebirrRateEtbPerUsd||0),receiver:String(settings?.ebirrReceiver||"+251905881300"),instructions:String(settings?.ebirrInstructions||""),devicePaired:Boolean(settings?.ebirrDeviceTokenHash)},orders:orders.map(p=>({orderId:p.orderId,userId:p.userId,amountUsd:Number(p.amountUsd||0),amountEtb:Number(p.amountEtb||0),rate:Number(p.exchangeRate||0),method:String(p.methodName||p.method||"eBirr"),coins:Number(p.coins||0),payerPhone:p.payerPhone,receiverPhone:p.receiverPhone,status:p.status,transactionReference:p.transactionReference||"",smsMatched:Boolean(p.smsMatched),smsAmount:p.smsAmount??null,smsPayerPhone:p.smsPayerPhone||"",createdAt:p.createdAt,proofSubmittedAt:p.proofSubmittedAt,paidAt:p.paidAt})),events:events.map(e=>({provider:e.provider,amount:e.amount,transactionReference:e.transactionReference,payerPhone:e.payerPhone,simPhone:e.simPhone,simOperator:e.simOperator,matched:e.matched,reason:e.reason,receivedAt:e.receivedAt,rawBody:e.rawBody}))});
+  return NextResponse.json({ok:true,settings:{open:settings?.ebirrOpen===true,rate:Number(settings?.ebirrRateEtbPerUsd||0),receiver:String(settings?.ebirrReceiver||"+251905881300"),instructions:String(settings?.ebirrInstructions||""),paymentMethods:methodsFor(settings),devicePaired:Boolean(settings?.ebirrDeviceTokenHash)},orders:orders.map(p=>({orderId:p.orderId,userId:p.userId,amountUsd:Number(p.amountUsd||0),amountEtb:Number(p.amountEtb||0),rate:Number(p.exchangeRate||0),method:String(p.methodName||p.method||"eBirr"),coins:Number(p.coins||0),payerPhone:p.payerPhone,receiverPhone:p.receiverPhone,status:p.status,transactionReference:p.transactionReference||"",smsMatched:Boolean(p.smsMatched),smsAmount:p.smsAmount??null,smsPayerPhone:p.smsPayerPhone||"",createdAt:p.createdAt,proofSubmittedAt:p.proofSubmittedAt,paidAt:p.paidAt})),events:events.map(e=>({provider:e.provider,amount:e.amount,transactionReference:e.transactionReference,payerPhone:e.payerPhone,simPhone:e.simPhone,simOperator:e.simOperator,matched:e.matched,reason:e.reason,receivedAt:e.receivedAt,rawBody:e.rawBody}))});
  }catch{return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});}
 }
 export async function POST(req:Request){
@@ -21,6 +24,19 @@ export async function POST(req:Request){
    if(!/^\+?251[79][0-9]{8}$/.test(receiver)&&!/^0[79][0-9]{8}$/.test(receiver))return NextResponse.json({ok:false,error:"Enter a valid Ethiopian eBirr receiving number."},{status:400});
    await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:open,ebirrRateEtbPerUsd:rate,ebirrReceiver:receiver,ebirrInstructions:instructions,updatedAt:new Date()}},{upsert:true});
    return NextResponse.json({ok:true});
+  }
+  if(action==="save_methods"){
+   const input=b.paymentMethods&&typeof b.paymentMethods==="object"?b.paymentMethods:{},rate=Number(b.rate),baseInstructions=String(b.instructions||"").trim().slice(0,800);
+   if(!Number.isFinite(rate)||rate<=0||rate>100000)return NextResponse.json({ok:false,error:"Enter a valid ETB per USD rate."},{status:400});
+   const next:Record<string,any>={};
+   for(const [id,name] of Object.entries(methodNames)){
+    const x=input[id]||methodsFor(await settings.findOne({_id:"payments"}))[id],open=x?.open===true,receiver=String(x?.receiver||"").trim().replace(/[\\s()+-]/g,"");
+    if(open){const bank=id==="cbe_bank",valid=bank?/^[0-9]{10,16}$/.test(receiver):((receiver.length===12&&receiver.startsWith("251")&&["7","9"].includes(receiver[3]))||(receiver.length===10&&receiver.startsWith("0")&&["7","9"].includes(receiver[1])));if(!valid)return NextResponse.json({ok:false,error:"Enter a valid receiving number for "+name+" before opening it."},{status:400});}
+    next[id]={name,open,receiver:receiver.startsWith("251")?"+"+receiver:receiver,instructions:String(x?.instructions||baseInstructions).trim().slice(0,800)};
+   }
+   const e=next.coopay_ebirr;
+   await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:e.open,ebirrRateEtbPerUsd:rate,ebirrReceiver:e.receiver,ebirrInstructions:e.instructions,ethiopiaPaymentMethods:next,updatedAt:new Date()}},{upsert:true});
+   return NextResponse.json({ok:true,paymentMethods:next});
   }
   if(action==="pair_device"){
    const token=crypto.randomBytes(32).toString("base64url"),hash=crypto.createHash("sha256").update(token).digest("hex");
