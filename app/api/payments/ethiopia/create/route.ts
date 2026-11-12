@@ -10,7 +10,7 @@ export async function POST(req:Request){try{
  const user=await requireUser();if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before topping up."},{status:403});
  const config=await (await collection<any>("settings")).findOne({_id:"payments"}),body=await req.json(),method=String(body.method||""),name=methodNames[method],amount=Number(body.amountUsd),phone=normalizePhone(String(body.payerPhone||""));
  if(!name)return NextResponse.json({ok:false,error:"Choose a supported Ethiopian payment method."},{status:400});
- const saved=config?.ethiopiaPaymentMethods?.[method]||{},legacy=config?.ebirrOpen===true&&["coopay_ebirr","kaafi_ebirr","cbe_birr","cbe_bank"].includes(method),open=typeof saved.open==="boolean"?saved.open:legacy;
+ const saved=config?.ethiopiaPaymentMethods?.[method]||{},legacy=config?.ebirrOpen===true&&method==="coopay_ebirr",open=typeof saved.open==="boolean"?saved.open:legacy;
  const receiver=String(saved.receiver??(method==="coopay_ebirr"?String(config?.ebirrReceiver||""):"")).trim();
  if(!open)return NextResponse.json({ok:false,error:"This payment service is currently closed."},{status:403});
  if(!receiver)return NextResponse.json({ok:false,error:"The receiving account is not configured."},{status:503});
