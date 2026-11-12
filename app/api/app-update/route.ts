@@ -56,7 +56,7 @@ async function getRollingRelease(){
         headers:{Accept:"application/vnd.github+json"},
         cache:"no-store"
       }),
-      fetch("https://raw.githubusercontent.com/manager-cpu6/Numelixa-app/main/pubspec.yaml",{cache:"no-store"})
+      fetch("https://raw.githubusercontent.com/manager-cpu6/Numelixa-app/android-latest/pubspec.yaml",{cache:"no-store"})
     ]);
     if(!releaseResponse.ok||!sourceResponse.ok)return null;
     const [release,source]=await Promise.all([releaseResponse.json(),sourceResponse.text()]);
