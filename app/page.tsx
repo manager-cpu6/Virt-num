@@ -21,7 +21,7 @@ export async function generateMetadata():Promise<Metadata>{
   robots:{index:true,follow:true,googleBot:{index:true,follow:true}},
   openGraph:{type:"website",url:"https://app.numelixa.com/",siteName:"Numelixa",title:"Numelixa APK Download | Official Android App",description:"Get the official Numelixa Android app for virtual numbers, SMS, wallet and order updates.",images:[{url:"https://numelixa.com/numelixa-favicon.png",width:512,height:512,alt:"Numelixa Android app icon"}]},
   twitter:{card:"summary_large_image",title:"Numelixa APK Download | Official Android App",description:"Download the official Numelixa Android app.",images:["https://numelixa.com/numelixa-favicon.png"]},
-  icons:{icon:"https://numelixa.com/numelixa-favicon.png",apple:"https://numelixa.com/numelixa-favicon.png"}
+  icons:{icon:"https://numelixa.com/numelixa-brand.svg",apple:"https://numelixa.com/numelixa-favicon.png"}
  };
  return {};
 }
