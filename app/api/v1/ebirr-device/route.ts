@@ -52,11 +52,14 @@ export async function POST(req:Request){
     const settings=await collection<any>("settings");
     if(action==="save_settings"){
       const open=body.open===true,rate=Number(body.rate);
-      const receiver=String(body.receiver||"").trim().replace(/[\s()-]/g,"");
+      const rawReceiver=String(body.receiver||"").trim();
+      const receiver=rawReceiver.replaceAll("+","").replaceAll(" ","").replaceAll("-","").replaceAll("(","").replaceAll(")","");
+      const validReceiver=(receiver.length===12&&receiver.startsWith("251")&&["7","9"].includes(receiver[3]))||(receiver.length===10&&receiver.startsWith("0")&&["7","9"].includes(receiver[1]));
+      const storedReceiver=receiver.startsWith("251")?"+"+receiver:receiver;
       const instructions=String(body.instructions||"").trim().slice(0,800);
       if(!Number.isFinite(rate)||rate<=0||rate>100000)return NextResponse.json({ok:false,error:"Enter a valid ETB amount for one USD."},{status:400});
-      if(!/^\+?251[79][0-9]{8}$/.test(receiver)&&!/^0[79][0-9]{8}$/.test(receiver))return NextResponse.json({ok:false,error:"Enter a valid Ethiopian eBirr receiving number."},{status:400});
-      await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:open,ebirrRateEtbPerUsd:rate,ebirrReceiver:receiver,ebirrInstructions:instructions,updatedAt:new Date()}},{upsert:true});
+      if(!validReceiver)return NextResponse.json({ok:false,error:"Enter a valid Ethiopian eBirr receiving number."},{status:400});
+      await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:open,ebirrRateEtbPerUsd:rate,ebirrReceiver:storedReceiver,ebirrInstructions:instructions,updatedAt:new Date()}},{upsert:true});
       return NextResponse.json({ok:true});
     }
     if(action==="close_order"){
