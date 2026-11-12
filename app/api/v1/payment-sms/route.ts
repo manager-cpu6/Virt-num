@@ -6,6 +6,7 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 function digest(s:string){return crypto.createHash("sha256").update(s).digest();}
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
+const providerMethods:Record<string,string[]>={EBIRR:["ebirr","coopay_ebirr"],COOPAY_EBIRR:["coopay_ebirr"],KAAFI:["kaafi_ebirr"],KAAFI_EBIRR:["kaafi_ebirr"],CBE:["cbe_birr"],CBE_BIRR:["cbe_birr"],MPESA:["mpesa"],M_PESA:["mpesa"],TELEBIRR:["telebirr"]};
 function parse(body:string){
  const amountMatch=body.match(/(?:ETB|Birr|Amount|paid|received|credited)\s*[:=]?\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)/i);
  const amount=Number((amountMatch?.[1]||amountMatch?.[2]||"").replace(/,/g,""));
@@ -27,9 +28,9 @@ export async function POST(req:Request){
   let matched=false,reason="sms_missing_completed_amount_or_sender_phone",creditedOrderId="";
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
    const cutoff=new Date(Date.now()-30*60*1000);
-   const candidates=await payments.find({provider:"ebirr_manual",method:{$in:["ebirr","coopay_ebirr","kaafi_ebirr","cbe_birr"]},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(2).toArray();
+   const candidates=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(2).toArray();
    reason=candidates.length===0?"no_unique_recent_order_match":candidates.length>1?"multiple_matching_orders":"receiver_sim_check_failed";
-   const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(settings?.ebirrReceiver||""));
+   const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(order.receiverPhone||""));
    if(candidates.length===1&&receiverMatches){
     const order=candidates[0],session=getMongoClient().startSession();let credited=false;
     try{await session.withTransaction(async()=>{
