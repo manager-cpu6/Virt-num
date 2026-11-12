@@ -5,7 +5,7 @@ const API_PREFIX="/api/v1";
 const corsHeaders={
   "Access-Control-Allow-Origin":"*",
   "Access-Control-Allow-Methods":"GET,POST,DELETE,OPTIONS",
-  "Access-Control-Allow-Headers":"Authorization,Content-Type,X-API-Key",
+  "Access-Control-Allow-Headers":"Authorization,Content-Type,X-API-Key,X-Numelixa-Device-Token",
   "Access-Control-Max-Age":"86400",
 };
 
