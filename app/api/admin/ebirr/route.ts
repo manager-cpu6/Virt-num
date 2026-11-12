@@ -26,11 +26,11 @@ export async function POST(req:Request){
    return NextResponse.json({ok:true});
   }
   if(action==="save_methods"){
-   const input=b.paymentMethods&&typeof b.paymentMethods==="object"?b.paymentMethods:{},rate=Number(b.rate),baseInstructions=String(b.instructions||"").trim().slice(0,800);
+   const input=b.paymentMethods&&typeof b.paymentMethods==="object"?b.paymentMethods:{},rate=Number(b.rate),baseInstructions=String(b.instructions||"").trim().slice(0,800),current=methodsFor(await settings.findOne({_id:"payments"}));
    if(!Number.isFinite(rate)||rate<=0||rate>100000)return NextResponse.json({ok:false,error:"Enter a valid ETB per USD rate."},{status:400});
    const next:Record<string,any>={};
    for(const [id,name] of Object.entries(methodNames)){
-    const x=input[id]||methodsFor(await settings.findOne({_id:"payments"}))[id],open=x?.open===true,receiver=String(x?.receiver||"").trim().replace(/[\\s()+-]/g,"");
+    const x=input[id]||current[id],open=x?.open===true,receiver=String(x?.receiver||"").trim().replace(/[\s()+-]/g,"");
     if(open){const bank=id==="cbe_bank",valid=bank?/^[0-9]{10,16}$/.test(receiver):((receiver.length===12&&receiver.startsWith("251")&&["7","9"].includes(receiver[3]))||(receiver.length===10&&receiver.startsWith("0")&&["7","9"].includes(receiver[1])));if(!valid)return NextResponse.json({ok:false,error:"Enter a valid receiving number for "+name+" before opening it."},{status:400});}
     next[id]={name,open,receiver:receiver.startsWith("251")?"+"+receiver:receiver,instructions:String(x?.instructions||baseInstructions).trim().slice(0,800)};
    }
