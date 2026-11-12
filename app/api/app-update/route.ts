@@ -88,7 +88,7 @@ async function getRollingRelease(){
 
 export async function GET(req:Request){
   try{
-    // Build 14 is the minimum supported native app. Older installations
+    // Build 16 is the minimum supported native app. Older installations
     // (including 1.0.1-era builds) must install the current APK before access
     // policy is evaluated by newer clients.
     const clientVersionCode=Number(new URL(req.url).searchParams.get("versionCode")||0);
