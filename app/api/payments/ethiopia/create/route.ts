@@ -22,7 +22,7 @@ export async function POST(req:Request){
   if(!(rate>0))return NextResponse.json({ok:false,error:"ETB exchange rate is not configured."},{status:503});
   if(!Number.isFinite(amount)||Math.round(amount*100)/100!==amount||amount<settings.minTopupUsd||amount>Math.min(settings.maxTopupUsd,10000))return NextResponse.json({ok:false,error:"Enter a valid USD amount within wallet limits."},{status:400});
   if(!/^0[79][0-9]{8}$/.test(phone))return NextResponse.json({ok:false,error:"Enter your Ethiopian mobile number as 09XXXXXXXX."},{status:400});
-  const amountEtb=Number((amount*rate).toFixed(2)),coins=Math.round(amount*settings.coinsPerUsd),orderId="etpay_"+crypto.randomUUID(),now=new Date();
+  const amountEtb=method==="kaafi_ebirr"?Math.round(amount*rate):Number((amount*rate).toFixed(2)),coins=Math.round(amount*settings.coinsPerUsd),orderId="etpay_"+crypto.randomUUID(),now=new Date();
   const payment={_id:mongoId(),userId:String(user.id),provider:"ebirr_manual",providerId:orderId,orderId,amountUsd:amount,amountEtb,exchangeRate:rate,coins,payerPhone:phone,receiverPhone:chosen.receiver,method,methodName:chosen.name,status:"awaiting_proof",transactionReference:null,smsMatched:false,credited:false,createdAt:now,updatedAt:now};
   await (await collection<any>("payments")).insertOne(payment);
   return NextResponse.json({ok:true,orderId,amountUsd:amount,amountEtb,exchangeRate:rate,receiverPhone:chosen.receiver,payerPhone:phone,method,methodName:chosen.name,status:payment.status});
