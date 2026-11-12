@@ -6,7 +6,7 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 function digest(s:string){return crypto.createHash("sha256").update(s).digest();}
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
-const providerMethods:Record<string,string[]>={EBIRR:["ebirr","coopay_ebirr"],COOPAY_EBIRR:["coopay_ebirr"],KAAFI:["kaafi_ebirr"],KAAFI_EBIRR:["kaafi_ebirr"],CBE:["cbe_birr"],CBE_BIRR:["cbe_birr"],MPESA:["mpesa"],M_PESA:["mpesa"],TELEBIRR:["telebirr"]};
+const providerMethods:Record<string,string[]>={EBIRR:["ebirr","coopay_ebirr"],COOPAY_EBIRR:["coopay_ebirr"],KAAFI:["kaafi_ebirr"],KAAFI_EBIRR:["kaafi_ebirr"],CBE:["cbe_birr","cbe_bank"],CBE_BIRR:["cbe_birr"],CBE_BANK:["cbe_bank"],MPESA:["mpesa"],M_PESA:["mpesa"],TELEBIRR:["telebirr"]};
 function parse(body:string){
  const amountMatch=body.match(/(?:ETB|Birr|Amount|paid|received|credited)\s*[:=]?\s*([\d,]+(?:\.\d{1,2})?)|([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)/i);
  const amount=Number((amountMatch?.[1]||amountMatch?.[2]||"").replace(/,/g,""));
