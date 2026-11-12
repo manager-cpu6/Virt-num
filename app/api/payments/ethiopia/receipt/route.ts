@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
 
@@ -19,7 +20,8 @@ export async function GET(req:Request){
       userId:String(user.id),reference:orderId,type:"credit"
     });
     const paidAt=order.paidAt||order.smsMatchedAt||order.updatedAt||order.createdAt;
-    const receiptId="NX-"+String(orderId).replace(/[^a-z0-9]/gi,"").slice(-12).toUpperCase();
+    const receiptId=String(order.receiptId||("NX-"+crypto.createHash("sha256").update(orderId).digest("hex").slice(0,16).toUpperCase()));
+    if(!order.receiptId)await (await collection<any>("payments")).updateOne({_id:order._id,receiptId:{$exists:false}},{$set:{receiptId}});
     return NextResponse.json({ok:true,receipt:{
       receiptId,orderId,service:String(order.methodName||order.method||"Ethiopia Local Payment"),
       payerPhone:String(order.smsPayerPhone||order.payerPhone||""),
