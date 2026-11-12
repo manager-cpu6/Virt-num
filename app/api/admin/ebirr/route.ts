@@ -4,6 +4,7 @@ import {requireAdmin} from "@/lib/auth";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
+// Payment service settings are shared by the website checkout and the paired admin APK.
 const methodNames:Record<string,string>={coopay_ebirr:"Coopay eBirr",kaafi_ebirr:"Kaafi eBirr",cbe_birr:"CBE Birr",cbe_bank:"CBE Bank Transfer",mpesa:"M-Pesa",telebirr:"Telebirr"};
 function methodsFor(s:any){const saved=s?.ethiopiaPaymentMethods||{};return Object.fromEntries(Object.entries(methodNames).map(([id,name])=>{const x=saved[id]||{},legacy=s?.ebirrOpen===true&&id==="coopay_ebirr";return [id,{name,open:typeof x.open==="boolean"?x.open:legacy,receiver:String(x.receiver??(id==="coopay_ebirr"?String(s?.ebirrReceiver||""):(id==="kaafi_ebirr"||id==="cbe_birr")?"0905881300":id==="cbe_bank"?"1000812965518":"")),instructions:String(x.instructions??s?.ebirrInstructions??"")}];}));}
 
