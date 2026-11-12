@@ -7,9 +7,9 @@ export const dynamic="force-dynamic";
 const FALLBACK_RELEASE={
   version:"1.0.15+16",
   versionCode:16,
-  sizeBytes:58478507,
+  sizeBytes:58759103,
   apkUrl:"https://www.numelixa.com/api/mobile/apk",
-  sha256:"",
+  sha256:"18072f1da303d38bf30e0e4dadbdd385065daa8fa5e176d9fb34a32755f001b0",
   releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
   publishedAt:"2026-11-10T13:55:01.000Z"
 };
