@@ -22,17 +22,18 @@ export async function POST(req:Request){
   const expected=String(settings?.ebirrDeviceTokenHash||"");
   if(!token||!expected||!same(crypto.createHash("sha256").update(token).digest("hex"),expected))return NextResponse.json({ok:false,error:"Device is not paired."},{status:401});
   if(body.type==="webhook_test")return NextResponse.json({ok:true});
-  const raw=String(body.rawBody||"").trim(),parsed=parse(raw),provider=String(body.provider||"").toUpperCase();
-  if(!raw||!/(EBIRR|KAAFI|CBE\s*-?BIRR)/i.test(provider))return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
+  const raw=String(body.rawBody||"").trim(),parsed=parse(raw),provider=String(body.provider||"").toUpperCase().replace(/[^A-Z_]/g,""),allowed=providerMethods[provider];
+  if(!raw||!allowed)return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
   const payments=await collection<any>("payments");
   let matched=false,reason="sms_missing_completed_amount_or_sender_phone",creditedOrderId="";
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
    const cutoff=new Date(Date.now()-30*60*1000);
    const candidates=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(2).toArray();
    reason=candidates.length===0?"no_unique_recent_order_match":candidates.length>1?"multiple_matching_orders":"receiver_sim_check_failed";
-   const receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(order.receiverPhone||""));
-   if(candidates.length===1&&receiverMatches){
-    const order=candidates[0],session=getMongoClient().startSession();let credited=false;
+   if(candidates.length===1){
+    const order=candidates[0],receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(order.receiverPhone||""));
+    if(receiverMatches){
+    const session=getMongoClient().startSession();let credited=false;
     try{await session.withTransaction(async()=>{
      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"payer_phone_amount_and_incoming_sms"}},{session,returnDocument:"before"});
      if(!claimed)return;
@@ -44,7 +45,8 @@ export async function POST(req:Request){
     matched=credited;creditedOrderId=credited?String(order.orderId):"";
     reason=credited?"payer_phone_amount_receiver_and_sms_verified":"order_already_processed";
     if(credited){try{await notifyUser(String(order.userId),"Payment confirmed","Your Ethiopia payment was verified and your Numelixa wallet has been credited.",{type:"payment",orderId:String(order.orderId)});}catch{}}
-   }else if(candidates.length===1&&!receiverMatches)reason="receiving_sim_mismatch";
+    }else reason="receiving_sim_mismatch";
+   }
   }
   await (await collection<any>("ebirrSmsEvents")).insertOne({provider,amount:parsed.amount,transactionReference:parsed.reference||null,payerPhone:parsed.payerPhone||null,simPhone:String(body.receivingSimPhone||""),simOperator:String(body.simOperator||""),smsOrigin:String(body.senderPhone||""),rawBody:raw,matched,reason,creditedOrderId:creditedOrderId||null,receivedAt:new Date(),deviceId:String(body.deviceId||"")});
   return NextResponse.json({ok:true,matched,reason});
