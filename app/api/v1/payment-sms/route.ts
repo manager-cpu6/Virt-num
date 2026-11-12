@@ -22,7 +22,7 @@ export async function POST(req:Request){
   if(!token||!expected||!same(crypto.createHash("sha256").update(token).digest("hex"),expected))return NextResponse.json({ok:false,error:"Device is not paired."},{status:401});
   if(body.type==="webhook_test")return NextResponse.json({ok:true});
   const raw=String(body.rawBody||"").trim(),parsed=parse(raw),provider=String(body.provider||"").toUpperCase();
-  if(!raw||!/(EBIRR|KAAFI|CBE\\s*-?BIRR)/i.test(provider))return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
+  if(!raw||!/(EBIRR|KAAFI|CBE\s*-?BIRR)/i.test(provider))return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
   const payments=await collection<any>("payments");
   let matched=false,reason="sms_missing_completed_amount_or_sender_phone",creditedOrderId="";
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
