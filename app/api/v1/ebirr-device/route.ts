@@ -52,10 +52,10 @@ export async function POST(req:Request){
     const settings=await collection<any>("settings");
     if(action==="save_settings"){
       const open=body.open===true,rate=Number(body.rate);
-      const receiver=String(body.receiver||"").trim().replace(/[\\s()-]/g,"");
+      const receiver=String(body.receiver||"").trim().replace(/[\s()-]/g,"");
       const instructions=String(body.instructions||"").trim().slice(0,800);
       if(!Number.isFinite(rate)||rate<=0||rate>100000)return NextResponse.json({ok:false,error:"Enter a valid ETB amount for one USD."},{status:400});
-      if(!/^\\+?251[79][0-9]{8}$/.test(receiver)&&!/^0[79][0-9]{8}$/.test(receiver))return NextResponse.json({ok:false,error:"Enter a valid Ethiopian eBirr receiving number."},{status:400});
+      if(!/^\+?251[79][0-9]{8}$/.test(receiver)&&!/^0[79][0-9]{8}$/.test(receiver))return NextResponse.json({ok:false,error:"Enter a valid Ethiopian eBirr receiving number."},{status:400});
       await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:open,ebirrRateEtbPerUsd:rate,ebirrReceiver:receiver,ebirrInstructions:instructions,updatedAt:new Date()}},{upsert:true});
       return NextResponse.json({ok:true});
     }
