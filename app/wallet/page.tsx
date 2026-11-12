@@ -5,12 +5,12 @@ type User={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd?:number;minTopupUsd?:number;maxTopupUsd?:number};
 const money=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(Number.isFinite(n)?n:0);
 export default function Wallet(){
- const [user,setUser]=useState<User|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[paymentNotice,setPaymentNotice]=useState("");
+ const [user,setUser]=useState<User|null>(null),[pricing,setPricing]=useState<Pricing|null>(null),[loaded,setLoaded]=useState(false),[paymentNotice,setPaymentNotice]=useState(""),[transactions,setTransactions]=useState<any[]>([]);
  const [amount,setAmount]=useState("5.00"),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const rate=Number(pricing?.coinsPerUsd)||100,min=Number(pricing?.minTopupUsd)||1,max=Math.min(Number(pricing?.maxTopupUsd)||10000,10000),value=Number(amount);
  const valid=Number.isFinite(value)&&Math.round(value*100)===value*100&&value>=min&&value<=max;
  const presets=useMemo(()=>[5,10,25,50].filter(x=>x>=min&&x<=max),[min,max]);
- useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("payment")==="success")setPaymentNotice("Payment confirmed. Your wallet balance has been refreshed.");fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>{setUser(d.user||null);setPricing(d.pricing||null);}).catch(()=>setError("Unable to load wallet. Please refresh the page.")).finally(()=>setLoaded(true));},[]);
+ useEffect(()=>{const params=new URLSearchParams(window.location.search);if(params.get("payment")==="success")setPaymentNotice("Payment confirmed. Your wallet balance has been refreshed.");fetch("/api/me",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>{setUser(d.user||null);setPricing(d.pricing||null);}).catch(()=>setError("Unable to load wallet. Please refresh the page.")).finally(()=>setLoaded(true));fetch("/api/v1/transactions",{cache:"no-store",credentials:"include"}).then(r=>r.json()).then(d=>setTransactions(Array.isArray(d.transactions)?d.transactions:[])).catch(()=>setTransactions([]));},[]);
  useEffect(()=>{const v=new URLSearchParams(window.location.search).get("amount");if(v&&/^\d+(?:\.\d{1,2})?$/.test(v))setAmount(Number(v).toFixed(2));},[]);
  function checkout(){setError("");if(!user){window.location.href="https://numelixa.com/login?next="+encodeURIComponent("/wallet?amount="+encodeURIComponent(amount));return;}if(!user.verified_at){window.location.href="/verify-email";return;}if(!valid){setError("Enter an amount between "+money(min)+" and "+money(max)+".");return;}setBusy(true);window.location.href="https://numelixa.com/payment-method?amount="+encodeURIComponent(value.toFixed(2));}
  return <div className="nx-wallet-page">
@@ -39,6 +39,10 @@ export default function Wallet(){
     </div>
     <div className="nx-wallet-receipt-note"><span>✓</span><div><b>Your verified payment comes with a receipt</b><small>Receipt number, payment reference, sender and receiver numbers, date, Addis Ababa time, exchange rate, barcode and official Numelixa verification stamp.</small></div></div>
    </section>
+  </section>
+  <section className="nx-wallet-history">
+   <div className="nx-wallet-history-head"><div><span className="eyebrow">WALLET LEDGER</span><h2>Recent activity</h2><p>Open a payment receipt to view its official barcode and verification details.</p></div><span>{transactions.length} records</span></div>
+   {transactions.length===0?<div className="nx-wallet-history-empty">Your wallet activity will appear here after your first transaction.</div>:transactions.slice(0,8).map((tx:any)=><article className="nx-wallet-history-row" key={tx.id}><span className={tx.type==="credit"?"credit":"debit"}>{tx.type==="credit"?"＋":"−"}</span><div><b>{tx.description||"Wallet transaction"}</b><small>{tx.createdAt?new Date(tx.createdAt).toLocaleString("en-ET",{dateStyle:"medium",timeStyle:"short"}):"Date unavailable"} · {tx.reference||"No reference"}</small></div><strong className={tx.type==="credit"?"credit":"debit"}>{tx.type==="credit"?"+":"−"}{money(Math.abs(Number(tx.amountUsd)||0))}</strong>{tx.type==="credit"&&tx.reference?<a href={"/wallet/receipt?reference="+encodeURIComponent(tx.reference)}>View receipt →</a>:<span className="nx-wallet-history-muted">—</span>}</article>)}
   </section>
  </div>;
 }
