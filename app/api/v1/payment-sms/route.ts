@@ -40,8 +40,9 @@ export async function POST(req:Request){
   const safeReference=parsed.reference||("SMS-"+crypto.createHash("sha256").update(provider+"|"+raw).digest("hex"));
   if(parsed.positive&&parsed.amount&&parsed.payerPhone&&payerName){
    const cutoff=new Date(Date.now()-30*60*1000);
-   const candidates=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(3).toArray();
-   reason=candidates.length===0?"no_matching_recent_order":candidates.length>1?"multiple_matching_orders":"payer_name_mismatch";
+   const possible=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
+   const candidates=possible.filter((o:any)=>!!o.payerName&&nameKey(String(o.payerName))===nameKey(payerName));
+   reason=possible.length===0?"no_matching_recent_order":candidates.length===0?"payer_name_mismatch":candidates.length>1?"multiple_matching_orders":"receiving_sim_mismatch";
    if(candidates.length===1){
     const order=candidates[0],receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(order.receiverPhone||""));
     const namesMatch=!!order.payerName&&nameKey(payerName)===nameKey(String(order.payerName));
