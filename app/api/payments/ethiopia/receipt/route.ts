@@ -24,13 +24,13 @@ export async function GET(req:Request){
     if(!order.receiptId)await (await collection<any>("payments")).updateOne({_id:order._id,receiptId:{$exists:false}},{$set:{receiptId}});
     return NextResponse.json({ok:true,receipt:{
       receiptId,orderId,service:String(order.methodName||order.method||"Ethiopia Local Payment"),
-      payerPhone:String(order.smsPayerPhone||order.payerPhone||""),
+      payerName:String(order.smsPayerName||order.payerName||""),payerPhone:String(order.smsPayerPhone||order.payerPhone||""),
       receiverPhone:String(order.receiverPhone||""),transactionReference:String(order.transactionReference||""),
       amountEtb:Number(order.amountEtb||0),amountUsd:Number(order.amountUsd||0),
       exchangeRate:Number(order.exchangeRate||0),walletCredit:Number(order.coins||0),
       balanceAfter:transaction?.balanceAfter==null?null:Number(transaction.balanceAfter),
       paidAt:paidAt?new Date(paidAt).toISOString():null,status:"VERIFIED",
-      verification:"Incoming payment SMS, payer number, exact amount, receiving SIM and unique transaction reference matched."
+      verification:"Incoming payment SMS, payer name and number, exact amount, receiving SIM and unique transaction reference matched."
     }},{headers:{"Cache-Control":"no-store"}});
   }catch(error){
     if(error instanceof Error&&error.message==="AUTH_REQUIRED")
