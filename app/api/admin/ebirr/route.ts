@@ -27,7 +27,7 @@ export async function POST(req:Request){
    return NextResponse.json({ok:true});
   }
   if(action==="save_methods"){
-   const input=b.paymentMethods&&typeof b.paymentMethods==="object"?b.paymentMethods:{},rate=Number(b.rate),smsReceivingPhone=String(b.smsReceivingPhone||"").trim().replace(/[\\s()+-]/g,""),baseInstructions=String(b.instructions||"").trim().slice(0,800),current=methodsFor(await settings.findOne({_id:"payments"}));
+   const input=b.paymentMethods&&typeof b.paymentMethods==="object"?b.paymentMethods:{},rate=Number(b.rate),smsReceivingPhone=String(b.smsReceivingPhone||"").trim().replace(/[\s()+-]/g,""),baseInstructions=String(b.instructions||"").trim().slice(0,800),current=methodsFor(await settings.findOne({_id:"payments"}));
    if(!Number.isFinite(rate)||rate<=0||rate>100000)return NextResponse.json({ok:false,error:"Enter a valid ETB per USD rate."},{status:400});
    const next:Record<string,any>={};
    if(Object.values(input).some((x:any)=>x?.open===true)&&!/^0[79][0-9]{8}$/.test(smsReceivingPhone)&&!/^251[79][0-9]{8}$/.test(smsReceivingPhone))return NextResponse.json({ok:false,error:"Enter the phone number of the SIM that receives payment SMS messages."},{status:400});
