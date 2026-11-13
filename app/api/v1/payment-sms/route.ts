@@ -20,8 +20,9 @@ function parse(body:string){
  const ref=body.match(/(?:reference|ref(?:erence)?\s*(?:no|number)?|txn(?:\s*id)?|transaction\s*(?:id|no|number)|trans(?:action)?\s*no)\s*[:#= -]*([A-Z0-9-]{6,})/i)?.[1]||"";
  const payerMatch=body.match(/(?:from|sender|payer|customer|debited\s+from|sent\s+by|mobile(?:\s+number)?|phone(?:\s+number)?|የላኪ|ላኪ)\D{0,45}(\+?251[\s-]?[79](?:[\s-]?\d){8}|0[79](?:[\s-]?\d){8})/i);
  const payerPhone=payerMatch?phone(payerMatch[1]):"";
- const nameMatch=body.match(/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/iu);
- const payerName=nameMatch?.[1]?.trim().replace(/[.,;:-]+$/,"")||"";
+ const namePattern=/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/giu;
+ const nameCandidates=[...body.matchAll(namePattern)].map(m=>m[1].trim().replace(/[.,;:-]+$/,"")).filter(n=>!["sender","payer","customer","account","bank"].includes(n.toLowerCase()));
+ const payerName=nameCandidates[nameCandidates.length-1]||"";
  const positive=/(?:received|credited|deposit(?:ed)?|has been received|you have received|ደረሰ|ገቢ ሆኗል)/i.test(body);
  return {amount,reference:ref,payerPhone,payerName,positive};
 }
