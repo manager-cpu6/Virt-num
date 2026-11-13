@@ -1,6 +1,6 @@
 "use client";
 import {useMemo,useState} from "react";
-type ReceiptData={receiptId:string;orderId:string;service:string;payerPhone:string;receiverPhone:string;transactionReference:string;amountEtb:number;amountUsd:number;exchangeRate:number;walletCredit:number;balanceAfter:number|null;paidAt:string|null;status:string;verification:string};
+type ReceiptData={receiptId:string;orderId:string;service:string;payerName:string;payerPhone:string;receiverPhone:string;transactionReference:string;amountEtb:number;amountUsd:number;exchangeRate:number;walletCredit:number;balanceAfter:number|null;paidAt:string|null;status:string;verification:string};
 const code39:Record<string,string>={"0":"nnnwwnwnn","1":"wnnwnnnnw","2":"nnwwnnnnw","3":"wnwwnnnnn","4":"nnnwwnnnw","5":"wnnwwnnnn","6":"nnwwwnnnn","7":"nnnwnnwnw","8":"wnnwnnwnn","9":"nnwwnnwnn","A":"wnnnnwnnw","B":"nnwnnwnnw","C":"wnwnnwnnn","D":"nnnnwwnnw","E":"wnnnwwnnn","F":"nnwnwwnnn","G":"nnnnnwwnw","H":"wnnnnwwnn","I":"nnwnnwwnn","J":"nnnnwwwnn","K":"wnnnnnnww","L":"nnwnnnnww","M":"wnwnnnnwn","N":"nnnnwnnww","O":"wnnnwnnwn","P":"nnwnwnnwn","Q":"nnnnnnnww","R":"wnnnnnwnw","S":"nnwnnnwnw","T":"nnnnwnwnw","U":"wwnnnnnnw","V":"nwwnnnnnw","W":"wwwnnnnnn","X":"nwnnwnnnw","Y":"wwnwnnnnn","Z":"nwwnwnnnn","-":"nwnnnnwnw",".":"wwnnnwnnn"," ":"nwwnnwnnn","$":"nwnwnwnnn","/":"nwnwnnnwn","+":"nwnnnwnwn","%":"nnnwnwnwn","*":"nwnnwnwnn"};
 function Barcode({value}:{value:string}){
  const encoded="*"+value.toUpperCase().replace(/[^0-9A-Z. $/+%-]/g,"")+"*";
@@ -20,7 +20,7 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
   <div className="nx-receipt-stamp" aria-label="Numelixa verified official stamp"><div className="nx-stamp-ring"><span>NUMELIXA</span><b>✓</b><small>PAYMENT VERIFIED</small></div></div>
   <div className="nx-receipt-grid">
    <div><small>RECEIPT NUMBER</small><b>{receipt.receiptId}</b></div><div><small>PAYMENT METHOD</small><b>{receipt.service}</b></div>
-   <div><small>SENDER NUMBER</small><b>{receipt.payerPhone||"Not provided"}</b></div><div><small>RECEIVING NUMBER</small><b>{receipt.receiverPhone||"—"}</b></div>
+   <div><small>PAYER NAME</small><b>{receipt.payerName||"Not provided"}</b></div><div><small>SENDER NUMBER</small><b>{receipt.payerPhone||"Not provided"}</b></div><div><small>RECEIVING NUMBER</small><b>{receipt.receiverPhone||"—"}</b></div>
    <div><small>TRANSACTION REFERENCE</small><b>{receipt.transactionReference||"—"}</b></div><div><small>DATE & TIME (ADDIS ABABA)</small><b>{receipt.paidAt?new Intl.DateTimeFormat("en-ET",{dateStyle:"medium",timeStyle:"medium",timeZone:"Africa/Addis_Ababa"}).format(new Date(receipt.paidAt)):"—"}</b></div>
    {receipt.amountEtb>0&&<div><small>LOCAL AMOUNT PAID</small><b>{etb(receipt.amountEtb)} ETB</b></div>}{receipt.exchangeRate>0&&<div><small>EXCHANGE RATE</small><b>1 USD = {etb(receipt.exchangeRate)} ETB</b></div>}<div><small>WALLET CREDIT</small><b>{receipt.walletCredit.toLocaleString("en-US")} credits</b></div>
    {receipt.balanceAfter!==null&&<div className="wide"><small>UPDATED WALLET BALANCE</small><b>{receipt.balanceAfter.toLocaleString("en-US")} credits</b></div>}
