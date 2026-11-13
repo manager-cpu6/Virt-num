@@ -5,11 +5,11 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 const FALLBACK_RELEASE={
-  version:"1.0.15+16",
-  versionCode:16,
-  sizeBytes:58759103,
+  version:"1.0.17+18",
+  versionCode:18,
+  sizeBytes:57499591,
   apkUrl:"https://www.numelixa.com/api/mobile/apk",
-  sha256:"18072f1da303d38bf30e0e4dadbdd385065daa8fa5e176d9fb34a32755f001b0",
+  sha256:"bd912db248de09f3aec0a2e24d42d558a4d96e757bc9c9e006ef968e08b15745",
   releaseNotes:"Premium mobile experience with smoother navigation, improved reliability, and updated support features. Existing accounts and data are preserved during the update.",
   publishedAt:"2026-11-10T13:55:01.000Z"
 };
@@ -62,11 +62,11 @@ async function getRollingRelease(){
     // that uploads Numelixa.apk. The lightweight tag itself can remain old
     // when an existing release has its asset replaced, so never read pubspec
     // from that stale tag or from unbuilt main-branch source.
-    const titleVersion=String(release.name||"").match(/([0-9]+\\.[0-9]+\\.[0-9]+\\+[0-9]+)/)?.[1]||"";
-    const bodyVersion=String(release.body||"").match(/\\bVersion\\s+([0-9]+\\.[0-9]+\\.[0-9]+\\+[0-9]+)/i)?.[1]||"";
+    const titleVersion=String(release.name||"").match(/([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)/)?.[1]||"";
+    const bodyVersion=String(release.body||"").match(/\bVersion\s+([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)/i)?.[1]||"";
     const version=titleVersion||bodyVersion;
     if(!version||(titleVersion&&bodyVersion&&titleVersion!==bodyVersion))return null;
-    const versionCode=Number(version.match(/\\+(\\d+)$/)?.[1]||0);
+    const versionCode=Number(version.match(/\+(\d+)$/)?.[1]||0);
     const assets=Array.isArray(release.assets)?release.assets:[];
     const apk=assets.find((asset:any)=>String(asset.name||"").toLowerCase()==="numelixa.apk");
     const apkUrl=String(apk?.browser_download_url||"");
