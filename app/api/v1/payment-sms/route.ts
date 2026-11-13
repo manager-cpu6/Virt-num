@@ -30,7 +30,7 @@ export async function POST(req:Request){
  try{
   const body:any=await req.json(),token=String(req.headers.get("x-numelixa-device-token")||"");
   const settings=await (await collection<any>("settings")).findOne({_id:"payments"});
-  const expected=String(settings?.ebirrDeviceTokenHash||"");
+  const expected=String(settings?.ebirrDeviceTokenHash||""),expectedSimPhone=phone(String(settings?.ebirrSmsReceivingPhone||""));
   if(!token||!expected||!same(crypto.createHash("sha256").update(token).digest("hex"),expected))return NextResponse.json({ok:false,error:"Device is not paired."},{status:401});
   if(body.type==="webhook_test")return NextResponse.json({ok:true});
   const raw=String(body.rawBody||"").trim(),parsed=parse(raw),payerName=parsed.payerName||String(body.senderName||"").trim(),provider=String(body.provider||"").toUpperCase().replace(/[^A-Z_]/g,""),allowed=providerMethods[provider];
@@ -46,9 +46,10 @@ export async function POST(req:Request){
    const candidates=possible.filter((o:any)=>!!o.payerName&&nameKey(String(o.payerName))===nameKey(payerName));
    reason=recentByPhone.length===0?"no_matching_recent_order":possible.length===0?"amount_mismatch":candidates.length===0?"payer_name_mismatch":candidates.length>1?"multiple_matching_orders":"receiving_sim_mismatch";
    if(candidates.length===1){
-    const order=candidates[0],receiverMatches=!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===phone(String(order.receiverPhone||""));
+    const order=candidates[0],receiverMatches=!!expectedSimPhone&&!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===expectedSimPhone;
     const namesMatch=!!order.payerName&&nameKey(payerName)===nameKey(String(order.payerName));
     if(!namesMatch)reason="payer_name_mismatch";
+    else if(!expectedSimPhone)reason="sms_receiving_sim_not_configured";
     else if(!receiverMatches)reason="receiving_sim_mismatch";
     else{
      const session=getMongoClient().startSession();let credited=false;
