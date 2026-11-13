@@ -12,7 +12,7 @@ function parse(body:string){
  const amount=Number((amountMatch?.[1]||amountMatch?.[2]||"").replace(/,/g,""));
  const reference=body.match(/(?:reference|ref|txn(?:\s*id)?|transaction\s*id|trans(?:action)?\s*no)\s*[:#= -]*([A-Z0-9-]{6,})/i)?.[1]||"";
  const payer=body.match(/(?:from|sender|payer|customer)\D{0,16}(\+?251[79]\d{8}|0[79]\d{8})/i)?.[1]||"";
- const positive=/(received|credited|deposit|transfer successful|payment successful|you have received)/i.test(body);
+ const positive=/(received|credited|deposit|transfer successful|payment successful|transaction successful|you have received)/i.test(body);
  return {amount:Number.isFinite(amount)&&amount>0?amount:null,reference,payerPhone:payer?phone(payer):"",positive};
 }
 export async function POST(req:Request){
