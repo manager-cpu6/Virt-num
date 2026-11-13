@@ -36,11 +36,12 @@ export async function POST(req:Request){
   const raw=String(body.rawBody||"").trim(),parsed=parse(raw),payerName=parsed.payerName||String(body.senderName||"").trim(),provider=String(body.provider||"").toUpperCase().replace(/[^A-Z_]/g,""),allowed=providerMethods[provider];
   if(!raw||!allowed)return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
   const payments=await collection<any>("payments");
-  let matched=false,reason="sms_missing_amount_name_or_sender_number",creditedOrderId="";
+  let matched=false,reason="sms_missing_amount_name_or_sender_number",creditedOrderId="",checkedOrderIds:any[]=[];
   const safeReference=parsed.reference||("SMS-"+crypto.createHash("sha256").update(provider+"|"+raw).digest("hex"));
   if(parsed.positive&&parsed.amount&&parsed.payerPhone&&payerName){
    const cutoff=new Date(Date.now()-30*60*1000);
    const possible=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,amountEtb:parsed.amount,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
+   checkedOrderIds=possible.map((o:any)=>o._id);
    const candidates=possible.filter((o:any)=>!!o.payerName&&nameKey(String(o.payerName))===nameKey(payerName));
    reason=possible.length===0?"no_matching_recent_order":candidates.length===0?"payer_name_mismatch":candidates.length>1?"multiple_matching_orders":"receiving_sim_mismatch";
    if(candidates.length===1){
@@ -65,6 +66,7 @@ export async function POST(req:Request){
     }
    }
   }
+  if(!matched&&checkedOrderIds.length)await payments.updateMany({_id:{$in:checkedOrderIds},credited:{$ne:true}},{$set:{smsLastCheck:{reason,payerName,payerPhone:parsed.payerPhone,amount:parsed.amount,checkedAt:new Date()}}});
   await (await collection<any>("ebirrSmsEvents")).insertOne({provider,amount:parsed.amount,transactionReference:safeReference,payerName:payerName||null,payerPhone:parsed.payerPhone||null,simPhone:String(body.receivingSimPhone||""),simOperator:String(body.simOperator||""),smsOrigin:String(body.senderPhone||""),rawBody:raw,matched,reason,creditedOrderId:creditedOrderId||null,receivedAt:new Date(),deviceId:String(body.deviceId||"")});
   return NextResponse.json({ok:true,matched,reason});
  }catch(e){console.error("[EBIRR SMS INGEST]",e);return NextResponse.json({ok:false,error:"Unable to process incoming payment SMS."},{status:500});}
