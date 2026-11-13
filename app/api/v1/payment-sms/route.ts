@@ -23,7 +23,7 @@ function parse(body:string){
  const namePattern=/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/giu;
  const nameCandidates=[...body.matchAll(namePattern)].map(m=>m[1].trim().replace(/[.,;:-]+$/,"")).filter(n=>!["sender","payer","customer","account","bank"].includes(n.toLowerCase()));
  const payerName=nameCandidates[nameCandidates.length-1]||"";
- const positive=/(?:received|credited|deposit(?:ed)?|has been received|you have received|ደረሰ|ገቢ ሆኗል)/i.test(body);
+ const positive=/(?:received|credited|deposit(?:ed)?|has been received|you have received|payment successful|transaction successful|transfer successful|ደረሰ|ገቢ ሆኗል|ተቀብለዋል)/i.test(body);
  return {amount,reference:ref,payerPhone,payerName,positive};
 }
 export async function POST(req:Request){
