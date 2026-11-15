@@ -38,9 +38,9 @@ export async function POST(req:Request){
   const raw=String(body.rawBody||"").trim(),parsed=parse(raw),payerName=parsed.payerName||String(body.senderName||"").trim(),provider=String(body.provider||"").toUpperCase().replace(/[^A-Z_]/g,""),allowed=providerMethods[provider];
   if(!raw||!allowed)return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
   const payments=await collection<any>("payments");
-  let matched=false,reason="sms_missing_amount_name_or_sender_number",creditedOrderId="",checkedOrderIds:any[]=[];
+  let matched=false,reason="sms_missing_amount_or_sender_number",creditedOrderId="",checkedOrderIds:any[]=[];
   const safeReference=parsed.reference||("SMS-"+crypto.createHash("sha256").update(provider+"|"+raw).digest("hex"));
-  if(parsed.positive&&parsed.amount&&parsed.payerPhone&&payerName){
+  if(parsed.positive&&parsed.amount&&parsed.payerPhone){
    const cutoff=new Date(Date.now()-30*60*1000);
    const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
    checkedOrderIds=recentByPhone.map((o:any)=>o._id);
@@ -66,7 +66,7 @@ export async function POST(req:Request){
       credited=true;
      });}catch(e:any){if(e?.code===11000)reason="duplicate_transaction_reference";else if(e instanceof Error&&e.message==="PAYMENT_ORDER_ALREADY_CLAIMED")reason="order_already_processed";else throw e;}finally{await session.endSession();}
      matched=credited;creditedOrderId=credited?String(order.orderId):"";
-     if(credited){reason="payer_name_phone_amount_receiver_and_sms_verified";try{await notifyUser(String(order.userId),"Payment confirmed","Your Ethiopia payment was verified and your Numelixa wallet has been credited.",{type:"payment",orderId:String(order.orderId)});}catch{}}
+     if(credited){reason="payer_phone_amount_receiver_and_sms_verified";try{await notifyUser(String(order.userId),"Payment confirmed","Your Ethiopia payment was verified and your Numelixa wallet has been credited.",{type:"payment",orderId:String(order.orderId)});}catch{}}
     }
    }
   }
