@@ -7,6 +7,8 @@ function digest(s:string){return crypto.createHash("sha256").update(s).digest();
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
 function nameKey(v:string){return v.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim().split(/\s+/).filter(Boolean).sort().join(" ");}
+function editSimilarity(a:string,b:string){const x=a,y=b;if(x===y)return 1;if(!x||!y)return 0;let prev=Array.from({length:y.length+1},(_,i)=>i);for(let i=1;i<=x.length;i++){const row=[i];for(let j=1;j<=y.length;j++)row[j]=Math.min(row[j-1]+1,prev[j]+1,prev[j-1]+(x[i-1]===y[j-1]?0:1));prev=row;}return 1-prev[y.length]/Math.max(x.length,y.length);}
+function nameSimilarity(a:string,b:string){const x=nameKey(a),y=nameKey(b);if(!x||!y)return 0;const character=editSimilarity(x,y),left=x.split(" "),right=y.split(" ");const score=(from:string[],to:string[])=>from.reduce((sum,word)=>sum+Math.max(...to.map(other=>editSimilarity(word,other))),0)/from.length;const token=(score(left,right)+score(right,left))/2;return Math.max(character,token);}
 const providerMethods:Record<string,string[]>={EBIRR:["ebirr","coopay_ebirr"],COOPAY_EBIRR:["coopay_ebirr"],KAAFI:["kaafi_ebirr"],KAAFI_EBIRR:["kaafi_ebirr"],CBE:["cbe_birr","cbe_bank"],CBE_BIRR:["cbe_birr"],CBE_BANK:["cbe_bank"],MPESA:["mpesa"],M_PESA:["mpesa"],TELEBIRR:["telebirr"]};
 function parse(body:string){
  const amountPatterns=[
@@ -43,11 +45,11 @@ export async function POST(req:Request){
    const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
    checkedOrderIds=recentByPhone.map((o:any)=>o._id);
    const possible=recentByPhone.filter((o:any)=>Number(o.amountEtb)===parsed.amount);
-   const candidates=possible.filter((o:any)=>!!o.payerName&&nameKey(String(o.payerName))===nameKey(payerName));
+   const candidates=possible.filter((o:any)=>{const saved=String(o.payerName||"").trim();return !saved||!payerName||nameSimilarity(saved,payerName)>=0.8;});
    reason=recentByPhone.length===0?"no_matching_recent_order":possible.length===0?"amount_mismatch":candidates.length===0?"payer_name_mismatch":candidates.length>1?"multiple_matching_orders":"receiving_sim_mismatch";
    if(candidates.length===1){
     const order=candidates[0],receiverMatches=!!expectedSimPhone&&!!body.receivingSimPhone&&phone(String(body.receivingSimPhone))===expectedSimPhone;
-    const namesMatch=!!order.payerName&&nameKey(payerName)===nameKey(String(order.payerName));
+    const namesMatch=!order.payerName||!payerName||nameSimilarity(String(order.payerName),payerName)>=0.8;
     if(!namesMatch)reason="payer_name_mismatch";
     else if(!expectedSimPhone)reason="sms_receiving_sim_not_configured";
     else if(!receiverMatches)reason="receiving_sim_mismatch";
@@ -56,7 +58,7 @@ export async function POST(req:Request){
      try{await session.withTransaction(async()=>{
       const claims=await collection<any>("paymentSmsClaims");
       await claims.insertOne({_id:crypto.createHash("sha256").update(String(order.method)+"|"+safeReference).digest("hex"),provider,method:String(order.method),transactionReference:safeReference,orderId:String(order.orderId),createdAt:new Date()},{session});
-      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:parsed.reference||null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_exact_payer_name_phone_amount_receiver_and_unique_reference"}},{session,returnDocument:"before"});
+      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:parsed.reference||null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_payer_phone_exact_amount_optional_name_similarity_80_receiver_and_unique_reference"}},{session,returnDocument:"before"});
       if(!claimed)throw new Error("PAYMENT_ORDER_ALREADY_CLAIMED");
       const users=await collection<any>("users"),user=await users.findOneAndUpdate({_id:String(order.userId)},{$inc:{coins:Number(order.coins)}},{session,returnDocument:"after"});
       if(!user)throw new Error("Payment user not found");
