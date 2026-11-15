@@ -3,12 +3,13 @@ import Link from "next/link";
 import {usePathname,useRouter} from "next/navigation";
 
 const items=[
- {href:"/dashboard",label:"Home",icon:"⌂"},
- {href:"/services",label:"Numbers",icon:"＋"},
- {href:"/wallet",label:"Wallet",icon:"◈"},
- {href:"/numbers",label:"Orders",icon:"▣"},
- {href:"/account",label:"Account",icon:"◉"}
+ {href:"/dashboard",label:"Home",icon:"home"},
+ {href:"/services",label:"Numbers",icon:"globe"},
+ {href:"/wallet",label:"Wallet",icon:"wallet"},
+ {href:"/numbers",label:"Orders",icon:"receipt"},
+ {href:"/account",label:"Account",icon:"user"}
 ];
+function NavIcon({name}:{name:string}){const paths:Record<string,React.ReactNode>={home:<><path d="m3 10 9-7 9 7"/><path d="M5 9v11h14V9M9 20v-6h6v6"/></>,globe:<><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18M12 3a15 15 0 0 0 0 18"/></>,wallet:<><rect x="3" y="5" width="18" height="15" rx="3"/><path d="M3 9h18M16 15h2"/></>,receipt:<><path d="M6 3h12v18l-3-2-3 2-3-2-3 2z"/><path d="M9 8h6M9 12h6M9 16h3"/></>,user:<><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></>};return <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]}</svg>;}
 
 export default function BottomNav(){
  const path=usePathname();
@@ -38,7 +39,7 @@ export default function BottomNav(){
     onPointerDown={()=>warm(i.href)}
     onTouchStart={()=>warm(i.href)}
    >
-    <span aria-hidden="true">{i.icon}</span><small>{i.label}</small>
+    <span className="nav-icon"><NavIcon name={i.icon}/></span><small>{i.label}</small>
    </Link>
   )}
  </nav>
