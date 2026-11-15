@@ -31,7 +31,7 @@ export default async function AndroidDownloadPage(){
   <div className="nxdl-glow nxdl-glow-one"/><div className="nxdl-glow nxdl-glow-two"/>
   <header className="nxdl-nav">
    <Link href="/" className="nxdl-brand"><img src="/numelixa-brand.svg" alt="Numelixa logo"/><span><b>Numelixa</b><small>ANDROID APP</small></span></Link>
-   <nav><a href="#features">Features</a><a href="#screens">App preview</a><a href="#faq">FAQ</a></nav>
+   <nav><a href="#features">Features</a><a href="#screens">App preview</a><a href="#safety">Safety</a><a href="#faq">FAQ</a></nav>
    <a className="nxdl-nav-cta" href="/api/mobile/apk">Download APK <span>↓</span></a>
   </header>
   <main>
@@ -72,6 +72,16 @@ export default async function AndroidDownloadPage(){
    <section className="nxdl-download-band">
     <div><span>READY TO GET STARTED?</span><h2>Bring Numelixa<br/>with you.</h2><p>Download the official Android APK and sign in to your Numelixa account.</p></div>
     <a href="/api/mobile/apk" className="nxdl-download nxdl-download-light"><span className="nxdl-android">↓</span><span><b>Download Numelixa APK</b><small>{release?release.version+" · "+release.size+" MB · Android": "Official Android APK"}</small></span><strong>→</strong></a>
+   </section>
+   <section id="safety" className="nxdl-safety">
+    <div className="nxdl-section-heading"><span>BUILT AROUND CLARITY</span><h2>Know what to expect.<br/><em>Stay in control.</em></h2><p>Important details about using, updating and protecting your Numelixa Android app.</p></div>
+    <div className="nxdl-safety-grid">
+     <article><span className="nxdl-safety-icon">01</span><b>Account and wallet</b><p>Sign in with your own Numelixa account. Wallet changes and payment receipts are tied to your account and verified server records.</p></article>
+     <article><span className="nxdl-safety-icon">02</span><b>Payment verification</b><p>For supported local payments, a pending request is not a successful payment. Wallet credit is applied only after the connected verification service confirms the transaction.</p></article>
+     <article><span className="nxdl-safety-icon">03</span><b>App permissions</b><p>Android may ask for notification permission so you can receive order updates. Optional features request access only when you use them. You can review permissions in Android Settings.</p></article>
+     <article><span className="nxdl-safety-icon">04</span><b>Updates and installation</b><p>Download the APK from this official domain. In-app updates preserve your account data when installed over the same official app signature. Android may ask you to approve the installer.</p></article>
+    </div>
+    <div className="nxdl-policy-links"><div><b>Privacy and terms</b><p>Read how Numelixa handles account information and the rules that apply when using the service.</p></div><div><a href="https://www.numelixa.com/privacy">Privacy policy ↗</a><a href="https://www.numelixa.com/terms">Terms of service ↗</a><a href="https://support.numelixa.com">Support ↗</a></div></div>
    </section>
    <section id="faq" className="nxdl-faq"><div className="nxdl-section-heading"><span>GOOD TO KNOW</span><h2>Quick answers.</h2></div><div className="nxdl-faq-grid">
     <article><b>Is this the official Numelixa APK?</b><p>Yes. This is the official Android download page for Numelixa. The download is served through Numelixa's own domain.</p></article>
