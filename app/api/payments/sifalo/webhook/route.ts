@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";
@@ -38,7 +39,7 @@ export async function POST(req:Request){
     const users=await collection<any>("users");
     const u=await users.findOneAndUpdate({_id:String(p.userId)},{$inc:{coins:Number(p.coins)}},{session,returnDocument:"after"});
     if(!u)throw new Error("Payment user not found");
-    await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(u.coins),reference:p.orderId,description:"Sifalo local payment top-up",createdAt:new Date()},{session});
+    await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(u.coins),reference:p.orderId,description:"Sifalo local payment top-up",createdAt:new Date()},{session});\n  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
     await payments.updateOne({_id:p._id,credited:{$ne:true}},{$set:{credited:true,status:"paid",updatedAt:new Date()}},{session});
     creditedNow=true;
    });
