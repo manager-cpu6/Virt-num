@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {collection,getMongoClient,getMongoDb,mongoId} from "@/lib/mongo";
 import {getCoinDeposits,personalApiConfigured,type BinanceDeposit} from "@/lib/binance-personal";
 import {notifyUser} from "@/lib/notifications";
+import {applyReferralReward} from "@/lib/referrals";
 import {sendEmail,coinPaymentSuccessEmail} from "@/lib/mailer";
 
 export const runtime="nodejs";
