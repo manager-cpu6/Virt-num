@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import {collection,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
 import {getZotloAppId,normalizeWebhook} from "@/lib/zotlo";
@@ -47,7 +48,7 @@ export async function POST(req:Request){
       _id:mongoId(),userId:p.userId,type:"credit",amount:Number(p.coins),
       balanceAfter:Number(u.coins),reference:p.orderId,
       description:"Zotlo wallet top-up",createdAt:new Date()
-    });
+    });\n  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
 
     try{
       await notifyUser(String(p.userId),"💰 Payment confirmed",
