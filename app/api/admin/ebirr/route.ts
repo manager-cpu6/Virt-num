@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import crypto from "crypto";
 import {requireAdmin} from "@/lib/auth";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
@@ -80,6 +81,7 @@ export async function POST(req:Request){
     credited=true;
    });}finally{await session.endSession();}
    if(!credited)return NextResponse.json({ok:false,error:"Payment was already processed by another admin action."},{status:409});
+   try{await applyReferralReward({userId:String(order.userId),paymentReference:String(orderId),amountUsd:Number(order.amountUsd||0),description:"Ethiopia payment approved by admin"});}catch(error){console.error("[REFERRAL REWARD]",error)}
    try{await notifyUser(String(order.userId),"eBirr payment confirmed","Your Numelixa wallet was credited with $"+Number(order.amountUsd).toFixed(2)+" USD.",{type:"payment",orderId});}catch{}
    return NextResponse.json({ok:true,status:"paid",creditedUsd:Number(order.amountUsd)});
   }

@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import {getPaymentSettings} from "@/lib/payment-settings";
 import {paypalApi} from "@/lib/paypal";
 import {collection,mongoId} from "@/lib/mongo";
@@ -17,6 +18,7 @@ async function credit(p:any,event:any){
  if(!claimed)return;
  const users=await collection<any>("users"),u=await users.findOneAndUpdate({_id:String(p.userId)},{$inc:{coins:Number(p.coins)}},{returnDocument:"after"});if(!u)throw new Error("Payment user not found");
  await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(u.coins),reference:p.orderId,description:"PayPal wallet top-up",createdAt:new Date()});
+  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
  try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with "+Number(p.coins).toLocaleString()+" coins.",{paymentId:String(p._id),type:"payment"});}catch(error){console.error("[PAYPAL WEBHOOK PUSH]",error);}
 }
 export async function POST(req:Request){

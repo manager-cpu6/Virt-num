@@ -9,7 +9,7 @@ export const dynamic="force-dynamic";
 
 export async function POST(req:Request){
  try{
-  const b=await req.json(),name=String(b.name||"").trim(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||"");
+  const b=await req.json(),name=String(b.name||"").trim(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||""),referralCode=String(b.ref||b.referralCode||"").trim().toUpperCase().slice(0,24);
   if(name.length<2||!email.includes("@")||password.length<8)return NextResponse.json({ok:false,error:"Enter valid details. Password must be 8+ characters."},{status:400});
   const users=await collection<any>("users");
   const existing=await users.findOne({email});
@@ -25,7 +25,8 @@ export async function POST(req:Request){
     },$unset:{googleId:""}});
     await (await collection<any>("emailTokens")).deleteMany({userId:id,type:"email_verify_code"});
   }else{
-    await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now});
+    const referrer=referralCode?await users.findOne({referralCode},{projection:{_id:1}}):null;
+    await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now,...(referrer&&String(referrer._id)!==id?{referredBy:String(referrer._id),referredAt:now}:{})});
 
   }
   await ensureApiKey(id);

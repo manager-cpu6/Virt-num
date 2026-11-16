@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import crypto from "crypto";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
@@ -49,6 +50,7 @@ export async function POST(req:Request){
    credited=true;
   });}finally{await session.endSession();}
   if(!credited)return NextResponse.json({ok:false,error:"Order was processed by another action."},{status:409});
+  try{await applyReferralReward({userId:String(order.userId),paymentReference:String(orderId),amountUsd:Number(order.amountUsd||0),description:"Ethiopia payment verified by admin device"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(order.userId),"Payment confirmed","Your Numelixa wallet was credited with $"+Number(order.amountUsd).toFixed(2)+" USD.",{type:"payment",orderId});}catch{}
   return NextResponse.json({ok:true,status:"paid",creditedUsd:Number(order.amountUsd)});
  }

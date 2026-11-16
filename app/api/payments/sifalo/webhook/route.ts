@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";
@@ -44,6 +45,7 @@ export async function POST(req:Request){
    });
   }finally{await session.endSession();}
   if(creditedNow){
+   try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified Sifalo wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
    try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(e){console.error("[SIFALO PUSH]",e);}
   }
   return NextResponse.json({ok:true});

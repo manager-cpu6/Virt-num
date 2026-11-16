@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
@@ -41,6 +42,7 @@ export async function POST(req:Request){
   const users=await collection<any>("users"),u=await users.findOneAndUpdate({_id:p.userId},{$inc:{coins:Number(p.coins)}},{returnDocument:"after"});
   if(!u)throw new Error("Payment user not found");
   await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:p.userId,type:"credit",amount:Number(p.coins),balanceAfter:Number(u.coins),reference:p.orderId,description:"NOWPayments wallet top-up",createdAt:new Date()});
+  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(error){console.error("[NOWPAYMENTS PUSH]",error);}
   try{const paidUser=await users.findOne({_id:p.userId},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmail(String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),String(body.pay_currency||body.price_currency||"Crypto"),String(p.orderId)));}catch(error){console.error("[NOWPAYMENTS PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
   return NextResponse.json({ok:true});
