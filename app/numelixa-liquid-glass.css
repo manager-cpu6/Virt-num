@@ -1,0 +1,109 @@
+/* Numelixa Liquid Glass — unified premium visual layer */
+:root{
+ --nx-glass-bg:#050b19;--nx-glass-panel:rgba(13,25,48,.68);--nx-glass-panel-2:rgba(20,37,68,.62);
+ --nx-glass-line:rgba(174,207,255,.16);--nx-glass-line-strong:rgba(133,192,255,.30);
+ --nx-glass-text:#f5f8ff;--nx-glass-muted:#9aaccb;--nx-glass-blue:#438cff;
+ --nx-glass-cyan:#36e4ed;--nx-glass-violet:#9872ff;--nx-glass-mint:#4ce8c4;
+ --nx-glass-shadow:0 22px 70px rgba(0,0,0,.34);
+}
+html{background:#050b19!important;color-scheme:dark}
+body{color:var(--nx-glass-text)!important;background:
+ radial-gradient(900px 580px at 4% -8%,rgba(51,118,255,.20),transparent 62%),
+ radial-gradient(720px 520px at 100% 16%,rgba(133,74,255,.16),transparent 62%),
+ radial-gradient(700px 500px at 55% 110%,rgba(22,208,205,.09),transparent 66%),
+ linear-gradient(145deg,#050b19 0%,#08152b 48%,#050b19 100%)!important}
+body:before{background:rgba(57,123,255,.20)!important;filter:blur(100px)!important}
+body:after{background:rgba(119,76,255,.16)!important;filter:blur(110px)!important}
+.page-shell{width:min(100%,1180px)!important;padding:18px 22px 150px!important}
+.topbar{max-width:1180px!important;min-height:66px!important}
+.top-title,.section-head h2,.page-intro h1,.orders-hero h1{color:#f5f8ff!important}
+.eyebrow{color:#79baff!important;letter-spacing:.17em!important}
+.topbar .brand-mark,.brand-mark{background:linear-gradient(145deg,#438cff,#7657e9)!important;color:white!important;box-shadow:0 12px 34px rgba(67,140,255,.28)!important}
+.icon-btn,.secondary-btn,.quick-card,.service-card,.list-card,.purchase-card,.code-card,.form-card,.admin-card,
+.country-row,.number-row,.transaction-list,.account-action-card,.account-security-card,.account-profile-card,
+.account-wallet-card,.orders-stat-strip,.orders-tabs,.order-card,.nx-wallet-content,.nx-wallet-custom,
+.nx-wallet-checkout-summary,.nx-wallet-methods,.nx-wallet-guide,.admin-tabs,.admin-table-wrap,.admin-section,
+.admin-header,.admin-card,.nx-chooser-card{
+ background:linear-gradient(145deg,rgba(19,37,68,.76),rgba(8,20,42,.72))!important;
+ border:1px solid var(--nx-glass-line)!important;border-radius:24px!important;
+ box-shadow:var(--nx-glass-shadow),inset 0 1px 0 rgba(255,255,255,.055)!important;
+ backdrop-filter:blur(28px) saturate(145%)!important;-webkit-backdrop-filter:blur(28px) saturate(145%)!important;
+ color:var(--nx-glass-text)!important
+}
+.quick-card,.service-card,.account-action-card,.order-card,.nx-chooser-card{transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease!important}
+.quick-card:hover,.service-card:hover,.account-action-card:hover,.order-card:hover,.nx-chooser-card:hover{
+ transform:translateY(-3px);border-color:var(--nx-glass-line-strong)!important;box-shadow:0 28px 75px rgba(0,0,0,.42),0 0 34px rgba(61,143,255,.08)!important}
+.quick-card b,.service-card b,.country-name b,.number-main b,.account-action-card b,.order-card strong,.section-head h2{color:#f5f8ff!important}
+.quick-card small,.service-card small,.country-name small,.number-main small,.page-intro p,.account-action-card small{color:var(--nx-glass-muted)!important}
+.quick-card>span,.service-icon,.flag,.number-icon,.account-action-icon,.order-service-icon{
+ background:linear-gradient(145deg,rgba(70,142,255,.23),rgba(126,91,255,.15))!important;
+ border:1px solid rgba(128,180,255,.20)!important;color:#a9d8ff!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.13)!important}
+.hero-card,.orders-hero,.nx-wallet-hero,.balance-banner,.wallet-hero,.home-live-card{
+ position:relative;overflow:hidden;border:1px solid rgba(164,204,255,.24)!important;border-radius:32px!important;
+ background:radial-gradient(ellipse at 85% 12%,rgba(81,151,255,.32),transparent 42%),
+ radial-gradient(ellipse at 8% 100%,rgba(119,83,255,.22),transparent 48%),
+ linear-gradient(135deg,#101f40 0%,#0a1731 55%,#102044 100%)!important;
+ box-shadow:0 30px 90px rgba(0,0,0,.42),inset 0 1px 0 rgba(255,255,255,.12)!important}
+.hero-card:before,.orders-hero:before,.nx-wallet-hero:before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,.10),transparent 28%,transparent 72%,rgba(90,191,255,.08))}
+.hero-card h1,.orders-hero h1,.nx-wallet-hero strong,.wallet-hero strong{color:#fff!important}
+.hero-card p,.orders-hero p,.nx-wallet-hero p{color:#bdcce7!important}
+.hero-card .primary-btn,.primary-btn,.nx-wallet-checkout-summary button,.nx-receipt-continue{
+ color:#fff!important;border:1px solid rgba(255,255,255,.20)!important;
+ background:linear-gradient(110deg,#287fff 0%,#6259ee 55%,#8c5bfa 100%)!important;
+ box-shadow:0 14px 35px rgba(66,116,255,.30),inset 0 1px 0 rgba(255,255,255,.24)!important}
+.secondary-btn,.icon-btn{color:#e8f2ff!important;border-color:var(--nx-glass-line)!important}
+.bottom-nav{
+ background:rgba(7,17,37,.84)!important;border:1px solid rgba(151,190,255,.20)!important;
+ box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.10)!important;
+ backdrop-filter:blur(32px) saturate(160%)!important;-webkit-backdrop-filter:blur(32px) saturate(160%)!important}
+.nav-item{color:#8299bd!important}.nav-item.selected{color:#8bdcff!important}
+.nav-item.selected .nav-icon{filter:drop-shadow(0 0 9px rgba(69,186,255,.42))}
+input,select,textarea,.service-search input,.country-search input{
+ color:#f5f8ff!important;background:rgba(5,14,31,.68)!important;border:1px solid rgba(145,181,238,.22)!important;border-radius:16px!important}
+input::placeholder,textarea::placeholder{color:#7186a9!important}
+.country-filters button,.orders-tabs button,.tab{background:rgba(16,32,59,.82)!important;color:#a9bddc!important;border:1px solid var(--nx-glass-line)!important}
+.country-filters button.active,.orders-tabs button.selected,.tab.active{background:linear-gradient(110deg,#287fff,#7158ef)!important;color:white!important;border-color:rgba(164,204,255,.36)!important}
+.country-row,.number-row{border-bottom-color:rgba(156,190,239,.12)!important}
+.country-price,.order-card-footer,.purchase-line b{color:#f3f7ff!important}
+.status,.order-status{background:rgba(64,135,255,.16)!important;color:#a8d6ff!important}
+.status.active,.order-status.good{background:rgba(46,218,164,.14)!important;color:#71f0c6!important}
+.balance-banner,.wallet-hero{background:linear-gradient(135deg,#142d58,#172653 58%,#33205f)!important}
+.nx-wallet-page,.account-premium-page,.orders-page,.reference-dashboard,.admin-shell{color:#f5f8ff!important}
+.nx-wallet-balance,.account-wallet-copy strong{color:#fff!important}
+.nx-wallet-heading h1,.account-section-title h2,.account-identity h1{color:#f5f8ff!important}
+.nx-wallet-heading p,.account-identity p,.account-profile-footer,.account-wallet-copy small{color:#9fb2d1!important}
+.nx-wallet-amount-grid button{background:linear-gradient(145deg,rgba(22,42,78,.86),rgba(8,20,42,.88))!important;border:1px solid var(--nx-glass-line)!important;color:#f5f8ff!important;border-radius:20px!important}
+.nx-wallet-amount-grid button.selected{border-color:#69c6ff!important;box-shadow:0 0 0 1px rgba(105,198,255,.24),0 15px 38px rgba(47,123,255,.16)!important}
+.nx-wallet-amount-grid button strong{color:#fff!important}
+.nx-wallet-custom,.nx-wallet-checkout-summary,.nx-wallet-methods,.nx-wallet-guide{background:rgba(12,27,53,.76)!important;border:1px solid var(--nx-glass-line)!important;border-radius:24px!important}
+.nx-wallet-methods>div{background:rgba(18,39,73,.68)!important;border:1px solid rgba(146,186,244,.13)!important;border-radius:18px!important}
+.nx-wallet-methods b,.nx-wallet-guide h2{color:#f4f8ff!important}.nx-wallet-methods small,.nx-wallet-guide p{color:#9db1d0!important}
+.nx-receipt-actions button,.nx-wallet-checkout-summary button{border-radius:15px!important}
+.account-profile-card,.account-wallet-card,.account-security-card{overflow:hidden}
+.account-profile-card{background:radial-gradient(circle at 90% 0%,rgba(90,146,255,.22),transparent 40%),linear-gradient(145deg,rgba(20,39,75,.88),rgba(8,19,41,.88))!important}
+.account-id-card{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:14px 0;padding:17px 19px;border-radius:20px;background:linear-gradient(120deg,rgba(39,107,207,.19),rgba(119,82,227,.15));border:1px solid rgba(134,185,255,.23)}
+.account-id-card span{display:block;color:#91a9ce;font-size:10px;font-weight:850;letter-spacing:.14em}.account-id-card code{display:block;color:#eff7ff;font-size:14px;font-weight:850;margin-top:6px;overflow-wrap:anywhere}
+.admin-shell{max-width:1240px;margin:0 auto}.admin-header h1{color:#f5f8ff!important}.admin-header small,.admin-help{color:#9fb2d1!important}
+.admin-tabs{padding:9px!important;gap:8px!important}
+.admin-tabs .tab{border-radius:13px!important}
+.admin-form label,.admin-card label{color:#dbe8ff!important}
+.admin-table,.admin-table th,.admin-table td{color:#dce8ff!important;border-color:rgba(149,184,234,.14)!important}
+.admin-table th{color:#91baff!important;background:rgba(31,62,108,.38)!important}
+.error-box{background:rgba(117,25,51,.26)!important;border-color:rgba(255,116,151,.28)!important;color:#ffb8ca!important}
+.success-box{background:rgba(18,111,91,.25)!important;border-color:rgba(73,222,181,.25)!important;color:#9bf1d7!important}
+.nx-payment-receipt{background:#fff!important;color:#111827!important}
+.nx-payment-receipt *{color:inherit}
+.nx-payment-receipt .nx-receipt-status,.nx-payment-receipt .nx-receipt-proof,.nx-payment-receipt .nx-receipt-grid{color:#111827!important}
+.nx-payment-receipt .nx-receipt-actions button{background:#101827!important;color:#fff!important}
+@media(max-width:760px){
+ .page-shell{padding:12px 14px calc(132px + env(safe-area-inset-bottom))!important}
+ .hero-card,.orders-hero,.nx-wallet-hero{border-radius:26px!important}
+ .hero-card{padding:24px!important;min-height:300px!important}
+ .section-head{margin-top:28px!important}
+ .quick-grid{gap:10px!important}
+ .quick-card{padding:14px!important;min-height:82px!important}
+ .account-id-card{align-items:flex-start;flex-direction:column}
+ .admin-tabs{overflow-x:auto;flex-wrap:nowrap!important;scrollbar-width:none}
+ .admin-tabs .tab{white-space:nowrap}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
