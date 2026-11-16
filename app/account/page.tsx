@@ -22,6 +22,7 @@ export default async function AccountPage(){
     </div>
     <div className="account-profile-footer"><span>Personal account</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
    </section>
+   <section className="account-id-card" aria-label="Your Numelixa account ID"><div><span>YOUR NUMELIXA ID</span><code>{user.id}</code></div><small>Use this ID when contacting support or requesting account assistance.</small></section>
    <section className="account-wallet-card">
     <div className="account-wallet-orb">◈</div>
     <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>${balanceUsd}</strong><small>USD available to spend</small></div>
