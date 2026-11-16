@@ -52,11 +52,10 @@ export default function PaymentPage(){
   const query=new URLSearchParams(window.location.search);
   const requestedReturn=query.get("returnTo")||"";
   // Only accept the one explicit Numelixa Android callback or the same-site wallet route.
+  const reference=String(deposit?.orderId||"");
   const returnUrl=requestedReturn==="com.numelixa.app://auth/callback?payment=success"
-    ? requestedReturn
-    : requestedReturn==="https://numelixa.com/wallet?payment=success"
-      ? requestedReturn
-      : "https://numelixa.com/wallet?payment=success";
+    ? "com.numelixa.app://auth/callback?payment=success&reference="+encodeURIComponent(reference)
+    : "https://numelixa.com/wallet?payment=success&reference="+encodeURIComponent(reference);
   const id=window.setTimeout(()=>{window.location.href=returnUrl;},1800);
   return()=>window.clearTimeout(id);
  },[status]);

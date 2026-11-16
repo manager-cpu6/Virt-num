@@ -10,9 +10,10 @@ export default function AdminAppUpdate(){
  const[busy,setBusy]=useState(false);
  const[result,setResult]=useState("");
  const[updates,setUpdates]=useState<any[]>([]);
+ const[versionUsage,setVersionUsage]=useState<any[]>([]);
 
  async function load(){
-  try{const r=await fetch("/api/admin/app-update",{cache:"no-store"});const d=await r.json();if(d.ok)setUpdates(d.updates||[])}catch{}
+  try{const r=await fetch("/api/admin/app-update",{cache:"no-store"});const d=await r.json();if(d.ok){setUpdates(d.updates||[]);setVersionUsage(d.versionUsage||[])}}catch{}
  }
  useEffect(()=>{load()},[]);
 
@@ -31,6 +32,17 @@ export default function AdminAppUpdate(){
  }
 
  return <div className="admin-notifications">
+  <div className="admin-card">
+   <span className="eyebrow">APP INVENTORY</span>
+   <h2>App Updates & installed versions</h2>
+   <p className="admin-help">Version usage is counted from Android devices that have registered with Numelixa notifications. It shows registered installs and distinct accounts seen in the last 30 days; it is not a count of anonymous APK downloads.</p>
+   {versionUsage.length?<div className="admin-app-version-grid">{versionUsage.map((item:any)=><article className="admin-app-version-card" key={item.platform+"-"+item.version}>
+    <div><b>{item.appName||"Numelixa Android"}</b><span>{item.platform.toUpperCase()} · v{item.version}</span></div>
+    <strong>{Number(item.registeredDevices||0).toLocaleString()}</strong><small>Registered devices</small>
+    <div className="admin-app-version-stats"><span><b>{Number(item.registeredUsers||0).toLocaleString()}</b> Accounts</span><span><b>{Number(item.activeUsers30d||0).toLocaleString()}</b> Active · 30 days</span></div>
+    <small>Last seen: {item.lastSeenAt?new Date(item.lastSeenAt).toLocaleString():"Not reported"}</small>
+   </article>)}</div>:<div className="country-loading">No Android version registrations have been recorded yet.</div>}
+  </div>
   <div className="notification-compose">
    <div className="notice"><span>📦</span><p>Publish an APK update. The native Numelixa app checks this automatically and detects the exact APK size automatically and shows it before updating without opening a browser.</p></div>
    <span className="eyebrow">APP UPDATE CENTER</span>

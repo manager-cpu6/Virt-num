@@ -9,8 +9,26 @@ export const dynamic="force-dynamic";
 export async function GET(){
   try{
     await requireAdmin();
-    const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(20).toArray();
-    return NextResponse.json({ok:true,updates:rows.map(x=>({
+    const rows=await (await collection<any>("appUpdates")).find({}).sort({publishedAt:-1}).limit(50).toArray();
+    const deviceRows=await (await collection<any>("deviceTokens")).find({platform:"android",enabled:{$ne:false}}).toArray();
+    const grouped=new Map<string,{platform:string;version:string;registeredDevices:number;users:Set<string>;activeUsers:Set<string>;lastSeenAt:Date|null}>();
+    const activeAfter=new Date(Date.now()-30*24*60*60*1000);
+    for(const device of deviceRows){
+      const version=String(device.appVersion||"Unknown / legacy").trim()||"Unknown / legacy";
+      const platform=String(device.platform||"android").toLowerCase();
+      const key=platform+"|"+version;
+      const item=grouped.get(key)||{platform,version,registeredDevices:0,users:new Set<string>(),activeUsers:new Set<string>(),lastSeenAt:null};
+      item.registeredDevices++;
+      if(device.userId)item.users.add(String(device.userId));
+      const seen=device.lastSeenAt?new Date(device.lastSeenAt):device.updatedAt?new Date(device.updatedAt):null;
+      if(seen&&Number.isFinite(seen.getTime())){
+        if(seen>=activeAfter&&device.userId)item.activeUsers.add(String(device.userId));
+        if(!item.lastSeenAt||seen>item.lastSeenAt)item.lastSeenAt=seen;
+      }
+      grouped.set(key,item);
+    }
+    const versionUsage=[...grouped.values()].map(item=>({platform:item.platform,appName:"Numelixa Android",version:item.version,registeredDevices:item.registeredDevices,registeredUsers:item.users.size,activeUsers30d:item.activeUsers.size,lastSeenAt:item.lastSeenAt})).sort((a,b)=>b.version.localeCompare(a.version,undefined,{numeric:true}));
+    return NextResponse.json({ok:true,versionUsage,updates:rows.map(x=>({
       id:String(x._id),version:x.version,versionCode:Number(x.versionCode||0),sizeMb:x.sizeMb,sizeBytes:Number(x.sizeBytes||0),sha256:String(x.sha256||""),apkUrl:x.apkUrl,
       releaseNotes:x.releaseNotes,force:Boolean(x.force),published:Boolean(x.published),
       publishedAt:x.publishedAt,pushSent:Number(x.pushSent||0),pushFailed:Number(x.pushFailed||0)

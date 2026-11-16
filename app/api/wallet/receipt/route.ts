@@ -20,12 +20,13 @@ export async function GET(req:Request){
   const pricing=await getSettings(),rate=Number(pricing.coinsPerUsd)||100;
   const amountUsd=Number(payment?.amountUsd??(Number(transaction.amount||0)/rate));
   const paidAt=payment?.paidAt||payment?.smsMatchedAt||transaction.createdAt;
-  const method=String(payment?.methodName||payment?.method||payment?.provider||transaction.description||"Numelixa wallet credit");
+  const methodId=String(payment?.method||"").toLowerCase();
+  const method=String(payment?.methodName||(methodId==="waafi"?"Somalia Mobile Money · Waafi / EVC Plus / ZAAD / SAHAL":methodId==="edahab"?"Somalia Mobile Money · eDahab":methodId==="premier"?"Somalia Mobile Money · Premier Wallet":payment?.provider||transaction.description||"Numelixa wallet credit"));
   const verification=payment?.provider==="ebirr_manual"
    ?"Incoming payment SMS, sender number, exact amount, receiving SIM and unique transaction reference matched."
    :"A matching credit entry was posted to the Numelixa wallet ledger after payment processing.";
   return NextResponse.json({ok:true,receipt:{
-   receiptId,orderId:reference,service:method,payerPhone:String(payment?.smsPayerPhone||payment?.payerPhone||""),
+   receiptId,orderId:reference,service:method,payerPhone:String(payment?.smsPayerPhone||payment?.payerPhone||payment?.account||""),
    receiverPhone:String(payment?.receiverPhone||""),transactionReference:String(payment?.transactionReference||payment?.txid||reference),
    amountEtb:Number(payment?.amountEtb||0),amountUsd:Number.isFinite(amountUsd)?amountUsd:0,
    exchangeRate:Number(payment?.exchangeRate||0),walletCredit:Number(transaction.amount||0),
