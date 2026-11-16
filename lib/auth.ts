@@ -118,10 +118,28 @@ export async function getCurrentSession(){
  return {...s,expiresAt:new Date(now.getTime()+90*24*60*60*1000),tokenHash:undefined};
 }
 
+async function ensureNumelixaPublicId(userId:string){
+ const users=await collection<any>("users");
+ for(let attempt=0;attempt<12;attempt++){
+  const current=await users.findOne({_id:userId},{projection:{publicId:1}});
+  if(current?.publicId&&/^\d{7}$/.test(String(current.publicId)))return String(current.publicId);
+  const candidate=String(crypto.randomInt(1_000_000,10_000_000));
+  try{
+   const result=await users.updateOne({_id:userId,publicId:{$exists:false}},{$set:{publicId:candidate,publicIdCreatedAt:new Date()}});
+   if(result.modifiedCount)return candidate;
+   const latest=await users.findOne({_id:userId},{projection:{publicId:1}});
+   if(latest?.publicId&&/^\d{7}$/.test(String(latest.publicId)))return String(latest.publicId);
+  }catch(error){
+   if((error as {code?:number})?.code!==11000)throw error;
+  }
+ }
+ throw new Error("Unable to allocate a unique Numelixa ID.");
+}
 async function sessionUser(userId:string){
  const u=await (await collection<any>("users")).findOne({_id:userId});
  if(!u||u.suspendedAt)return null;
- return {id:String(u._id),email:u.email||null,phone:u.phone||null,phoneVerifiedAt:u.phoneVerifiedAt||null,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||u.phoneVerifiedAt||null,createdAt:u.createdAt||null};
+ const publicId=await ensureNumelixaPublicId(String(u._id));
+ return {id:String(u._id),publicId,email:u.email||null,phone:u.phone||null,phoneVerifiedAt:u.phoneVerifiedAt||null,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||u.phoneVerifiedAt||null,createdAt:u.createdAt||null};
 }
 
 export async function getUser(){
