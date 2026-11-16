@@ -35,7 +35,7 @@ export default async function AccountPage(){
     <Link href="/services" className="account-action-card primary"><span className="account-action-icon">＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>↗</i></Link>
     <Link href="/numbers" className="account-action-card"><span className="account-action-icon">▣</span><div><b>My orders</b><small>View your numbers</small></div><i>↗</i></Link>
     <Link href="/wallet" className="account-action-card"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
-    <Link href="/referrals" className="account-action-card"><span className="account-action-icon">↗</span><div><b>Referral rewards</b><small>Invite friends and withdraw rewards</small></div><i>↗</i></Link>\n    <Link href="/developers" className="account-action-card"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
+    \n    <Link href="/developers" className="account-action-card"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
    </section>
    <AccountSessions/>
    {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
