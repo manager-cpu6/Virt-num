@@ -1,4 +1,5 @@
 import {NextResponse} from "next/server";
+import {applyReferralReward} from "@/lib/referrals";
 import {collection} from "@/lib/mongo";
 import {requireUser} from "@/lib/auth";
 import {paypalApi} from "@/lib/paypal";
@@ -19,7 +20,7 @@ export async function POST(req:Request){
   if(!claimed)return NextResponse.json({ok:true,alreadyPaid:true});
   const users=await collection<any>("users");const updated=await users.findOneAndUpdate({_id:String(p.userId)},{$inc:{coins:Number(p.coins)}},{returnDocument:"after"});
   if(!updated)throw new Error("Payment user not found");
-  await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(updated.coins),reference:p.orderId,description:"PayPal wallet top-up",createdAt:new Date()});
+  await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(updated.coins),reference:p.orderId,description:"PayPal wallet top-up",createdAt:new Date()});\n  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(error){console.error("[PAYPAL PUSH]",error);}
   try{const paidUser=await users.findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmail(String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),"PayPal",String(p.orderId)));}catch(error){console.error("[PAYPAL PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
   return NextResponse.json({ok:true,coins:Number(p.coins),balance:Number(updated.coins)});
