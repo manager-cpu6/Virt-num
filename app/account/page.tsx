@@ -2,6 +2,7 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import { getUser } from "@/lib/auth";
 import AccountSessions from "@/components/AccountSessions";
+import NumelixaIdCard from "@/components/NumelixaIdCard";
 import {getSettings} from "@/lib/settings";
 
 export default async function AccountPage(){
@@ -17,12 +18,12 @@ export default async function AccountPage(){
     <div className="account-profile-glow"/>
     <div className="account-profile-top">
       <div className="account-avatar-premium">{initial}</div>
-      <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">NUMELIXA MEMBER</span></div>
+      <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">♛ NUMELIXA MEMBER</span></div>
       <Link href="/account" className="account-edit-btn" aria-label="Account settings">•••</Link>
     </div>
     <div className="account-profile-footer"><span>Personal account</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
    </section>
-   <section className="account-id-card" aria-label="Your Numelixa account ID"><div><span>YOUR NUMELIXA ID</span><code>{user.id}</code></div><small>Use this ID when contacting support or requesting account assistance.</small></section>
+   <NumelixaIdCard publicId={user.publicId}/>
    <section className="account-wallet-card">
     <div className="account-wallet-orb">◈</div>
     <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>${balanceUsd}</strong><small>USD available to spend</small></div>
