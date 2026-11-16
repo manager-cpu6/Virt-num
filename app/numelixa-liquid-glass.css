@@ -247,3 +247,27 @@ input::placeholder,textarea::placeholder{color:#7186a9!important}
 .nx-payment-receipt .nx-receipt-continue{width:100%!important;min-height:52px!important;margin-top:13px!important;border:0!important;border-radius:15px!important;background:linear-gradient(105deg,#087fff,#6254ed 58%,#853df0)!important;color:#fff!important;font-size:13px!important;font-weight:950!important;box-shadow:0 14px 30px rgba(45,104,255,.2)!important}
 .nx-payment-receipt footer{padding-top:15px!important;text-align:center!important;font-size:9px!important;color:#7185a2!important}
 @media(max-width:520px){.nx-payment-receipt{padding:16px!important;border-radius:22px!important}.nx-payment-receipt .nx-receipt-top{align-items:flex-start!important;flex-direction:column!important}.nx-payment-receipt .nx-receipt-grid{grid-template-columns:1fr!important}.nx-payment-receipt .nx-receipt-grid>div.wide{grid-column:auto!important}.nx-payment-receipt .nx-receipt-actions{grid-template-columns:1fr!important}.nx-payment-receipt .nx-receipt-actions button{min-height:46px!important}.nx-payment-receipt .nx-receipt-stamp{padding:12px 0!important}}
+
+
+/* Account quick access: fixed two-column, two-row placement */
+.account-action-grid{
+ display:grid!important;
+ grid-template-columns:repeat(2,minmax(0,1fr))!important;
+ grid-template-areas:"get-number orders" "wallet developer-api"!important;
+ align-items:stretch!important;
+ gap:12px!important;
+}
+.account-action-card--get-number{grid-area:get-number!important}
+.account-action-card--orders{grid-area:orders!important}
+.account-action-card--wallet{grid-area:wallet!important}
+.account-action-card--developer-api{grid-area:developer-api!important}
+.account-action-grid>.account-action-card{
+ min-width:0!important;
+ min-height:108px!important;
+ height:100%!important;
+ box-sizing:border-box!important;
+}
+@media(max-width:650px){
+ .account-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+ .account-action-grid>.account-action-card{min-height:96px!important}
+}

@@ -32,11 +32,11 @@ export default async function AccountPage(){
    {!user.verified_at&&<section className="account-security-card"><div className="security-icon">!</div><div><b>Verify your email</b><small>Verification is required before purchasing a number.</small></div><Link href="/verify-email">Verify</Link></section>}
    {user.verified_at&&<section className="account-security-card verified"><div className="security-icon">✓</div><div><b>Account verified</b><small>Your email is verified and your account is ready.</small></div><span>Secure</span></section>}
    <div className="account-section-title"><div><span>QUICK ACCESS</span><h2>Everything you need</h2></div></div>
-   <section className="account-action-grid">
-    <Link href="/services" className="account-action-card primary"><span className="account-action-icon">＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>↗</i></Link>
-    <Link href="/numbers" className="account-action-card"><span className="account-action-icon">▣</span><div><b>My orders</b><small>View your numbers</small></div><i>↗</i></Link>
-    <Link href="/wallet" className="account-action-card"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
-\n    <Link href="/developers" className="account-action-card"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
+   <section className="account-action-grid" aria-label="Quick access">
+    <Link href="/services" className="account-action-card account-action-card--get-number primary"><span className="account-action-icon">＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>↗</i></Link>
+    <Link href="/numbers" className="account-action-card account-action-card--orders"><span className="account-action-icon">▣</span><div><b>My orders</b><small>View your numbers</small></div><i>↗</i></Link>
+    <Link href="/wallet" className="account-action-card account-action-card--wallet"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
+    <Link href="/developers" className="account-action-card account-action-card--developer-api"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
    </section>
    <AccountSessions/>
    {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
