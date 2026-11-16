@@ -20,7 +20,7 @@ export function proxy(req:NextRequest){
     return res;
   }
 
-  if(host==="payment.numelixa.com"){
+  if(host==="checkout.numelixa.com"){\n    const url=req.nextUrl.clone();\n    if(pathname==="/"||pathname==="")url.pathname="/checkout";\n    return NextResponse.rewrite(url);\n  }\n\n  if(host==="payment.numelixa.com"){
     const url=req.nextUrl.clone();
     if(pathname==="/"||pathname==="")url.pathname="/payment";
     return NextResponse.rewrite(url);
