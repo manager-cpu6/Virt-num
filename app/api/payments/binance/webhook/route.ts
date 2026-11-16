@@ -14,8 +14,13 @@ function validSignature(headers:Headers,raw:string){
  const cert=headers.get("binancepay-certificate-sn")||"";
  const expectedCert=String(process.env.BINANCE_PAY_CERT_SERIAL||process.env.BINANCE_PAY_API_KEY||"");
  if(!signature||!timestamp||!nonce||!cert||cert!==expectedCert)return false;
- const publicKey=String(process.env.BINANCE_PAY_PUBLIC_KEY||"").replace(/\\n/g,"\n");
- try{return crypto.verify("RSA-SHA256",Buffer.from(timestamp+"\n"+nonce+"\n"+raw+"\n"),publicKey,Buffer.from(signature,"base64"));}catch{return false;}
+ const publicKey=String(process.env.BINANCE_PAY_PUBLIC_KEY||"").replace(/\
+/g,"
+");
+ try{return crypto.verify("RSA-SHA256",Buffer.from(timestamp+"
+"+nonce+"
+"+raw+"
+"),publicKey,Buffer.from(signature,"base64"));}catch{return false;}
 }
 export async function POST(req:Request){
  try{
@@ -41,7 +46,8 @@ export async function POST(req:Request){
   const users=await collection<any>("users");
   const user=await users.findOneAndUpdate({_id:String(p.userId)},{$inc:{coins:Number(p.coins)}},{returnDocument:"after"});
   if(!user)throw new Error("Payment user not found");
-  await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(user.coins),reference:p.orderId,description:"Binance Pay USDT wallet top-up",createdAt:new Date()});\n  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
+  await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(user.coins),reference:p.orderId,description:"Binance Pay USDT wallet top-up",createdAt:new Date()});
+  try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with "+Number(p.coins).toLocaleString()+" coins.",{paymentId:String(p._id),type:"payment"});}catch(e){console.error("[BINANCE PAY PUSH]",e);}
   return NextResponse.json({returnCode:"SUCCESS",returnMessage:"OK"});
  }catch(e){console.error("[BINANCE PAY WEBHOOK]",e);return NextResponse.json({returnCode:"FAIL",returnMessage:"Webhook processing failed"},{status:500});}
