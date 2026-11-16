@@ -25,7 +25,8 @@ export async function POST(req:Request){
     },$unset:{googleId:""}});
     await (await collection<any>("emailTokens")).deleteMany({userId:id,type:"email_verify_code"});
   }else{
-    const referrer=referralCode?await users.findOne({referralCode},{projection:{_id:1}}):null;\n    await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now,...(referrer&&String(referrer._id)!==id?{referredBy:String(referrer._id),referredAt:now}:{})});
+    const referrer=referralCode?await users.findOne({referralCode},{projection:{_id:1}}):null;
+    await users.insertOne({_id:id,email,name,password_hash:await passwordHash(password),role:"user",coins:0,verifiedAt:null,createdAt:now,...(referrer&&String(referrer._id)!==id?{referredBy:String(referrer._id),referredAt:now}:{})});
 
   }
   await ensureApiKey(id);
