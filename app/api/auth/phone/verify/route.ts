@@ -12,7 +12,7 @@ export async function POST(req:Request){
   const users=await collection<any>("users");let u=await users.findOne({phone});
   if(t.purpose==="signup"){
    if(u)return NextResponse.json({ok:false,error:"This phone number is already registered."},{status:409});
-   const id=mongoId();await users.insertOne({_id:id,phone,name:name||t.name||"Numelixa user",email:null,password_hash:null,role:"user",coins:0,verifiedAt:new Date(),phoneVerifiedAt:new Date(),createdAt:new Date()});u=await users.findOne({_id:id});
+   const id=mongoId(),referrer=t.referralCode?await users.findOne({referralCode:String(t.referralCode).toUpperCase()},{projection:{_id:1}}):null;await users.insertOne({_id:id,phone,name:name||t.name||"Numelixa user",email:null,password_hash:null,role:"user",coins:0,verifiedAt:new Date(),phoneVerifiedAt:new Date(),createdAt:new Date(),...(referrer&&String(referrer._id)!==id?{referredBy:String(referrer._id),referredAt:new Date()}:{})});u=await users.findOne({_id:id});
   }else{
    if(!u)return NextResponse.json({ok:false,error:"Account not found."},{status:404});
    if(u.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Contact support for a review."},{status:403});
