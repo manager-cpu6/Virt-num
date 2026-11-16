@@ -10,6 +10,7 @@ import "./numelixa-redesign.css";
 import "./numelixa-native-app.css";
 import "./admin-support.css";
 import "./numelixa-liquid-glass.css";
+import "./numelixa-wallet-referral-refresh.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
