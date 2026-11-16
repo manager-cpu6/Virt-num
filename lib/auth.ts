@@ -122,13 +122,13 @@ async function ensureNumelixaPublicId(userId:string){
  const users=await collection<any>("users");
  for(let attempt=0;attempt<12;attempt++){
   const current=await users.findOne({_id:userId},{projection:{publicId:1}});
-  if(current?.publicId&&/^\\d{7}$/.test(String(current.publicId)))return String(current.publicId);
+  if(current?.publicId&&/^\d{7}$/.test(String(current.publicId)))return String(current.publicId);
   const candidate=String(crypto.randomInt(1_000_000,10_000_000));
   try{
    const result=await users.updateOne({_id:userId,publicId:{$exists:false}},{$set:{publicId:candidate,publicIdCreatedAt:new Date()}});
    if(result.modifiedCount)return candidate;
    const latest=await users.findOne({_id:userId},{projection:{publicId:1}});
-   if(latest?.publicId&&/^\\d{7}$/.test(String(latest.publicId)))return String(latest.publicId);
+   if(latest?.publicId&&/^\d{7}$/.test(String(latest.publicId)))return String(latest.publicId);
   }catch(error){
    if((error as {code?:number})?.code!==11000)throw error;
   }
