@@ -201,3 +201,49 @@ input::placeholder,textarea::placeholder{color:#7186a9!important}
 .nx-chooser-card:disabled{opacity:.48!important;cursor:not-allowed!important}
 .nx-chooser-continue{width:100%!important;min-height:56px!important;margin-top:18px!important;padding:0 20px!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:12px!important;border:1px solid rgba(255,255,255,.22)!important;border-radius:17px!important;background:linear-gradient(105deg,#087fff,#6254ed 58%,#853df0)!important;color:#fff!important;font-size:14px!important;font-weight:900!important;box-shadow:0 16px 36px rgba(45,104,255,.27),inset 0 1px 0 rgba(255,255,255,.2)!important}
 .nx-chooser-continue:disabled{opacity:.45!important;box-shadow:none!important;cursor:not-allowed!important}
+
+
+/* Official wallet receipt — aligned with the native Numelixa payment receipt */
+.nx-payment-receipt{max-width:760px!important;margin:18px auto 30px!important;padding:clamp(18px,4vw,30px)!important;border:1px solid #d7e5f4!important;border-radius:28px!important;background:linear-gradient(160deg,#fff 0%,#f7fbff 100%)!important;color:#102a4c!important;box-shadow:0 24px 70px rgba(3,19,46,.28),inset 0 1px 0 #fff!important;overflow:hidden!important}
+.nx-payment-receipt *{box-sizing:border-box!important}
+.nx-payment-receipt .nx-receipt-top{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:14px!important;padding-bottom:18px!important;border-bottom:1px solid #e3ebf5!important}
+.nx-payment-receipt .nx-receipt-brand{display:flex!important;align-items:center!important;gap:11px!important;min-width:0!important}
+.nx-payment-receipt .nx-receipt-brandmark{width:43px!important;height:43px!important;border-radius:14px!important;box-shadow:0 8px 22px rgba(27,112,255,.22)!important}
+.nx-payment-receipt .nx-receipt-brand span{display:flex!important;flex-direction:column!important;gap:3px!important}
+.nx-payment-receipt .nx-receipt-brand b{font-size:16px!important;letter-spacing:.13em!important;font-weight:950!important;color:#102a4c!important}
+.nx-payment-receipt .nx-receipt-brand small{font-size:8px!important;letter-spacing:.12em!important;color:#7185a2!important;font-weight:850!important}
+.nx-payment-receipt .nx-receipt-status{display:flex!important;align-items:center!important;gap:7px!important;padding:9px 12px!important;border-radius:30px!important;background:#e0f8ef!important;color:#087b59!important;font-size:9px!important;font-weight:950!important;letter-spacing:.08em!important;white-space:nowrap!important}
+.nx-payment-receipt .nx-receipt-status i{width:8px!important;height:8px!important;border-radius:50%!important;background:#10b981!important;box-shadow:0 0 0 4px rgba(16,185,129,.13)!important}
+.nx-payment-receipt .nx-receipt-title{padding:22px 0 15px!important}
+.nx-payment-receipt .nx-receipt-title>span{font-size:9px!important;letter-spacing:.18em!important;font-weight:950!important;color:#66809f!important}
+.nx-payment-receipt .nx-receipt-title h2{margin:7px 0 5px!important;font-size:clamp(24px,5vw,32px)!important;line-height:1.12!important;font-weight:950!important;letter-spacing:-.04em!important;color:#102a4c!important}
+.nx-payment-receipt .nx-receipt-title p{margin:0!important;color:#7185a2!important;font-size:12px!important;line-height:1.5!important}
+.nx-payment-receipt .nx-receipt-amount{display:flex!important;flex-direction:column!important;gap:5px!important;padding:20px!important;border:1px solid #d8e8fa!important;border-radius:20px!important;background:radial-gradient(circle at 100% 0,rgba(113,59,255,.14),transparent 48%),linear-gradient(125deg,#eaf5ff,#f1efff)!important}
+.nx-payment-receipt .nx-receipt-amount small{font-size:9px!important;font-weight:950!important;letter-spacing:.15em!important;color:#617b9d!important}
+.nx-payment-receipt .nx-receipt-amount strong{font-size:clamp(34px,7vw,46px)!important;line-height:1.05!important;font-weight:950!important;letter-spacing:-.045em!important;color:#102a4c!important;font-variant-numeric:tabular-nums!important}
+.nx-payment-receipt .nx-receipt-amount span{font-size:11px!important;font-weight:800!important;color:#087e69!important}
+.nx-payment-receipt .nx-receipt-stamp{display:flex!important;justify-content:center!important;padding:17px 0!important}
+.nx-payment-receipt .nx-stamp-ring{width:96px!important;height:96px!important;display:flex!important;flex-direction:column!important;align-items:center!important;justify-content:center!important;gap:2px!important;border:2px solid #18a77d!important;border-radius:50%!important;outline:5px solid rgba(24,167,125,.08)!important;color:#07805f!important;transform:rotate(-9deg)!important}
+.nx-payment-receipt .nx-stamp-ring span,.nx-payment-receipt .nx-stamp-ring small{font-size:7px!important;letter-spacing:.1em!important;font-weight:950!important;color:#07805f!important}
+.nx-payment-receipt .nx-stamp-ring b{font-size:27px!important;line-height:1!important;color:#07805f!important}
+.nx-payment-receipt .nx-receipt-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important;padding:14px!important;border:1px solid #e0e9f3!important;border-radius:20px!important;background:#fff!important}
+.nx-payment-receipt .nx-receipt-grid>div{min-width:0!important;padding:11px!important;border-radius:12px!important;background:#f5f8fc!important}
+.nx-payment-receipt .nx-receipt-grid>div.wide{grid-column:1/-1!important}
+.nx-payment-receipt .nx-receipt-grid small{display:block!important;margin-bottom:5px!important;font-size:8px!important;line-height:1.4!important;font-weight:950!important;letter-spacing:.09em!important;color:#7185a2!important}
+.nx-payment-receipt .nx-receipt-grid b{display:block!important;overflow-wrap:anywhere!important;font-size:11px!important;line-height:1.45!important;font-weight:850!important;color:#102a4c!important}
+.nx-payment-receipt .nx-receipt-barcode{margin-top:13px!important;padding:14px!important;border:1px solid #e0e9f3!important;border-radius:18px!important;background:#fff!important;text-align:center!important}
+.nx-payment-receipt .nx-receipt-barcode svg{display:block!important;max-width:360px!important;margin:0 auto 8px!important}
+.nx-payment-receipt .nx-receipt-barcode>b{display:block!important;letter-spacing:.16em!important;font-size:12px!important;color:#102a4c!important}
+.nx-payment-receipt .nx-receipt-barcode small{display:block!important;margin-top:9px!important;font-size:9px!important;color:#7185a2!important}
+.nx-payment-receipt .nx-receipt-barcode a{font-size:10px!important;color:#1677ff!important;font-weight:900!important}
+.nx-payment-receipt .nx-receipt-proof{margin-top:13px!important;padding:14px!important;border-radius:16px!important;background:#edf5ff!important;border:1px solid #dceafa!important}
+.nx-payment-receipt .nx-receipt-proof>b{font-size:11px!important;font-weight:950!important;color:#173b68!important}
+.nx-payment-receipt .nx-receipt-proof p{margin:6px 0!important;font-size:10px!important;line-height:1.55!important;color:#355574!important}
+.nx-payment-receipt .nx-receipt-proof span{font-size:9px!important;line-height:1.45!important;color:#6b829e!important}
+.nx-payment-receipt .nx-receipt-actions{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:8px!important;margin-top:16px!important}
+.nx-payment-receipt .nx-receipt-actions button{min-height:42px!important;padding:8px 10px!important;border:0!important;border-radius:12px!important;background:#102a4c!important;color:#fff!important;font-size:10px!important;font-weight:850!important}
+.nx-payment-receipt .nx-receipt-actions button:disabled{opacity:.55!important}
+.nx-payment-receipt .nx-receipt-message{padding:10px!important;border-radius:12px!important;background:#e4f8f1!important;color:#087b59!important;font-size:11px!important}
+.nx-payment-receipt .nx-receipt-continue{width:100%!important;min-height:52px!important;margin-top:13px!important;border:0!important;border-radius:15px!important;background:linear-gradient(105deg,#087fff,#6254ed 58%,#853df0)!important;color:#fff!important;font-size:13px!important;font-weight:950!important;box-shadow:0 14px 30px rgba(45,104,255,.2)!important}
+.nx-payment-receipt footer{padding-top:15px!important;text-align:center!important;font-size:9px!important;color:#7185a2!important}
+@media(max-width:520px){.nx-payment-receipt{padding:16px!important;border-radius:22px!important}.nx-payment-receipt .nx-receipt-top{align-items:flex-start!important;flex-direction:column!important}.nx-payment-receipt .nx-receipt-grid{grid-template-columns:1fr!important}.nx-payment-receipt .nx-receipt-grid>div.wide{grid-column:auto!important}.nx-payment-receipt .nx-receipt-actions{grid-template-columns:1fr!important}.nx-payment-receipt .nx-receipt-actions button{min-height:46px!important}.nx-payment-receipt .nx-receipt-stamp{padding:12px 0!important}}
