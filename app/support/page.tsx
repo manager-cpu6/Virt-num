@@ -8,17 +8,17 @@ function ChannelIcon({name}:{name:string}){
  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.3 18-3.8-7-7-3.8L21 3Z"/><path d="m10 14 4-4"/></svg>;
 }
 export default function SupportPage(){
- const [channel,setChannel]=useState("email"),[contact,setContact]=useState(""),[subject,setSubject]=useState(""),[message,setMessage]=useState(""),[ticket,setTicket]=useState<Ticket|null>(null),[loading,setLoading]=useState(true),[sending,setSending]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
+ const [channel,setChannel]=useState("email"),[contact,setContact]=useState(""),[subject,setSubject]=useState(""),[message,setMessage]=useState(""),[ticket,setTicket]=useState<Ticket|null>(null),[needsLogin,setNeedsLogin]=useState(false),[loading,setLoading]=useState(true),[sending,setSending]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
  async function refresh(silent=false){
   if(!silent)setLoading(true);
-  try{const r=await fetch("/api/support",{cache:"no-store",credentials:"include"});const d=await r.json();if(r.ok&&d.ok){setTicket(d.ticket||null);setError("")}else if(r.status===401)setError("Please sign in first to contact Support.");else if(!silent)setError(d.error||"Support is temporarily unavailable.");}
+  try{const r=await fetch("/api/support",{cache:"no-store",credentials:"include"});const d=await r.json();if(r.ok&&d.ok){setTicket(d.ticket||null);setError("")}else if(r.status===401){setNeedsLogin(true);setError("");}else if(!silent)setError(d.error||"Support is temporarily unavailable.");}
   catch{if(!silent)setError("Connection problem. Please try again.");}
   finally{if(!silent)setLoading(false)}
  }
  useEffect(()=>{void refresh();const timer=window.setInterval(()=>void refresh(true),15000);return()=>window.clearInterval(timer)},[]);
  async function submit(e:React.FormEvent){
   e.preventDefault();setNotice("");setError("");setSending(true);
-  try{const r=await fetch("/api/support",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({channel,contact,subject,message})});const d=await r.json();if(!r.ok||!d.ok){setError(d.error||"Your request could not be sent.");return;}setNotice("Your request was sent successfully. Keep the ticket number below for reference.");setSubject("");setMessage("");await refresh();}
+  try{const r=await fetch("/api/support",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({channel,contact,subject,message})});const d=await r.json();if(!r.ok||!d.ok){if(r.status===401){setNeedsLogin(true);setError("Sign in to your Numelixa account before submitting a support request.");return;}setError(d.error||"Your request could not be sent.");return;}setNotice("Your request was sent successfully. Keep the ticket number below for reference.");setSubject("");setMessage("");await refresh();}
   catch{setError("Connection problem. Your request was not confirmed. Please try again.");}
   finally{setSending(false)}
  }
@@ -39,7 +39,7 @@ export default function SupportPage(){
   {error&&<div className="nx-support-alert error" role="alert"><b>We couldn't complete that</b><span>{error}</span></div>}
   <div className="nx-support-layout">
    <section className="nx-support-panel">
-    {ticket?<div className="nx-support-active">
+    {needsLogin?<section className="nx-support-login"><span className="nx-support-login-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3Z"/><path d="M12 11v5M9.5 13.5h5"/></svg></span><span className="nx-support-kicker">ACCOUNT SIGN-IN REQUIRED</span><h2>Sign in to contact Support</h2><p>Your requests are linked to your Numelixa account so you can track updates and keep your information protected.</p><a href="https://www.numelixa.com/login?next=%2Fsupport">Sign in to continue <span>→</span></a></section>:ticket?<div className="nx-support-active">
       <div className="nx-support-active-head"><span className="nx-support-ticket-icon"><svg viewBox="0 0 24 24"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/></svg></span><div><span className="nx-support-kicker">YOUR OPEN REQUEST</span><h2>{ticket.subject}</h2><small>Ticket #{ticket.id.slice(-8).toUpperCase()}</small></div><span className={"nx-support-status "+(ticket.status==="reviewing"?"review":"received")}>{status}</span></div>
       <div className="nx-support-progress"><div className="done"><i>✓</i><b>Received</b></div><span className="line"/><div className={ticket.status==="reviewing"?"current":""}><i>{ticket.status==="reviewing"?"2":"•"}</i><b>In review</b></div><span className="line"/><div><i>3</i><b>Solved</b></div></div>
       <p className="nx-support-muted">We’ll update this page automatically when the team reviews your request. A solved request is removed from your active list.</p>
