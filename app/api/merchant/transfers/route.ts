@@ -1,10 +1,10 @@
 import {NextResponse} from "next/server";
-import {requireUser,requireAdmin} from "@/lib/auth";
+import {requireUser} from "@/lib/auth";
 import {collection,mongoId,getMongoClient} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
 import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
-const money=(v:any)=>Number.isFinite(Number(v))&&Number(v)>0&&Math.round(Number(v)*100)===Number(v)*100;
+const money=(v:any)=>Number.isFinite(Number(v))&&Number(v)>0&&Math.abs(Math.round(Number(v)*100)/100-Number(v))<0.0000001;
 export async function GET(){
  try{
   const me=await requireUser();
