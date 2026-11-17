@@ -149,7 +149,7 @@ export default function VerifyEmailClient({email=""}:Props){
  }
 
  return <div className="verify-modern-card">
-  <div className="verify-mail-icon"><span>✉</span><i/></div>
+  <div className="verify-mail-icon"><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="9" width="38" height="30" rx="8"/><path d="m7 13 17 13 17-13"/></svg><i/></div>
   <span className="eyebrow">SECURE EMAIL VERIFICATION</span>
   <h2>Check your inbox</h2>
   <p className="verify-lead">We sent a 6-digit verification code to <strong>{maskedEmail}</strong>.</p>

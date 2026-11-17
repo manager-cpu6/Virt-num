@@ -27,6 +27,17 @@ export async function PATCH(req:Request){
   const id=String(body?.userId||"").trim();
   const action=String(body?.action||"").trim().toLowerCase();
   const reason=String(body?.reason||"").trim().slice(0,500);
+  if(action==="verify"){
+   if(!id)return NextResponse.json({ok:false,error:"Choose a user."},{status:400});
+   const users=await collection<any>("users");
+   const user=await users.findOne({_id:id},{projection:{_id:1,verifiedAt:1}});
+   if(!user)return NextResponse.json({ok:false,error:"User not found."},{status:404});
+   if(user.verifiedAt)return NextResponse.json({ok:true,verified:true,alreadyVerified:true});
+   const verifiedAt=new Date();
+   await users.updateOne({_id:id},{$set:{verifiedAt,emailVerifiedByAdmin:true,emailVerifiedAt:verifiedAt}});
+   await (await collection<any>("emailTokens")).deleteMany({userId:id,type:"email_verify_code"});
+   return NextResponse.json({ok:true,verified:true,verifiedAt});
+  }
   if(!id||!["suspend","unsuspend"].includes(action))return NextResponse.json({ok:false,error:"Choose a user and a valid action."},{status:400});
   const users=await collection<any>("users");
   const user=await users.findOne({_id:id},{projection:{_id:1,role:1,email:1,name:1,suspendedAt:1}});

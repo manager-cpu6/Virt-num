@@ -19,10 +19,17 @@ type User={id:string;publicId?:string;email:string|null;phone?:string|null;name:
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;service_display?:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
 export default function AdminPanel(){
- const[stats,setStats]=useState<Stats|null>(null),[tab,setTab]=useState("overview"),[users,setUsers]=useState<User[]>([]),[orders,setOrders]=useState<Order[]>([]),[error,setError]=useState(""),[saved,setSaved]=useState(""),[refreshing,setRefreshing]=useState(false);
+ const[stats,setStats]=useState<Stats|null>(null),[tab,setTab]=useState("overview"),[users,setUsers]=useState<User[]>([]),[orders,setOrders]=useState<Order[]>([]),[error,setError]=useState(""),[saved,setSaved]=useState(""),[refreshing,setRefreshing]=useState(false),[emailTestBusy,setEmailTestBusy]=useState(false);
  async function loadStats(){const r=await fetch("/api/admin/stats",{cache:"no-store"});const d=await r.json();d.ok?setStats(d):setError(d.error||"Unable to load admin data")}
  async function loadData(t=tab){if(t==="users"){const r=await fetch("/api/admin/users",{cache:"no-store"});const d=await r.json();if(d.ok)setUsers(d.users||[]);else setError(d.error||"Unable to load users")}if(t==="orders"||t==="active otp"){const r=await fetch("/api/admin/orders",{cache:"no-store"});const d=await r.json();if(d.ok)setOrders(d.orders||[]);else setError(d.error||"Unable to load orders")}}
  async function refresh(){setRefreshing(true);setError("");await Promise.all([loadStats(),loadData(tab)]);setRefreshing(false)}
+ async function testEmail(){
+  setEmailTestBusy(true);setError("");setSaved("");
+  try{const r=await fetch("/api/admin/email-test",{method:"POST"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Email test failed.");setSaved(d.message||"Test email accepted. Check the admin inbox.");window.setTimeout(()=>setSaved(""),6000);}
+  catch(e){setError(e instanceof Error?e.message:"Email test failed.")}
+  finally{setEmailTestBusy(false)}
+ }
+
  useEffect(()=>{loadStats()},[]);
  useEffect(()=>{loadData(tab)},[tab]);
 
@@ -56,6 +63,22 @@ export default function AdminPanel(){
    setError("");try{const r=await fetch("/api/admin/users",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,action,reason})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to update account status.");setUsers(rows=>rows.map(row=>row.id===user.id?{...row,suspended_at:action==="suspend"?new Date().toISOString():null,suspension_reason:action==="suspend"?reason:""}:row));setSaved(action==="suspend"?"Account suspended and sessions revoked.":"Account restored; confirmation email attempted.");window.setTimeout(()=>setSaved(""),3500)}catch(e){setError(e instanceof Error?e.message:"Unable to update account status.")}
  }
 
+ async function verifyUser(user:User){
+  if(user.verified_at)return;
+  if(!confirm("Verify the email address "+(user.email||"for this account")+" without sending an OTP?"))return;
+  setError("");
+  try{const r=await fetch("/api/admin/users",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,action:"verify"})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to verify this account.");setUsers(rows=>rows.map(row=>row.id===user.id?{...row,verified_at:d.verifiedAt||new Date().toISOString()}:row));setSaved("Email verified by admin. The user can continue without entering an OTP.");window.setTimeout(()=>setSaved(""),3500);}
+  catch(e){setError(e instanceof Error?e.message:"Unable to verify this account.")}
+ }
+ async function changeUserPassword(user:User){
+  const password=prompt("Set a new password for "+(user.email||user.name||"this user")+" (at least 8 characters):");
+  if(password===null)return;
+  if(password.length<8||password.length>128){setError("Password must be 8–128 characters.");return;}
+  if(!confirm("Change this user's password and sign out all existing sessions?"))return;
+  setError("");
+  try{const r=await fetch("/api/admin/users/password",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,password})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to change password.");setSaved("Password changed. All existing sessions for this user have been signed out.");window.setTimeout(()=>setSaved(""),3500);}
+  catch(e){setError(e instanceof Error?e.message:"Unable to change password.")}
+ }
  async function adjustCoins(user:User,mode:"add"|"remove"|"set"){
    const raw=prompt(mode==="set"?"Set exact USD wallet balance:":"USD amount to "+mode+":");
    if(raw===null)return;
@@ -83,14 +106,14 @@ export default function AdminPanel(){
  const waiting=useMemo(()=>orders.filter(o=>String(o.status).toLowerCase()==="waiting"),[orders]);
 
  return <div className="admin-shell">
-  <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
+  <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={()=>void testEmail()} disabled={emailTestBusy}>{emailTestBusy?"Testing email…":"✉ Test email"}</button><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","local payments","ebirr","notifications","authentication","app updates","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="merchants"&&<AdminMerchants/>}
   {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
   {tab==="traffic sources"&&<AdminTrafficAnalytics/>}
-  {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
+  {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension} onVerify={verifyUser} onPassword={changeUserPassword}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
   {tab==="orders"&&<OrdersTable orders={orders} coinsPerUsd={stats?.settings.coinsPerUsd} title={"All orders ("+orders.length+")"} onCancel={cancelWaitingOrder}/>}
   {tab==="providers"&&<Providers stats={stats}/>}
@@ -159,7 +182,28 @@ function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
   <Table title="Admin control"><div className="admin-cap-grid"><div>Users & balances<small>Search users and adjust USD wallet balances.</small></div><div>Orders & OTP<small>Inspect phone, SMS, provider order, status and expiry.</small></div><div>Pricing & operators<small>Control USD pricing, top-up limits and 5SIM operators.</small></div><div>Live monitoring<small>Track users, USD wallet value, order status and service demand.</small></div></div></Table>
  </>
 }
-function UsersTable({users,coinsPerUsd=100,onAdjust,onDelete,onSuspension}:{users:User[];coinsPerUsd?:number;onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void;onSuspension:(u:User,a:"suspend"|"unsuspend")=>void}){const[q,setQ]=useState("");const list=users.filter(u=>(String(u.name||"")+" "+String(u.email||"")+" "+String(u.phone||"")+" "+String(u.id||"")+" "+String(u.publicId||"")).toLowerCase().includes(q.toLowerCase()));return <Table title={"Users, status & contact ("+list.length+")"}><div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name, email, phone, 7-digit Numelixa ID or internal ID…"/></div>{list.map(u=><div className="admin-user-row" key={u.id}><div><b>{u.name||"Numelixa user"}</b><small className="admin-public-id">Numelixa ID: <b>{u.publicId||"Assigned when user next signs in"}</b></small><small>Internal account reference: {u.id}</small>{u.email&&<small>{u.email}</small>}{u.phone&&<small>Phone: {u.phone}</small>}<span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Account verified":"! Verification pending"}</span><span className={"admin-email-verification "+(u.suspended_at?"is-unverified":"is-verified")}>{u.suspended_at?"Suspended":"Account active"}</span>{u.suspended_at&&<small>Reason: {u.suspension_reason||"Not specified"}</small>}<strong>\${(Number(u.coins||0)/(Number(coinsPerUsd)||100)).toFixed(2)} USD</strong></div><div className="coin-actions"><Link href={"/admin/users/"+encodeURIComponent(u.id)} className="secondary-btn">History / ID</Link><button onClick={()=>onAdjust(u,"add")}>+ Add</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set</button>{u.role!=="admin"&&<button onClick={()=>onSuspension(u,u.suspended_at?"unsuspend":"suspend")}>{u.suspended_at?"Unsuspend":"Suspend"}</button>}{u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}</div></div>)}</Table>}
+function UsersTable({users,coinsPerUsd=100,onAdjust,onDelete,onSuspension,onVerify,onPassword}:{users:User[];coinsPerUsd?:number;onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void;onSuspension:(u:User,a:"suspend"|"unsuspend")=>void;onVerify:(u:User)=>void;onPassword:(u:User)=>void}){
+ const[q,setQ]=useState("");
+ const list=users.filter(u=>(String(u.name||"")+" "+String(u.email||"")+" "+String(u.phone||"")+" "+String(u.id||"")+" "+String(u.publicId||"")).toLowerCase().includes(q.toLowerCase()));
+ return <Table title={"Users, status & contact ("+list.length+")"}>
+  <div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name, email, phone or Numelixa ID…"/></div>
+  {list.map(u=><div className="admin-user-row" key={u.id}>
+   <div><b>{u.name||"Numelixa user"}</b><small className="admin-public-id">Numelixa ID: <b>{u.publicId||"Assigned when user next signs in"}</b></small><small>Internal account reference: {u.id}</small>{u.email&&<small>{u.email}</small>}{u.phone&&<small>Phone: {u.phone}</small>}
+    <span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span>
+    <span className={"admin-email-verification "+(u.suspended_at?"is-unverified":"is-verified")}>{u.suspended_at?"Suspended":"Account active"}</span>{u.suspended_at&&<small>Reason: {u.suspension_reason||"Not specified"}</small>}
+    <strong>$​{(Number(u.coins||0)/(Number(coinsPerUsd)||100)).toFixed(2)} USD</strong>
+   </div>
+   <div className="coin-actions">
+    <Link href={"/admin/users/"+encodeURIComponent(u.id)} className="secondary-btn">History / ID</Link>
+    <button onClick={()=>onAdjust(u,"add")}>+ Add USD</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set balance</button>
+    {u.role!=="admin"&&!u.verified_at&&<button className="nx-admin-verify-user" onClick={()=>onVerify(u)}>✓ Verify email</button>}
+    {u.role!=="admin"&&<button className="nx-admin-password-user" onClick={()=>onPassword(u)}>Change password</button>}
+    {u.role!=="admin"&&<button onClick={()=>onSuspension(u,u.suspended_at?"unsuspend":"suspend")}>{u.suspended_at?"Unsuspend":"Suspend"}</button>}
+    {u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}
+   </div>
+  </div>)}
+ </Table>
+}
 
 function OrdersTable({orders,title,active=false,coinsPerUsd=100,onCancel}:{orders:Order[];title:string;active?:boolean;coinsPerUsd?:number;onCancel:(order:Order)=>void}){return <Table title={title}>{!orders.length&&<div className="country-loading">No orders found.</div>}{orders.map(o=><div className="admin-order-card" key={o.id}><div className="admin-order-head"><b>{o.service_display||o.service} · {o.country}</b><span className={"status "+(active?"active":"")}>{o.status}</span></div><div className="admin-order-meta"><span>User: {o.name||o.email}</span><span>Phone: {o.phone_number||"Waiting for number"}</span><span>Price: ${(Number(o.price_coins||0)/(Number(coinsPerUsd)||100)).toFixed(2)} USD</span><span>Expires: {o.expires_at?new Date(o.expires_at).toLocaleString():"—"}</span></div>{(o.code||o.full_sms)&&<div className="admin-sms-box"><b>OTP / SMS</b><strong>{o.code||"No parsed code"}</strong><small>{o.full_sms||"No full SMS text"}</small></div>}<div className="admin-order-meta"><span>Provider order: {o.provider_order_id||"—"}</span><span>Created: {o.created_at?new Date(o.created_at).toLocaleString():"—"}</span></div>{String(o.status).toLowerCase()==="waiting"&&<div style={{display:"flex",justifyContent:"flex-end",marginTop:12}}><button className="secondary-btn" onClick={()=>onCancel(o)}>Cancel waiting order</button></div>}</div>)}</Table>}
 

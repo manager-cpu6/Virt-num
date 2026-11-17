@@ -10,6 +10,7 @@ import "./numelixa-redesign.css";
 import "./numelixa-native-app.css";
 import "./admin-support.css";
 import "./numelixa-liquid-glass.css";
+import "./support/support.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
@@ -33,6 +34,7 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
  const isDownloadHost=host==="app.numelixa.com";
+ const isSupportHost=host==="support.numelixa.com";
  const isCheckoutHost=host==="checkout.numelixa.com"||host==="payment.numelixa.com";
- return <html lang="en"><body>{!isCheckoutHost&&!isDownloadHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&!isDownloadHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
+ return <html lang="en"><body>{!isCheckoutHost&&!isDownloadHost&&!isSupportHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isSupportHost?"nx-support-host-shell":isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isSupportHost?"nx-support-host-main":isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>{!isCheckoutHost&&!isDownloadHost&&!isSupportHost&&<AppChrome docs={isDocsHost}/>}</div></body></html>;
 }
