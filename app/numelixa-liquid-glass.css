@@ -389,3 +389,9 @@ body:has(.nx-developer-portal) .global-footer{display:none!important}
 body:has(.nx-developer-portal) .bottom-nav{display:none!important}
 body:has(.nx-developer-docs) .page-shell{width:100%!important;max-width:none!important;margin:0!important;padding:0!important}
 body:has(.nx-developer-docs) .global-footer,body:has(.nx-developer-docs) .bottom-nav{display:none!important}
+
+
+/* Admin support inbox — premium ticket cards and working contact links */
+.nx-support-contact-link{display:inline-flex;align-items:center;gap:6px;color:#70d7ff;text-decoration:none;font-size:10px;font-weight:800}
+.nx-support-contact-link:hover{text-decoration:underline}
+.nx-support-contact-link svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
