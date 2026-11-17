@@ -34,3 +34,9 @@ body:has(.nx-support-page) .bottom-nav,body:has(.nx-support-page) .app-footer,bo
 .nx-support-host-shell{min-height:100vh;background:#050b18}.nx-support-host-main{width:100%;max-width:none;margin:0;padding:0 22px 36px}
 .nx-support-login{max-width:620px;margin:0 auto;padding:36px 28px;text-align:center;border:1px solid rgba(120,165,225,.2);border-radius:22px;background:linear-gradient(145deg,rgba(14,31,58,.9),rgba(7,18,37,.96));box-shadow:0 20px 55px rgba(0,0,0,.22)}
 .nx-support-login-icon{width:58px;height:58px;display:grid;place-items:center;margin:0 auto 16px;border-radius:18px;background:#103451;color:#7ad9ff}.nx-support-login-icon svg{width:29px;height:29px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.nx-support-login h2{font-size:23px;letter-spacing:-.035em;color:#f2f7ff;margin:9px 0}.nx-support-login p{font-size:13px;line-height:1.65;color:#9bb0ce;max-width:470px;margin:0 auto 20px}.nx-support-login a{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:0 20px;border-radius:13px;background:linear-gradient(100deg,#247aff,#13b9d9);color:white;font-size:12px;font-weight:850}
+
+
+/* Hide all app navigation on standalone support and verification flows */
+body:has(.nx-support-page) .mobile-bottom-nav,body:has(.nx-support-page) .global-footer,
+body:has(.nx-verify-page) .mobile-bottom-nav,body:has(.nx-verify-page) .global-footer{display:none!important}
+body:has(.nx-verify-page) .page-shell{width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
