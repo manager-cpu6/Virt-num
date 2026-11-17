@@ -271,3 +271,37 @@ input::placeholder,textarea::placeholder{color:#7186a9!important}
  .account-action-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
  .account-action-grid>.account-action-card{min-height:96px!important}
 }
+
+
+/* Numelixa referral experience — refined premium glass system */
+.nx-referral-shell{width:min(100%,1040px)!important;padding-top:18px!important}
+.nx-referral-hero{min-height:310px!important;grid-template-columns:minmax(0,1.15fr) minmax(260px,.85fr)!important;border-radius:32px!important;background:radial-gradient(ellipse at 88% 8%,rgba(0,217,255,.23),transparent 42%),radial-gradient(ellipse at 12% 100%,rgba(113,59,255,.22),transparent 48%),linear-gradient(135deg,#081a36 0%,#071329 58%,#11183c 100%)!important;border-color:rgba(130,175,255,.22)!important;box-shadow:0 28px 80px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.1)!important}
+.nx-referral-hero h1{font-size:clamp(38px,6vw,62px)!important;letter-spacing:-.065em!important}
+.nx-referral-hero h1 em{background:linear-gradient(100deg,#75e8ff,#a89aff 70%,#f29bd8);-webkit-background-clip:text;background-clip:text;color:transparent!important}
+.nx-referral-balance{min-height:190px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;background:linear-gradient(145deg,rgba(15,42,81,.9),rgba(6,18,42,.84))!important;border-color:rgba(106,185,255,.24)!important}
+.nx-referral-glow-orb{right:15px!important;top:5px!important;bottom:auto!important;font-size:86px!important;color:rgba(99,204,255,.3)!important;text-shadow:0 0 45px rgba(49,148,255,.3)!important}
+.nx-referral-stats article,.nx-referral-panel{background:linear-gradient(145deg,rgba(11,30,60,.88),rgba(5,15,34,.91))!important;border-color:rgba(123,165,232,.16)!important;box-shadow:0 18px 48px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.055)!important}
+.nx-referral-stats article{position:relative;overflow:hidden;min-height:128px!important}
+.nx-referral-stats article:after{content:"";position:absolute;right:-35px;top:-45px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(0,217,255,.14),transparent 70%);pointer-events:none}
+.nx-referral-stats strong{font-variant-numeric:tabular-nums!important}
+.nx-referral-panel h2{font-size:clamp(20px,3vw,25px)!important}
+.nx-referral-code{background:linear-gradient(120deg,rgba(0,217,255,.065),rgba(113,59,255,.08)),rgba(2,10,25,.66)!important}
+.nx-referral-code strong{letter-spacing:.18em!important;color:#f4f8ff!important}
+.nx-referral-link{background:rgba(2,9,23,.76)!important}
+.nx-referral-link button,.nx-referral-submit,.nx-referral-hero-actions button,.nx-referral-share-row button{background:linear-gradient(105deg,#1677ff,#6556ed 64%,#8544df)!important;border:1px solid rgba(160,195,255,.22)!important;box-shadow:0 12px 28px rgba(46,103,255,.2)!important;transition:transform .18s ease,filter .18s ease!important}
+.nx-referral-link button:hover,.nx-referral-submit:hover:not(:disabled),.nx-referral-hero-actions button:hover,.nx-referral-share-row button:hover{transform:translateY(-2px)!important;filter:brightness(1.08)!important}
+.nx-referral-hero-actions .secondary{background:rgba(255,255,255,.07)!important;box-shadow:none!important}
+.nx-referral-socials{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.nx-referral-socials a{display:inline-flex;align-items:center;gap:8px;min-height:38px;padding:0 12px;border:1px solid rgba(143,183,245,.16);border-radius:12px;background:rgba(255,255,255,.045);color:#d8e8ff;font-size:10px;font-weight:850;transition:background .18s,border-color .18s,transform .18s}
+.nx-referral-socials a:hover{background:rgba(60,130,255,.15);border-color:rgba(99,183,255,.35);transform:translateY(-1px)}
+.nx-referral-socials a span{color:#72dff5}
+.nx-referral-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px;margin:14px 0}
+.nx-referral-step{min-height:130px;padding:17px;border:1px solid rgba(123,165,232,.15);border-radius:20px;background:linear-gradient(145deg,rgba(12,31,61,.78),rgba(5,15,34,.86));box-shadow:inset 0 1px 0 rgba(255,255,255,.05)}
+.nx-referral-step>span{display:grid;place-items:center;width:32px;height:32px;border-radius:11px;background:linear-gradient(145deg,rgba(22,119,255,.24),rgba(113,59,255,.2));border:1px solid rgba(120,174,255,.2);color:#9cecff;font-size:10px;font-weight:950}
+.nx-referral-step b{display:block;margin:12px 0 5px;color:#f4f8ff;font-size:13px}
+.nx-referral-step small{display:block;color:#92a9ca;font-size:10px;line-height:1.55}
+.nx-referral-form-grid input,.nx-referral-form-grid select{background:rgba(2,9,23,.78)!important}
+.nx-referral-history-row{gap:12px!important}
+.nx-referral-history-row>div{overflow:hidden}
+.nx-referral-history-row small{line-height:1.45}
+@media(max-width:680px){.nx-referral-hero{grid-template-columns:1fr!important;padding:23px!important;gap:17px!important}.nx-referral-balance{min-height:150px!important}.nx-referral-stats{grid-template-columns:1fr!important}.nx-referral-stats article{min-height:100px!important}.nx-referral-steps{grid-template-columns:1fr!important}.nx-referral-step{min-height:0!important}.nx-referral-form-grid{grid-template-columns:1fr!important}.nx-referral-form-grid .wide{grid-column:auto!important}.nx-referral-panel-head{flex-direction:column!important}.nx-referral-link{align-items:stretch!important;flex-direction:column!important}.nx-referral-link button{min-height:43px!important}.nx-referral-history-grid{grid-template-columns:1fr!important}}
