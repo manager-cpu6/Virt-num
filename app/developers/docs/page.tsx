@@ -145,7 +145,7 @@ export default function Docs(){
  const [endpoint,setEndpoint]=useState("GET /account");
  const [showWebhook,setShowWebhook]=useState(false);
  const panel={padding:22,borderRadius:20,border:"1px solid rgba(109,222,230,.14)",background:"rgba(5,28,39,.78)",marginBottom:18} as const;
- return <main style={{maxWidth:1240,margin:"0 auto",padding:"24px 18px 90px",color:"#edf9ff",fontFamily:"Inter,system-ui,sans-serif",lineHeight:1.7}}>
+ return <main className="nx-developer-docs" style={{maxWidth:1240,margin:"0 auto",padding:"24px 18px 90px",color:"#edf9ff",fontFamily:"Inter,system-ui,sans-serif",lineHeight:1.7}}>
   <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,flexWrap:"wrap"}}><a href="https://numelixa.com" style={{color:"#7be5d8",textDecoration:"none",fontWeight:800}}>← Numelixa</a><a href="https://support.numelixa.com" style={{color:"#a8c0ce",textDecoration:"none",fontSize:13}}>Developer support ↗</a></div>
   <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr)",gap:18,marginTop:30}}>
    <section style={{padding:"28px 24px",borderRadius:26,border:"1px solid rgba(109,222,230,.2)",background:"radial-gradient(ellipse at 10% 0%,rgba(21,111,137,.35),transparent 55%),linear-gradient(145deg,#071b2b,#04121e)"}}>
