@@ -10,7 +10,8 @@ import AdminSupport from "@/components/AdminSupport";
 import AdminHelpChat from "@/components/AdminHelpChat";
 import AdminSupportTeam from "@/components/AdminSupportTeam";
 import AdminServiceCatalog from "@/components/AdminServiceCatalog";
-import AdminTrafficAnalytics from "@/components/AdminTrafficAnalytics";\nimport AdminMerchants from "@/components/AdminMerchants";
+import AdminTrafficAnalytics from "@/components/AdminTrafficAnalytics";
+import AdminMerchants from "@/components/AdminMerchants";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];analytics?:{pageViews:number;clicks:number;uniqueVisitors:number};settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
