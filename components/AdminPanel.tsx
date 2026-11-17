@@ -87,7 +87,8 @@ export default function AdminPanel(){
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","local payments","ebirr","notifications","authentication","app updates","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
-  {tab==="merchants"&&<AdminMerchants/>}\n  {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
+  {tab==="merchants"&&<AdminMerchants/>}
+  {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
   {tab==="traffic sources"&&<AdminTrafficAnalytics/>}
   {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
