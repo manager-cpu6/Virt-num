@@ -139,7 +139,7 @@ async function sessionUser(userId:string){
  const u=await (await collection<any>("users")).findOne({_id:userId});
  if(!u||u.suspendedAt)return null;
  const publicId=await ensureNumelixaPublicId(String(u._id));
- return {id:String(u._id),publicId,email:u.email||null,phone:u.phone||null,phoneVerifiedAt:u.phoneVerifiedAt||null,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,coins:Number(u.coins||0),verified_at:u.verifiedAt||u.phoneVerifiedAt||null,createdAt:u.createdAt||null};
+ return {id:String(u._id),publicId,email:u.email||null,phone:u.phone||null,phoneVerifiedAt:u.phoneVerifiedAt||null,name:u.name,avatarUrl:u.avatarUrl||u.avatarDataUrl||"",role:u.role,merchantEnabled:u.merchantEnabled===true,coins:Number(u.coins||0),verified_at:u.verifiedAt||u.phoneVerifiedAt||null,createdAt:u.createdAt||null};
 }
 
 export async function getUser(){
