@@ -1,7 +1,7 @@
 import nodemailer from "nodemailer";
 import {createHash} from "crypto";
 
-const DEFAULT_HOST="mail.privateemail.com";
+const DEFAULT_HOST="mail.spacemail.com";
 const DEFAULT_PORT=465;
 type SmtpConfig={host:string;port:number;user:string;pass:string;from:string};
 
@@ -11,26 +11,26 @@ function isRateLimitedError(error:unknown){
 }
 
 function fallbackConfig():SmtpConfig|null{
- const user=String(process.env.PRIVATE_EMAIL_FALLBACK_USER||"").trim();
- const pass=String(process.env.PRIVATE_EMAIL_FALLBACK_PASSWORD||"");
+ const user=String(process.env.SPACEMAIL_FALLBACK_USER||"").trim();
+ const pass=String(process.env.SPACEMAIL_FALLBACK_PASSWORD||"");
  if(!user||!pass)return null;
- const host=String(process.env.PRIVATE_EMAIL_FALLBACK_HOST||DEFAULT_HOST).trim();
- const port=Number(process.env.PRIVATE_EMAIL_FALLBACK_PORT||DEFAULT_PORT);
- const from=String(process.env.PRIVATE_EMAIL_FALLBACK_FROM||user).trim();
+ const host=String(process.env.SPACEMAIL_FALLBACK_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env.SPACEMAIL_FALLBACK_PORT||DEFAULT_PORT);
+ const from=String(process.env.SPACEMAIL_FALLBACK_FROM||user).trim();
  if(!host||!Number.isFinite(port)||!from.includes("@"))return null;
  return{host,port,user,pass,from};
 }
 
 function smtpConfig():SmtpConfig{
- const host=(process.env.PRIVATE_EMAIL_SMTP_HOST||DEFAULT_HOST).trim();
- const port=Number(process.env.PRIVATE_EMAIL_SMTP_PORT||DEFAULT_PORT);
- const user=(process.env.PRIVATE_EMAIL_SMTP_USER||"info@virtunumber.online").trim();
- const pass=process.env.PRIVATE_EMAIL_SMTP_PASSWORD||"";
- const from=(process.env.PRIVATE_EMAIL_FROM||user).trim();
- if(!user)throw new Error("Private Email SMTP username is missing.");
- if(!pass)throw new Error("Private Email SMTP password is missing.");
- if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Private Email SMTP port.");
- if(!from||!from.includes("@"))throw new Error("Private Email sender address is missing or invalid.");
+ const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
+ const user=(process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const pass=process.env.SPACEMAIL_SMTP_PASSWORD||"";
+ const from=(process.env.SPACEMAIL_FROM||user).trim();
+ if(!user)throw new Error("Spacemail SMTP username is missing.");
+ if(!pass)throw new Error("Spacemail SMTP password is missing.");
+ if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port.");
+ if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
  return{host,port,user,pass,from};
 }
 function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|h3|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim();}
@@ -58,7 +58,7 @@ export async function sendEmail(to:string,subject:string,html:string){
      if(fallback){await sendWithConfig(fallback,to,subject,html);return;}
     }
     const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
-    throw new Error("Private Email SMTP error: "+message);
+    throw new Error("Spacemail SMTP error: "+message);
    }
   }
   if(!isRateLimitedError(error)&&isSocketTlsError(error)){
@@ -76,7 +76,7 @@ export async function sendEmail(to:string,subject:string,html:string){
    throw new Error("EMAIL_RATE_LIMITED: Your Numelixa mail server has temporarily limited outgoing messages. Please wait a little before requesting another code.");
   }
   const message=error instanceof Error?error.message:String(error);
-  throw new Error("Private Email SMTP error: "+message);
+  throw new Error("Spacemail SMTP error: "+message);
  } 
 }
 
