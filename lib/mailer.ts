@@ -1,4 +1,5 @@
 import nodemailer from "nodemailer";
+import {createHash} from "crypto";
 
 const DEFAULT_HOST="mail.privateemail.com";
 const DEFAULT_PORT=465;
@@ -33,7 +34,7 @@ function smtpConfig():SmtpConfig{
  return{host,port,user,pass,from};
 }
 function plain(html:string){return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi,"").replace(/<br\s*\/?>(?=.)/gi,"\n").replace(/<\/(p|div|h1|h2|h3|li)>/gi,"\n").replace(/<[^>]+>/g,"").replace(/&nbsp;/g," ").replace(/&amp;/g,"&").replace(/&lt;/g,"<").replace(/&gt;/g,">").replace(/\n{3,}/g,"\n\n").trim();}
-function makeTransporter(config:SmtpConfig){const key="__numelixa_mailer_"+config.host+"_"+config.port+"_"+config.user;
+function makeTransporter(config:SmtpConfig){const credentialFingerprint=createHash("sha256").update(config.pass).digest("hex").slice(0,20);const key="__numelixa_mailer_"+config.host+"_"+config.port+"_"+config.user+"_"+credentialFingerprint;
  const g=globalThis as any;
  if(g[key])return g[key];
  const transporter=nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,requireTLS:config.port===587,auth:{user:config.user,pass:config.pass},tls:{minVersion:"TLSv1.2",servername:config.host},connectionTimeout:8000,greetingTimeout:8000,socketTimeout:12000,pool:true,maxConnections:3,maxMessages:50} as any);
