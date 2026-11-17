@@ -1220,3 +1220,11 @@ body:has(.reference-dashboard) .page-shell,body:has(.reference-dashboard) main{b
   border:1px solid var(--line)!important;
   box-shadow:none!important;
 }
+
+/* Quick Access is deliberately a fixed two-column grid at every breakpoint. */
+.reference-dashboard .quick-access-section{width:100%;min-width:0}
+.reference-dashboard .quick-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;grid-template-rows:repeat(2,minmax(96px,auto))!important;grid-auto-flow:row!important;align-items:stretch;gap:12px!important;width:100%;}
+.reference-dashboard .quick-card{width:100%;min-width:0;height:100%;min-height:96px;}
+.reference-dashboard .quick-card>div{flex:1;min-width:0;}
+.reference-dashboard .quick-card .quick-icon{width:42px;height:42px;flex:0 0 42px;border-radius:50%;}
+@media(max-width:390px){.reference-dashboard .quick-grid{gap:9px!important}.reference-dashboard .quick-card{padding:11px;gap:9px;min-height:90px}.reference-dashboard .quick-card .quick-icon{width:38px;height:38px;flex-basis:38px}.reference-dashboard .quick-card b{font-size:11px}.reference-dashboard .quick-card small{font-size:9px;line-height:1.25}}
