@@ -19,10 +19,17 @@ type User={id:string;publicId?:string;email:string|null;phone?:string|null;name:
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;service_display?:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
 export default function AdminPanel(){
- const[stats,setStats]=useState<Stats|null>(null),[tab,setTab]=useState("overview"),[users,setUsers]=useState<User[]>([]),[orders,setOrders]=useState<Order[]>([]),[error,setError]=useState(""),[saved,setSaved]=useState(""),[refreshing,setRefreshing]=useState(false);
+ const[stats,setStats]=useState<Stats|null>(null),[tab,setTab]=useState("overview"),[users,setUsers]=useState<User[]>([]),[orders,setOrders]=useState<Order[]>([]),[error,setError]=useState(""),[saved,setSaved]=useState(""),[refreshing,setRefreshing]=useState(false),[emailTestBusy,setEmailTestBusy]=useState(false);
  async function loadStats(){const r=await fetch("/api/admin/stats",{cache:"no-store"});const d=await r.json();d.ok?setStats(d):setError(d.error||"Unable to load admin data")}
  async function loadData(t=tab){if(t==="users"){const r=await fetch("/api/admin/users",{cache:"no-store"});const d=await r.json();if(d.ok)setUsers(d.users||[]);else setError(d.error||"Unable to load users")}if(t==="orders"||t==="active otp"){const r=await fetch("/api/admin/orders",{cache:"no-store"});const d=await r.json();if(d.ok)setOrders(d.orders||[]);else setError(d.error||"Unable to load orders")}}
  async function refresh(){setRefreshing(true);setError("");await Promise.all([loadStats(),loadData(tab)]);setRefreshing(false)}
+ async function testEmail(){
+  setEmailTestBusy(true);setError("");setSaved("");
+  try{const r=await fetch("/api/admin/email-test",{method:"POST"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Email test failed.");setSaved(d.message||"Test email accepted. Check the admin inbox.");window.setTimeout(()=>setSaved(""),6000);}
+  catch(e){setError(e instanceof Error?e.message:"Email test failed.")}
+  finally{setEmailTestBusy(false)}
+ }
+
  useEffect(()=>{loadStats()},[]);
  useEffect(()=>{loadData(tab)},[tab]);
 
@@ -99,7 +106,7 @@ export default function AdminPanel(){
  const waiting=useMemo(()=>orders.filter(o=>String(o.status).toLowerCase()==="waiting"),[orders]);
 
  return <div className="admin-shell">
-  <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
+  <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><button className="secondary-btn" onClick={()=>void testEmail()} disabled={emailTestBusy}>{emailTestBusy?"Testing email…":"✉ Test email"}</button><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","local payments","ebirr","notifications","authentication","app updates","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
