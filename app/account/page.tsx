@@ -21,7 +21,7 @@ export default async function AccountPage(){
       <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">♛ NUMELIXA MEMBER</span></div>
       <Link href="/account" className="account-edit-btn" aria-label="Account settings">•••</Link>
     </div>
-    <div className="account-profile-footer"><span>Personal account</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
+    <div className="account-profile-footer"><span>{user.merchantEnabled||user.role==="merchant"?"Merchant account":"Personal account"}</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
    </section>
    <NumelixaIdCard publicId={user.publicId}/>
    <section className="account-wallet-card">
@@ -39,7 +39,7 @@ export default async function AccountPage(){
     <Link href="/developers" className="account-action-card account-action-card--developer-api"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
    </section>
    <AccountSessions/>
-   {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
+   {(user.merchantEnabled||user.role==="merchant")&&<Link href="/merchant" className="account-admin-card"><span>↗</span><div><b>Merchant</b><small>Send and manage wallet funds</small></div><i>↗</i></Link>}{user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
    <form action="/api/auth/logout" method="post" className="account-logout-form"><button type="submit">Sign out <span>↗</span></button></form>
   </main>
  </div>;

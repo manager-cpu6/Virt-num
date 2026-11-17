@@ -23,7 +23,7 @@ function fallbackConfig():SmtpConfig|null{
 function smtpConfig():SmtpConfig{
  const host=(process.env.PRIVATE_EMAIL_SMTP_HOST||DEFAULT_HOST).trim();
  const port=Number(process.env.PRIVATE_EMAIL_SMTP_PORT||DEFAULT_PORT);
- const user=(process.env.PRIVATE_EMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const user=(process.env.PRIVATE_EMAIL_SMTP_USER||"info@virtunumber.online").trim();
  const pass=process.env.PRIVATE_EMAIL_SMTP_PASSWORD||"";
  const from=(process.env.PRIVATE_EMAIL_FROM||user).trim();
  if(!user)throw new Error("Private Email SMTP username is missing.");
