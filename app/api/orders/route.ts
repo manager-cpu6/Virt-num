@@ -176,7 +176,7 @@ export async function POST(req:Request){
             service,
             country,
             number,
-            price,
+            Number((price/(Number(settings.coinsPerUsd)||100)).toFixed(2)),
             base+"/get-code/"+id
           )
         );
