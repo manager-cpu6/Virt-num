@@ -1,6 +1,6 @@
 import {NextRequest,NextResponse} from "next/server";
 
-const PUBLIC_HOSTS=new Set(["developers.numelixa.com","docs.numelixa.com","support.numelixa.com"]);
+const PUBLIC_HOSTS=new Set(["developer.numelixa.com","developers.numelixa.com","docs.numelixa.com","support.numelixa.com"]);
 const API_PREFIX="/api/v1";
 const corsHeaders={
   "Access-Control-Allow-Origin":"*",
@@ -49,33 +49,22 @@ export function proxy(req:NextRequest){
     return NextResponse.rewrite(url);
   }
 
-  if(host==="docs.numelixa.com"){
+  // The legacy plural hostname permanently forwards to the canonical developer host.
+  if(host==="developers.numelixa.com"){
+    return NextResponse.redirect(new URL("https://developer.numelixa.com"+pathname+req.nextUrl.search),308);
+  }
+
+  if(host==="developer.numelixa.com"){
     const url=req.nextUrl.clone();
-    if(pathname==="/"||pathname===""){
-      url.pathname="/docs";
-    }else if(pathname==="/api"||pathname.startsWith("/api/")){
-      url.pathname="/docs";
-    }else if(pathname==="/docs"||pathname.startsWith("/docs/")){
-      url.pathname="/docs"+pathname.slice(5);
-    }else{
-      url.pathname="/docs"+pathname;
-    }
+    url.pathname=pathname==="/"||pathname===""?"/developers":"/developers"+pathname;
     return NextResponse.rewrite(url);
   }
 
-  if(host==="developers.numelixa.com"){
-    if(pathname==="/"||pathname===""){
-      const url=req.nextUrl.clone();
-      url.pathname="/developers";
-      return NextResponse.rewrite(url);
-    }
-    if(pathname==="/docs"||pathname.startsWith("/docs/")){
-      const url=req.nextUrl.clone();
-      url.pathname="/developers/docs"+pathname.slice(5);
-      return NextResponse.rewrite(url);
-    }
+  if(host==="docs.numelixa.com"){
+    const url=req.nextUrl.clone();
+    url.pathname=pathname==="/"||pathname===""?"/developers/docs":"/developers/docs"+pathname;
+    return NextResponse.rewrite(url);
   }
-
 
   if(host==="support.numelixa.com"){
     const url=req.nextUrl.clone();
