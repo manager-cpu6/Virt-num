@@ -36,7 +36,8 @@ export async function POST(req:Request){
     await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),replyEmail:channel==="email"?contact:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"new",createdAt:now,updatedAt:now});
     const acknowledgementEmail=channel==="email"?contact:String(user.email||"");
     if(acknowledgementEmail){
-      const text="Hello "+String(user.name||"there")+",\n\nThank you for contacting Numelixa Support. Your request has been received and is now waiting for review.\n\nTicket ID: "+String(id)+"\nSubject: "+subject+"\nStatus: Received — awaiting review\n\nOur team will review your request and email you when it is solved. You can return to https://support.numelixa.com to see the current status.\n\nFor your security, never send your password or one-time verification codes.\n\nNumelixa Support Team";
+      const safe=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\x27/g,"&#39;");
+      const text="Hello "+safe(String(user.name||"there"))+",<br><br>Thank you for contacting Numelixa Support. Your request has been received and is now waiting for review.<br><br>Ticket ID: "+safe(String(id))+"<br>Subject: "+safe(subject)+"<br>Status: Received — awaiting review<br><br>Our team will review your request and email you when it is solved. You can return to https://support.numelixa.com to see the current status.<br><br>For your security, never send your password or one-time verification codes.<br><br>Numelixa Support Team";
       try{await sendEmail(acknowledgementEmail,"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support request was received",text,"https://support.numelixa.com","Your Numelixa support request was received."));}
       catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
     }
