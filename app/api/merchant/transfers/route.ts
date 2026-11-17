@@ -8,15 +8,15 @@ const money=(v:any)=>Number.isFinite(Number(v))&&Number(v)>0&&Math.round(Number(
 export async function GET(){
  try{
   const me=await requireUser();
-  if(me.role!=="admin"&&me.role!=="merchant"&&me.merchantEnabled!==true)return NextResponse.json({ok:false,error:"Merchant access is not enabled."},{status:403});
-  const rows=await (await collection<any>("merchantTransfers")).find({merchantId:me.id}).sort({createdAt:-1}).limit(200).toArray();
-  return NextResponse.json({ok:true,transfers:rows.map(x=>({id:String(x._id),recipientName:x.recipientName,recipientEmail:x.recipientEmail,recipientPublicId:x.recipientPublicId,amountUsd:Number(x.amountUsd||0),status:x.status,heldAmountUsd:Number(x.heldAmountUsd||0),createdAt:x.createdAt,updatedAt:x.updatedAt}))},{headers:{"Cache-Control":"no-store"}});
+  if(me.role!=="admin"&&me.merchantEnabled!==true)return NextResponse.json({ok:false,error:"Merchant access is not enabled."},{status:403});
+  const rows=await (await collection<any>("merchantTransfers")).find(me.role==="admin"?{}:{merchantId:me.id}).sort({createdAt:-1}).limit(200).toArray();
+  return NextResponse.json({ok:true,transfers:rows.map(x=>({id:String(x._id),recipientName:x.recipientName,recipientEmail:x.recipientEmail,recipientPublicId:x.recipientPublicId,merchantId:String(x.merchantId||""),recipientId:String(x.recipientId||""),amountUsd:Number(x.amountUsd||0),status:x.status,heldAmountUsd:Number(x.heldAmountUsd||0),createdAt:x.createdAt,updatedAt:x.updatedAt}))},{headers:{"Cache-Control":"no-store"}});
  }catch{return NextResponse.json({ok:false,error:"Unable to load merchant activity."},{status:401})}
 }
 export async function POST(req:Request){
  try{
   const me=await requireUser();
-  if(me.role!=="merchant"&&me.merchantEnabled!==true)return NextResponse.json({ok:false,error:"Merchant access is not enabled."},{status:403});
+  if(me.role!=="admin"&&me.merchantEnabled!==true)return NextResponse.json({ok:false,error:"Merchant access is not enabled."},{status:403});
   const b=await req.json(),target=String(b.recipient||"").trim(),amountUsd=Number(b.amountUsd),note=String(b.note||"").trim().slice(0,160);
   if(!target||target.length>254||!money(amountUsd))return NextResponse.json({ok:false,error:"Enter a valid recipient and USD amount."},{status:400});
   const recipient=await (await collection<any>("users")).findOne({$or:[{_id:target},{email:target.toLowerCase()},{publicId:target}]},{projection:{_id:1,email:1,name:1,publicId:1,role:1}});
