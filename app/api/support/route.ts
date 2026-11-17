@@ -33,13 +33,13 @@ export async function POST(req:Request){
     if(subject.length<4||subject.length>120||message.length<15||message.length>3000)return NextResponse.json({ok:false,error:"Add a subject and a message (15–3000 characters)."}, {status:400});
     const tickets=await collection<any>("supportTickets");
     const now=new Date(),id=mongoId();
-    await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),replyEmail:channel==="email"?contact:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"reviewing",createdAt:now,updatedAt:now});
+    await tickets.insertOne({_id:id,userId:String(user.id),userEmail:String(user.email||""),replyEmail:channel==="email"?contact:String(user.email||""),userName:String(user.name||""),channel,contact,subject,message,status:"new",createdAt:now,updatedAt:now});
     const acknowledgementEmail=channel==="email"?contact:String(user.email||"");
     if(acknowledgementEmail){
-      const text="Hello "+String(user.name||"there")+",\n\nThank you for contacting Numelixa Support. Your request has been received and is now waiting for review.\n\nTicket ID: "+String(id)+"\nSubject: "+subject+"\nStatus: In review\n\nOur team will review your request and email you when it is solved. You can return to https://support.numelixa.com to see the current status.\n\nFor your security, never send your password or one-time verification codes.\n\nNumelixa Support Team";
-      try{await sendEmail(acknowledgementEmail,"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support ticket is in review",text,"https://support.numelixa.com","Your Numelixa support ticket is now in review."));}
+      const text="Hello "+String(user.name||"there")+",\n\nThank you for contacting Numelixa Support. Your request has been received and is now waiting for review.\n\nTicket ID: "+String(id)+"\nSubject: "+subject+"\nStatus: Received — awaiting review\n\nOur team will review your request and email you when it is solved. You can return to https://support.numelixa.com to see the current status.\n\nFor your security, never send your password or one-time verification codes.\n\nNumelixa Support Team";
+      try{await sendEmail(acknowledgementEmail,"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support request was received",text,"https://support.numelixa.com","Your Numelixa support request was received."));}
       catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
     }
-    return NextResponse.json({ok:true,ticket:{id:String(id),status:"reviewing",createdAt:now},message:"Your request has been received and is now in review. Ticket number: "+String(id)+"."});
+    return NextResponse.json({ok:true,ticket:{id:String(id),status:"new",createdAt:now},message:"Your request has been received and is awaiting review. Ticket number: "+String(id)+"."});
   }catch{return NextResponse.json({ok:false,error:"We could not submit your request. Please try again later."},{status:500})}
 }
