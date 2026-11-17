@@ -6,6 +6,7 @@ function ChannelIcon({channel}:{channel:string}){
  if(channel==="telegram")return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.3 18-3.8-7-7-3.8L21 3Z"/><path d="m10 14 4-4"/></svg>;
  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>;
 }
+function contactUrl(t:Ticket){if(t.channel==="whatsapp"){const n=t.contact.replace(/\D/g,"");return n?"https://wa.me/"+n:"#"}if(t.channel==="telegram"){const n=t.contact.replace(/^@/,"");return n?"https://t.me/"+n:"#"}return t.contact?"mailto:"+t.contact:"#"}
 export default function AdminSupport(){
  const [tickets,setTickets]=useState<Ticket[]>([]),[loading,setLoading]=useState(true),[error,setError]=useState(""),[busy,setBusy]=useState("");
  async function load(){setLoading(true);setError("");try{const r=await fetch("/api/admin/support",{cache:"no-store"}),d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to load support requests.");setTickets(d.tickets||[])}catch(e){setError(e instanceof Error?e.message:"Unable to load support requests.")}finally{setLoading(false)}}
@@ -18,7 +19,7 @@ export default function AdminSupport(){
   {loading?<div className="nx-support-empty">Loading customer requests…</div>:!tickets.length?<div className="nx-support-empty"><span>✓</span><b>Inbox is clear</b><small>New customer requests will appear here automatically.</small></div>:<div className="nx-support-ticket-list">{tickets.map(t=><article className="nx-support-ticket" key={t.id}>
    <div className="nx-support-ticket-top"><div className="nx-support-ticket-icon"><ChannelIcon channel={t.channel}/></div><div className="nx-support-ticket-title"><b>{t.subject}</b><small>{t.userName||"Customer"} · {t.userEmail||"No email on file"}</small></div><span className={"nx-support-status "+(t.status==="reviewing"?"review":"new")}>{t.status==="reviewing"?"In review":"New"}</span></div>
    <p className="nx-support-ticket-message">{t.message}</p>
-   <div className="nx-support-ticket-details"><span>Ticket <b>#{t.id.slice(-8).toUpperCase()}</b></span><span>Received <b>{new Date(t.createdAt).toLocaleString()}</b></span><span>Reply channel <b>{t.channel}</b></span><span>Contact <b>{t.contact}</b></span></div>
+   <div className="nx-support-ticket-details"><span>Ticket <b>#{t.id.slice(-8).toUpperCase()}</b></span><span>Received <b>{new Date(t.createdAt).toLocaleString()}</b></span><span>Reply channel <b>{t.channel}</b></span><span>Contact <b><a className="nx-support-contact-link" href={contactUrl(t)} target={t.channel==="email"?undefined:"_blank"} rel="noopener noreferrer">{t.channel==="whatsapp"?"Open WhatsApp":t.channel==="telegram"?"Open Telegram":t.contact} ↗</a></b></span></div>
    <div className="nx-support-ticket-actions"><button className={t.status==="reviewing"?"nx-support-review-active":"nx-support-review"} disabled={busy===t.id||t.status==="reviewing"} onClick={()=>void setStatus(t.id,"reviewing")}>{busy===t.id?"Saving…":"◷ In review"}</button><button className="nx-support-solve" disabled={busy===t.id} onClick={()=>void setStatus(t.id,"resolved")}>{busy===t.id?"Sending email…":"✓ Solve & email user"}</button><button className="nx-support-reject" disabled={busy===t.id} onClick={()=>void setStatus(t.id,"rejected")}>Reject</button></div>
   </article>)}</div>}
  </section>
