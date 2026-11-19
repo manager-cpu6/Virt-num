@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PublicFooter from "@/components/PublicFooter";
 const policies=[
+ {href:"/security",title:"Security Information",description:"How current account, API, webhook and Android security controls work."},
  {href:"/terms",title:"Terms of Service",description:"Account use, wallet and orders, API access, restrictions and service availability."},
  {href:"/privacy",title:"Privacy Policy",description:"Account, order, device, notification and support information."},
  {href:"/refund-policy",title:"Refund Policy",description:"Eligible wallet credits, completed orders and payment review."},
