@@ -3,9 +3,9 @@ import {useEffect,useState} from "react";
 
 type Ticket={id:string;subject:string;status:string;createdAt:string;updatedAt?:string};
 function ChannelIcon({name}:{name:string}){
- if(name==="email")return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>;
- if(name==="whatsapp")return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 11.7a8.5 8.5 0 0 1-12.6 7.4L3 20l.9-4.7A8.5 8.5 0 1 1 20.5 11.7Z"/><path d="M8.2 7.8c.3-.5.7-.4 1-.1l1 1.5c.2.3.1.6-.2.9l-.6.6c.7 1.3 1.6 2.2 2.9 2.8l.6-.7c.2-.3.6-.4.9-.2l1.5.8c.4.2.5.6.3 1-.4.8-1.1 1.2-2 1.1-3.2-.5-6.3-3.4-6.7-6.2-.1-.6.4-1.2 1.3-1.5Z"/></svg>;
- return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.3 18-3.8-7-7-3.8L21 3Z"/><path d="m10 14 4-4"/></svg>;
+ if(name==="whatsapp")return <img src="https://cdn.simpleicons.org/whatsapp/25D366" alt="" width="23" height="23"/>;
+ if(name==="telegram")return <img src="https://cdn.simpleicons.org/telegram/26A5E4" alt="" width="23" height="23"/>;
+ return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="m4 7 8 6 8-6"/></svg>;
 }
 export default function SupportPage(){
  const [channel,setChannel]=useState("email"),[contact,setContact]=useState(""),[subject,setSubject]=useState(""),[message,setMessage]=useState(""),[ticket,setTicket]=useState<Ticket|null>(null),[needsLogin,setNeedsLogin]=useState(false),[loading,setLoading]=useState(true),[sending,setSending]=useState(false),[notice,setNotice]=useState(""),[error,setError]=useState("");
