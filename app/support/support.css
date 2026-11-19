@@ -40,3 +40,8 @@ body:has(.nx-support-page) .bottom-nav,body:has(.nx-support-page) .app-footer,bo
 body:has(.nx-support-page) .mobile-bottom-nav,body:has(.nx-support-page) .global-footer,
 body:has(.nx-verify-page) .mobile-bottom-nav,body:has(.nx-verify-page) .global-footer{display:none!important}
 body:has(.nx-verify-page) .page-shell{width:100%!important;max-width:none!important;padding:0!important;margin:0!important}
+
+
+/* Responsive admin email campaign workspace */
+.nx-admin-email-grid{grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr)}
+@media(max-width:800px){.nx-admin-email-grid{grid-template-columns:minmax(0,1fr)!important}}
