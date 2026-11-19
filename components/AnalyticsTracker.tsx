@@ -24,6 +24,7 @@ function attribution(){
   }catch{return {source:"direct",referrerHost:"",campaignSource:""};}
 }
 function send(event:"pageview"|"click",path:string,label=""){
+  try{if(localStorage.getItem("numelixa-cookie-choice")!=="accepted")return;}catch{return;}
   const payload=JSON.stringify({event,path,visitorId:visitorId(),label,...attribution()});
   void fetch("/api/analytics/track",{method:"POST",headers:{"Content-Type":"application/json"},body:payload,keepalive:true}).catch(()=>{});
 }
@@ -32,6 +33,9 @@ export default function AnalyticsTracker(){
   useEffect(()=>{
     if(!pathname||pathname.startsWith("/admin"))return;
     send("pageview",pathname);
+    const onConsent=()=>send("pageview",pathname);
+    window.addEventListener("numelixa-cookie-consent",onConsent);
+    return()=>window.removeEventListener("numelixa-cookie-consent",onConsent);
   },[pathname]);
   useEffect(()=>{
     const onClick=(event:MouseEvent)=>{
