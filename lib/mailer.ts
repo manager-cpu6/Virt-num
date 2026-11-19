@@ -22,9 +22,9 @@ function fallbackConfig():SmtpConfig|null{
 }
 
 type SenderKey="info"|"noreply"|"team";
-const SENDER_ADDRESS:Record<SenderKey,string>={info:"info@numelixa.com",noreply:"noreply@numelixa.com",team:"team@numelixa.com"};
+const SENDER_ADDRESS:Record<SenderKey,string>={info:"info@numelixa.com",noreply:"noreplay@numelixa.com",team:"team@numelixa.com"};
 function smtpConfig(sender:SenderKey="info"):SmtpConfig{
- const prefix=sender==="noreply"?"SPACEMAIL_NOREPLY":sender==="team"?"SPACEMAIL_TEAM":"SPACEMAIL_INFO";
+ const prefix=sender==="noreply"?"SPACEMAIL_NOREPLAY":sender==="team"?"SPACEMAIL_TEAM":"SPACEMAIL_INFO";
  const host=(process.env[prefix+"_HOST"]||process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
  const port=Number(process.env[prefix+"_PORT"]||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
  const user=(process.env[prefix+"_USER"]||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
