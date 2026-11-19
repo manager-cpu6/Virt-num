@@ -4,7 +4,7 @@ import {collection,mongoId} from "@/lib/mongo";
 import {sendEmailFrom} from "@/lib/mailer";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-const allowedSenders=["info","noreply","team"] as const;
+const allowedSenders=["info","payment","welcome","noreply","team","system","notification"] as const;
 type Sender=typeof allowedSenders[number];
 const BATCH_SIZE=5;
 function safeHtml(input:string){return input.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,"").replace(/\son\w+\s*=\s*(["']).*?\1/gi,"").replace(/(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi,'$1="#"');}
