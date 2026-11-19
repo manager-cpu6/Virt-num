@@ -15,7 +15,7 @@ export async function POST(req:Request){
   const users=await collection<any>("users");
   const user=await users.findOne({_id:userId},{projection:{_id:1,role:1,badgeVerifiedAt:1}});
   if(!user)return NextResponse.json({ok:false,error:"User not found."},{status:404});
-  if(user.role==="admin"&&String(admin.id)!==userId)return NextResponse.json({ok:false,error:"Administrator badges must be managed through the owner account."},{status:403});
+  if(user.role==="admin")return NextResponse.json({ok:false,error:"Administrator accounts cannot receive public verification badges."},{status:403});
   const now=new Date();
   if(verified){
    await users.updateOne({_id:userId},{$set:{badgeVerifiedAt:now,badgeVerifiedBy:String(admin.id),badgeVerifiedByEmail:String(admin.email||"")}});
