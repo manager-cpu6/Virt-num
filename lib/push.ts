@@ -94,7 +94,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const messageData=Object.fromEntries(Object.entries({url:data.url||"/",...data,title,body,...(copyCodePush?{code}:{})}).map(([key,value])=>[key,String(value)]));
   const payload={
    tokens:batch,
-   // Data-only FCM lets Flutter choose the exact notification artwork and prevents Android from rendering a duplicate system notification.
+   // Foreground messages are rendered by Flutter; background notification payloads are rendered by Android.
    // Notification payloads are rendered by Android automatically while the
    // app is backgrounded or terminated. Flutter handles onMessage in the
    // foreground, so the background isolate must not display them again.
