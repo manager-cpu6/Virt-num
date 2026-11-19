@@ -50,7 +50,7 @@ export default function AdminBulkEmail(){
    <header style={{margin:"22px 0 24px"}}><span style={{fontSize:10,letterSpacing:".18em",fontWeight:900,color:"#69d8e8"}}>NUMELIXA COMMUNICATIONS</span><h1 style={{fontSize:"clamp(30px,5vw,46px)",letterSpacing:"-.05em",margin:"8px 0"}}>Send email to users</h1><p style={{color:"#9bb1d0",maxWidth:680,lineHeight:1.65}}>Create a branded HTML email and send it to every registered user with a valid email address. Delivery runs in small batches so progress and failures can be tracked.</p></header>
    {error&&<div role="alert" style={{padding:14,borderRadius:12,background:"#401d2b",border:"1px solid #8b405a",color:"#ffd4df",marginBottom:14}}>{error}</div>}
    {notice&&<div role="status" style={{padding:14,borderRadius:12,background:"#0b302d",border:"1px solid #236b60",color:"#a8f5dc",marginBottom:14}}>{notice}</div>}
-   <section style={{display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(280px,.85fr)",gap:18,alignItems:"start"}}>
+   <section className="nx-admin-email-grid" style={{display:"grid",gridTemplateColumns:"minmax(0,1.15fr) minmax(280px,.85fr)",gap:18,alignItems:"start"}}>
     <div style={{padding:22,border:"1px solid #233d61",borderRadius:22,background:"linear-gradient(145deg,#0c1c35,#081329)"}}>
      <label style={{display:"block",fontSize:12,fontWeight:800,marginBottom:8}}>Send from</label>
      <select value={sender} onChange={e=>setSender(e.target.value as Sender)} disabled={busy} style={{width:"100%",height:48,padding:"0 12px",borderRadius:12,border:"1px solid #2b466c",background:"#071329",color:"#eaf4ff"}}>
@@ -60,7 +60,7 @@ export default function AdminBulkEmail(){
      <input value={subject} onChange={e=>setSubject(e.target.value)} maxLength={180} placeholder="Important Numelixa update" disabled={busy} style={{width:"100%",height:48,padding:"0 12px",borderRadius:12,border:"1px solid #2b466c",background:"#071329",color:"#eaf4ff"}}/>
      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"18px 0 8px"}}><label style={{fontSize:12,fontWeight:800}}>HTML email body</label><span style={{fontSize:10,color:"#8da8ca"}}>HTML supported</span></div>
      <textarea value={html} onChange={e=>setHtml(e.target.value)} disabled={busy} spellCheck={false} rows={17} style={{width:"100%",resize:"vertical",padding:14,borderRadius:12,border:"1px solid #2b466c",background:"#050e20",color:"#cce5ff",fontFamily:"ui-monospace,monospace",fontSize:12,lineHeight:1.6}}/>
-     <button onClick={send} disabled={busy} style={{width:"100%",height:52,marginTop:16,border:0,borderRadius:13,background:"linear-gradient(100deg,#236dff,#00b8d5)",color:"white",fontWeight:900,opacity:busy?.65:1}}>{busy?"Sending campaign…":"✉ Send email to all users"}</button>
+     <button onClick={send} disabled={busy} style={{width:"100%",height:52,marginTop:16,border:0,borderRadius:13,background:"linear-gradient(100deg,#236dff,#00b8d5)",color:"white",fontWeight:900,opacity:busy ? 0.65 : 1}}>{busy?"Sending campaign…":"✉ Send email to all users"}</button>
      <p style={{fontSize:11,color:"#8199b9",lineHeight:1.6,marginBottom:0}}>A confirmation is required before sending. Keep this page open until all batches finish. Emails already marked sent are not sent again.</p>
     </div>
     <div style={{display:"grid",gap:14}}>
