@@ -1,4 +1,5 @@
 import Link from "next/link";
+import PublicFooter from "@/components/PublicFooter";
 import {getUser} from "@/lib/auth";
 import {redirect} from "next/navigation";
 import {headers} from "next/headers";
@@ -111,7 +112,7 @@ export default async function LandingPage() {
         <section className="landing-final"><span>READY WHEN YOU ARE</span><h2>Start with Numelixa today.</h2><p>Get your first virtual number in a few taps.</p><Link href="/signup" className="landing-primary">Create free account <span>→</span></Link></section>
       </main>
 
-      <footer className="landing-footer"><span>© 2026 Numelixa</span><div><Link href="/pricing">Pricing</Link><Link href="/terms">Terms of Service</Link><Link href="/privacy">Privacy</Link><Link href="/refund-policy">Refund Policy</Link><Link href="/cookie-policy">Cookie Policy</Link><Link href="/account-deletion">Account Deletion</Link><Link href="/developers">Developers</Link><a href="mailto:support@numelixa.com">Contact</a></div></footer>
+      <PublicFooter/>
     </div>
   );
 }
