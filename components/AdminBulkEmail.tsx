@@ -7,13 +7,13 @@ const senders:{value:Sender;label:string;purpose:string}[]=[
  {value:"team",label:"team@numelixa.com",purpose:"Support and team communication"}
 ];
 export default function AdminBulkEmail(){
- const [sender,setSender]=useState<Sender>("info"),[subject,setSubject]=useState(""),[html,setHtml]=useState("<h1 style=\"color:#1769e8\">Hello from Numelixa</h1>\n<p>Write your announcement here.</p>"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[progress,setProgress]=useState<{campaignId:string;total:number;sent:number;failed:number;remaining:number}|null>(null);
+ const [sender,setSender]=useState<Sender>("info"),[html,setHtml]=useState("<h1 style=\"color:#1769e8\">Hello from Numelixa</h1>\n<p>Write your announcement here.</p>"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[notice,setNotice]=useState(""),[progress,setProgress]=useState<{campaignId:string;total:number;sent:number;failed:number;remaining:number}|null>(null);
  async function send(){
-  if(!subject.trim()||html.trim().length<20){setError("Add a subject and complete HTML email content.");return;}
+  if(html.trim().length<20){setError("Add complete HTML email content.");return;}
   if(!window.confirm("Send this HTML email to every registered user with a valid email address? The message will be delivered in small batches."))return;
   setBusy(true);setError("");setNotice("");setProgress(null);
   try{
-   const start=await fetch("/api/admin/email-campaign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create",sender,subject,html})});
+   const start=await fetch("/api/admin/email-campaign",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"create",sender,html})});
    const created=await start.json();if(!start.ok||!created.ok)throw new Error(created.error||"Unable to create email campaign.");
    let state={campaignId:created.campaignId,total:Number(created.total||0),sent:0,failed:0,remaining:Number(created.total||0)};
    setProgress(state);setNotice("Campaign created. Sending emails…");
@@ -26,6 +26,16 @@ export default function AdminBulkEmail(){
    setNotice("Campaign finished. "+state.sent+" emails sent; "+state.failed+" failed.");
   }catch(e){setError(e instanceof Error?e.message:"Unable to send campaign.");}
   finally{setBusy(false);}
+ }
+
+ async function testEmail(){
+  setTestBusy(true);setTestError("");setTestNotice("");
+  try{
+   const r=await fetch("/api/admin/email-test",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sender,html})});
+   const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Test email failed.");
+   setTestNotice(d.message||"Test email accepted. Check the administrator inbox.");
+  }catch(e){setTestError(e instanceof Error?e.message:"Test email failed.");}
+  finally{setTestBusy(false);}
  }
  async function retryFailed(){
   if(!progress||progress.failed===0)return;
@@ -60,7 +70,7 @@ export default function AdminBulkEmail(){
      <input value={subject} onChange={e=>setSubject(e.target.value)} maxLength={180} placeholder="Important Numelixa update" disabled={busy} style={{width:"100%",height:48,padding:"0 12px",borderRadius:12,border:"1px solid #2b466c",background:"#071329",color:"#eaf4ff"}}/>
      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",margin:"18px 0 8px"}}><label style={{fontSize:12,fontWeight:800}}>HTML email body</label><span style={{fontSize:10,color:"#8da8ca"}}>HTML supported</span></div>
      <textarea value={html} onChange={e=>setHtml(e.target.value)} disabled={busy} spellCheck={false} rows={17} style={{width:"100%",resize:"vertical",padding:14,borderRadius:12,border:"1px solid #2b466c",background:"#050e20",color:"#cce5ff",fontFamily:"ui-monospace,monospace",fontSize:12,lineHeight:1.6}}/>
-     <button onClick={send} disabled={busy} style={{width:"100%",height:52,marginTop:16,border:0,borderRadius:13,background:"linear-gradient(100deg,#236dff,#00b8d5)",color:"white",fontWeight:900,opacity:busy ? 0.65 : 1}}>{busy?"Sending campaign…":"✉ Send email to all users"}</button>
+     <div style={{display:"grid",gridTemplateColumns:"minmax(0,1fr) minmax(0,1fr)",gap:10,marginTop:16}}><button onClick={send} disabled={busy||testBusy} style={{minHeight:50,padding:"10px 12px",border:0,borderRadius:13,background:"linear-gradient(100deg,#236dff,#00b8d5)",color:"white",fontWeight:900,opacity:busy||testBusy ? 0.65 : 1}}>{busy?"Sending…":"✉ Send to all users"}</button><button onClick={testEmail} disabled={busy||testBusy} style={{minHeight:50,padding:"10px 12px",border:"1px solid #41658d",borderRadius:13,background:"#102846",color:"#d7eaff",fontWeight:850,opacity:busy||testBusy ? 0.65 : 1}}>{testBusy?"Testing…":"Test email"}</button></div>{testError&&<div role="alert" style={{marginTop:10,padding:12,borderRadius:10,background:"#401d2b",color:"#ffd4df",fontSize:12}}>{testError}</div>}{testNotice&&<div role="status" style={{marginTop:10,padding:12,borderRadius:10,background:"#0b302d",color:"#a8f5dc",fontSize:12}}>{testNotice}</div>}
      <p style={{fontSize:11,color:"#8199b9",lineHeight:1.6,marginBottom:0}}>A confirmation is required before sending. Keep this page open until all batches finish. Emails already marked sent are not sent again.</p>
     </div>
     <div style={{display:"grid",gap:14}}>
@@ -76,6 +86,6 @@ export default function AdminBulkEmail(){
     </div>
    </section>
   </div>
-  <style jsx>{`@media(max-width:800px){section[style*="grid-template-columns: minmax(0px, 1.15fr)"]{grid-template-columns:1fr!important}}`}</style>
+  <style jsx>{`@media(max-width:800px){.nx-admin-email-grid{grid-template-columns:1fr!important}}`}</style>
  </main>;
 }
