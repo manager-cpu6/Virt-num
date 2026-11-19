@@ -3,7 +3,7 @@ import {collection,getMongoClient,getMongoDb,mongoId} from "@/lib/mongo";
 import {getCoinDeposits,personalApiConfigured,type BinanceDeposit} from "@/lib/binance-personal";
 import {notifyUser} from "@/lib/notifications";
 import {applyReferralReward} from "@/lib/referrals";
-import {sendEmail,coinPaymentSuccessEmail} from "@/lib/mailer";
+import {sendEmailFrom,coinPaymentSuccessEmail} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -37,7 +37,7 @@ async function creditDeposit(payment:any,deposit:BinanceDeposit){
  if(credited){
   try{await applyReferralReward({userId:credited.userId,paymentReference:credited.orderId,amountUsd:Number(credited.amountUsd||0),description:"Verified Binance Personal deposit"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(credited.userId,"💰 Payment confirmed","Your crypto deposit was confirmed and $"+Number(credited.amountUsd||0).toFixed(2)+" USD was added to your Numelixa wallet.",{paymentId:credited.paymentId,type:"payment"});}catch(e){console.error("[BINANCE DEPOSIT PUSH]",e);}
-  try{if(credited.email)await sendEmail(credited.email,"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(credited.name,credited.coins,credited.amountUsd,credited.currency,credited.orderId));}catch(e){console.error("[BINANCE DEPOSIT EMAIL]",e instanceof Error?e.message:"send failed");}
+  try{if(credited.email)await sendEmailFrom("payment",credited.email,"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(credited.name,credited.coins,credited.amountUsd,credited.currency,credited.orderId));}catch(e){console.error("[BINANCE DEPOSIT EMAIL]",e instanceof Error?e.message:"send failed");}
  }
  return Boolean(credited);
 }
