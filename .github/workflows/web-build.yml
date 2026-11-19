@@ -7,6 +7,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +20,17 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Persist deterministic npm lockfile
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Add reproducible npm lockfile"
+            git push origin HEAD:main
+          fi
       - name: Audit installed production dependencies
         shell: bash
         run: |
