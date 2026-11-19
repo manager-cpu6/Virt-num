@@ -1,29 +1,41 @@
 "use client";
+import Link from "next/link";
 import {useEffect,useState} from "react";
-import type {CSSProperties} from "react";
+import ServiceLogo from "@/components/ServiceLogo";
 const money=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 const methods=[
- {id:"coopay_ebirr",name:"Coopay eBirr",desc:"Cooperative Bank · Mobile wallet",mark:"e",color:"#22c997",group:"Wallet"},
- {id:"kaafi_ebirr",name:"Kaafi eBirr",desc:"Kaafi wallet · USSD",mark:"K",color:"#f2bb58",group:"Wallet"},
- {id:"cbe_birr",name:"CBE Birr",desc:"Commercial Bank mobile wallet",mark:"CBE",color:"#59b9ef",group:"Wallet"},
- {id:"cbe_bank",name:"CBE Bank Transfer",desc:"Bank account transfer",mark:"CB",color:"#a99af5",group:"Bank"},
- {id:"mpesa",name:"M-Pesa",desc:"Safaricom mobile money",mark:"M",color:"#55ce87",group:"Wallet"},
- {id:"telebirr",name:"Telebirr",desc:"Ethio telecom mobile wallet",mark:"T",color:"#f3a45d",group:"Wallet"}
+ {id:"coopay_ebirr",name:"Coopay eBirr",desc:"Cooperative Bank mobile wallet",group:"Wallet"},
+ {id:"kaafi_ebirr",name:"Kaafi eBirr",desc:"Kaafi mobile wallet",group:"Wallet"},
+ {id:"cbe_birr",name:"CBE Birr",desc:"Commercial Bank mobile wallet",group:"Wallet"},
+ {id:"cbe_bank",name:"CBE Bank Transfer",desc:"Commercial Bank transfer",group:"Bank"},
+ {id:"mpesa",name:"M-Pesa",desc:"Safaricom mobile money",group:"Wallet"},
+ {id:"telebirr",name:"Telebirr",desc:"Ethio telecom mobile wallet",group:"Wallet"}
 ];
 export default function LocalPaymentChooser(){
  const [amount,setAmount]=useState("5.00"),[available,setAvailable]=useState<Record<string,boolean>>({}),[somaliaOpen,setSomaliaOpen]=useState(false),[loading,setLoading]=useState(true);
  useEffect(()=>{const raw=new URLSearchParams(location.search).get("amount")||"5.00";if(/^\d+(?:\.\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));Promise.all([fetch("/api/payments/ethiopia/methods",{cache:"no-store"}).then(r=>r.json()),fetch("/api/payments/sifalo/status",{cache:"no-store"}).then(r=>r.json())]).then(([e,s])=>{const next:Record<string,boolean>={};for(const m of methods)next[m.id]=e?.ok===true&&e?.methods?.[m.id]?.open===true&&!!e?.methods?.[m.id]?.receiver&&Number(e?.etbPerUsd)>0;setAvailable(next);setSomaliaOpen(s?.ok===true&&s?.open===true&&s?.configured===true)}).catch(()=>{setAvailable({});setSomaliaOpen(false)}).finally(()=>setLoading(false));},[]);
  const goSomalia=()=>location.href="https://checkout.numelixa.com/?amount="+encodeURIComponent(amount),goEthiopia=(method:string)=>location.href="/ethiopia-payment?method="+encodeURIComponent(method)+"&amount="+encodeURIComponent(amount),back="/payment-method?amount="+encodeURIComponent(amount);
- const panel:CSSProperties={border:"1px solid rgba(148,171,205,.18)",borderRadius:24,background:"rgba(14,23,39,.88)",boxShadow:"0 22px 65px rgba(0,0,0,.24)"};
- const card:CSSProperties={display:"flex",alignItems:"center",gap:14,width:"100%",padding:15,border:"1px solid rgba(148,171,205,.17)",borderRadius:17,background:"rgba(255,255,255,.035)",color:"#f5f7fb",textAlign:"left"};
- const mark:CSSProperties={width:48,height:48,flex:"0 0 48px",display:"grid",placeItems:"center",borderRadius:15,fontSize:20,fontWeight:900};
  const availableCount=methods.filter(m=>available[m.id]).length;
- return <main style={{minHeight:"100vh",padding:"22px 16px 48px",background:"radial-gradient(ellipse at 50% -10%,#183b58 0%,#0a1220 44%,#070b13 100%)",color:"#f5f7fb",fontFamily:"Inter,system-ui,sans-serif"}}><div style={{maxWidth:720,margin:"0 auto"}}>
- <header style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12}}><a href={back} style={{color:"#b8c7dc",textDecoration:"none",fontSize:14}}>← Payment methods</a><span style={{fontSize:11,letterSpacing:1.5,color:"#8ea5bf",fontWeight:800}}>NUMELIXA · SECURE</span></header>
- <section style={{margin:"28px 0 20px"}}><div style={{fontSize:11,letterSpacing:2,color:"#67dfc0",fontWeight:900}}>LOCAL PAYMENT</div><h1 style={{fontSize:"clamp(32px,7vw,46px)",letterSpacing:-1.5,lineHeight:1.05,margin:"10px 0 12px"}}>Pay your way,<br/><span style={{color:"#8cc8ff"}}>locally.</span></h1><p style={{color:"#a9b8ca",fontSize:15,lineHeight:1.65,maxWidth:540,margin:0}}>Choose the country where you will send money. You will only be able to continue with payment services that are enabled and configured.</p>
- <div style={{...panel,display:"flex",alignItems:"center",justifyContent:"space-between",gap:16,padding:"15px 18px",marginTop:20}}><div><small style={{color:"#8ea2ba",fontWeight:700}}>WALLET TOP-UP</small><div style={{fontSize:25,fontWeight:900,marginTop:3}}>{money(Number(amount))}</div></div><div style={{fontSize:11,color:"#75e0c1",border:"1px solid rgba(117,224,193,.24)",background:"rgba(117,224,193,.08)",padding:"8px 11px",borderRadius:30}}> <span style={{display:"inline-block",width:7,height:7,borderRadius:9,background:"#5de0b5",marginRight:7}}/>Secure checkout</div></div></section>
- <section style={{...panel,padding:18,marginBottom:16}}><div style={{display:"flex",alignItems:"center",gap:14,marginBottom:16}}><div style={{...mark,background:"linear-gradient(145deg,#276bd0,#153a82)",fontSize:26}}>🇸🇴</div><div style={{flex:1}}><div style={{fontSize:20,fontWeight:850}}>Somalia</div><div style={{fontSize:12,color:"#9eafc4",marginTop:3}}>Mobile money · Local wallets</div></div><span style={{fontSize:11,color:somaliaOpen?"#67dfb2":"#f1bb78",fontWeight:800}}>{loading?"Checking…":somaliaOpen?"AVAILABLE":"UNAVAILABLE"}</span></div><p style={{fontSize:13,color:"#a9b8ca",lineHeight:1.55,margin:"0 0 14px"}}>Waafi, EVC Plus, ZAAD, SAHAL, eDahab and other supported Somali payment services.</p><button type="button" disabled={!somaliaOpen||loading} onClick={goSomalia} style={{width:"100%",padding:15,border:0,borderRadius:14,background:somaliaOpen?"linear-gradient(100deg,#3988f5,#5cafff)":"#303b4b",color:"#fff",fontWeight:900,fontSize:14,cursor:somaliaOpen?"pointer":"not-allowed",opacity:somaliaOpen?1:.7}}>Continue to Somalia payment <span style={{marginLeft:8}}>→</span></button></section>
- <section style={{...panel,padding:18}}><div style={{display:"flex",alignItems:"center",gap:14,marginBottom:15}}><div style={{...mark,background:"linear-gradient(145deg,#159b68,#075b48)",fontSize:26}}>🇪🇹</div><div style={{flex:1}}><div style={{fontSize:20,fontWeight:850}}>Ethiopia</div><div style={{fontSize:12,color:"#9eafc4",marginTop:3}}>eBirr · Bank transfer · Mobile money</div></div><span style={{fontSize:11,color:"#80cfff",fontWeight:800}}>{loading?"…":availableCount+" / "+methods.length+" OPEN"}</span></div><div style={{display:"grid",gap:10}}>{methods.map(m=>{const open=available[m.id]===true;return <button key={m.id} type="button" disabled={!open||loading} onClick={()=>goEthiopia(m.id)} style={{...card,opacity:open?1:.53,cursor:open?"pointer":"not-allowed",borderColor:open?m.color+"70":"rgba(148,171,205,.12)"}}><span style={{...mark,color:m.color,background:m.color+"18",fontSize:m.mark==="CBE"?13:20}}>{m.mark}</span><span style={{flex:1,minWidth:0}}><b style={{display:"block",fontSize:14}}>{m.name}</b><small style={{display:"block",marginTop:4,color:"#9eafc4",fontSize:11,lineHeight:1.4}}>{m.desc}</small></span><span style={{fontSize:10,fontWeight:900,color:open?"#72e2b9":"#e2ad78",whiteSpace:"nowrap"}}>{loading?"CHECKING":open?"SELECT →":"CLOSED"}</span></button>})}</div><p style={{margin:"15px 2px 0",fontSize:11,color:"#8296ae",lineHeight:1.55}}>Unavailable methods are shown for clarity but cannot be selected. An administrator must configure the receiving account and open the service first.</p></section>
- <footer style={{marginTop:24,display:"flex",justifyContent:"space-between",gap:12,color:"#71839b",fontSize:11}}><span>© 2026 Numelixa</span><a href="/wallet" style={{color:"#9eafc4"}}>Back to wallet</a></footer>
- </div></main>;
+ return <main className="nx-local-pay-page">
+  <div className="nx-local-pay-shell">
+   <header className="nx-local-pay-nav"><Link href={back}>← Payment methods</Link><span><img src="/numelixa-brand.svg" alt="" width="26" height="26"/> NUMELIXA · SECURE CHECKOUT</span></header>
+   <section className="nx-local-pay-hero"><span className="nx-guide-kicker">LOCAL PAYMENT</span><h1>Pay locally.<br/><em>Stay in control.</em></h1><p>Choose the country where you will send your payment. Only methods confirmed as enabled and configured by the payment service are selectable.</p></section>
+   <section className="nx-local-pay-amount"><div><small>WALLET TOP-UP</small><strong>{money(Number(amount))}</strong></div><span>{loading?"Checking availability":"Availability checked live"}</span></section>
+   <section className="nx-local-country-card">
+    <div className="nx-local-country-head"><span className="nx-local-flag">🇸🇴</span><div><h2>Somalia</h2><p>Local mobile-money checkout</p></div><span className={"nx-local-status "+(loading?"checking":somaliaOpen?"open":"closed")}>{loading?"CHECKING":somaliaOpen?"AVAILABLE":"UNAVAILABLE"}</span></div>
+    <p className="nx-local-country-copy">Supported Somali payment options and instructions are displayed by the secure checkout after availability is confirmed.</p>
+    <button type="button" className="nx-local-continue" disabled={!somaliaOpen||loading} onClick={goSomalia}>Continue to Somalia payment <b>→</b></button>
+   </section>
+   <section className="nx-local-country-card">
+    <div className="nx-local-country-head"><span className="nx-local-flag">🇪🇹</span><div><h2>Ethiopia</h2><p>Wallets and bank transfer</p></div><span className={"nx-local-status "+(loading?"checking":availableCount>0?"open":"closed")}>{loading?"CHECKING":availableCount+" / "+methods.length+" OPEN"}</span></div>
+    <div className="nx-local-method-list">{methods.map(m=>{const open=available[m.id]===true;return <button key={m.id} type="button" disabled={!open||loading} onClick={()=>goEthiopia(m.id)} className={"nx-local-method"+(open?" enabled":"")}>
+      <ServiceLogo id={m.id} name={m.name} className="nx-local-method-logo"/>
+      <span className="nx-local-method-copy"><b>{m.name}</b><small>{m.desc}</small></span>
+      <span className={"nx-local-method-state "+(open?"open":"closed")}>{loading?"CHECKING":open?"SELECT →":"CLOSED"}</span>
+     </button>})}</div>
+    <p className="nx-local-method-note">Closed methods cannot be selected. They become available only after the receiving account and service are configured and enabled.</p>
+   </section>
+   <footer className="nx-local-pay-footer"><span>© 2026 Numelixa</span><Link href="/wallet">Back to wallet</Link></footer>
+  </div>
+ </main>;
 }
