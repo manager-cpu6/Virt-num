@@ -60,6 +60,6 @@ export default function Wallet(){
     </article>;
    })}
    <p className="nx-wallet-history-disclaimer">This history shows posted wallet-ledger entries returned by the current API. Pending or failed payment attempts are not included in the current ledger response; a unified payment-attempt history requires a backend endpoint.</p>
-  </section>>
+  </section>
  </div>;
 }
