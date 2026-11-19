@@ -2,6 +2,8 @@ import {getApps,initializeApp,cert,deleteApp} from "firebase-admin/app";
 import {getMessaging} from "firebase-admin/messaging";
 import {getFirebaseServerSettings} from "@/lib/firebase-settings";
 import crypto from "crypto";
+import {collection} from "@/lib/mongo";
+import {sendEmailFrom,emailTemplate} from "@/lib/mailer";
 
 const EXPECTED_PROJECT_ID="numelixa";
 let initDiagnosticLogged=false;
@@ -53,7 +55,7 @@ export async function isFirebaseConfigured(){try{return Boolean(await firebaseAp
 
 export type PushSendResult={
  configured:boolean;successCount:number;failureCount:number;invalidTokens:string[];
- errors:{code:string;message:string}[];successfulTokens?:string[];messageIds?:string[];
+ errors:{code:string;message:string}[];successfulTokens?:string[];messageIds?:string[];emailSuccessCount?:number;emailFailureCount?:number;emailSuccessfulUserIds?:string[];
 };
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const notificationIconFor=(data:Record<string,string>)=>{
@@ -82,40 +84,73 @@ const channelFor=(data:Record<string,string>)=>{
 };
 
 export async function sendPush(tokens:string[],title:string,body:string,data:Record<string,string>={}):Promise<PushSendResult>{
+ const allTokens=[...new Set(tokens.map(String).map(x=>x.trim()).filter(x=>x.length>=20))];
+ const errors:{code:string;message:string}[]=[];
+ let emailSuccessCount=0,emailFailureCount=0;
+ const emailSuccessfulUserIds:string[]=[];
+ let pushTokens=allTokens;
+ let tokenUserIds=new Map<string,string>();
+ try{
+  const explicitUserIds=String(data.userIds||"").split(",").map(x=>x.trim()).filter(Boolean);
+  const deviceRows=allTokens.length
+   ?await (await collection<any>("deviceTokens")).find({token:{$in:allTokens}},{projection:{token:1,userId:1}}).toArray()
+   :[];
+  tokenUserIds=new Map(deviceRows.map(row=>[String(row.token||""),String(row.userId||"")]).filter(x=>x[0]&&x[1]));
+  const userIds=[...new Set([...tokenUserIds.values(),...explicitUserIds])];
+  if(userIds.length){
+   const users=await (await collection<any>("users")).find({_id:{$in:userIds}},{projection:{_id:1,email:1,notificationPreferences:1,name:1}}).toArray();
+   const byId=new Map(users.map(user=>[String(user._id),user]));
+   pushTokens=allTokens.filter(token=>{
+    const userId=tokenUserIds.get(token);
+    if(!userId)return true;
+    const user=byId.get(userId);
+    return user?.notificationPreferences?.appEnabled!==false;
+   });
+   const emailUsers=users.filter(user=>user.notificationPreferences?.emailEnabled===true&&String(user.email||"").includes("@"));
+   const mailResults=await Promise.all(emailUsers.map(async user=>{
+    try{
+     await sendEmailFrom("notification",String(user.email),title,emailTemplate(title,body,"https://www.numelixa.com/account","Numelixa service notification"));
+     return {id:String(user._id),ok:true};
+    }catch(error){
+     console.error("[USER_NOTIFICATION_EMAIL_FAILURE]",{userId:String(user._id),message:error instanceof Error?error.message:"Email delivery failed"});
+     return {id:String(user._id),ok:false};
+    }
+   }));
+   emailSuccessCount=mailResults.filter(x=>x.ok).length;
+   emailFailureCount=mailResults.length-emailSuccessCount;
+   emailSuccessfulUserIds.push(...mailResults.filter(x=>x.ok).map(x=>x.id));
+  }
+ }catch(error){
+  console.error("[NOTIFICATION_PREFERENCES_RESOLUTION]",error instanceof Error?error.message:"Unable to resolve notification preferences");
+  if(errors.length<20)errors.push({code:"notification-preferences-unavailable",message:"Could not apply saved notification preferences."});
+ }
+ if(!pushTokens.length){
+  return {configured:true,successCount:0,failureCount:0,invalidTokens:[],errors,emailSuccessCount,emailFailureCount,emailSuccessfulUserIds};
+ }
  let app:Awaited<ReturnType<typeof firebaseApp>>;
  try{app=await firebaseApp()}catch(error){
-  return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-admin-init-failed",message:error instanceof Error?error.message:"Firebase Admin credentials could not be initialized."}]};
+  return {configured:false,successCount:0,failureCount:pushTokens.length,invalidTokens:[],errors:[...errors,{code:"firebase-admin-init-failed",message:error instanceof Error?error.message:"Firebase Admin credentials could not be initialized."}],emailSuccessCount,emailFailureCount,emailSuccessfulUserIds};
  }
- if(!app)return {configured:false,successCount:0,failureCount:tokens.length,invalidTokens:[],errors:[{code:"firebase-config-missing",message:"Firebase Admin credentials are incomplete. Configure FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in Vercel Production."}]};
- const unique=[...new Set(tokens.map(String).map(x=>x.trim()).filter(x=>x.length>=20))];
- if(!unique.length)return {configured:true,successCount:0,failureCount:0,invalidTokens:[],errors:[]};
+ if(!app)return {configured:false,successCount:0,failureCount:pushTokens.length,invalidTokens:[],errors:[...errors,{code:"firebase-config-missing",message:"Firebase Admin credentials are incomplete. Configure Firebase Admin credentials in Vercel Production."}],emailSuccessCount,emailFailureCount,emailSuccessfulUserIds};
  const channelId=channelFor(data);
- console.info("[FCM_SEND_START]",{projectId:EXPECTED_PROJECT_ID,deviceCount:unique.length,channelId,type:String(data.type||"general")});
+ console.info("[FCM_SEND_START]",{projectId:EXPECTED_PROJECT_ID,deviceCount:pushTokens.length,channelId,type:String(data.type||"general")});
  let successCount=0,failureCount=0;
  const invalidTokens:string[]=[],successfulTokens:string[]=[],messageIds:string[]=[];
- const errors:{code:string;message:string}[]=[];
- for(let i=0;i<unique.length;i+=500){
-  const batch=unique.slice(i,i+500);
+ for(let i=0;i<pushTokens.length;i+=500){
+  const batch=pushTokens.slice(i,i+500);
   const type=String(data.type||"").toLowerCase();
   const codeCandidate=String(data.code||data.otp||data.verificationCode||data.smsCode||"").trim();
-  const code= /^\d{4,8}$/.test(codeCandidate) ? codeCandidate : (body.match(/(?<!\d)\d{4,8}(?!\d)/)||[])[0]||"";
+  const code= /^\\d{4,8}$/.test(codeCandidate) ? codeCandidate : (body.match(/(?<!\\d)\\d{4,8}(?!\\d)/)||[])[0]||"";
   const copyCodePush=["sms","verification","verification_code"].includes(type)&&data.copyCode==="true"&&Boolean(code);
   const messageData=Object.fromEntries(Object.entries({
    url:data.url||"/",...data,
-   // Send the selected category under explicit aliases so every app build can
-   // resolve it without relying on Firebase's default notification renderer.
    iconType:data.iconType||data.notificationCategory||"general",
    notificationCategory:data.iconType||data.notificationCategory||"general",
    title,body,...(copyCodePush?{code}:{})
-  }).map(([key,value])=>[key,String(value)]));
-  const visibleNotification={title,body};
+  }).filter(([key])=>key!=="userIds").map(([key,value])=>[key,String(value)]));
   const payload={
    tokens:batch,
-   // Include both data and a real Android notification payload. When Numelixa
-   // is backgrounded or terminated, Android/FCM renders the notification
-   // natively instead of depending on a Dart background isolate being started.
-   // When the app is foregrounded, Flutter's onMessage handler renders it.
-   notification:visibleNotification,
+   notification:{title,body},
    data:messageData,
    android:{
     priority:"high" as const,
@@ -156,6 +191,6 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
    }
   });
  }
- console.info(successCount>0?"[FCM_SEND_SUCCESS]":"[FCM_SEND_FAILURE]",{projectId:EXPECTED_PROJECT_ID,attempted:unique.length,sent:successCount,failed:failureCount,invalidTokens:invalidTokens.length,channelId,messageIds:messageIds.length});
- return {configured:true,successCount,failureCount,invalidTokens,errors,successfulTokens,messageIds};
+ console.info(successCount>0?"[FCM_SEND_SUCCESS]":"[FCM_SEND_FAILURE]",{projectId:EXPECTED_PROJECT_ID,attempted:pushTokens.length,sent:successCount,failed:failureCount,invalidTokens:invalidTokens.length,channelId,messageIds:messageIds.length,emailSuccessCount,emailFailureCount});
+ return {configured:true,successCount,failureCount,invalidTokens,errors,successfulTokens,messageIds,emailSuccessCount,emailFailureCount,emailSuccessfulUserIds};
 }
