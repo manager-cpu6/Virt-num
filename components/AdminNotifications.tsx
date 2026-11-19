@@ -11,7 +11,7 @@ export default function AdminNotifications(){
  const[message,setMessage]=useState("");
  const[target,setTarget]=useState("all");
  const[iconType,setIconType]=useState("general");
- const[users,setUsers]=useState<{id:string;name:string;email:string;hasAndroidPush?:boolean}[]>([]);
+ const[users,setUsers]=useState<{id:string;name:string;email:string;hasAndroidPush?:boolean;hasEmailNotifications?:boolean}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0),[linkedDeviceCount,setLinkedDeviceCount]=useState(0),[unlinkedDeviceCount,setUnlinkedDeviceCount]=useState(0);
  const[serverPushConfigured,setServerPushConfigured]=useState(false);
@@ -159,7 +159,7 @@ export default function AdminNotifications(){
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
       <option value="all">All eligible users (App and/or Email preferences)</option>
-      {users.filter(u=>u.hasAndroidPush).map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email} · Android linked</option>)}
+      {users.filter(u=>u.hasAndroidPush||u.hasEmailNotifications).map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email} · {u.hasAndroidPush?"App linked":""}{u.hasAndroidPush&&u.hasEmailNotifications?" + ":""}{u.hasEmailNotifications?"Email enabled":""}</option>)}
      </select>
     </label>
     <label>Title
