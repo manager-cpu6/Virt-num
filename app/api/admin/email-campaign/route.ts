@@ -18,7 +18,7 @@ export async function POST(req:Request){
   const recipients=await collection<any>("adminEmailRecipients");
   if(action==="create"){
    const sender=String(body.sender||"") as Sender;
-   const subject=String(body.subject||"").trim();
+   const subject="A message from Numelixa";
    const html=String(body.html||"");
    if(!allowedSenders.includes(sender))return NextResponse.json({ok:false,error:"Choose a valid Numelixa sender address."},{status:400});
    if(subject.length<3||subject.length>180)return NextResponse.json({ok:false,error:"Subject must be 3–180 characters."},{status:400});
