@@ -57,12 +57,21 @@ export type PushSendResult={
 };
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const notificationIconFor=(data:Record<string,string>)=>{
+ const requested=String(data.iconType||data.notificationCategory||data.notificationIcon||"").toLowerCase().trim();
+ const allowed=new Set(["admin","number","otp","auto","payment","gift","general","user","system","numelixa","announcement","success"]);
+ if(allowed.has(requested))return "ic_notification_"+requested;
  const type=String(data.type||"").toLowerCase();
- if(type.includes("admin")||type.includes("announcement")||type==="push_test")return "ic_notification_admin";
  if(type.includes("auto")||type.includes("automation")||type.includes("background"))return "ic_notification_auto";
  if(type.includes("otp")||type.includes("verification")||type==="sms"||type.includes("code"))return "ic_notification_otp";
  if(type.includes("number")||type.includes("order")||type.includes("activation")||type.includes("purchase"))return "ic_notification_number";
- return "ic_notification_admin";
+ if(type.includes("payment")||type.includes("wallet")||type.includes("deposit")||type.includes("balance"))return "ic_notification_payment";
+ if(type.includes("gift")||type.includes("reward")||type.includes("bonus"))return "ic_notification_gift";
+ if(type.includes("system")||type.includes("maintenance"))return "ic_notification_system";
+ if(type.includes("success")||type.includes("completed"))return "ic_notification_success";
+ if(type.includes("announcement")||type.includes("news"))return "ic_notification_announcement";
+ if(type.includes("user")||type.includes("account"))return "ic_notification_user";
+ if(type.includes("numelixa")||type.includes("brand"))return "ic_notification_numelixa";
+ return "ic_notification_general";
 };
 const channelFor=(data:Record<string,string>)=>{
  const type=String(data.type||"").toLowerCase();
@@ -99,13 +108,27 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
    notificationCategory:data.iconType||data.notificationCategory||"general",
    title,body,...(copyCodePush?{code}:{})
   }).map(([key,value])=>[key,String(value)]));
+  const visibleNotification={title,body};
   const payload={
    tokens:batch,
-   // Strict data-only FCM: do not attach android.notification here. Even an
-   // empty Android notification block can be rendered by the system with a
-   // blank body/default icon before Flutter can apply the selected drawable.
+   // Include both data and a real Android notification payload. When Numelixa
+   // is backgrounded or terminated, Android/FCM renders the notification
+   // natively instead of depending on a Dart background isolate being started.
+   // When the app is foregrounded, Flutter's onMessage handler renders it.
+   notification:visibleNotification,
    data:messageData,
-   android:{priority:"high" as const,ttl:28*24*60*60*1000}
+   android:{
+    priority:"high" as const,
+    ttl:28*24*60*60*1000,
+    notification:{
+     title,body,
+     icon:notificationIconFor(messageData),
+     channelId,
+     sound:"default",
+     priority:"high" as const,
+     color:"#00D9FF"
+    }
+   }
   };
   let response;
   try{
