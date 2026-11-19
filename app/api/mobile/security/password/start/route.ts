@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireUser,tokenHash,mongoId} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {sendEmail,verificationEmail} from "@/lib/mailer";
+import {sendEmailFrom,verificationEmail} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -19,7 +19,7 @@ export async function POST(){
   if(now.getTime()-last<60*1000)return NextResponse.json({ok:false,error:"Wait 60 seconds before requesting another password code."},{status:429});
   const code=String(Math.floor(100000+Math.random()*900000));
   await users.updateOne({_id:String(user.id)},{$set:{passwordChangeLastAttemptAt:now}});
-  await sendEmail(email,"Your Numelixa password change code",verificationEmail(code));
+  await sendEmailFrom("noreply",email,"Your Numelixa password change code",verificationEmail(code));
   const tokens=await collection<any>("emailTokens");
   await tokens.deleteMany({userId:String(user.id),type:"mobile_password_change_code"});
   await tokens.insertOne({_id:mongoId(),tokenHash:tokenHash(code),userId:String(user.id),type:"mobile_password_change_code",expiresAt:new Date(now.getTime()+TTL),createdAt:now});
