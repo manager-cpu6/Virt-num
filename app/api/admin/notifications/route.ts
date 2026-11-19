@@ -111,16 +111,12 @@ export async function POST(req:Request){
   const deviceRows=await (await collection<any>("deviceTokens"))
    .find({userId:{$in:ids},platform:"android",enabled:{$ne:false}}).toArray();
   const uniqueTokens=[...new Set(deviceRows.map(x=>String(x.token||"").trim()).filter(x=>x.length>=20))];
-  if(!uniqueTokens.length){
-   return NextResponse.json({ok:false,error:"No Android push devices are linked to the selected users. Open the Numelixa Android app, sign in, and allow notifications before sending."},{status:409});
-  }
-
   let pushResult:Awaited<ReturnType<typeof sendPush>>={
    configured:false,successCount:0,failureCount:0,invalidTokens:[],errors:[]
   };
   let pushError:string|null=null;
   try{
-   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",iconType,notificationCategory:iconType,url:"/"});
+   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",iconType,notificationCategory:iconType,url:"/",userIds:ids.join(",")});
   }catch(error){
    pushError=error instanceof Error?error.message:String(error);
    console.error("[ADMIN NOTIFICATIONS PUSH]",pushError);
@@ -133,19 +129,19 @@ export async function POST(req:Request){
   // Do not create a user-visible notification record unless Firebase confirms
   // that at least one actual device received the message.
   const successfulTokens=new Set(pushResult.successfulTokens||[]);
-  const deliveredUserIds=[...new Set(deviceRows
-   .filter(row=>successfulTokens.has(String(row.token||"").trim()))
-   .map(row=>String(row.userId||""))
-   .filter(id=>id&&ids.includes(id)))];
+  const deliveredUserIds=[...new Set([
+   ...deviceRows.filter(row=>successfulTokens.has(String(row.token||"").trim())).map(row=>String(row.userId||"")),
+   ...(pushResult.emailSuccessfulUserIds||[])
+  ].filter(id=>id&&ids.includes(id)))];
 
-  if(!pushResult.configured||pushResult.successCount===0||!deliveredUserIds.length){
+  if((!pushResult.configured&&Number(pushResult.emailSuccessCount||0)===0)||(pushResult.successCount===0&&Number(pushResult.emailSuccessCount||0)===0)||!deliveredUserIds.length){
    const details=pushResult.errors?.[0]?.message;
    return NextResponse.json({
     ok:false,
     error:!pushResult.configured
      ?(details||"Firebase Push is not configured. Check Firebase Admin credentials in Vercel.")
      :details||"Firebase did not confirm delivery to any device. No notification was saved as sent.",
-    devices:uniqueTokens.length,failed:pushResult.failureCount,
+    devices:uniqueTokens.length,failed:pushResult.failureCount,emailFailed:Number(pushResult.emailFailureCount||0),
     invalidTokens:pushResult.invalidTokens.length,
     pushConfigured:pushResult.configured
    },{status:pushResult.configured?502:503});
@@ -161,7 +157,7 @@ export async function POST(req:Request){
 
   return NextResponse.json({
    ok:true,recipients:deliveredUserIds.length,targetUsers:ids.length,
-   devices:uniqueTokens.length,sent:pushResult.successCount,failed:pushResult.failureCount,
+   devices:uniqueTokens.length,sent:pushResult.successCount,failed:pushResult.failureCount,emailSent:Number(pushResult.emailSuccessCount||0),emailFailed:Number(pushResult.emailFailureCount||0),
    invalidTokens:pushResult.invalidTokens.length,
    pushConfigured:true,pushError
   });
