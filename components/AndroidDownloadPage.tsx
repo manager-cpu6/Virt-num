@@ -16,7 +16,7 @@ function PhonePreview({variant="home"}:{variant?:string}){
  return <div className={`nxdl-phone nxdl-phone-${variant}`}>
   <div className="nxdl-phone-top"><span>9:41</span><span>● ● ● ▰</span></div>
   <div className="nxdl-appbar"><img src="/numelixa-brand.svg" alt="Numelixa app icon"/><b>Numelixa</b><span>•••</span></div>
-  {variant==="home"?<><div className="nxdl-greeting"><small>YOUR NUMELIXA WALLET</small><strong>$24.80</strong><span>Available balance</span></div><div className="nxdl-quick"><i>＋</i><i>⌕</i><i>◷</i></div><div className="nxdl-phone-label">Choose a service</div><div className="nxdl-services"><span>◉<b>WhatsApp</b></span><span>✉<b>Telegram</b></span><span>◎<b>Other</b></span><span>✦<b>More</b></span></div><div className="nxdl-order"><span>Recent activity</span><b>Verification ready</b><small>Your number is waiting for a code</small></div></>:<><div className="nxdl-screen-title">Your number is ready</div><div className="nxdl-number">+1 202 ••• 0184</div><div className="nxdl-code"><small>VERIFICATION CODE</small><b>482 915</b><span>Message received securely</span></div><div className="nxdl-progress"><i/></div><div className="nxdl-order"><b>Live SMS updates</b><small>Stay up to date as your order changes</small></div></>}
+  {variant==="home"?<><div className="nxdl-greeting"><small>YOUR NUMELIXA WALLET</small><strong>— —</strong><span>Balance loads from your signed-in account</span></div><div className="nxdl-quick"><i>＋</i><i>⌕</i><i>◷</i></div><div className="nxdl-phone-label">Choose a service</div><div className="nxdl-services"><span>◉<b>WhatsApp</b></span><span>✉<b>Telegram</b></span><span>◎<b>Other</b></span><span>✦<b>More</b></span></div><div className="nxdl-order"><span>Recent activity</span><b>Your orders</b><small>Live account activity appears after sign-in</small></div></>:<><div className="nxdl-screen-title">Activation details</div><div className="nxdl-number">••• ••• ••••</div><div className="nxdl-code"><small>INCOMING SMS</small><b>Message appears here</b><span>No real number or OTP is shown in this preview</span></div><div className="nxdl-progress"><i/></div><div className="nxdl-order"><b>Live SMS updates</b><small>Stay up to date as your order changes</small></div></>}
   <div className="nxdl-bottom"><span>⌂</span><span>▣</span><span>◉</span><span>☻</span></div>
  </div>
 }
@@ -44,7 +44,7 @@ export default async function AndroidDownloadPage(){
     </div>
     <div className="nxdl-visual" aria-label="Numelixa Android app screen preview">
      <div className="nxdl-orbit nxdl-orbit-a"/><div className="nxdl-orbit nxdl-orbit-b"/>
-     <div className="nxdl-float nxdl-float-top"><span>✦</span><b>Live SMS</b><small>Stay in the loop</small></div>
+     <div className="nxdl-float nxdl-float-top"><span>✦</span><b>SMS updates</b><small>See messages when received</small></div>
      <PhonePreview/>
      <div className="nxdl-float nxdl-float-bottom"><span>✓</span><b>One simple workspace</b><small>Numbers · Wallet · Orders</small></div>
     </div>
