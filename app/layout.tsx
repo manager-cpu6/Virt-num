@@ -11,6 +11,7 @@ import "./numelixa-native-app.css";
 import "./admin-support.css";
 import "./numelixa-liquid-glass.css";
 import "./support/support.css";
+import "./numelixa-platform.css";
 import "./numelixa-public-pages.css";
 import type {Metadata} from "next";
 import {headers} from "next/headers";
