@@ -5,7 +5,7 @@ import {requireUser} from "@/lib/auth";
 import {paypalApi} from "@/lib/paypal";
 import {notifyUser} from "@/lib/notifications";
 import {mongoId} from "@/lib/mongo";
-import {sendEmail,coinPaymentSuccessEmail} from "@/lib/mailer";
+import {sendEmailFrom,coinPaymentSuccessEmail} from "@/lib/mailer";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 export async function POST(req:Request){
  try{
@@ -23,7 +23,7 @@ export async function POST(req:Request){
   await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:String(p.userId),type:"credit",amount:Number(p.coins),balanceAfter:Number(updated.coins),reference:p.orderId,description:"PayPal wallet top-up",createdAt:new Date()});
   try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(error){console.error("[PAYPAL PUSH]",error);}
-  try{const paidUser=await users.findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmail(String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),"PayPal",String(p.orderId)));}catch(error){console.error("[PAYPAL PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
+  try{const paidUser=await users.findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmailFrom("payment",String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),"PayPal",String(p.orderId)));}catch(error){console.error("[PAYPAL PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
   return NextResponse.json({ok:true,coins:Number(p.coins),balance:Number(updated.coins)});
  }catch(e){const m=e instanceof Error?e.message:"";if(m==="AUTH_REQUIRED")return NextResponse.json({ok:false,error:"Please sign in to continue."},{status:401});console.error("[PAYPAL CAPTURE]",e);return NextResponse.json({ok:false,error:"Unable to confirm PayPal payment."},{status:500});}
 }
