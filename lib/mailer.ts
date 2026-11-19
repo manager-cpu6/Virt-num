@@ -59,7 +59,7 @@ export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,ht
    catch(fallbackError){
     if(isRateLimitedError(fallbackError)){
      const fallback=fallbackConfig();
-     if(fallback){await sendWithConfig(fallback,to,subject,html);return;}
+     if(fallback){await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html);return;}
     }
     const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
     throw new Error("Spacemail SMTP error: "+message);
@@ -72,7 +72,7 @@ export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,ht
   if(isRateLimitedError(error)){
    const fallback=fallbackConfig();
    if(fallback){
-    try{await sendWithConfig(fallback,to,subject,html);return;}catch(fallbackError){
+    try{await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html);return;}catch(fallbackError){
      const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
      throw new Error("EMAIL_RATE_LIMITED: "+message);
     }
