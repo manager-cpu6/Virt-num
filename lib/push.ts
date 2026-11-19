@@ -17,7 +17,7 @@ async function firebaseApp(){
  }
  const projectId=String(settings.projectId||EXPECTED_PROJECT_ID).trim();
  const clientEmail=String(settings.clientEmail||"").trim();
- const privateKey=String(settings.privateKey||"").replace(/\\n/g,"\n").replace(/\r\n/g,"\n").trim();
+ const privateKey=String(settings.privateKey||"").replace(/\n/g,"\n").replace(/\r\n/g,"\n").trim();
  if(projectId!==EXPECTED_PROJECT_ID){
   console.error("[FCM_ADMIN_INIT_FAILURE]",{code:"firebase-project-mismatch",expectedProject:EXPECTED_PROJECT_ID,configuredProject:projectId});
   throw new Error("Firebase Admin credentials must belong to the Numelixa Firebase project.");
@@ -113,7 +113,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
     const batch=emailUsers.slice(i,i+5);
     const results=await Promise.all(batch.map(async user=>{
      try{
-      await sendEmailFrom("notification",String(user.email),escapeHtml(title),emailTemplate(escapeHtml(title),escapeHtml(body).replace(/\\n/g,"<br>"),"https://www.numelixa.com/account","Numelixa service notification"));
+      await sendEmailFrom("notification",String(user.email),escapeHtml(title),emailTemplate(escapeHtml(title),escapeHtml(body).replace(/\n/g,"<br>"),"https://www.numelixa.com/account","Numelixa service notification"));
       return {id:String(user._id),ok:true};
      }catch(error){
       console.error("[USER_NOTIFICATION_EMAIL_FAILURE]",{userId:String(user._id),message:error instanceof Error?error.message:"Email delivery failed"});
