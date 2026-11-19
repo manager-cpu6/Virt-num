@@ -99,7 +99,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
    android:{
     priority:"high" as const,
     ttl:28*24*60*60*1000,
-    ...(copyCodePush?{}:{notification:{channelId,sound:"default" as const}})
+    ...(copyCodePush?{}:{notification:{channelId,sound:"default" as const,icon:notificationIconFor(data)}})
    }
   };
   let response;
