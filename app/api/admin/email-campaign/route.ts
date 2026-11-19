@@ -6,7 +6,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 const allowedSenders=["info","noreply","team"] as const;
 type Sender=typeof allowedSenders[number];
-const BATCH_SIZE=10;
+const BATCH_SIZE=5;
 function safeHtml(input:string){return input.replace(/<script\b[^>]*>[\s\S]*?<\/script\s*>/gi,"").replace(/\son\w+\s*=\s*(["']).*?\1/gi,"").replace(/(href|src)\s*=\s*(["'])\s*javascript:[\s\S]*?\2/gi,'$1="#"');}
 async function counts(campaignId:string){const rows=await collection<any>("adminEmailRecipients");const [sent,failed,pending,sending]=await Promise.all([rows.countDocuments({campaignId,status:"sent"}),rows.countDocuments({campaignId,status:"failed"}),rows.countDocuments({campaignId,status:"pending"}),rows.countDocuments({campaignId,status:"sending"})]);return{sent,failed,pending,sending,remaining:pending+sending};}
 export async function POST(req:Request){
