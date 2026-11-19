@@ -44,7 +44,9 @@ function flag(iso:string){
 export async function GET(req:Request){
   try{
     if(!(await providerConfigured()))return NextResponse.json({ok:false,live:false,countries:[],error:"Number service is temporarily unavailable. Please try again shortly."},{status:503});
-    const params=new URL(req.url).searchParams;\n    const service=params.get("service")||"";\n    const includeUnavailable=params.get("includeUnavailable")==="1";
+    const params=new URL(req.url).searchParams;
+    const service=params.get("service")||"";
+    const includeUnavailable=params.get("includeUnavailable")==="1";
     if(!service)return NextResponse.json({ok:false,error:"Service is required."},{status:400});
     const [countries,settings]=await Promise.all([listCountries(),getSettings()]);
     const prices=await servicePrices(service,countries);
