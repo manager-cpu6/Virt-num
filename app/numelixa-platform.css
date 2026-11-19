@@ -373,3 +373,18 @@ input::placeholder,textarea::placeholder{color:var(--nx-subtle)!important}
 .nx-chooser-logo{display:grid!important;place-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important}
 .nx-chooser-logo img{width:34px!important;height:34px!important;object-fit:contain!important}
 .nx-public-brand img{display:inline-block!important;vertical-align:middle!important}
+
+
+.nx-security-grid{max-width:1160px!important;margin:24px auto!important;display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:13px!important}
+.nx-security-grid article{padding:23px!important;background:var(--nx-surface)!important;border:1px solid var(--nx-border)!important;border-radius:20px!important}
+.nx-security-number{display:inline-grid!important;place-items:center!important;width:34px!important;height:34px!important;border-radius:10px!important;background:rgba(57,216,232,.1)!important;color:var(--nx-cyan)!important;font-size:11px!important;font-weight:900!important}
+.nx-security-grid h2{font-size:17px!important;margin:15px 0 8px!important}
+.nx-security-grid p{font-size:13px!important;line-height:1.75!important;color:var(--nx-muted)!important;margin:0!important}
+.nx-security-note{max-width:1160px!important;margin:32px auto!important;padding:25px!important;display:grid!important;grid-template-columns:1fr auto!important;gap:25px!important;align-items:center!important;border:1px solid var(--nx-border-strong)!important;border-radius:22px!important;background:var(--nx-surface)!important}
+.nx-security-note h2{font-size:24px!important;margin:8px 0!important}
+.nx-security-note p{max-width:680px!important;color:var(--nx-muted)!important;font-size:13px!important;line-height:1.7!important}
+.nx-security-note>div:last-child{display:grid!important;gap:9px!important;min-width:220px!important}
+.nx-security-note>div:last-child b{font-size:12px!important}
+.nx-security-note>div:last-child strong{font-size:14px!important;color:var(--nx-text)!important}
+.nx-security-note>div:last-child a{font-size:12px!important;color:var(--nx-cyan)!important;font-weight:800!important}
+@media(max-width:700px){.nx-security-grid{grid-template-columns:1fr!important}.nx-security-note{grid-template-columns:1fr!important;padding:20px!important}}
