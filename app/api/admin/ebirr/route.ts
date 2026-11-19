@@ -7,7 +7,8 @@ import {notifyUser} from "@/lib/notifications";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 // Payment service settings are shared by the website checkout and the paired admin APK.
 const methodNames:Record<string,string>={coopay_ebirr:"Coopay eBirr",kaafi_ebirr:"Kaafi eBirr",cbe_birr:"CBE Birr",cbe_bank:"CBE Bank Transfer",mpesa:"M-Pesa",telebirr:"Telebirr"};
-function methodsFor(s:any){const saved=s?.ethiopiaPaymentMethods||{};return Object.fromEntries(Object.entries(methodNames).map(([id,name])=>{const x=saved[id]||{},legacy=s?.ebirrOpen===true&&id==="coopay_ebirr";return [id,{name,open:typeof x.open==="boolean"?x.open:legacy,receiver:String(x.receiver??(id==="coopay_ebirr"?String(s?.ebirrReceiver||""):"")),instructions:String(x.instructions??s?.ebirrInstructions??"")}];}));}
+const ussdDefaults:Record<string,string>={coopay_ebirr:"*841#",kaafi_ebirr:"*681*{receiver}*{amount}#",cbe_birr:"*847#",cbe_bank:"*889#",mpesa:"",telebirr:""};
+function methodsFor(s:any){const saved=s?.ethiopiaPaymentMethods||{};return Object.fromEntries(Object.entries(methodNames).map(([id,name])=>{const x=saved[id]||{},legacy=s?.ebirrOpen===true&&id==="coopay_ebirr";return [id,{name,open:typeof x.open==="boolean"?x.open:legacy,receiver:String(x.receiver??(id==="coopay_ebirr"?String(s?.ebirrReceiver||""):"")),instructions:String(x.instructions??s?.ebirrInstructions??""),ussdCode:String(x.ussdCode??ussdDefaults[id]??"")}];}));}
 
 export async function GET(){
  try{
@@ -35,7 +36,7 @@ export async function POST(req:Request){
    for(const [id,name] of Object.entries(methodNames)){
     const x=input[id]||current[id],open=x?.open===true,receiver=String(x?.receiver||"").trim().replace(/[\s()+-]/g,"");
     if(open){const bank=id==="cbe_bank",valid=bank?/^[0-9]{10,16}$/.test(receiver):((receiver.length===12&&receiver.startsWith("251")&&["7","9"].includes(receiver[3]))||(receiver.length===10&&receiver.startsWith("0")&&["7","9"].includes(receiver[1])));if(!valid)return NextResponse.json({ok:false,error:"Enter a valid receiving number for "+name+" before opening it."},{status:400});}
-    next[id]={name,open,receiver:receiver.startsWith("251")?"+"+receiver:receiver,instructions:String(x?.instructions||baseInstructions).trim().slice(0,800)};
+    next[id]={name,open,receiver:receiver.startsWith("251")?"+"+receiver:receiver,instructions:String(x?.instructions||baseInstructions).trim().slice(0,800),ussdCode:String(x?.ussdCode||ussdDefaults[id]||"").trim().slice(0,100)};
    }
    const e=next.coopay_ebirr;
    await settings.updateOne({_id:"payments"},{$set:{ebirrOpen:e.open,ebirrRateEtbPerUsd:rate,ebirrReceiver:e.receiver,ebirrInstructions:e.instructions,ethiopiaPaymentMethods:next,ebirrSmsReceivingPhone:smsReceivingPhone.startsWith("251")?"0"+smsReceivingPhone.slice(3):smsReceivingPhone,updatedAt:new Date()}},{upsert:true});
