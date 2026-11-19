@@ -2,7 +2,7 @@ import crypto from "crypto";
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
 import {tokenHash} from "@/lib/auth";
-import {sendEmail,emailTemplate} from "@/lib/mailer";
+import {sendEmailFrom,emailTemplate} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -35,7 +35,7 @@ export async function POST(req:Request){
    const expiresAt=new Date(now.getTime()+TTL);
    await approvals.updateOne({_id:row._id,status:"pending"},{$set:{emailCodeHash:tokenHash(plain),emailCodeExpiresAt:expiresAt,emailCodeSentAt:now,emailCodeAttempts:0}});
    const message="Hello "+String(user?.name||"there")+",\\n\\nYou requested an alternative way to approve a Numelixa sign-in because your registered device may be unavailable.\\n\\nYour one-time approval code is: "+plain+"\\n\\nThis code expires in 10 minutes and can be used only for this login request. If you did not try to sign in, do not share this code; return to Numelixa and deny the request or let it expire.\\n\\nLogin details: "+String(row.device||"Browser")+" · "+String(row.browser||"Browser")+" · "+[row.city,row.country].filter(Boolean).join(", ")+"\\n\\nNumelixa Account Security";
-   await sendEmail(email,"Your Numelixa login approval code",emailTemplate("Alternative sign-in verification",message,"https://numelixa.com/login","Your one-time Numelixa login approval code."));
+   await sendEmailFrom("noreply",email,"Your Numelixa login approval code",emailTemplate("Alternative sign-in verification",message,"https://numelixa.com/login","Your one-time Numelixa login approval code."));
    return NextResponse.json({ok:true,message:"A one-time approval code was sent to your account email.",expiresInSeconds:600});
   }
   if(action==="verify"){
