@@ -27,7 +27,7 @@ export function canonicalServiceBrand(id:string,name:string){
  const normalize=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
  const a=normalize(id),b=normalize(name);
  const keys=Object.keys(aliases).sort((x,y)=>y.length-x.length);
- for(const key of keys){if(a===key||a.startsWith(key)||b===key||b.startsWith(key))return aliases[key]}
+ for(const key of keys){if(a===key||b===key||(key.length>=3&&(a.startsWith(key)||b.startsWith(key))))return aliases[key]}
  return a||b||"";
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
