@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {sendEmail,emailTemplate} from "@/lib/mailer";
+import {sendEmailFrom,emailTemplate} from "@/lib/mailer";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
@@ -28,7 +28,7 @@ export async function PATCH(req:Request){
     const name=String(ticket.userName||"there"),subject=String(ticket.subject||"Support request");
     const safe=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
     const body="Hello "+safe(name)+",<br><br>Your Numelixa Support request has been marked as solved by our support team.<br><br>Ticket ID: "+safe(id)+"<br>Subject: "+safe(subject)+"<br>Status: Solved<br><br>If you still need help, you can submit a new request at https://support.numelixa.com.<br><br>Thank you for using Numelixa.<br><br>Numelixa Support Team";
-    try{await sendEmail(recipient,"Your Numelixa support request has been solved — #"+id,emailTemplate("Your request has been solved",body,"https://support.numelixa.com","Your Numelixa support ticket has been marked as solved."));}
+    try{await sendEmailFrom("team",recipient,"Your Numelixa support request has been solved — #"+id,emailTemplate("Your request has been solved",body,"https://support.numelixa.com","Your Numelixa support ticket has been marked as solved."));}
     catch(error){console.error("[SUPPORT SOLVED EMAIL]",error);return NextResponse.json({ok:false,error:"The solved email could not be sent, so the ticket remains open. Check the mail server and try again."},{status:502})}
   }
   const r=await tickets.updateOne({_id:id,status:{$ne:"resolved"}},{$set:{status,updatedAt:new Date(),...(status==="resolved"?{solvedEmailSentAt:new Date() }:{})}});
