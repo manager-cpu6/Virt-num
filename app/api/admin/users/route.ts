@@ -15,7 +15,7 @@ export async function GET(){
   return NextResponse.json({ok:true,users:rows.map(u=>({
    id:String(u._id),publicId:String(u.publicId||""),email:u.email||null,phone:u.phone||null,name:u.name||null,role:u.role,coins:Number(u.coins||0),
    hasAndroidPush:pushUserIds.has(String(u._id)),
-   verified_at:u.verifiedAt||null,created_at:u.createdAt,suspended_at:u.suspendedAt||null,suspension_reason:u.suspensionReason||""
+   verified_at:u.verifiedAt||null,badge_verified_at:u.badgeVerifiedAt||null,badge_verified_by:u.badgeVerifiedBy||null,created_at:u.createdAt,suspended_at:u.suspendedAt||null,suspension_reason:u.suspensionReason||""
   }))},{headers:{"Cache-Control":"no-store"}});
  }catch{return NextResponse.json({ok:false,error:"Unauthorized"},{status:401})}
 }
