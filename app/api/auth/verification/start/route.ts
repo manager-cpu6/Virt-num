@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireUser,tokenHash,mongoId} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {sendEmail,verificationEmail} from "@/lib/mailer";
+import {sendEmailFrom,verificationEmail} from "@/lib/mailer";
 import {notifyUser} from "@/lib/notifications";
 
 export const runtime="nodejs";
@@ -81,7 +81,7 @@ export async function POST(req:Request){
   await (await collection<any>("users")).updateOne({_id:u.id},{$set:{verificationEmailLastAttemptAt:now}});
 
   try{
-   await sendEmail(u.email,"Your Numelixa verification code",verificationEmail(code));
+   await sendEmailFrom("noreply",u.email,"Your Numelixa verification code",verificationEmail(code));
   }catch(error){
    const message=error instanceof Error?error.message:String(error);
    if(message.startsWith("EMAIL_RATE_LIMITED:")){
