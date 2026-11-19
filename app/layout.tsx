@@ -56,6 +56,6 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
      </div>
     </SystemMaintenanceGate>
   }
-  {!isDownloadHost&&!isSupportHost&&!isCheckoutHost&&<CookieConsent/>}
+  {!isDownloadHost&&!isSupportHost&&!isCheckoutHost&&!websiteMaintenance&&<CookieConsent/>}
  </body></html>;
 }
