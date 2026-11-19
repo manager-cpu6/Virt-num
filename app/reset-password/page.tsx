@@ -40,7 +40,7 @@ function ResetForm(){
 export default function Reset(){
   return (
     <div className="auth-page">
-      <div className="brand-mark">N</div>
+      <div className="brand-mark"><img src="/numelixa-brand.svg" alt="Numelixa" width="42" height="42"/></div>
       <h1>Choose a new password</h1>
       <p>Set a new secure password for your account.</p>
       <Suspense fallback={<div className="form-card">Loading…</div>}>
