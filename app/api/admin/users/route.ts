@@ -55,7 +55,7 @@ export async function PATCH(req:Request){
    return NextResponse.json({ok:true,suspended:true});
   }
   await users.updateOne({_id:id},{$unset:{suspendedAt:"",suspensionReason:""},$set:{suspensionUpdatedAt:now}});
-  try{if(user.email)await sendEmail(String(user.email),"Your Numelixa account suspension has been lifted",emailTemplate("Account restored","The suspension on your Numelixa account has been lifted. You may sign in again and continue using your account. If you need help, contact our Support team.","https://numelixa.com/login","Numelixa account restored"));}catch(e){console.error("[UNSUSPENSION EMAIL]",e)}
+  try{if(user.email)await sendEmailFrom("notification",String(user.email),"Your Numelixa account suspension has been lifted",emailTemplate("Account restored","The suspension on your Numelixa account has been lifted. You may sign in again and continue using your account. If you need help, contact our Support team.","https://numelixa.com/login","Numelixa account restored"));}catch(e){console.error("[UNSUSPENSION EMAIL]",e)}
   return NextResponse.json({ok:true,suspended:false});
  }catch(error){
   const message=error instanceof Error?error.message:"";
