@@ -94,11 +94,9 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const messageData=Object.fromEntries(Object.entries({url:data.url||"/",...data,title,body,...(copyCodePush?{code}:{})}).map(([key,value])=>[key,String(value)]));
   const payload={
    tokens:batch,
-   // Foreground messages are rendered by Flutter; background notification payloads are rendered by Android.
-   // Notification payloads are rendered by Android automatically while the
-   // app is backgrounded or terminated. Flutter handles onMessage in the
-   // foreground, so the background isolate must not display them again.
-   notification:{title,body},
+   // Data-only, high-priority FCM is intentional: the Android background isolate
+   // must receive iconType before a notification is rendered, so it can select
+   // the correct monochrome drawable instead of Firebase using one default icon.
    data:messageData,
    android:{priority:"high" as const,ttl:28*24*60*60*1000,notification:{channelId,priority:"high" as const,defaultSound:true}}
   };
