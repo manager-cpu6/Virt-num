@@ -11,6 +11,10 @@ export async function GET(req:Request){
     const device=(headers.get("x-numelixa-device")||"").trim().toLowerCase();
     const appVersion=(headers.get("x-numelixa-app-version")||"").trim().toLowerCase();
     const sdk=Number(headers.get("x-numelixa-android-sdk")||0);
+    const maintenance=await (await collection<any>("settings")).findOne({_id:"systemMaintenance"});
+    if(maintenance?.appEnabled===true){
+      return NextResponse.json({ok:true,allowed:false,reason:"maintenance",maintenance:true,message:String(maintenance.message||"Numelixa is temporarily under maintenance."),chatOnly:true,whatsapp:"",contactUrl:"/support/chat"},{headers:{"Cache-Control":"no-store"}});
+    }
     const saved=await (await collection<any>("settings")).findOne({_id:"mobileAccess"});
     const bannedCountries=Array.isArray(saved?.bannedCountries)?saved.bannedCountries.map((x:any)=>String(x).toUpperCase()):[];
     const blockedDevices=Array.isArray(saved?.blockedDevices)?saved.blockedDevices.map((x:any)=>String(x).trim().toLowerCase()).filter(Boolean):[];
