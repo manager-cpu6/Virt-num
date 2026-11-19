@@ -178,14 +178,14 @@ export default function AdminNotifications(){
      <label>Notification Icon</label>
      <div className="notification-icon-grid" role="group" aria-label="Notification Icon">
       {[
-       ["admin","Admin","♛"],["number","Number","#"],["otp","OTP","✓"],["auto","Auto","↻"],
-       ["payment","Payment","$"],["gift","Gift","◇"],["general","General","♧"],["user","User","◉"],
-       ["system","System","⚙"],["numelixa","Numelixa","N"],["announcement","Announcement","▰"],["success","Success","✓"]
-      ].map(([id,label,symbol])=><button key={id} type="button" className={"notification-icon-option"+(iconType===id?" selected":"")} aria-pressed={iconType===id} onClick={()=>setIconType(id)}>
-       <span className="notification-icon-symbol" aria-hidden="true">{symbol}</span><span>{label}</span>
+       ["admin","Admin"],["number","Number"],["otp","OTP"],["auto","Auto"],
+       ["payment","Payment"],["gift","Gift"],["general","General"],["user","User"],
+       ["system","System"],["numelixa","Numelixa"],["announcement","Announcement"],["success","Success"]
+      ].map(([id,label])=><button key={id} type="button" className={"notification-icon-option"+(iconType===id?" selected":"")} aria-pressed={iconType===id} onClick={()=>setIconType(id)}>
+       <span className="notification-icon-symbol" aria-hidden="true"><NotificationIcon type={id}/></span><span>{label}</span>
       </button>)}
      </div>
-     <div className="notification-icon-preview"><span className="notification-icon-preview-symbol">{({admin:"♛",number:"#",otp:"✓",auto:"↻",payment:"$",gift:"◇",general:"♧",user:"◉",system:"⚙",numelixa:"N",announcement:"▰",success:"✓"} as Record<string,string>)[iconType]||"♧"}</span><span>Selected icon: <b>{iconType.charAt(0).toUpperCase()+iconType.slice(1)}</b></span></div>
+     <div className="notification-icon-preview"><span className="notification-icon-preview-symbol"><NotificationIcon type={iconType}/></span><span>Selected icon: <b>{iconType.charAt(0).toUpperCase()+iconType.slice(1)}</b></span></div>
     </div>
     <label>Message
      <textarea value={message} onChange={e=>setMessage(e.target.value)} maxLength={500} rows={5} placeholder="Write the notification…"/>
@@ -212,6 +212,25 @@ export default function AdminNotifications(){
   </Table>
   <style jsx>{`.notification-icon-field{display:grid;gap:9px}.notification-icon-field>label{font-size:12px;font-weight:800;color:#c8e9e9}.notification-icon-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.notification-icon-option{min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(121,246,229,.14);border-radius:13px;background:rgba(2,28,35,.48);color:#9bbfc0;font-size:10px;font-weight:700;cursor:pointer}.notification-icon-option.selected{border-color:#31d7d1;background:rgba(20,173,173,.18);color:#efffff;box-shadow:0 0 0 1px rgba(49,215,209,.22),0 0 18px rgba(49,215,209,.12)}.notification-icon-symbol{width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:rgba(65,210,220,.12);color:#67e5ec;font-size:21px;font-weight:900}.notification-icon-preview{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:12px;background:rgba(1,23,30,.52);color:#9bc2c3;font-size:11px}.notification-icon-preview-symbol{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(65,210,220,.15);color:#fff;font-size:21px;font-weight:900}.notification-icon-preview b{color:#e8ffff}.history-icon-type{display:inline-block;padding:3px 6px;border-radius:6px;background:rgba(65,210,220,.12);color:#67e5ec;font-size:9px;text-transform:uppercase;letter-spacing:.4px}@media(max-width:420px){.notification-icon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}`}</style>
  </div>;
+}
+
+
+function NotificationIcon({type}:{type:string}){
+ const common={width:20,height:20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:2,strokeLinecap:"round" as const,strokeLinejoin:"round" as const};
+ switch(type){
+  case "admin":return <svg {...common}><path d="M12 3 20 6v5c0 5-3.4 8.2-8 10-4.6-1.8-8-5-8-10V6l8-3Z"/><path d="m9 12 2 2 4-4"/></svg>;
+  case "number":return <svg {...common}><path d="M4 9h16M3 15h16M10 3 8 21M16 3l-2 18"/></svg>;
+  case "otp":return <svg {...common}><path d="M21 11.5a8.4 8.4 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.4 8.4 0 0 1-3.8-.9L3 21l1.9-5.7a8.4 8.4 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.4 8.4 0 0 1 3.8-.9h.5a8.5 8.5 0 0 1 8 8v.5Z"/><path d="m8.5 12 2.2 2.2 4.8-4.8"/></svg>;
+  case "auto":return <svg {...common}><path d="M20 7v5h-5"/><path d="M4 17v-5h5"/><path d="M5.6 9A7 7 0 0 1 18 6l2 6M4 12l2 6a7 7 0 0 0 12.4-3"/></svg>;
+  case "payment":return <svg {...common}><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="M2.5 10h19M7 15h3"/></svg>;
+  case "gift":return <svg {...common}><rect x="3" y="9" width="18" height="12" rx="2"/><path d="M12 9v12M3 13h18M12 9H7.5a2.5 2.5 0 1 1 2.5-2.5V9Zm0 0h4.5a2.5 2.5 0 1 0-2.5-2.5V9Z"/></svg>;
+  case "user":return <svg {...common}><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>;
+  case "system":return <svg {...common}><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z"/><path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.7a8 8 0 0 1-1.6.9L16 21h-8l-.2-2.2a8 8 0 0 1-1.6-.9l-1.7.7-1.4-2.4 1.4-1.1A8 8 0 0 1 4.5 13l-1.4-1.1 1.4-2.4 1.7.7a8 8 0 0 1 1.6-.9L8 7h8l.2 2.3a8 8 0 0 1 1.6.9l1.7-.7 1.4 2.4-1.4 1.1a8 8 0 0 1-.1 2Z"/></svg>;
+  case "numelixa":return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="M7.5 16V8l9 8V8"/></svg>;
+  case "announcement":return <svg {...common}><path d="m3 11 18-5v12L3 13v-2Z"/><path d="M11 15.2 13 21H8l-2-7.2M21 10l2-2M21 14l2 2"/></svg>;
+  case "success":return <svg {...common}><circle cx="12" cy="12" r="9"/><path d="m8 12 2.5 2.5L16.5 8.5"/></svg>;
+  default:return <svg {...common}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM10 21h4"/></svg>;
+ }
 }
 
 function Table({title,children}:{title:string;children:React.ReactNode}){
