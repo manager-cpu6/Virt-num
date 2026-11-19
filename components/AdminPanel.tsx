@@ -202,7 +202,7 @@ function UsersTable({users,coinsPerUsd=100,onAdjust,onDelete,onSuspension,onVeri
    <div className="coin-actions">
     <Link href={"/admin/users/"+encodeURIComponent(u.id)} className="secondary-btn">History / ID</Link>
     <button onClick={()=>onAdjust(u,"add")}>+ Add USD</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set balance</button>
-    {u.role!=="admin"&&!u.verified_at&&<button className="nx-admin-verify-user" onClick={()=>onVerify(u)}>✓ Verify email</button>}<button className="nx-admin-verify-user" onClick={()=>onBadge(u,!u.badge_verified_at)}>{u.badge_verified_at?"Remove verified badge":"Grant verified badge"}</button>
+    {u.role!=="admin"&&!u.verified_at&&<button className="nx-admin-verify-user" onClick={()=>onVerify(u)}>✓ Verify email</button>}{u.role!=="admin"&&<button className="nx-admin-verify-user" onClick={()=>onBadge(u,!u.badge_verified_at)}>{u.badge_verified_at?"Remove verified badge":"Grant verified badge"}</button>}
     {u.role!=="admin"&&<button className="nx-admin-password-user" onClick={()=>onPassword(u)}>Change password</button>}
     {u.role!=="admin"&&<button onClick={()=>onSuspension(u,u.suspended_at?"unsuspend":"suspend")}>{u.suspended_at?"Unsuspend":"Suspend"}</button>}
     {u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}
