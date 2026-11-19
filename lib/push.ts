@@ -95,8 +95,12 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const payload={
    tokens:batch,
    // Data-only FCM lets Flutter choose the exact notification artwork and prevents Android from rendering a duplicate system notification.
+   // Notification payloads are rendered by Android automatically while the
+   // app is backgrounded or terminated. Flutter handles onMessage in the
+   // foreground, so the background isolate must not display them again.
+   notification:{title,body},
    data:messageData,
-   android:{priority:"high" as const,ttl:28*24*60*60*1000}
+   android:{priority:"high" as const,ttl:28*24*60*60*1000,notification:{channelId,priority:"high" as const,defaultSound:true}}
   };
   let response;
   try{
