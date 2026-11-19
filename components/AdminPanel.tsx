@@ -23,13 +23,6 @@ export default function AdminPanel(){
  async function loadStats(){const r=await fetch("/api/admin/stats",{cache:"no-store"});const d=await r.json();d.ok?setStats(d):setError(d.error||"Unable to load admin data")}
  async function loadData(t=tab){if(t==="users"){const r=await fetch("/api/admin/users",{cache:"no-store"});const d=await r.json();if(d.ok)setUsers(d.users||[]);else setError(d.error||"Unable to load users")}if(t==="orders"||t==="active otp"){const r=await fetch("/api/admin/orders",{cache:"no-store"});const d=await r.json();if(d.ok)setOrders(d.orders||[]);else setError(d.error||"Unable to load orders")}}
  async function refresh(){setRefreshing(true);setError("");await Promise.all([loadStats(),loadData(tab)]);setRefreshing(false)}
- async function testEmail(){
-  setEmailTestBusy(true);setError("");setSaved("");
-  try{const r=await fetch("/api/admin/email-test",{method:"POST"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Email test failed.");setSaved(d.message||"Test email accepted. Check the admin inbox.");window.setTimeout(()=>setSaved(""),6000);}
-  catch(e){setError(e instanceof Error?e.message:"Email test failed.")}
-  finally{setEmailTestBusy(false)}
- }
-
  useEffect(()=>{loadStats()},[]);
  useEffect(()=>{loadData(tab)},[tab]);
 
