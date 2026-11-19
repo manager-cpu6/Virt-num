@@ -13,7 +13,7 @@ import "./numelixa-liquid-glass.css";
 import "./support/support.css";
 import "./numelixa-public-pages.css";
 import "./numelixa-platform.css";
-import type {Metadata} from "next";
+import type {Metadata,Viewport} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
 import MobileAppBootstrap from "@/components/MobileAppBootstrap";
@@ -33,8 +33,9 @@ export const metadata:Metadata={
  icons:{icon:[{url:"/numelixa-brand.svg",type:"image/svg+xml"}],apple:"/numelixa-favicon.png"},
  openGraph:{type:"website",url:"https://numelixa.com/",siteName:"Numelixa",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers, SMS verification, wallet and native mobile notifications.",images:[{url:"https://numelixa.com/numelixa-favicon.png",width:512,height:512,alt:"Numelixa app logo"}]},
  twitter:{card:"summary_large_image",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers, SMS verification and native mobile alerts.",images:["https://numelixa.com/numelixa-favicon.png"]},
- manifest:"/manifest.webmanifest",themeColor:"#020718"
+ manifest:"/manifest.webmanifest"
 };
+export const viewport:Viewport={themeColor:"#050b18"};
 export default async function RootLayout({children}:{children:React.ReactNode}){
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
  const isDocsHost=host==="docs.numelixa.com";
