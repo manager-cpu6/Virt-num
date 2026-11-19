@@ -2,20 +2,16 @@ import Link from "next/link";
 
 async function getRelease(){
   try{
-    const [r,s]=await Promise.all([
-      fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"}),
-      fetch("https://raw.githubusercontent.com/manager-cpu6/Numelixa-app/main/pubspec.yaml",{cache:"no-store"})
-    ]);
-    if(!r.ok||!s.ok)return null;
-    const [release,source]=await Promise.all([r.json(),s.text()]);
+    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/latest",{headers:{Accept:"application/vnd.github+json"},cache:"no-store"});
+    if(!response.ok)return null;
+    const release=await response.json();
     if(release.draft||release.prerelease)return null;
-    const version=source.match(/^version:\s*([\d.]+\+\d+)\s*$/m)?.[1]||"";
+    const version=String(release.name||"").match(/([\\d.]+\\+[\\d]+)/)?.[1]||"";
     const apk=release.assets?.find((a:any)=>a.name==="Numelixa.apk");
     if(!version||!apk||apk.size<20*1024*1024)return null;
     return {version,size:(apk.size/1024/1024).toFixed(1),date:apk.updated_at};
   }catch{return null}
 }
-
 function PhonePreview({variant="home"}:{variant?:string}){
  return <div className={`nxdl-phone nxdl-phone-${variant}`}>
   <div className="nxdl-phone-top"><span>9:41</span><span>● ● ● ▰</span></div>
