@@ -11,7 +11,7 @@ const aliases:Record<string,string>={
  rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",vb:"viber",viber:"viber",sg:"signal",signal:"signal",
  vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",ebay:"ebay",uber:"uber",airbnb:"airbnb",pinterest:"pinterest",twitch:"twitch",
  steam:"steam",dropbox:"dropbox",slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail",
- "1xbet":"1xbet","1bet":"1xbet",vercel:"vercel"
+ "1xbet":"1xbet","1bet":"1xbet",vercel:"vercel",xbox:"xbox",playstation:"playstation",epicgames:"epicgames",roblox:"roblox",coinbase:"coinbase",kucoin:"kucoin",bitget:"bitget",grab:"grab",bolt:"bolt",olx:"olx",shopee:"shopee",rakuten:"rakuten",tinder:"tinder",bumble:"bumble",wechat:"wechat",line:"line",yahoo:"yahoo",hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda"
 };
 const domains:Record<string,string>={
  whatsapp:"whatsapp.com",facebook:"facebook.com",instagram:"instagram.com",threads:"threads.net",telegram:"telegram.org",tiktok:"tiktok.com",
@@ -21,14 +21,14 @@ const domains:Record<string,string>={
  netflix:"netflix.com",viber:"viber.com",signal:"signal.org",vk:"vk.com",yandex:"yandex.com",binance:"binance.com",bybit:"bybit.com",
  okx:"okx.com",ebay:"ebay.com",uber:"uber.com",airbnb:"airbnb.com",pinterest:"pinterest.com",twitch:"twitch.tv",steam:"steampowered.com",
  dropbox:"dropbox.com",slack:"slack.com",zoom:"zoom.us",notion:"notion.so",canva:"canva.com",figma:"figma.com",capcut:"capcut.com",protonmail:"proton.me",
- "1xbet":"1xbet.com",vercel:"vercel.com"
+ "1xbet":"1xbet.com",vercel:"vercel.com",xbox:"xbox.com",playstation:"playstation.com",epicgames:"epicgames.com",roblox:"roblox.com",coinbase:"coinbase.com",kucoin:"kucoin.com",bitget:"bitget.com",grab:"grab.com",bolt:"bolt.eu",olx:"olx.com",shopee:"shopee.com",rakuten:"rakuten.com",tinder:"tinder.com",bumble:"bumble.com",wechat:"wechat.com",line:"line.me",yahoo:"yahoo.com",hulu:"hulu.com",disneyplus:"disneyplus.com",paramountplus:"paramountplus.com",bookingdotcom:"booking.com",expedia:"expedia.com",agoda:"agoda.com"
 };
 export function canonicalServiceBrand(id:string,name:string){
  const normalize=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
  const a=normalize(id),b=normalize(name);
  const keys=Object.keys(aliases).sort((x,y)=>y.length-x.length);
  for(const key of keys){if(a===key||b===key||(key.length>=3&&(a.startsWith(key)||b.startsWith(key))))return aliases[key]}
- return a||b||"";
+ return "";
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
  const [attempt,setAttempt]=useState(0);
