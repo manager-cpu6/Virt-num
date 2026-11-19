@@ -51,7 +51,7 @@ function compareVersions(left:string,right:string){
 
 async function getRollingRelease(){
   try{
-    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest",{
+    const response=await fetch("https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/latest",{
       headers:{Accept:"application/vnd.github+json"},
       cache:"no-store"
     });
