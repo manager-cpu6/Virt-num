@@ -2,7 +2,7 @@
 import {useEffect,useState} from "react";
 
 type Sent={
- id:string;title:string;message:string;target:string;createdAt:string;
+ id:string;title:string;message:string;target:string;createdAt:string;iconType?:string;
  sentCount:number;failureCount?:number;pushConfigured?:boolean
 };
 
@@ -10,6 +10,7 @@ export default function AdminNotifications(){
  const[title,setTitle]=useState("");
  const[message,setMessage]=useState("");
  const[target,setTarget]=useState("all");
+ const[iconType,setIconType]=useState("general");
  const[users,setUsers]=useState<{id:string;name:string;email:string;hasAndroidPush?:boolean}[]>([]);
  const[history,setHistory]=useState<Sent[]>([]);
  const[deviceCount,setDeviceCount]=useState(0),[linkedDeviceCount,setLinkedDeviceCount]=useState(0),[unlinkedDeviceCount,setUnlinkedDeviceCount]=useState(0);
@@ -98,7 +99,7 @@ export default function AdminNotifications(){
     method:"POST",
     headers:{"Content-Type":"application/json"},
     credentials:"include",
-    body:JSON.stringify({title,message,target})
+    body:JSON.stringify({title,message,target,iconType})
    });
    const d=await r.json();
 
@@ -127,6 +128,7 @@ export default function AdminNotifications(){
 
    setTitle("");
    setMessage("");
+   setIconType("general");
    load();
   }finally{
    setBusy(false);
@@ -172,6 +174,19 @@ export default function AdminNotifications(){
     <label>Title
      <input value={title} onChange={e=>setTitle(e.target.value)} maxLength={80} placeholder="e.g. New Numelixa update"/>
     </label>
+    <div className="notification-icon-field">
+     <label>Notification Icon</label>
+     <div className="notification-icon-grid" role="group" aria-label="Notification Icon">
+      {[
+       ["admin","Admin","♛"],["number","Number","#"],["otp","OTP","✓"],["auto","Auto","↻"],
+       ["payment","Payment","$"],["gift","Gift","◇"],["general","General","♧"],["user","User","◉"],
+       ["system","System","⚙"],["numelixa","Numelixa","N"],["announcement","Announcement","▰"],["success","Success","✓"]
+      ].map(([id,label,symbol])=><button key={id} type="button" className={"notification-icon-option"+(iconType===id?" selected":"")} aria-pressed={iconType===id} onClick={()=>setIconType(id)}>
+       <span className="notification-icon-symbol" aria-hidden="true">{symbol}</span><span>{label}</span>
+      </button>)}
+     </div>
+     <div className="notification-icon-preview"><span className="notification-icon-preview-symbol">{({admin:"♛",number:"#",otp:"✓",auto:"↻",payment:"$",gift:"◇",general:"♧",user:"◉",system:"⚙",numelixa:"N",announcement:"▰",success:"✓"} as Record<string,string>)[iconType]||"♧"}</span><span>Selected icon: <b>{iconType.charAt(0).toUpperCase()+iconType.slice(1)}</b></span></div>
+    </div>
     <label>Message
      <textarea value={message} onChange={e=>setMessage(e.target.value)} maxLength={500} rows={5} placeholder="Write the notification…"/>
     </label>
@@ -185,7 +200,7 @@ export default function AdminNotifications(){
    {history.length
     ?history.map(x=><div className="admin-notification-history" key={x.id}>
       <div>
-       <b>{x.title}</b>
+       <b><span className="history-icon-type">{x.iconType||"general"}</span> {x.title}</b>
        <p>{x.message}</p>
        <small>
         {new Date(x.createdAt).toLocaleString()} · {x.sentCount||0} push sent
@@ -201,3 +216,6 @@ export default function AdminNotifications(){
 function Table({title,children}:{title:string;children:React.ReactNode}){
  return <div className="admin-card"><h2>{title}</h2>{children}</div>;
 }
+
+
+.notification-icon-field{display:grid;gap:9px}.notification-icon-field>label{font-size:12px;font-weight:800;color:#c8e9e9}.notification-icon-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.notification-icon-option{min-height:72px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid rgba(121,246,229,.14);border-radius:13px;background:rgba(2,28,35,.48);color:#9bbfc0;font-size:10px;font-weight:700;cursor:pointer}.notification-icon-option.selected{border-color:#31d7d1;background:rgba(20,173,173,.18);color:#efffff;box-shadow:0 0 0 1px rgba(49,215,209,.22),0 0 18px rgba(49,215,209,.12)}.notification-icon-symbol{width:27px;height:27px;display:grid;place-items:center;border-radius:9px;background:rgba(65,210,220,.12);color:#67e5ec;font-size:21px;font-weight:900}.notification-icon-preview{display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:12px;background:rgba(1,23,30,.52);color:#9bc2c3;font-size:11px}.notification-icon-preview-symbol{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:rgba(65,210,220,.15);color:#fff;font-size:21px;font-weight:900}.notification-icon-preview b{color:#e8ffff}.history-icon-type{display:inline-block;padding:3px 6px;border-radius:6px;background:rgba(65,210,220,.12);color:#67e5ec;font-size:9px;text-transform:uppercase;letter-spacing:.4px}@media(max-width:420px){.notification-icon-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
