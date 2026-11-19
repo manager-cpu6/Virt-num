@@ -1,116 +1,94 @@
 # Numelixa Developer API v1
 
-Base URL: `https://www.numelixa.com/api/v1`
+This reference is based on the current production route handlers in the website repository. It documents only routes that exist in the repository. Provider-specific metadata and unverified functionality are called out explicitly.
 
-Numelixa provides a REST/JSON API for developers building bots, websites, automation and applications around virtual-number activations.
+- **Base URL:** `https://www.numelixa.com/api/v1`
+- **Transport:** HTTPS
+- **Format:** JSON
+- **Currency:** USD for public API balances and selling prices
 
-## Authentication
+## Quick start
 
-Use the production API key from your Numelixa Developer account:
+1. Sign in to Numelixa.
+2. Open **Developer Center → API Access** at `https://www.numelixa.com/developers`.
+3. Copy your production API key. The key is a secret; keep it on a trusted server.
+4. Check the service and country catalog, then refresh stock immediately before purchasing.
+
+```bash
+export NUMELIXA_API_KEY='nx_live_REPLACE_WITH_YOUR_KEY'
+curl --fail-with-body --silent --show-error \
+  'https://www.numelixa.com/api/v1/account' \
+  -H "Authorization: Bearer $NUMELIXA_API_KEY" \
+  -H 'Accept: application/json'
+```
+
+## Authentication and API keys
+
+Send the key with every request:
 
 ```http
 Authorization: Bearer nx_live_YOUR_SECRET_KEY
 ```
 
-You may also send:
+The API also advertises the `X-API-Key` header. The key prefix is `nx_live_`. API keys are created automatically for an account in the Developer Center. The active key can be copied from the authenticated dashboard; revoking the active key automatically creates a replacement. Keep the raw key private and never place it in browser JavaScript, a mobile APK, a public repository, logs or screenshots.
 
-```http
-X-API-Key: nx_live_YOUR_SECRET_KEY
-```
+All documented v1 resource handlers call the authenticated-user guard. A missing, invalid or revoked key is rejected; data is scoped to the authenticated account.
 
-Never expose an API key in browser JavaScript, Android/iOS source code or public repositories.
+## API discovery
 
-## API design
+### GET /
 
-- JSON request and response bodies.
-- All resources are scoped to the authenticated account.
-- Wallet balance is charged only for a successful activation and all public balances and prices are expressed in USD.
-- Public API responses never expose internal network/provider identity, credentials or internal routing choices.
-- Number routing and network selection are managed automatically by Numelixa.
-- Use the returned order ID for all later SMS, status and cancellation operations.
-- Stock and prices are live and can change between requests.
-- Catalog/stock responses are optimized for low-latency access; clients should still cache their own UI data briefly and refresh before a purchase.
-- Use reasonable polling intervals for SMS instead of sending continuous requests.
+Returns the v1 API name, version, operational status, authentication description, currency and a list of endpoint paths. This discovery response is informational; use the individual endpoints below for data.
 
-## 1. Account
+## Account and wallet
 
 ### GET /account
 
-Returns account and wallet information.
+Returns account identity and the current USD wallet balance.
 
-```bash
-curl "https://www.numelixa.com/api/v1/account" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
-
-Example:
+Verified response shape:
 
 ```json
 {
   "ok": true,
   "account": {
-    "id": "USER_ID",
-    "email": "user@example.com",
-    "name": "Example User",
+    "id": "ACCOUNT_ID",
+    "email": "account@example.com",
+    "name": "Account name",
     "verified": true,
-    "balance": 8.50,
+    "balance": 8.5,
     "currency": "USD"
   }
 }
 ```
 
+Values above are illustrative placeholders; they are not live account data.
+
 ### GET /balance
 
-Returns the current wallet balance.
+Returns `balance`, `currency` and `accountId`. The balance is expressed in USD.
 
 ### GET /transactions
 
-Returns recent wallet ledger entries for the authenticated account.
+Returns up to 100 most recent wallet ledger entries for the authenticated account. Each returned transaction includes `id`, `type`, `amountUsd`, `balanceAfterUsd`, `currency`, optional `reference`, `description` and `createdAt`. Transaction types are ledger values; do not assume an exhaustive enum beyond values actually returned.
 
-## 2. Services
+**Funding:** no public v1 wallet-funding endpoint is exposed by the inspected v1 route tree. Use the official checkout UI for funding. A payment provider integration is not a public API funding contract.
+
+## Services, countries and prices
 
 ### GET /services
 
-Returns the services currently available for number activation.
-
-```bash
-curl "https://www.numelixa.com/api/v1/services" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
-
-## 3. Countries and prices
+Returns the current configured service catalog in `services`. Use the returned service identifier exactly as provided. Service names and identifiers are supplied by the active catalog and may change.
 
 ### GET /countries?service=whatsapp
 
-Returns supported countries, live availability and the Numelixa selling price.
+The `service` query parameter is required. Returns countries associated with that service, including provider-supplied country metadata plus the API's `flag`, `available`, `stock`, `price` and `currency` fields. The `price` is the Numelixa selling price in USD, not an upstream provider cost.
 
-```bash
-curl "https://www.numelixa.com/api/v1/countries?service=whatsapp" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
-
-Country objects include fields such as:
-
-- `id` — Numelixa country identifier.
-- `name` — display name.
-- `iso` — ISO country code when available.
-- `stock.count` — current available quantity.
-- `stock.price` — live price in USD, with `currency: "USD"`.
-
-Do not calculate a purchase price from a stale country response. Refresh the stock/price before purchasing.
-
-## 4. Live stock
+Use the country identifier returned by this endpoint in later calls. The API does not define a separate, guaranteed country calling-code field in its documented response. Use `iso` or other country metadata only when it is present in the returned object.
 
 ### GET /stock?country=usa&service=whatsapp
 
-Checks live availability and the current Numelixa price.
-
-```bash
-curl "https://www.numelixa.com/api/v1/stock?country=usa&service=whatsapp" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
-
-Example:
+Both query parameters are required. Returns:
 
 ```json
 {
@@ -126,275 +104,224 @@ Example:
 }
 ```
 
-## 5. Purchase a number
+This example illustrates the verified response keys, not current inventory or pricing. Stock and price are live and may change. Refresh this endpoint immediately before purchase. A zero count or unavailable response means do not attempt to purchase at that moment.
+
+## Number acquisition and order lifecycle
 
 ### POST /orders
 
-Required JSON:
+Creates an activation using the current live price and inventory. JSON body:
 
 ```json
-{
-  "country": "usa",
-  "service": "whatsapp"
-}
+{ "country": "usa", "service": "whatsapp" }
 ```
 
-```bash
-curl -X POST "https://www.numelixa.com/api/v1/orders" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"country":"usa","service":"whatsapp"}'
-```
+The backend also accepts `countryCode` for compatibility. Public API clients do not choose an upstream provider or operator.
 
-The public API does not accept or expose upstream routing/operator selection. Numelixa selects the appropriate available network automatically.
+On success, the v1 wrapper returns an `order` object containing `id`, `number`, `price`, `currency`, `expiresIn` and `stockAfter`. The public `price` is USD. Save the returned order ID immediately.
 
-Successful response:
-
-```json
-{
-  "ok": true,
-  "order": {
-    "id": "ORDER_ID",
-    "number": "+15551234567",
-    "price": 0.85,
-    "expiresIn": 600,
-    "stockAfter": 11
-  }
-}
-```
-
-All public API prices and wallet amounts use USD. The API validates live stock and price immediately before charging the wallet. If the activation cannot be completed safely, the wallet debit is reversed when cancellation is confirmed.
-
-## 6. Orders
+Purchase requires an eligible verified account, sufficient wallet balance, current stock and a successful upstream activation. The server rechecks price and stock immediately before charging. If the purchase times out, check order history before retrying; do not blindly submit a second purchase.
 
 ### GET /orders
 
-Lists recent orders belonging to the authenticated account.
+Lists the authenticated account's recent orders.
 
-Optional query:
+Optional query parameters:
+- `limit`: 1–100; default 25.
+- `status`: exact order status filter.
 
-- `limit` — 1 to 100, default 25.
-- `status` — filter by an order status.
+Returned order objects include `id`, `service`, `country`, `countryCode`, `phone`, `price`, `currency`, `status`, optional `code` and `fullSms`, `expiresAt`, `createdAt` and optional `completedAt`.
 
-```bash
-curl "https://www.numelixa.com/api/v1/orders?limit=25&status=waiting" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
+### GET /orders/{orderId}
 
-### GET /orders/:id
-
-Returns one order.
-
-```bash
-curl "https://www.numelixa.com/api/v1/orders/ORDER_ID" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY"
-```
-
-The response includes the order number, service, country, price, status, SMS/code when available, creation time and expiry time.
-
-## 7. Retrieve SMS/code
+Returns one order belonging to the authenticated account. The returned order includes `id`, `service`, `country`, `phone`, `price`, `currency`, `status`, optional `code` and `fullSms`, `expiresAt`, `createdAt` and optional `completedAt`.
 
 ### POST /orders/code
 
-Request:
+Checks the upstream activation for a new SMS and returns the current status. JSON body:
 
 ```json
-{
-  "orderId": "ORDER_ID"
-}
+{ "orderId": "ORDER_ID" }
 ```
 
-```bash
-curl -X POST "https://www.numelixa.com/api/v1/orders/code" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"orderId":"ORDER_ID"}'
-```
+When a code is received, the response contains `ok`, `code`, `fullSms` and `status: "received"`. While waiting, it returns `status: "waiting"`, an empty `code` and `timeLeft` in seconds. The current server lifecycle checks the 10-minute activation window; after expiry, an eligible no-SMS order is refunded to the Numelixa wallet. The order status and returned response are authoritative.
 
-For automation, poll at a reasonable interval with backoff and stop polling when the order is completed, cancelled or expired.
-
-## 8. Cancel an activation
+Treat full SMS bodies and OTPs as sensitive data. Do not log or expose them to other users.
 
 ### POST /orders/cancel
 
-Only eligible waiting orders can be cancelled.
-
-```bash
-curl -X POST "https://www.numelixa.com/api/v1/orders/cancel" \
-  -H "Authorization: Bearer nx_live_YOUR_SECRET_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"orderId":"ORDER_ID"}'
-```
-
-Successful response:
+JSON body:
 
 ```json
-{
-  "ok": true,
-  "status": "cancelled",
-  "refundedUsd": 0.85,
-  "currency": "USD"
-}
+{ "orderId": "ORDER_ID" }
 ```
 
-Cancellation is account-scoped. A key cannot cancel another account's order.
+The current public v1 cancellation handler accepts only orders with `status: "waiting"` and returns a cancellation status and refund amount in USD.
 
-## 9. JavaScript / Node.js
+**Provider compatibility limitation:** the current `/api/v1/orders/cancel` route imports the 5SIM cancellation adapter directly rather than the active-provider dispatcher. It must not be assumed to work for TigerSMS-routed orders. Confirm provider routing with the API owner before relying on this endpoint in a TigerSMS configuration. This is a backend limitation, not a client-side workaround.
+
+## Webhooks
+
+Configure a public HTTPS endpoint in **Developer Center → Webhooks**. Current event names verified in the code:
+
+- `order.created`
+- `order.code_received`
+- `order.cancelled`
+
+The event envelope contains `id`, `type`, `createdAt` and `data`. Headers include:
+- `X-Numelixa-Event`
+- `X-Numelixa-Event-Id`
+- `X-Numelixa-Timestamp`
+- `X-Numelixa-Signature: sha256=HEX`
+
+The signature is HMAC-SHA256 over `timestamp + "." + exactRawJsonBody`, using the signing secret shown when the endpoint is first configured. Verify the exact raw request bytes before parsing JSON, compare signatures safely, validate timestamp freshness and deduplicate by event ID.
+
+Delivery is attempted synchronously with a short timeout (5 seconds). The current implementation does **not** automatically retry failed deliveries. Persist events and reconcile order state using the API when necessary. Webhook delivery status is available in the Developer Center.
+
+## Errors and reliability
+
+The route handlers currently expose these common HTTP statuses:
+
+| HTTP status | Meaning |
+|---|---|
+| 200 | Successful read or action |
+| 400 | Missing or invalid input |
+| 401 | Missing, invalid or revoked authentication |
+| 402 | Insufficient USD wallet balance |
+| 403 | Account verification or permission restriction |
+| 404 | Account or order not found |
+| 409 | Stock unavailable or order state conflict |
+| 500 | Internal operation failed |
+| 502 / 503 | Temporary upstream or service failure |
+
+A `429` response may be introduced by platform-level throttling, but no numeric quota, reset window or stable rate-limit header is published in the inspected API contract. Do not assume a fixed requests-per-minute value.
+
+Use bounded retries with backoff for safe reads only. Do not blindly retry number acquisition after a timeout. First reconcile through `GET /orders` and `GET /orders/{orderId}`. Treat non-JSON responses and redirects as errors; API requests should not be silently redirected to a browser login page.
+
+## Integration examples
+
+### JavaScript / Node.js
 
 ```js
-const API = "https://www.numelixa.com/api/v1";
-const KEY = process.env.NUMELIXA_API_KEY;
+const base = "https://www.numelixa.com/api/v1";
+const key = process.env.NUMELIXA_API_KEY;
 
-async function api(path, options = {}) {
-  const response = await fetch(API + path, {
+async function numelixa(path, options = {}) {
+  const response = await fetch(base + path, {
     ...options,
+    redirect: "manual",
     headers: {
-      Authorization: "Bearer " + KEY,
-      "Content-Type": "application/json",
-      ...(options.headers || {})
-    }
+      Authorization: "Bearer " + key,
+      Accept: "application/json",
+      ...(options.body ? { "Content-Type": "application/json" } : {}),
+      ...options.headers,
+    },
   });
-
+  if (response.status >= 300 && response.status < 400) {
+    throw new Error("Unexpected API redirect");
+  }
   const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || "Numelixa API error");
+  if (!response.ok || data.ok === false) {
+    throw new Error(data.error || "Numelixa API request failed");
   }
   return data;
 }
 
-const account = await api("/account");
-const stock = await api("/stock?country=usa&service=whatsapp");
-
-if (!stock.stock.available) {
-  throw new Error("Out of stock");
-}
-
-if (stock.stock.price > account.account.balance) {
-  throw new Error("Insufficient balance");
-}
-
-const order = await api("/orders", {
-  method: "POST",
-  body: JSON.stringify({
-    country: "usa",
-    service: "whatsapp"
-  })
-});
-
-console.log(order.order.id, order.order.number);
+const account = await numelixa("/account");
+const stock = await numelixa("/stock?country=usa&service=whatsapp");
+console.log(account, stock);
+// Create an order only after checking stock and obtaining user confirmation.
 ```
 
-## 10. Python
+### Python
 
 ```python
 import os
 import requests
 
-API = "https://www.numelixa.com/api/v1"
-HEADERS = {
+BASE = "https://www.numelixa.com/api/v1"
+session = requests.Session()
+session.headers.update({
     "Authorization": "Bearer " + os.environ["NUMELIXA_API_KEY"],
-    "Content-Type": "application/json",
-}
+    "Accept": "application/json",
+})
 
-def api(method, path, **kwargs):
-    response = requests.request(
-        method,
-        API + path,
-        headers=HEADERS,
-        timeout=15,
-        **kwargs,
-    )
+def numelixa(method, path, **kwargs):
+    response = session.request(method, BASE + path, timeout=20,
+                               allow_redirects=False, **kwargs)
+    if 300 <= response.status_code < 400:
+        raise RuntimeError("Unexpected API redirect")
     data = response.json()
-    if not response.ok:
-        raise RuntimeError(data.get("error", "Numelixa API error"))
+    if not response.ok or data.get("ok") is False:
+        raise RuntimeError(data.get("error", "Numelixa API request failed"))
     return data
 
-account = api("GET", "/account")
-stock = api("GET", "/stock?country=usa&service=whatsapp")
-
-if not stock["stock"]["available"]:
-    raise RuntimeError("Out of stock")
-
-if stock["stock"]["price"] > account["account"]["balance"]:
-    raise RuntimeError("Insufficient balance")
-
-order = api(
-    "POST",
-    "/orders",
-    json={"country": "usa", "service": "whatsapp"},
-)
-
-print(order["order"]["id"], order["order"]["number"])
+account = numelixa("GET", "/account")
+stock = numelixa("GET", "/stock?country=usa&service=whatsapp")
+print(account, stock)
 ```
 
-## 11. HTTP status codes
+### PHP
 
-| Status | Meaning |
-|---|---|
-| 200 | Request completed successfully |
-| 400 | Invalid or missing parameters |
-| 401 | Missing or invalid API key |
-| 402 | Insufficient wallet balance |
-| 403 | Account action requires email verification |
-| 404 | Resource/order not found |
-| 409 | Stock, price or order-state conflict |
-| 502 | Temporary upstream number-service failure |
-| 503 | Number service temporarily unavailable |
+```php
+<?php
+$base = "https://www.numelixa.com/api/v1";
+$key = getenv("NUMELIXA_API_KEY");
 
-Error bodies use:
-
-```json
-{
-  "ok": false,
-  "error": "Human-readable error message"
+function numelixa($method, $path, $payload = null) {
+    global $base, $key;
+    $headers = ["Authorization: Bearer " . $key, "Accept: application/json"];
+    if ($payload !== null) $headers[] = "Content-Type: application/json";
+    $ch = curl_init($base . $path);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => false,
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 20,
+    ]);
+    if ($payload !== null) curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+    $body = curl_exec($ch);
+    $status = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    if ($body === false) throw new RuntimeException(curl_error($ch));
+    curl_close($ch);
+    if ($status >= 300 && $status < 400) throw new RuntimeException("Unexpected redirect");
+    $data = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+    if ($status < 200 || $status >= 300 || ($data["ok"] ?? true) === false)
+        throw new RuntimeException($data["error"] ?? "API request failed");
+    return $data;
 }
+
+$account = numelixa("GET", "/account");
+$stock = numelixa("GET", "/stock?country=usa&service=whatsapp");
+print_r([$account, $stock]);
 ```
 
-## 12. Production integration rules
+### cURL
 
-1. Keep the API key on your server.
-2. Never expose the key to end users.
-3. Refresh stock before a purchase.
-4. Treat the purchase response as authoritative for the new order.
-5. Save the returned order ID immediately.
-6. Poll SMS with backoff rather than a tight loop.
-7. Stop polling after completion/cancellation/expiry.
-8. Handle 401 by rotating/re-authenticating the API key.
-9. Handle 409 by refreshing stock and retrying only when appropriate.
-10. Do not retry a purchase blindly after a network timeout until you check the order list/status, because a purchase may already have succeeded.
-11. Use cancellation only for orders that are still eligible.
-12. Never rely on undocumented fields.
-
-## 13. API key security
-
-API keys can be revoked and replaced from the Numelixa Developer dashboard. A revoked key must no longer be used.
-
-Numelixa's public API contract intentionally hides internal number-network identity, routing configuration, credentials and upstream implementation details.
-
-
-## 14. Webhooks
-
-Configure an HTTPS endpoint in **Developers → Webhooks**, for example:
-
-`https://example.com/webhooks/numelixa`
-
-Save the URL, copy the signing secret shown on first save, and keep it on your server. The current event types are:
-
-- `order.created` — an API number order was created successfully.
-- `order.code_received` — the API code endpoint returned a verification code.
-- `order.cancelled` — an eligible order was cancelled and refunded.
-
-Read-only GET requests do not create webhook events. Each delivery is a JSON POST with an event envelope:
-
-```json
-{
-  "id": "EVENT_UUID",
-  "type": "order.created",
-  "createdAt": "2026-10-20T12:00:00.000Z",
-  "data": {}
-}
+```bash
+curl --fail-with-body 'https://www.numelixa.com/api/v1/balance' \
+  -H "Authorization: Bearer $NUMELIXA_API_KEY" \
+  -H 'Accept: application/json'
 ```
 
-Headers include `X-Numelixa-Event`, `X-Numelixa-Event-Id`, `X-Numelixa-Timestamp`, and `X-Numelixa-Signature`. The signature is `sha256=` followed by the hex HMAC-SHA256 of `timestamp + "." + rawRequestBody`, using your signing secret. Verify the exact raw body before parsing JSON, compare signatures in constant time, reject stale timestamps, and deduplicate event IDs. Return a 2xx response quickly and process heavier work asynchronously.
+## Security
 
-Initial delivery uses a short timeout and does not automatically retry failed deliveries. Check the Webhooks status panel and retain API polling as a recovery path. Use the dashboard's test-event button to verify your receiver.
+- Use HTTPS only.
+- Store keys in a server-side secret manager or environment variable.
+- Never bundle an API key in a website frontend, Android/iOS app or desktop client.
+- Do not log API keys, OTPs or full SMS bodies.
+- Verify webhook signatures over the exact raw body.
+- Restrict webhook receivers to public HTTPS endpoints and deduplicate event IDs.
+- Revoke and replace a key immediately if exposure is suspected.
+
+## Not yet verified / requires owner confirmation
+
+- Numeric API rate limits, quota windows and rate-limit headers.
+- A public v1 endpoint for wallet funding or payment initiation.
+- A public v1 country calling-code field guaranteed across providers.
+- TigerSMS compatibility for the current v1 cancellation endpoint.
+- Automatic webhook retries or delivery guarantees.
+- A public idempotency-key contract for purchase requests.
+- Formal API version deprecation and compatibility policy.
+- Public endpoints for account deletion or session/device management.
