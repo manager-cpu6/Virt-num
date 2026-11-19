@@ -48,6 +48,7 @@ export default async function AccountPage(){
      <Link href="/support"><span>◌</span><div><b>Contact Center</b><small>Support requests and official contact options</small></div><i>→</i></Link>
      <Link href="/clients"><span>?</span><div><b>For Clients</b><small>Guides and troubleshooting</small></div><i>→</i></Link>
      <Link href="/legal"><span>§</span><div><b>Legal Center</b><small>Policies and account deletion information</small></div><i>→</i></Link>
+     <Link href="/security"><span>⌑</span><div><b>Security information</b><small>Account, API and app security controls</small></div><i>→</i></Link>
     </div>
    </section>
    {(user.merchantEnabled||user.role==="merchant")&&<Link href="/merchant" className="account-admin-card"><span>↗</span><div><b>Merchant</b><small>Send and manage wallet funds</small></div><i>↗</i></Link>}{user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
