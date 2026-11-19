@@ -5,7 +5,7 @@ import {sendEmailFrom} from "@/lib/mailer";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
-const senders=["info","noreply","team"] as const;
+const senders=["info","payment","welcome","noreply","team","system","notification"] as const;
 type Sender=typeof senders[number];
 
 function safeHtml(input:string){
