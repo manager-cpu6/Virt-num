@@ -39,6 +39,17 @@ export default async function AccountPage(){
     <Link href="/developers" className="account-action-card account-action-card--developer-api"><span className="account-action-icon">⌘</span><div><b>Developer API</b><small>API access & keys</small></div><i>↗</i></Link>
    </section>
    <AccountSessions/>
+   <section className="nx-account-links">
+    <div className="account-section-title"><div><span>ACCOUNT & RESOURCES</span><h2>Manage your account</h2></div></div>
+    <div className="nx-account-link-grid">
+     <Link href="/forgot-password"><span>⌑</span><div><b>Password management</b><small>Start a secure password reset</small></div><i>→</i></Link>
+     <Link href="/developers"><span>⌘</span><div><b>Developer API access</b><small>Manage API keys and webhooks</small></div><i>→</i></Link>
+     <Link href="/developers/docs"><span>▤</span><div><b>API documentation</b><small>Verified endpoints and examples</small></div><i>→</i></Link>
+     <Link href="/support"><span>◌</span><div><b>Contact Center</b><small>Support requests and official contact options</small></div><i>→</i></Link>
+     <Link href="/clients"><span>?</span><div><b>For Clients</b><small>Guides and troubleshooting</small></div><i>→</i></Link>
+     <Link href="/legal"><span>§</span><div><b>Legal Center</b><small>Policies and account deletion information</small></div><i>→</i></Link>
+    </div>
+   </section>
    {(user.merchantEnabled||user.role==="merchant")&&<Link href="/merchant" className="account-admin-card"><span>↗</span><div><b>Merchant</b><small>Send and manage wallet funds</small></div><i>↗</i></Link>}{user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
    <form action="/api/auth/logout" method="post" className="account-logout-form"><button type="submit">Sign out <span>↗</span></button></form>
   </main>
