@@ -15,7 +15,7 @@ import AdminMerchants from "@/components/AdminMerchants";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];analytics?:{pageViews:number;clicks:number;uniqueVisitors:number};settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
-type User={id:string;publicId?:string;email:string|null;phone?:string|null;name:string|null;role:string;coins:number;verified_at?:string|null;created_at?:string;suspended_at?:string|null;suspension_reason?:string};
+type User={id:string;publicId?:string;email:string|null;phone?:string|null;name:string|null;role:string;coins:number;verified_at?:string|null;badge_verified_at?:string|null;badge_verified_by?:string|null;created_at?:string;suspended_at?:string|null;suspension_reason?:string};
 type Order={id:string;user_id:string;name:string;email:string;provider_order_id:string;service:string;service_display?:string;country:string;country_code:string;phone_number:string;provider_cost_usd:number;price_coins:number;status:string;code:string;full_sms:string;created_at:string;expires_at:string;cancelled_at?:string;completed_at?:string;refund_coins:number};
 
 export default function AdminPanel(){
@@ -63,6 +63,17 @@ export default function AdminPanel(){
   try{const r=await fetch("/api/admin/users",{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,action:"verify"})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to verify this account.");setUsers(rows=>rows.map(row=>row.id===user.id?{...row,verified_at:d.verifiedAt||new Date().toISOString()}:row));setSaved("Email verified by admin. The user can continue without entering an OTP.");window.setTimeout(()=>setSaved(""),3500);}
   catch(e){setError(e instanceof Error?e.message:"Unable to verify this account.")}
  }
+ async function setUserBadge(user:User,verified:boolean){
+  if(!confirm((verified?"Grant the official Numelixa verified badge to ":"Remove the official Numelixa verified badge from ")+(user.name||user.email||"this account")+"?"))return;
+  setError("");
+  try{
+   const r=await fetch("/api/admin/users/verification",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({userId:user.id,verified})});
+   const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to update verified badge.");
+   setUsers(rows=>rows.map(row=>row.id===user.id?{...row,badge_verified_at:d.badgeVerifiedAt||null,badge_verified_by:d.badgeVerifiedBy||null}:row));
+   setSaved(verified?"Official verified badge granted.":"Official verified badge removed.");
+   window.setTimeout(()=>setSaved(""),3000);
+  }catch(e){setError(e instanceof Error?e.message:"Unable to update verified badge.")}
+ }
  async function changeUserPassword(user:User){
   const password=prompt("Set a new password for "+(user.email||user.name||"this user")+" (at least 8 characters):");
   if(password===null)return;
@@ -106,7 +117,7 @@ export default function AdminPanel(){
   {tab==="merchants"&&<AdminMerchants/>}
   {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
   {tab==="traffic sources"&&<AdminTrafficAnalytics/>}
-  {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension} onVerify={verifyUser} onPassword={changeUserPassword}/>}
+  {tab==="users"&&<UsersTable users={topUsers} coinsPerUsd={stats?.settings.coinsPerUsd} onAdjust={adjustCoins} onDelete={deleteUser} onSuspension={setUserSuspension} onVerify={verifyUser} onBadge={setUserBadge} onPassword={changeUserPassword}/>}
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
   {tab==="orders"&&<OrdersTable orders={orders} coinsPerUsd={stats?.settings.coinsPerUsd} title={"All orders ("+orders.length+")"} onCancel={cancelWaitingOrder}/>}
   {tab==="providers"&&<Providers stats={stats}/>}
@@ -175,21 +186,21 @@ function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
   <Table title="Admin control"><div className="admin-cap-grid"><div>Users & balances<small>Search users and adjust USD wallet balances.</small></div><div>Orders & OTP<small>Inspect phone, SMS, provider order, status and expiry.</small></div><div>Pricing & operators<small>Control USD pricing, top-up limits and 5SIM operators.</small></div><div>Live monitoring<small>Track users, USD wallet value, order status and service demand.</small></div></div></Table>
  </>
 }
-function UsersTable({users,coinsPerUsd=100,onAdjust,onDelete,onSuspension,onVerify,onPassword}:{users:User[];coinsPerUsd?:number;onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void;onSuspension:(u:User,a:"suspend"|"unsuspend")=>void;onVerify:(u:User)=>void;onPassword:(u:User)=>void}){
+function UsersTable({users,coinsPerUsd=100,onAdjust,onDelete,onSuspension,onVerify,onBadge,onPassword}:{users:User[];coinsPerUsd?:number;onAdjust:(u:User,m:"add"|"remove"|"set")=>void;onDelete:(u:User)=>void;onSuspension:(u:User,a:"suspend"|"unsuspend")=>void;onVerify:(u:User)=>void;onBadge:(u:User,verified:boolean)=>void;onPassword:(u:User)=>void}){
  const[q,setQ]=useState("");
  const list=users.filter(u=>(String(u.name||"")+" "+String(u.email||"")+" "+String(u.phone||"")+" "+String(u.id||"")+" "+String(u.publicId||"")).toLowerCase().includes(q.toLowerCase()));
  return <Table title={"Users, status & contact ("+list.length+")"}>
   <div className="admin-search"><input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search name, email, phone or Numelixa ID…"/></div>
   {list.map(u=><div className="admin-user-row" key={u.id}>
    <div><b>{u.name||"Numelixa user"}</b><small className="admin-public-id">Numelixa ID: <b>{u.publicId||"Assigned when user next signs in"}</b></small><small>Internal account reference: {u.id}</small>{u.email&&<small>{u.email}</small>}{u.phone&&<small>Phone: {u.phone}</small>}
-    <span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span>
+    <span className={"admin-email-verification "+(u.verified_at?"is-verified":"is-unverified")}>{u.verified_at?"✓ Email verified":"! Email not verified"}</span><span className={"admin-email-verification "+(u.badge_verified_at?"is-verified":"is-unverified")}>{u.badge_verified_at?"✦ Official badge active":"No public verification badge"}</span>
     <span className={"admin-email-verification "+(u.suspended_at?"is-unverified":"is-verified")}>{u.suspended_at?"Suspended":"Account active"}</span>{u.suspended_at&&<small>Reason: {u.suspension_reason||"Not specified"}</small>}
     <strong>$​{(Number(u.coins||0)/(Number(coinsPerUsd)||100)).toFixed(2)} USD</strong>
    </div>
    <div className="coin-actions">
     <Link href={"/admin/users/"+encodeURIComponent(u.id)} className="secondary-btn">History / ID</Link>
     <button onClick={()=>onAdjust(u,"add")}>+ Add USD</button><button onClick={()=>onAdjust(u,"remove")}>− Remove</button><button onClick={()=>onAdjust(u,"set")}>Set balance</button>
-    {u.role!=="admin"&&!u.verified_at&&<button className="nx-admin-verify-user" onClick={()=>onVerify(u)}>✓ Verify email</button>}
+    {u.role!=="admin"&&!u.verified_at&&<button className="nx-admin-verify-user" onClick={()=>onVerify(u)}>✓ Verify email</button>}<button className="nx-admin-verify-user" onClick={()=>onBadge(u,!u.badge_verified_at)}>{u.badge_verified_at?"Remove verified badge":"Grant verified badge"}</button>
     {u.role!=="admin"&&<button className="nx-admin-password-user" onClick={()=>onPassword(u)}>Change password</button>}
     {u.role!=="admin"&&<button onClick={()=>onSuspension(u,u.suspended_at?"unsuspend":"suspend")}>{u.suspended_at?"Unsuspend":"Suspend"}</button>}
     {u.role!=="admin"&&<button className="admin-delete-user" onClick={()=>onDelete(u)}>Delete</button>}
