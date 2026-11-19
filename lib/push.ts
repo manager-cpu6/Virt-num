@@ -107,15 +107,21 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
     return user?.notificationPreferences?.appEnabled!==false;
    });
    const emailUsers=users.filter(user=>user.notificationPreferences?.emailEnabled===true&&String(user.email||"").includes("@"));
-   const mailResults=await Promise.all(emailUsers.map(async user=>{
-    try{
-     await sendEmailFrom("notification",String(user.email),title,emailTemplate(title,body,"https://www.numelixa.com/account","Numelixa service notification"));
-     return {id:String(user._id),ok:true};
-    }catch(error){
-     console.error("[USER_NOTIFICATION_EMAIL_FAILURE]",{userId:String(user._id),message:error instanceof Error?error.message:"Email delivery failed"});
-     return {id:String(user._id),ok:false};
-    }
-   }));
+   const escapeHtml=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+   const mailResults:{id:string;ok:boolean}[]=[];
+   for(let i=0;i<emailUsers.length;i+=5){
+    const batch=emailUsers.slice(i,i+5);
+    const results=await Promise.all(batch.map(async user=>{
+     try{
+      await sendEmailFrom("notification",String(user.email),escapeHtml(title),emailTemplate(escapeHtml(title),escapeHtml(body).replace(/\\n/g,"<br>"),"https://www.numelixa.com/account","Numelixa service notification"));
+      return {id:String(user._id),ok:true};
+     }catch(error){
+      console.error("[USER_NOTIFICATION_EMAIL_FAILURE]",{userId:String(user._id),message:error instanceof Error?error.message:"Email delivery failed"});
+      return {id:String(user._id),ok:false};
+     }
+    }));
+    mailResults.push(...results);
+   }
    emailSuccessCount=mailResults.filter(x=>x.ok).length;
    emailFailureCount=mailResults.length-emailSuccessCount;
    emailSuccessfulUserIds.push(...mailResults.filter(x=>x.ok).map(x=>x.id));
