@@ -27,7 +27,7 @@ export default function SupportPage(){
  const status=ticket?.status==="reviewing"?"In review":"Received";
  return <main className="nx-support-page">
   <header className="nx-support-header">
-   <a className="nx-support-brand" href="https://www.numelixa.com/dashboard"><span className="nx-support-logo"><img src="/numelixa-brand.svg" alt=""/></span><span><b>Numelixa Support</b><small>We're here to help</small></span></a>
+   <a className="nx-support-brand" href="https://www.numelixa.com/dashboard"><span className="nx-support-logo"><img src="https://numelixa.com/numelixa-brand.svg" alt="Numelixa logo"/></span><span><b>Numelixa</b><small>Customer Support · We're here to help</small></span></a>
    <a className="nx-support-account" href="https://www.numelixa.com/dashboard">Back to account <span>↗</span></a>
   </header>
   <section className="nx-support-intro">
