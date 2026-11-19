@@ -22,7 +22,7 @@ export async function GET(){
    ok:true,
    notifications:rows.map(x=>({
     id:String(x._id),title:x.title,message:x.message,target:x.target,
-    createdAt:x.createdAt,sentCount:Number(x.sentCount||0),
+    createdAt:x.createdAt,iconType:String(x.iconType||"general"),message:String(x.message||""),sentCount:Number(x.sentCount||0),
     pushConfigured:Boolean(x.pushConfigured)
    })),
    deviceCount,
@@ -120,7 +120,7 @@ export async function POST(req:Request){
   };
   let pushError:string|null=null;
   try{
-   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",iconType,url:"/"});
+   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",iconType,notificationCategory:iconType,url:"/"});
   }catch(error){
    pushError=error instanceof Error?error.message:String(error);
    console.error("[ADMIN NOTIFICATIONS PUSH]",pushError);
