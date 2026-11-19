@@ -1,6 +1,8 @@
 import Link from "next/link";
 const featureStyle={fontSize:12,padding:"7px 10px",borderRadius:999,background:"rgba(0,217,255,.08)",border:"1px solid rgba(0,217,255,.16)",color:"#a8efff"} as const;
 function AndroidMark(){return <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true"><path fill="currentColor" d="M13 17 9 10l2-1 4 7a18 18 0 0 1 18 0l4-7 2 1-4 7c4 3 6 7 6 12H7c0-5 2-9 6-12Zm-6 14h34v7a3 3 0 0 1-3 3h-3v5h-4v-5H17v5h-4v-5h-3a3 3 0 0 1-3-3v-7Z"/><circle cx="17" cy="23" r="1.8" fill="#071329"/><circle cx="31" cy="23" r="1.8" fill="#071329"/></svg>}
+function AppleMark(){return <svg viewBox="0 0 48 48" width="38" height="38" aria-hidden="true"><path fill="currentColor" d="M31.8 25.5c.1 7.1 6.2 9.5 6.3 9.5-.1.2-1 3.4-3.2 6.7-1.9 2.8-3.9 5.5-7 5.6-3.1.1-4.1-1.8-7.7-1.8s-4.8 1.7-7.7 1.9c-3 .1-5.3-3-7.2-5.8C.9 33.9-1 23.3 3 16.6c2-3.3 5.5-5.4 9.2-5.4 2.9 0 5.7 2 7.5 2s5.2-2.4 8.8-2.1c1.5.1 5.8.6 8.6 4.6-.2.1-5.1 3-5.3 9.8ZM26.6 7.8C28.2 5.9 29.3 3.2 29 0c-2.4.1-5.2 1.6-6.9 3.5-1.5 1.7-2.8 4.5-2.5 7.1 2.7.2 5.4-1.3 7-2.8Z" transform="translate(5 1) scale(.82)"/></svg>}
+
 export default function MobileAppsPage(){
  return <main style={{minHeight:"100vh",padding:"28px 18px 70px",color:"#f4f8ff",background:"radial-gradient(ellipse at 50% 0%,rgba(0,217,255,.12),transparent 44%),linear-gradient(180deg,#030817,#071329 55%,#030817)"}}>
   <div style={{maxWidth:1000,margin:"0 auto"}}>
@@ -30,10 +32,10 @@ export default function MobileAppsPage(){
      <small style={{display:"block",marginTop:12,color:"#7185a5"}}>Package: com.numelixa.app · Official Numelixa release</small>
     </article>
     <article style={{padding:24,borderRadius:26,border:"1px solid rgba(172,133,255,.2)",background:"linear-gradient(145deg,rgba(33,25,62,.7),rgba(5,16,35,.96))"}}>
-     <div style={{display:"flex",alignItems:"center",gap:12,color:"#e9e8f7"}}><span style={{fontSize:38,lineHeight:1}}></span><span style={{fontSize:11,letterSpacing:2,fontWeight:900}}>IOS · IPHONE</span></div>
+     <div style={{display:"flex",alignItems:"center",gap:12,color:"#e9e8f7"}}><AppleMark/><span style={{fontSize:11,letterSpacing:2,fontWeight:900}}>IOS · IPHONE</span></div>
      <h2 style={{fontSize:27,letterSpacing:"-1px",margin:"14px 0 8px"}}>Numelixa for iPhone</h2>
      <p style={{color:"#a7b7d0",fontSize:14,lineHeight:1.75}}>The iPhone edition is planned with the same account, USD wallet, virtual number and SMS experience.</p>
-     <div style={{marginTop:18,padding:15,borderRadius:14,border:"1px solid #5b4b82",background:"#17142a",color:"#e6d9ff",fontWeight:900,textAlign:"center"}}> App Store · Coming Soon</div>
+     <div style={{marginTop:18,padding:15,borderRadius:14,border:"1px solid #5b4b82",background:"#17142a",color:"#e6d9ff",fontWeight:900,textAlign:"center"}}>App Store · Coming Soon</div>
      <small style={{display:"block",marginTop:12,color:"#9186ae"}}>The iOS download will appear here after its official release.</small>
     </article>
    </section>
