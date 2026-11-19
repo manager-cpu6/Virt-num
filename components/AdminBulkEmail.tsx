@@ -1,10 +1,14 @@
 "use client";
 import {useState} from "react";
-type Sender="info"|"noreply"|"team";
+type Sender="info"|"payment"|"welcome"|"noreply"|"team"|"system"|"notification";
 const senders:{value:Sender;label:string;purpose:string}[]=[
  {value:"info",label:"info@numelixa.com",purpose:"General company updates"},
  {value:"noreply",label:"noreplay@numelixa.com",purpose:"Automated account messages"},
- {value:"team",label:"team@numelixa.com",purpose:"Support and team communication"}
+ {value:"team",label:"team@numelixa.com",purpose:"Support tickets and support replies"},
+ {value:"payment",label:"payment@numelixa.com",purpose:"Payment confirmations and receipts"},
+ {value:"welcome",label:"welcome@numelixa.com",purpose:"New account welcome messages"},
+ {value:"system",label:"system@numelixa.com",purpose:"Automated service and account updates"},
+ {value:"notification",label:"notification@numelixa.com",purpose:"User notifications and announcements"}
 ];
 export default function AdminBulkEmail(){
  const [sender,setSender]=useState<Sender>("info"),[html,setHtml]=useState("<h1 style=\"color:#1769e8\">Hello from Numelixa</h1>\n<p>Write your announcement here.</p>"),[busy,setBusy]=useState(false),[testBusy,setTestBusy]=useState(false),[testNotice,setTestNotice]=useState(""),[testError,setTestError]=useState(""),[error,setError]=useState(""),[notice,setNotice]=useState(""),[progress,setProgress]=useState<{campaignId:string;total:number;sent:number;failed:number;remaining:number}|null>(null);
