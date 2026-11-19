@@ -355,3 +355,12 @@ input::placeholder,textarea::placeholder{color:var(--nx-subtle)!important}
 .nx-docs-prev-next button{max-width:48%!important;min-height:42px!important;padding:0 13px!important;border:1px solid var(--nx-border)!important;border-radius:11px!important;background:var(--nx-bg-raised)!important;color:var(--nx-cyan)!important;font-size:12px!important;font-weight:850!important}
 .nx-docs-prev-next button:disabled{opacity:.4!important;cursor:not-allowed!important}
 @media(max-width:800px){.nx-docs-prev-next{grid-column:1!important}}
+
+
+.nx-footer-brand{display:inline-flex!important;align-items:center!important;gap:9px!important;margin-bottom:8px!important;color:var(--nx-text)!important}
+.nx-footer-brand img{width:34px!important;height:34px!important;object-fit:contain!important}
+.nx-footer-brand b{font-size:13px!important;letter-spacing:.1em!important}
+.nx-wallet-history-row{display:grid!important;grid-template-columns:36px minmax(0,1fr) auto auto!important;align-items:center!important;gap:10px!important}
+.nx-wallet-history-row>a,.nx-wallet-history-row>.nx-wallet-history-muted{grid-column:2/-1!important;font-size:11px!important}
+.nx-wallet-transaction-detail{grid-column:1/-1!important}
+@media(max-width:680px){.nx-wallet-history-row{grid-template-columns:30px minmax(0,1fr) auto!important}.nx-wallet-history-row .nx-wallet-detail-toggle{grid-column:2/-1!important;justify-self:start!important}.nx-wallet-history-row>a,.nx-wallet-history-row>.nx-wallet-history-muted{grid-column:2/-1!important}}
