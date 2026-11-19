@@ -17,5 +17,10 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Audit installed production dependencies
+        shell: bash
+        run: |
+          npm audit --json > /tmp/numelixa-npm-audit.json || true
+          node -e "const a=require('/tmp/numelixa-npm-audit.json'); const m=a.metadata?.vulnerabilities||{}; console.log('npm audit summary:',JSON.stringify(m)); for(const [name,item] of Object.entries(a.vulnerabilities||{})){console.log(name, 'severity='+item.severity, 'direct='+item.isDirect, 'range='+item.range, 'fixAvailable='+JSON.stringify(item.fixAvailable));}"
       - name: Production build
         run: npm run build
