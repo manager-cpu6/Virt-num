@@ -42,9 +42,20 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const isCheckoutHost=host==="checkout.numelixa.com"||host==="payment.numelixa.com";
  let websiteMaintenance=false;
  let maintenanceMessage="Numelixa is temporarily under maintenance. Please check back soon.";
- if(!isDownloadHost&&!isSupportHost&&!isCheckoutHost){
+ if(!isDownloadHost){
   try{const state=await (await collection<any>("settings")).findOne({_id:"systemMaintenance"});websiteMaintenance=state?.websiteEnabled===true;maintenanceMessage=String(state?.message||maintenanceMessage);}catch{}
  }
 
- return <html lang="en"><body>{!isCheckoutHost&&!isDownloadHost&&!isSupportHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}<div className={isSupportHost?"nx-support-host-shell":isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}><main className={isSupportHost?"nx-support-host-main":isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{isDownloadHost?children:<SystemMaintenanceGate initialEnabled={websiteMaintenance} initialMessage={maintenanceMessage}>{children}</SystemMaintenanceGate>}</main>{!isCheckoutHost&&!isDownloadHost&&!isSupportHost&&<AppChrome docs={isDocsHost}/>}</div>{!isDownloadHost&&!isSupportHost&&!isCheckoutHost&&<CookieConsent/>}</body></html>;
+ return <html lang="en"><body>{isDownloadHost
+  ? <div className="app-shell"><main className="page-shell docs-host-page">{children}</main></div>
+  : <SystemMaintenanceGate initialEnabled={websiteMaintenance} initialMessage={maintenanceMessage}>
+     {!isCheckoutHost&&!isSupportHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}
+     <div className={isSupportHost?"nx-support-host-shell":isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}>
+      <main className={isSupportHost?"nx-support-host-main":isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>
+      {!isCheckoutHost&&!isSupportHost&&<AppChrome docs={isDocsHost}/>}
+     </div>
+    </SystemMaintenanceGate>
+  }
+  {!isDownloadHost&&!isSupportHost&&!isCheckoutHost&&<CookieConsent/>}
+ </body></html>;
 }
