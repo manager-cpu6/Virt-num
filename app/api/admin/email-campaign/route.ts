@@ -21,7 +21,6 @@ export async function POST(req:Request){
    const subject="A message from Numelixa";
    const html=String(body.html||"");
    if(!allowedSenders.includes(sender))return NextResponse.json({ok:false,error:"Choose a valid Numelixa sender address."},{status:400});
-   if(subject.length<3||subject.length>180)return NextResponse.json({ok:false,error:"Subject must be 3–180 characters."},{status:400});
    if(html.trim().length<20||html.length>120000)return NextResponse.json({ok:false,error:"HTML email content must be 20–120,000 characters."},{status:400});
    const users=await (await collection<any>("users")).find({email:{$type:"string",$ne:""}}).project({email:1,name:1}).toArray();
    const unique=new Map<string,{email:string;name:string}>();
