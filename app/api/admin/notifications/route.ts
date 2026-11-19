@@ -66,7 +66,7 @@ export async function POST(req:Request){
     tokens,
     "🔔 Numelixa notification test",
     "Native push is working on this Android device.",
-    {type:"push_test",url:"/"}
+    {type:"push_test",iconType:"admin",url:"/"}
    );
 
    if(test.invalidTokens?.length){
@@ -87,6 +87,9 @@ export async function POST(req:Request){
   const title=String(body.title||"").trim().slice(0,80);
   const message=String(body.message||"").trim().slice(0,500);
   const target=String(body.target||"all").trim();
+  const allowedIcons=new Set(["admin","number","otp","auto","payment","gift","general","user","system","numelixa","announcement","success"]);
+  const requestedIcon=String(body.iconType||"general").toLowerCase().trim();
+  const iconType=allowedIcons.has(requestedIcon)?requestedIcon:"general";
 
   if(!title||!message)
    return NextResponse.json({ok:false,error:"Title and message are required."},{status:400});
@@ -117,7 +120,7 @@ export async function POST(req:Request){
   };
   let pushError:string|null=null;
   try{
-   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",url:"/"});
+   pushResult=await sendPush(uniqueTokens,title,message,{type:"admin",iconType,url:"/"});
   }catch(error){
    pushError=error instanceof Error?error.message:String(error);
    console.error("[ADMIN NOTIFICATIONS PUSH]",pushError);
@@ -150,7 +153,7 @@ export async function POST(req:Request){
 
   const notificationsCollection=await collection<any>("notifications");
   const notifications=deliveredUserIds.map(userId=>({
-   _id:mongoId(),userId,title,message,adminSent:true,target,
+   _id:mongoId(),userId,title,message,adminSent:true,target,iconType,
    createdAt:new Date(),readAt:null,sentCount:1,
    failureCount:0,pushConfigured:true,pushError:null
   }));
