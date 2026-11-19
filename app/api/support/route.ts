@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {getUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
-import {sendEmail,emailTemplate} from "@/lib/mailer";
+import {sendEmailFrom,emailTemplate} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -38,7 +38,7 @@ export async function POST(req:Request){
     if(acknowledgementEmail){
       const safe=(value:string)=>value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/\x27/g,"&#39;");
       const text="Hello "+safe(String(user.name||"there"))+",<br><br>Thank you for contacting Numelixa Support. Your request has been received and is now waiting for review.<br><br>Ticket ID: "+safe(String(id))+"<br>Subject: "+safe(subject)+"<br>Status: Received — awaiting review<br><br>Our team will review your request and email you when it is solved. You can return to https://support.numelixa.com to see the current status.<br><br>For your security, never send your password or one-time verification codes.<br><br>Numelixa Support Team";
-      try{await sendEmail(acknowledgementEmail,"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support request was received",text,"https://support.numelixa.com","Your Numelixa support request was received."));}
+      try{await sendEmailFrom("team",acknowledgementEmail,"Ticket #"+String(id)+" received — Numelixa Support",emailTemplate("Your support request was received",text,"https://support.numelixa.com","Your Numelixa support request was received."));}
       catch(error){console.error("[SUPPORT ACK EMAIL]",error)}
     }
     return NextResponse.json({ok:true,ticket:{id:String(id),status:"new",createdAt:now},message:"Your request has been received and is awaiting review. Ticket number: "+String(id)+"."});
