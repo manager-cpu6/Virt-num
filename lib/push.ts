@@ -95,7 +95,7 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const deviceRows=allTokens.length
    ?await (await collection<any>("deviceTokens")).find({token:{$in:allTokens}},{projection:{token:1,userId:1}}).toArray()
    :[];
-  tokenUserIds=new Map(deviceRows.map(row=>[String(row.token||""),String(row.userId||"")]).filter(x=>x[0]&&x[1]));
+  tokenUserIds=new Map<string,string>(deviceRows.map((row:any)=>[String(row.token||""),String(row.userId||"")] as [string,string]).filter(([token,userId])=>Boolean(token&&userId)));
   const userIds=[...new Set([...tokenUserIds.values(),...explicitUserIds])];
   if(userIds.length){
    const users=await (await collection<any>("users")).find({_id:{$in:userIds}},{projection:{_id:1,email:1,notificationPreferences:1,name:1}}).toArray();
