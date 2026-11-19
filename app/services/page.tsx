@@ -4,74 +4,66 @@ import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import ServiceLogo from "@/components/ServiceLogo";
 
-type S={id:string;code:string;name:string};
-
-const popular=["whatsapp","facebook","instagram","telegram","tiktok","google","snapchat","twitter","discord","amazon","microsoft","apple","openai","viber","signal"];
-const popularAliases:Record<string,string[]>={
- whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],google:["google","go"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],tiktok:["tiktok","tt"],twitter:["twitter","x","tw"],snapchat:["snapchat","sn"],viber:["viber"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt","op"],signal:["signal"]
-};
-function popularRank(x:S){
- const normalize=(v:string)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
- const id=normalize(x.id),name=normalize(x.name),raw=id+" "+name;
- for(let i=0;i<popular.length;i++){
-  const aliases=popularAliases[popular[i]]||[popular[i]];
-  if(aliases.some(alias=>{
-   const a=normalize(alias);
-   return id===a||name===a||(a.length>2&&(id.startsWith(a)||name.startsWith(a)));
-  }))return i;
- }
- return 9999;
-}
-
+type Service={id:string;code:string;name:string};
 
 export default function ServicesPage(){
- const[s,setS]=useState<S[]>([]),[q,setQ]=useState(""),[loading,setLoading]=useState(true),[showAll,setShowAll]=useState(false),[error,setError]=useState("");
+ const[services,setServices]=useState<Service[]>([]);
+ const[query,setQuery]=useState("");
+ const[loading,setLoading]=useState(true);
+ const[showAll,setShowAll]=useState(false);
+ const[error,setError]=useState("");
+
  useEffect(()=>{
-   fetch("/api/catalog/services",{cache:"no-store"})
-     .then(async r=>{const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Live catalog unavailable");setS(Array.isArray(d.services)?d.services:[])})
-     .catch(e=>setError(e instanceof Error?e.message:"Unable to load live services"))
-     .finally(()=>setLoading(false))
+  let active=true;
+  fetch("/api/catalog/services",{cache:"no-store",credentials:"include"})
+   .then(async response=>{
+    const data=await response.json();
+    if(!response.ok||!data.ok)throw new Error(data.error||"Live catalog unavailable");
+    if(active)setServices(Array.isArray(data.services)?data.services.filter((item:unknown):item is Service=>!!item&&typeof item==="object"&&typeof (item as Service).id==="string"&&typeof (item as Service).name==="string"):[]);
+   })
+   .catch(reason=>{if(active)setError(reason instanceof Error?reason.message:"Unable to load live services");})
+   .finally(()=>{if(active)setLoading(false);});
+  return()=>{active=false;};
  },[]);
+
  const filtered=useMemo(()=>{
-   const query=q.trim().toLowerCase();
-   if(query)return s.filter(x=>(x.name+" "+x.id).toLowerCase().includes(query));
-   const ranked=[...s].sort((a,b)=>popularRank(a)-popularRank(b)||a.name.localeCompare(b.name));
-   if(showAll)return ranked;
-   const p=ranked.filter(x=>popularRank(x)<9999);
-   return p.length?p.slice(0,16):ranked.slice(0,16)
- },[s,q,showAll]);
+  const q=query.trim().toLocaleLowerCase();
+  const rows=services.filter(item=>!q||(item.name+" "+item.id+" "+item.code).toLocaleLowerCase().includes(q));
+  return rows.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+ },[services,query]);
+ const visible=query.trim()||showAll?filtered:filtered.slice(0,16);
 
  return <div className="services-page">
-   <TopBar/>
-   <section className="market-hero">
-     <div className="market-hero-copy">
-       <span className="eyebrow">NUMELIXA • LIVE SMS CATALOG</span>
-       <h1>Virtual Numbers<br/>from <em>153 Countries</em></h1>
-       <p>Choose a service and then select any supported country with live price and stock.</p>
-       <div className="market-stats">
-         <span>◉ <b>153</b> Countries</span>
-         <span>▱ <b>{s.length||"1,300+"}</b> Services</span>
-         <span>ϟ <b>Ready</b> Now</span>
-       </div>
-     </div>
-     <div className="market-globe" aria-hidden="true">🌍</div>
-   </section>
-
-   <div className="service-search-box">
-     <span className="search-icon" aria-hidden="true">⌕</span>
-     <input value={q} onChange={e=>setQ(e.target.value)} placeholder="Search 1,300+ services…" autoComplete="off" aria-label="Search services"/>
-     {q&&<button type="button" className="search-clear" onClick={()=>setQ("")} aria-label="Clear search">×</button>}
+  <TopBar/>
+  <section className="market-hero">
+   <div className="market-hero-copy">
+    <span className="eyebrow">NUMELIXA · SERVICE CATALOG</span>
+    <h1>Choose a service.<br/><em>Start with clarity.</em></h1>
+    <p>Browse the services currently returned by the Numelixa catalog. Choose a service to see country availability and live pricing before you purchase.</p>
+    <div className="market-stats">
+     <span><b>{loading?"—":services.length.toLocaleString()}</b> catalog services</span>
+     <span><b>Live</b> country availability</span>
+     <span><b>USD</b> price display</span>
+    </div>
    </div>
+   <div className="market-globe" aria-hidden="true">◎</div>
+  </section>
 
-   <div className="section-head service-section-head">
-     <div><h2>{q?"Search results":"Popular Services"}</h2>{q&&<span className="service-count">{filtered.length.toLocaleString()} matching services</span>}</div>
-     {!q&&s.length>16&&<button className="view-all-btn" onClick={()=>setShowAll(v=>!v)}>{showAll?"Show popular":"View all ("+s.length+")"} <span>→</span></button>}
-   </div>
+  <div className="service-search-box">
+   <span className="search-icon" aria-hidden="true">⌕</span>
+   <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search services by name or ID…" autoComplete="off" aria-label="Search services"/>
+   {query&&<button type="button" className="search-clear" onClick={()=>setQuery("")} aria-label="Clear search">×</button>}
+  </div>
 
-   {loading?<div className="service-loading">Loading live services…</div>
-   :error?<div className="helper-card"><b>Live catalog unavailable</b><span>Please try again in a moment.</span></div>
-   :<div className="service-grid">{filtered.map((x,i)=><Link key={x.id+i} className="service-card" href={"/countries?service="+encodeURIComponent(x.id)}><ServiceLogo id={x.id} name={x.name}/><div><b>{x.name}</b><small>Live SMS verification</small></div><span className="chevron">›</span></Link>)}</div>}
+  <div className="section-head service-section-head">
+   <div><h2>{query?"Search results":"Available services"}</h2><span className="service-count">{loading?"Loading live catalog…":query?filtered.length.toLocaleString()+" matching services":services.length.toLocaleString()+" services returned by catalog"}</span></div>
+   {!query&&!loading&&!error&&filtered.length>16&&<button className="view-all-btn" onClick={()=>setShowAll(value=>!value)}>{showAll?"Show fewer":"View all ("+filtered.length+")"} <span>→</span></button>}
+  </div>
 
-   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try another search.</span></div>}
- </div>
+  {loading?<div className="service-loading" role="status">Loading live services…</div>
+   :error?<div className="helper-card" role="alert"><b>Live catalog unavailable</b><span>{error}. Please retry in a moment.</span><button className="secondary-btn" onClick={()=>{setLoading(true);setError("");fetch("/api/catalog/services",{cache:"no-store",credentials:"include"}).then(async response=>{const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"Live catalog unavailable");setServices(Array.isArray(data.services)?data.services:[])}).catch(reason=>setError(reason instanceof Error?reason.message:"Unable to load live services")).finally(()=>setLoading(false));}}>Retry</button></div>
+   :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
+
+  {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try a different service name or identifier.</span></div>}
+ </div>;
 }
