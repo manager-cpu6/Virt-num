@@ -108,22 +108,13 @@ export default function AdminNotifications(){
     return;
    }
 
-   if(Number(d.devices||0)===0){
-    setResult(
-     "⚠️ Saved for "+d.recipients+" users, but no app devices are registered. "+
-     "Open the Numelixa Android app while logged in and allow notifications."
-    );
-   }else if(!d.pushConfigured){
-    setResult(
-     "⚠️ Saved for "+d.recipients+" users, but Firebase Push is not configured on the server. "+
-     "Check FIREBASE_CLIENT_EMAIL and FIREBASE_PRIVATE_KEY in Vercel Production, and confirm the service account belongs to Firebase project numelixa."
-    );
-   }else if(Number(d.failed||0)>0){
-    setResult(
-     "⚠️ Sent to "+d.sent+" devices, but "+d.failed+" devices failed."
-    );
+   const appAccepted=Number(d.sent||0),emailSent=Number(d.emailSent||0),appFailed=Number(d.failed||0),emailFailed=Number(d.emailFailed||0);
+   if(appAccepted===0&&emailSent===0){
+    setResult("⚠️ No delivery channel accepted this notification. Check that users have enabled App or Email notifications and that Firebase/SMTP are configured.");
+   }else if(appFailed>0||emailFailed>0){
+    setResult("⚠️ Firebase accepted "+appAccepted+" app alerts and "+emailSent+" emails; "+appFailed+" app sends and "+emailFailed+" emails failed. FCM acceptance does not confirm the notification was displayed on the phone.");
    }else{
-    setResult("✅ Sent to "+d.sent+" app devices · saved for "+d.recipients+" users");
+    setResult("✅ Firebase accepted "+appAccepted+" app alerts · "+emailSent+" emails sent · saved for "+d.recipients+" users. Phone display is confirmed only when the device receives it.");
    }
 
    setTitle("");
