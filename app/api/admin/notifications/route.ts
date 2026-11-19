@@ -126,8 +126,8 @@ export async function POST(req:Request){
    await (await collection<any>("deviceTokens")).deleteMany({token:{$in:pushResult.invalidTokens}});
   }
 
-  // Do not create a user-visible notification record unless Firebase confirms
-  // that at least one actual device received the message.
+  // Save an in-app notification only for accounts where at least one enabled
+  // delivery channel accepted the message. FCM acceptance is not proof of display.
   const successfulTokens=new Set(pushResult.successfulTokens||[]);
   const deliveredUserIds=[...new Set([
    ...deviceRows.filter(row=>successfulTokens.has(String(row.token||"").trim())).map(row=>String(row.userId||"")),
@@ -151,7 +151,7 @@ export async function POST(req:Request){
   const notifications=deliveredUserIds.map(userId=>({
    _id:mongoId(),userId,title,message,adminSent:true,target,iconType,
    createdAt:new Date(),readAt:null,sentCount:1,
-   failureCount:0,pushConfigured:true,pushError:null
+   failureCount:Number(pushResult.failureCount||0)+Number(pushResult.emailFailureCount||0),pushConfigured:Boolean(pushResult.configured),pushError:null
   }));
   await notificationsCollection.insertMany(notifications);
 
@@ -159,7 +159,7 @@ export async function POST(req:Request){
    ok:true,recipients:deliveredUserIds.length,targetUsers:ids.length,
    devices:uniqueTokens.length,sent:pushResult.successCount,failed:pushResult.failureCount,emailSent:Number(pushResult.emailSuccessCount||0),emailFailed:Number(pushResult.emailFailureCount||0),
    invalidTokens:pushResult.invalidTokens.length,
-   pushConfigured:true,pushError
+   pushConfigured:Boolean(pushResult.configured),pushError
   });
  }catch(error){
   console.error("[ADMIN NOTIFICATIONS POST]",error);
