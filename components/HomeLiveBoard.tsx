@@ -15,7 +15,7 @@ const promos:Promo[]=[
 ];
 
 function flagFor(country:string){
- const flags:Record<string,string>={US:"🇺🇸",GB:"🇬🇧",NG:"🇳🇬",CA:"🇨🇦",DE:"🇩🇪",FR:"🇫🇷",BR:"🇧🇷",IN:"🇮🇳",AU:"🇦🇺",AE:"🇦🇪",ZA:"🇿🇦"};
+ const flags:Record<string,string>={US:"🇺🇸",USA:"🇺🇸",GB:"🇬🇧",UK:"🇬🇧",NG:"🇳🇬",NIGERIA:"🇳🇬",CA:"🇨🇦",CANADA:"🇨🇦",DE:"🇩🇪",GERMANY:"🇩🇪",FR:"🇫🇷",FRANCE:"🇫🇷",BR:"🇧🇷",IN:"🇮🇳",AU:"🇦🇺",AE:"🇦🇪",ZA:"🇿🇦",ET:"🇪🇹",ETHIOPIA:"🇪🇹",SO:"🇸🇴",SOMALIA:"🇸🇴",KE:"🇰🇪",KENYA:"🇰🇪"};
  return flags[country]||"◎";
 }
 
