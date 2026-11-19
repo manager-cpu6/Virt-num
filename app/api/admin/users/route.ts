@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 import {requireAdmin} from "@/lib/auth";
 import {collection} from "@/lib/mongo";
-import {sendEmail,emailTemplate} from "@/lib/mailer";
+import {sendEmailFrom,emailTemplate} from "@/lib/mailer";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -51,7 +51,7 @@ export async function PATCH(req:Request){
     collection<any>("sessions").then(x=>x.deleteMany({userId:id})),
     collection<any>("loginApprovals").then(x=>x.deleteMany({userId:id}))
    ]);
-   try{if(user.email)await sendEmail(String(user.email),"Your Numelixa account has been suspended",emailTemplate("Account suspended","Your account has been suspended by the Numelixa team. Reason: "+reason+" If you believe this is a mistake, contact Support and request a review.","https://support.numelixa.com","Numelixa account status"));}catch(e){console.error("[SUSPENSION EMAIL]",e)}
+   try{if(user.email)await sendEmailFrom("notification",String(user.email),"Your Numelixa account has been suspended",emailTemplate("Account suspended","Your account has been suspended by the Numelixa team. Reason: "+reason+" If you believe this is a mistake, contact Support and request a review.","https://support.numelixa.com","Numelixa account status"));}catch(e){console.error("[SUSPENSION EMAIL]",e)}
    return NextResponse.json({ok:true,suspended:true});
   }
   await users.updateOne({_id:id},{$unset:{suspendedAt:"",suspensionReason:""},$set:{suspensionUpdatedAt:now}});
