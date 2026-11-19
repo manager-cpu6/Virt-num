@@ -21,14 +21,17 @@ function fallbackConfig():SmtpConfig|null{
  return{host,port,user,pass,from};
 }
 
-function smtpConfig():SmtpConfig{
- const host=(process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
- const port=Number(process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
- const user=(process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
- const pass=process.env.SPACEMAIL_SMTP_PASSWORD||"";
- const from=(process.env.SPACEMAIL_FROM||user).trim();
- if(!user)throw new Error("Spacemail SMTP username is missing.");
- if(!pass)throw new Error("Spacemail SMTP password is missing.");
+type SenderKey="info"|"noreply"|"team";
+const SENDER_ADDRESS:Record<SenderKey,string>={info:"info@numelixa.com",noreply:"noreply@numelixa.com",team:"team@numelixa.com"};
+function smtpConfig(sender:SenderKey="info"):SmtpConfig{
+ const prefix=sender==="noreply"?"SPACEMAIL_NOREPLY":sender==="team"?"SPACEMAIL_TEAM":"SPACEMAIL_INFO";
+ const host=(process.env[prefix+"_HOST"]||process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env[prefix+"_PORT"]||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
+ const user=(process.env[prefix+"_USER"]||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const pass=process.env[prefix+"_PASSWORD"]||process.env.SPACEMAIL_SMTP_PASSWORD||"";
+ const from=(process.env[prefix+"_FROM"]||SENDER_ADDRESS[sender]).trim();
+ if(!user)throw new Error("Spacemail SMTP username is missing for "+sender+".");
+ if(!pass)throw new Error("Spacemail SMTP password is missing for "+sender+".");
  if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port.");
  if(!from||!from.includes("@"))throw new Error("Spacemail sender address is missing or invalid.");
  return{host,port,user,pass,from};
@@ -42,8 +45,9 @@ function makeTransporter(config:SmtpConfig){const credentialFingerprint=createHa
  return transporter;}
 async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,replyTo:config.from,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
 function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
-export async function sendEmail(to:string,subject:string,html:string){
- const config=smtpConfig();
+export async function sendEmail(to:string,subject:string,html:string){return sendEmailFrom("info",to,subject,html);}
+export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,html:string){
+ const config=smtpConfig(sender);
  try{
   await sendWithConfig(config,to,subject,html);
   return;
