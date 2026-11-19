@@ -38,8 +38,8 @@ export default async function LandingPage() {
   return (
     <div className="public-landing">
       <header className="landing-nav">
-        <Link href="/" className="landing-brand"><span className="landing-logo">N</span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
-        <nav><a href="#features">Features</a><a href="#how">How it works</a><a href="#security">Security</a></nav>
+        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-brand.svg" alt=""/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
+        <nav><a href="#features">Platform</a><a href="#how">How it works</a><Link href="/services">Services</Link><Link href="/pricing">Pricing</Link><Link href="/developers/docs">Developers</Link><Link href="/support">Support</Link></nav>
         <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div>
       </header>
 
@@ -50,20 +50,20 @@ export default async function LandingPage() {
             <h1>Numbers, without the noise.</h1>
             <p>Get a virtual number for supported services, manage your numbers and keep everything in one place.</p>
             <div className="landing-cta"><Link href="/signup" className="landing-primary">Get a Number <span>→</span></Link><Link href="/login" className="landing-secondary">Sign in</Link></div>
-            <div className="landing-proof"><span>✓ Global coverage</span><span>✓ Live SMS</span><span>✓ Secure wallet</span></div>
+            <div className="landing-proof"><span>✓ Live service catalog</span><span>✓ Order & SMS tracking</span><span>✓ USD wallet</span></div>
           </div>
           <LivePhoneDemo />
         </section>
 
-        <section className="landing-stats"><div><strong>Global</strong><span>Country coverage</span></div><div><strong>24/7</strong><span>Live availability</span></div><div><strong>Fast</strong><span>SMS delivery</span></div><div><strong>Secure</strong><span>Account protection</span></div></section>
+        <section className="landing-stats"><div><strong>Live catalog</strong><span>Browse services and country availability</span></div><div><strong>One workspace</strong><span>Numbers, orders, SMS and wallet</span></div><div><strong>Web + Android</strong><span>Use your Numelixa account across devices</span></div></section>
 
         <section id="features" className="landing-section">
           <div className="landing-section-head"><span>WHY NUMELIXA</span><h2>Everything you need to verify.<br /><em>Nothing you don't.</em></h2></div>
           <div className="landing-feature-grid">
-            <article><div>⚡</div><b>Live numbers</b><p>Pick a service and country from live availability and get your number without waiting.</p></article>
-            <article><div>💬</div><b>Instant SMS</b><p>Watch your verification messages arrive in your Numelixa account and mobile app.</p></article>
-            <article><div>🌍</div><b>Global coverage</b><p>Explore numbers across a wide range of countries and popular online services.</p></article>
-            <article><div>🔐</div><b>Private by design</b><p>Your account, wallet, orders and verification history stay behind your secure login.</p></article>
+            <article><div>↗</div><b>Live availability</b><p>Choose a service and check country stock and price before placing an order.</p></article>
+            <article><div>SMS</div><b>SMS tracking</b><p>Follow activation status and view incoming verification messages in your account.</p></article>
+            <article><div>◎</div><b>Country selection</b><p>Explore the countries returned by the live catalog for the service you select.</p></article>
+            <article><div>⌑</div><b>Account controls</b><p>Manage your profile, sessions, wallet, orders and support from one account.</p></article>
           </div>
         </section>
 
@@ -81,12 +81,11 @@ export default async function LandingPage() {
             <p>Fast number selection, live SMS status and a clean verification workflow.</p>
           </div>
           <div className="landing-people-panel">
-            <span className="eyebrow">Loved worldwide</span>
-            <h3>Built for people who need speed.</h3>
-            <p>Use a polished workspace across web and Android, wherever you work.</p>
+            <span className="eyebrow">ONE ACCOUNT</span>
+            <h3>Your workflow stays together.</h3>
+            <p>Move between the website and native Android app while keeping your Numelixa account and order history in one place.</p>
             <div className="people-row">
-              <div className="person">A</div><div className="person">M</div><div className="person">S</div><div className="person">J</div>
-              <span><b>Global users</b><small>Secure verification, simplified.</small></span>
+              <span><b>Product access</b><small>Web dashboard · Native Android app</small></span>
             </div>
           </div>
         </section>
