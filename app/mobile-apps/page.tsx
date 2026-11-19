@@ -26,7 +26,7 @@ export default function MobileAppsPage(){
      <div style={{display:"flex",alignItems:"center",gap:12,color:"#64e6ff"}}><AndroidMark/><span style={{fontSize:11,letterSpacing:2,fontWeight:900}}>ANDROID · OFFICIAL</span></div>
      <h2 style={{fontSize:27,letterSpacing:"-1px",margin:"14px 0 8px"}}>Numelixa for Android</h2>
      <p style={{color:"#a7b7d0",fontSize:14,lineHeight:1.75}}>Install the official APK, sign in securely and manage numbers, wallet top-ups, orders and SMS codes from your phone.</p>
-     <a href="https://app.numelixa.com/api/mobile/apk" style={{boxSizing:"border-box",display:"flex",justifyContent:"center",alignItems:"center",gap:10,textDecoration:"none",marginTop:18,padding:15,borderRadius:14,background:"linear-gradient(100deg,#00d9ff,#168cff)",color:"#031022",fontWeight:950}}>Download Android APK ↓</a>
+     <a href="https://app.numelixa.com/" style={{boxSizing:"border-box",display:"flex",justifyContent:"center",alignItems:"center",gap:10,textDecoration:"none",marginTop:18,padding:15,borderRadius:14,background:"linear-gradient(100deg,#00d9ff,#168cff)",color:"#031022",fontWeight:950}}>Explore Android app →</a>
      <small style={{display:"block",marginTop:12,color:"#7185a5"}}>Package: com.numelixa.app · Official Numelixa release</small>
     </article>
     <article style={{padding:24,borderRadius:26,border:"1px solid rgba(172,133,255,.2)",background:"linear-gradient(145deg,rgba(33,25,62,.7),rgba(5,16,35,.96))"}}>
