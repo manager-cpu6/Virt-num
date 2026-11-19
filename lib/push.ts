@@ -58,9 +58,9 @@ export type PushSendResult={
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 const notificationIconFor=(data:Record<string,string>)=>{
  const type=String(data.type||"").toLowerCase();
- if(type.includes("otp")||type.includes("verification")||type==="sms"||type.includes("code"))return "ic_notification_otp";
  if(type.includes("admin")||type.includes("announcement")||type==="push_test")return "ic_notification_admin";
  if(type.includes("auto")||type.includes("automation")||type.includes("background"))return "ic_notification_auto";
+ if(type.includes("otp")||type.includes("verification")||type==="sms"||type.includes("code"))return "ic_notification_otp";
  if(type.includes("number")||type.includes("order")||type.includes("activation")||type.includes("purchase"))return "ic_notification_number";
  return "ic_notification_admin";
 };
