@@ -58,10 +58,9 @@ async function getRollingRelease(){
     if(!response.ok)return null;
     const release=await response.json();
     if(release.draft||release.prerelease)return null;
-    // The rolling GitHub release's title/body are updated by the same CI job
-    // that uploads Numelixa.apk. The lightweight tag itself can remain old
-    // when an existing release has its asset replaced, so never read pubspec
-    // from that stale tag or from unbuilt main-branch source.
+    // Each Android build is published as an immutable versioned GitHub release.
+    // Read the release title/body and its matching APK asset; never infer a
+    // version from unbuilt main-branch source.
     const titleVersion=String(release.name||"").match(/([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)/)?.[1]||"";
     const bodyVersion=String(release.body||"").match(/\bVersion\s+([0-9]+\.[0-9]+\.[0-9]+\+[0-9]+)/i)?.[1]||"";
     const version=titleVersion||bodyVersion;
