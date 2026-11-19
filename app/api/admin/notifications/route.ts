@@ -22,7 +22,7 @@ export async function GET(){
    ok:true,
    notifications:rows.map(x=>({
     id:String(x._id),title:x.title,message:x.message,target:x.target,
-    createdAt:x.createdAt,iconType:String(x.iconType||"general"),message:String(x.message||""),sentCount:Number(x.sentCount||0),
+    createdAt:x.createdAt,iconType:String(x.iconType||"general"),sentCount:Number(x.sentCount||0),
     pushConfigured:Boolean(x.pushConfigured)
    })),
    deviceCount,
