@@ -94,13 +94,9 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const messageData=Object.fromEntries(Object.entries({url:data.url||"/",...data,title,body,...(copyCodePush?{code}:{})}).map(([key,value])=>[key,String(value)]));
   const payload={
    tokens:batch,
-   ...(copyCodePush?{}:{notification:{title,body}}),
+   // Data-only FCM lets Flutter choose the exact notification artwork and prevents Android from rendering a duplicate system notification.
    data:messageData,
-   android:{
-    priority:"high" as const,
-    ttl:28*24*60*60*1000,
-    ...(copyCodePush?{}:{notification:{channelId,sound:"default" as const,icon:notificationIconFor(data)}})
-   }
+   android:{priority:"high" as const,ttl:28*24*60*60*1000}
   };
   let response;
   try{
