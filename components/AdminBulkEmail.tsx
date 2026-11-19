@@ -3,7 +3,7 @@ import {useState} from "react";
 type Sender="info"|"noreply"|"team";
 const senders:{value:Sender;label:string;purpose:string}[]=[
  {value:"info",label:"info@numelixa.com",purpose:"General company updates"},
- {value:"noreply",label:"noreply@numelixa.com",purpose:"Automated account messages"},
+ {value:"noreply",label:"noreplay@numelixa.com",purpose:"Automated account messages"},
  {value:"team",label:"team@numelixa.com",purpose:"Support and team communication"}
 ];
 export default function AdminBulkEmail(){
