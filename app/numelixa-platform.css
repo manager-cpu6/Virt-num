@@ -391,3 +391,49 @@ input::placeholder,textarea::placeholder{color:var(--nx-subtle)!important}
 
 
 .nx-chooser-availability{display:block!important;margin-top:12px!important;padding:10px 11px!important;border:1px solid var(--nx-border)!important;border-radius:10px!important;background:var(--nx-bg-raised)!important;color:var(--nx-muted)!important;font-size:11px!important;line-height:1.5!important}
+
+
+/* Local payment selection follows the same Numelixa surface and spacing system */
+.nx-local-pay-page{min-height:100vh!important;padding:20px 16px 48px!important;background:var(--nx-bg)!important;color:var(--nx-text)!important;font-family:inherit!important}
+.nx-local-pay-shell{max-width:760px!important;margin:0 auto!important}
+.nx-local-pay-nav{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;padding:8px 0 18px!important;border-bottom:1px solid var(--nx-border)!important}
+.nx-local-pay-nav>a{font-size:12px!important;color:var(--nx-muted)!important}
+.nx-local-pay-nav>span{display:flex!important;align-items:center!important;gap:8px!important;font-size:10px!important;font-weight:900!important;letter-spacing:.12em!important;color:var(--nx-muted)!important}
+.nx-local-pay-nav img{object-fit:contain!important}
+.nx-local-pay-hero{padding:42px 0 20px!important}
+.nx-local-pay-hero h1{font-size:clamp(38px,7vw,56px)!important;line-height:1.04!important;letter-spacing:-.06em!important;margin:12px 0!important}
+.nx-local-pay-hero h1 em{font-style:normal!important;color:var(--nx-cyan)!important}
+.nx-local-pay-hero p{max-width:600px!important;color:var(--nx-muted)!important;font-size:14px!important;line-height:1.75!important}
+.nx-local-pay-amount{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:16px!important;padding:18px!important;margin:8px 0 14px!important;border:1px solid var(--nx-border)!important;border-radius:18px!important;background:var(--nx-surface)!important}
+.nx-local-pay-amount>div{display:grid!important;gap:5px!important}
+.nx-local-pay-amount small{font-size:10px!important;color:var(--nx-muted)!important;font-weight:850!important;letter-spacing:.12em!important}
+.nx-local-pay-amount strong{font-size:25px!important;font-weight:900!important}
+.nx-local-pay-amount>span{padding:7px 10px!important;border:1px solid var(--nx-border)!important;border-radius:999px!important;color:var(--nx-cyan)!important;font-size:10px!important;font-weight:800!important}
+.nx-local-country-card{margin:14px 0!important;padding:18px!important;border:1px solid var(--nx-border)!important;border-radius:20px!important;background:var(--nx-surface)!important}
+.nx-local-country-head{display:flex!important;align-items:center!important;gap:13px!important;margin-bottom:13px!important}
+.nx-local-flag{width:44px!important;height:44px!important;display:grid!important;place-items:center!important;border-radius:13px!important;background:var(--nx-bg-raised)!important;font-size:23px!important}
+.nx-local-country-head>div{min-width:0!important;flex:1!important}
+.nx-local-country-head h2{font-size:19px!important;margin:0!important}
+.nx-local-country-head p{font-size:11px!important;color:var(--nx-muted)!important;margin:4px 0 0!important}
+.nx-local-status{padding:7px 9px!important;border:1px solid var(--nx-border)!important;border-radius:999px!important;font-size:9px!important;font-weight:900!important;white-space:nowrap!important}
+.nx-local-status.open,.nx-local-method-state.open{color:var(--nx-success)!important}
+.nx-local-status.closed,.nx-local-method-state.closed{color:var(--nx-warning)!important}
+.nx-local-status.checking{color:var(--nx-muted)!important}
+.nx-local-country-copy{font-size:12px!important;line-height:1.65!important;color:var(--nx-muted)!important;margin:10px 0 14px!important}
+.nx-local-continue{width:100%!important;min-height:48px!important;padding:0 14px!important;border:0!important;border-radius:12px!important;background:var(--nx-cyan)!important;color:#04202a!important;font-size:12px!important;font-weight:900!important}
+.nx-local-continue:disabled{background:var(--nx-bg-raised)!important;color:var(--nx-subtle)!important;border:1px solid var(--nx-border)!important;cursor:not-allowed!important}
+.nx-local-continue b{margin-left:8px!important}
+.nx-local-method-list{display:grid!important;gap:8px!important}
+.nx-local-method{display:flex!important;align-items:center!important;gap:12px!important;min-width:0!important;padding:12px!important;border:1px solid var(--nx-border)!important;border-radius:14px!important;background:var(--nx-bg-raised)!important;color:var(--nx-text)!important;text-align:left!important;opacity:.56!important}
+.nx-local-method.enabled{opacity:1!important;border-color:var(--nx-border-strong)!important}
+.nx-local-method:disabled{cursor:not-allowed!important}
+.nx-local-method-logo{width:38px!important;height:38px!important;flex:0 0 38px!important}
+.nx-local-method-logo img{width:28px!important;height:28px!important;object-fit:contain!important}
+.nx-local-method-copy{display:grid!important;gap:4px!important;min-width:0!important;flex:1!important}
+.nx-local-method-copy b{font-size:12px!important}
+.nx-local-method-copy small{font-size:10px!important;color:var(--nx-muted)!important;line-height:1.45!important}
+.nx-local-method-state{font-size:9px!important;font-weight:900!important;white-space:nowrap!important}
+.nx-local-method-note{margin:13px 0 0!important;font-size:10px!important;line-height:1.65!important;color:var(--nx-muted)!important}
+.nx-local-pay-footer{display:flex!important;justify-content:space-between!important;gap:12px!important;padding-top:20px!important;margin-top:18px!important;border-top:1px solid var(--nx-border)!important;color:var(--nx-subtle)!important;font-size:10px!important}
+.nx-local-pay-footer a{color:var(--nx-muted)!important}
+@media(max-width:520px){.nx-local-pay-page{padding:14px 13px 34px!important}.nx-local-pay-hero{padding:32px 0 16px!important}.nx-local-country-card{padding:14px!important}.nx-local-country-head{gap:10px!important}.nx-local-status{font-size:8px!important;padding:6px 7px!important}.nx-local-method{padding:10px!important;gap:9px!important}.nx-local-method-state{font-size:8px!important}}
