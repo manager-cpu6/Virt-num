@@ -91,14 +91,21 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const codeCandidate=String(data.code||data.otp||data.verificationCode||data.smsCode||"").trim();
   const code= /^\d{4,8}$/.test(codeCandidate) ? codeCandidate : (body.match(/(?<!\d)\d{4,8}(?!\d)/)||[])[0]||"";
   const copyCodePush=["sms","verification","verification_code"].includes(type)&&data.copyCode==="true"&&Boolean(code);
-  const messageData=Object.fromEntries(Object.entries({url:data.url||"/",...data,title,body,...(copyCodePush?{code}:{})}).map(([key,value])=>[key,String(value)]));
+  const messageData=Object.fromEntries(Object.entries({
+   url:data.url||"/",...data,
+   // Send the selected category under explicit aliases so every app build can
+   // resolve it without relying on Firebase's default notification renderer.
+   iconType:data.iconType||data.notificationCategory||"general",
+   notificationCategory:data.iconType||data.notificationCategory||"general",
+   title,body,...(copyCodePush?{code}:{})
+  }).map(([key,value])=>[key,String(value)]));
   const payload={
    tokens:batch,
-   // Data-only, high-priority FCM is intentional: the Android background isolate
-   // must receive iconType before a notification is rendered, so it can select
-   // the correct monochrome drawable instead of Firebase using one default icon.
+   // Strict data-only FCM: do not attach android.notification here. Even an
+   // empty Android notification block can be rendered by the system with a
+   // blank body/default icon before Flutter can apply the selected drawable.
    data:messageData,
-   android:{priority:"high" as const,ttl:28*24*60*60*1000,notification:{channelId,priority:"high" as const,defaultSound:true}}
+   android:{priority:"high" as const,ttl:28*24*60*60*1000}
   };
   let response;
   try{
