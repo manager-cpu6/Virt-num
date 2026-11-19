@@ -7,7 +7,7 @@ import {getSettings} from "@/lib/settings";
 
 export default async function AccountPage(){
  const user=await getUser();
- if(!user)return <div className="auth-page"><div className="brand-mark">N</div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
+ if(!user)return <div className="auth-page"><div className="brand-mark"><img src="/numelixa-brand.svg" alt="Numelixa" width="42" height="42"/></div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
  const name=(user.name||"User").trim();
  const initial=name.charAt(0).toUpperCase()||"U";
  const pricing=await getSettings();
