@@ -3,7 +3,7 @@ import {collection,mongoId} from "@/lib/mongo";
 import {createSession,createMobileSession,passwordHash,tokenHash,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {ensureApiKey} from "@/lib/api-key";
-import {sendEmail,verificationEmail} from "@/lib/mailer";
+import {sendEmailFrom,verificationEmail} from "@/lib/mailer";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
@@ -41,7 +41,7 @@ export async function POST(req:Request){
   // Do not save a verification code until the mail provider accepts it.
   // Otherwise a failed SMTP send would leave the user with an unseen code.
   try{
-   await sendEmail(email,"Your Numelixa verification code",verificationEmail(code));
+   await sendEmailFrom("noreply",email,"Your Numelixa verification code",verificationEmail(code));
    await (await collection("emailTokens")).insertOne({
     _id:mongoId(),
     tokenHash:tokenHash(code),
