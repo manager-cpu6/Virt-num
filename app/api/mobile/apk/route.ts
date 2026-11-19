@@ -4,7 +4,7 @@ export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export const revalidate=0;
 
-const RELEASE_API="https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/tags/android-latest";
+const RELEASE_API="https://api.github.com/repos/manager-cpu6/Numelixa-app/releases/latest";
 
 async function latestApkUrl(){
   const response=await fetch(RELEASE_API,{
