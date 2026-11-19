@@ -1,19 +1,9 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
 import {getUser} from "@/lib/auth";
-import {listServices} from "@/lib/sms-provider";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
-
-const POPULAR=[
- {service:"whatsapp",country:"us",label:"WhatsApp",flag:"🇺🇸"},
- {service:"telegram",country:"gb",label:"Telegram",flag:"🇬🇧"},
- {service:"instagram",country:"us",label:"Instagram",flag:"🇺🇸"},
- {service:"facebook",country:"ng",label:"Facebook",flag:"🇳🇬"},
- {service:"google",country:"us",label:"Google",flag:"🇺🇸"},
- {service:"tiktok",country:"ng",label:"TikTok",flag:"🇳🇬"}
-];
 
 function cleanService(v:any){return String(v||"Service").replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function maskedPhone(v:any){
@@ -27,16 +17,7 @@ function maskedPhone(v:any){
 export async function GET(){
  try{
   const user=await getUser().catch(()=>null);
-  let services:any[]=[];
-  try{services=await listServices()}catch{}
-  const aliases:Record<string,string[]>={whatsapp:["whatsapp","wa"],telegram:["telegram","tg"],instagram:["instagram","ig"],facebook:["facebook","fb"],google:["google","go"],tiktok:["tiktok","tt"]};
-  const normalize=(v:any)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
-  const popular=POPULAR.map(p=>{
-   const wanted=aliases[p.service]||[p.service];
-   const match=services.find((item:any)=>wanted.includes(normalize(item.id||item.code))||wanted.includes(normalize(item.name)));
-   return match?{...p,service:String(match.id||match.code||p.service),available:true}:null;
-  }).filter(Boolean);
-  if(!user)return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular,activeNumbers:[],activity:[]});
+  if(!user)return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular:[],activeNumbers:[],activity:[]});
   const orders=await collection<any>("orders");
   const userId=String(user.id||"");
   const [activeDocs,activityDocs]=await Promise.all([
@@ -64,8 +45,8 @@ export async function GET(){
    type:"SMS received",
    time:new Date(o.completedAt||o.createdAt||Date.now()).toISOString()
   }));
-  return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular,activeNumbers,activity},{headers:{"Cache-Control":"no-store"}});
+  return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular:[],activeNumbers,activity},{headers:{"Cache-Control":"no-store"}});
  }catch{
-  return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular:POPULAR,activeNumbers:[],activity:[]},{headers:{"Cache-Control":"no-store"}});
+  return NextResponse.json({ok:true,updatedAt:new Date().toISOString(),popular:[],activeNumbers:[],activity:[]},{headers:{"Cache-Control":"no-store"}});
  }
 }
