@@ -86,7 +86,7 @@ export default function AdminNotifications(){
   try{
    const r=await fetch("/api/admin/notifications",{method:"POST",headers:{"Content-Type":"application/json"},credentials:"include",body:JSON.stringify({action:"test_current_device"})});
    const d=await r.json();
-   setResult(d.ok?"✅ Test notification sent to this admin device.":"❌ "+(d.error||"Native push test failed."));
+   setResult(d.ok?"✅ Firebase accepted the test notification for this admin device. Check the Android notification shade to confirm display.":"❌ "+(d.error||"Native push test failed."));
   }catch{setResult("❌ Unable to run the native push test.")}finally{setBusy(false)}
  }
 
@@ -161,13 +161,13 @@ export default function AdminNotifications(){
     <b>{!databaseConfigured?"Notification storage is not configured. Add MONGODB_URI in Vercel Production.":backendError}</b>
    </div>}
    <button type="button" className="secondary-btn full" onClick={testCurrentDevice} disabled={busy}>🔔 Test this admin device</button>
-   <span className="eyebrow">PUSH CENTER</span>
+   <span className="eyebrow">NOTIFICATION CENTER</span>
    <h2>Send a notification</h2>
-   <p>All users sends only to accounts with a registered Android push device. Website-only accounts can remain in the user database, but cannot receive native phone push notifications until they sign in on the Android app.</p>
+   <p>Notifications follow each account’s saved preferences: App alerts are sent to registered devices when enabled, and Email alerts are sent to the registered email address when enabled. Users may select either channel or both.</p>
    <form onSubmit={send} className="admin-form">
     <label>Audience
      <select value={target} onChange={e=>setTarget(e.target.value)}>
-      <option value="all">All users with linked Android devices ({linkedDeviceCount})</option>
+      <option value="all">All eligible users (App and/or Email preferences)</option>
       {users.filter(u=>u.hasAndroidPush).map(u=><option key={u.id} value={"user:"+u.id}>{u.name||"Unnamed"} · {u.email} · Android linked</option>)}
      </select>
     </label>
