@@ -28,18 +28,18 @@ export function canonicalServiceBrand(id:string,name:string){
  const a=normalize(id),b=normalize(name);
  const keys=Object.keys(aliases).sort((x,y)=>y.length-x.length);
  for(const key of keys){if(a===key||a.startsWith(key)||b===key||b.startsWith(key))return aliases[key]}
- return a||b||"service";
+ return a||b||"";
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
  const [attempt,setAttempt]=useState(0);
  const brand=canonicalServiceBrand(id,name);
- const domain=domains[brand]||domains[brand.replace(/(lite|business|prime|shop|app)$/,"")]||((brand&&brand!=="service")?brand+".com":"google.com");
+ const domain=domains[brand];
  const sources=[
-  "https://logo.clearbit.com/"+encodeURIComponent(domain)+"?size=128",
   "https://cdn.simpleicons.org/"+encodeURIComponent(brand),
-  "https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"
+  ...(domain?["https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"]:[])
  ];
- return <span className={className||"service-icon"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
-  {attempt<sources.length?<img src={sources[attempt]} alt={name+" logo"} loading="lazy" onError={()=>setAttempt(value=>Math.min(value+1,sources.length))} style={{width:"100%",height:"100%",objectFit:"contain",padding:2,boxSizing:"border-box"}}/>:<span aria-hidden="true" style={{fontSize:20,fontWeight:900,color:"#A9D5FF"}}>{name.trim().slice(0,1).toUpperCase()||"N"}</span>}
+ return <span className={className||"service-icon"} role="img" aria-label={name+" logo"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
+  {attempt<sources.length?<img src={sources[attempt]} alt="" width="40" height="40" loading="lazy" decoding="async" onError={()=>setAttempt(value=>Math.min(value+1,sources.length))} style={{width:"100%",height:"100%",objectFit:"contain",padding:5,boxSizing:"border-box"}}/>:
+   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>}
  </span>
 }
