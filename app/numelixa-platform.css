@@ -364,3 +364,12 @@ input::placeholder,textarea::placeholder{color:var(--nx-subtle)!important}
 .nx-wallet-history-row>a,.nx-wallet-history-row>.nx-wallet-history-muted{grid-column:2/-1!important;font-size:11px!important}
 .nx-wallet-transaction-detail{grid-column:1/-1!important}
 @media(max-width:680px){.nx-wallet-history-row{grid-template-columns:30px minmax(0,1fr) auto!important}.nx-wallet-history-row .nx-wallet-detail-toggle{grid-column:2/-1!important;justify-self:start!important}.nx-wallet-history-row>a,.nx-wallet-history-row>.nx-wallet-history-muted{grid-column:2/-1!important}}
+
+
+.brand-mark{display:grid!important;place-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important;overflow:visible!important}
+.brand-mark img{display:block!important;width:42px!important;height:42px!important;object-fit:contain!important}
+.nx-dev-brand-mark{display:grid!important;place-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.nx-dev-brand-mark img{width:34px!important;height:34px!important;object-fit:contain!important}
+.nx-chooser-logo{display:grid!important;place-items:center!important;background:transparent!important;border:0!important;box-shadow:none!important}
+.nx-chooser-logo img{width:34px!important;height:34px!important;object-fit:contain!important}
+.nx-public-brand img{display:inline-block!important;vertical-align:middle!important}
