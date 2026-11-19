@@ -21,10 +21,19 @@ function fallbackConfig():SmtpConfig|null{
  return{host,port,user,pass,from};
 }
 
-type SenderKey="info"|"noreply"|"team";
-const SENDER_ADDRESS:Record<SenderKey,string>={info:"info@numelixa.com",noreply:"noreplay@numelixa.com",team:"team@numelixa.com"};
+type SenderKey="info"|"payment"|"welcome"|"noreply"|"team"|"system"|"notification";
+const SENDER_ADDRESS:Record<SenderKey,string>={
+ info:"info@numelixa.com",payment:"payment@numelixa.com",welcome:"welcome@numelixa.com",
+ noreply:"noreplay@numelixa.com",team:"team@numelixa.com",system:"system@numelixa.com",
+ notification:"notification@numelixa.com"
+};
+const SENDER_PREFIX:Record<SenderKey,string>={
+ info:"SPACEMAIL_INFO",payment:"SPACEMAIL_PAYMENT",welcome:"SPACEMAIL_WELCOME",
+ noreply:"SPACEMAIL_NOREPLAY",team:"SPACEMAIL_TEAM",system:"SPACEMAIL_SYSTEM",
+ notification:"SPACEMAIL_NOTIFICATION"
+};
 function smtpConfig(sender:SenderKey="info"):SmtpConfig{
- const prefix=sender==="noreply"?"SPACEMAIL_NOREPLAY":sender==="team"?"SPACEMAIL_TEAM":"SPACEMAIL_INFO";
+ const prefix=SENDER_PREFIX[sender];
  const host=(process.env[prefix+"_HOST"]||process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
  const port=Number(process.env[prefix+"_PORT"]||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
  const user=(process.env[prefix+"_USER"]||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
@@ -120,4 +129,11 @@ export function coinPaymentSuccessEmail(name:string,_internalBalance:number,amou
  const amount=Number(amountUsd||0).toFixed(2);
  const content='<div style="font-size:11px;font-weight:800;letter-spacing:2px;color:#62ddca">PAYMENT CONFIRMED</div><h1 style="font-size:31px;line-height:1.1;margin:10px 0;color:#f2fffc">Your wallet is topped up! 🎉</h1><p style="font-size:14px;line-height:1.7;color:#a9ccca">Hi '+safe(name||"there")+', your payment was received successfully and your Numelixa USD wallet has been updated.</p><div style="margin:24px 0;padding:22px;border-radius:20px;background:#041d25;border:1px solid rgba(100,235,211,.18);text-align:center"><div style="font-size:10px;color:#679596;letter-spacing:1.5px;font-weight:800">AMOUNT ADDED</div><div style="font-size:36px;font-weight:900;margin:8px 0;color:#62e5cf">$'+amount+'</div><div style="font-size:12px;color:#a9ccca">USD wallet balance credit</div><div style="margin-top:16px;padding-top:15px;border-top:1px solid rgba(100,235,211,.13);font-size:13px;color:#dffff8">Payment amount: $'+amount+' USD</div><div style="margin-top:7px;font-size:11px;color:#789c9d">Payment method: '+safe(currency||"Crypto")+'</div><div style="margin-top:7px;font-size:10px;color:#789c9d;word-break:break-all">Reference: '+safe(reference||"confirmed")+'</div></div><p style="font-size:13px;line-height:1.7;color:#a9ccca">Thank you for choosing Numelixa. Your USD balance is ready to use for virtual numbers and SMS verification.</p><p><a href="https://numelixa.com/wallet" style="display:inline-block;background:linear-gradient(135deg,#62e5cf,#2bbda9);color:#032027;padding:14px 22px;border-radius:14px;text-decoration:none;font-weight:900;font-size:13px">Open your wallet →</a></p>';
  return shell(content,'Payment confirmed — $'+amount+' USD was added to your Numelixa wallet.');
+}
+
+export function ethiopiaPaymentReceiptEmail(name:string,receiptId:string,service:string,payerPhone:string,receiverPhone:string,amountUsd:number,amountEtb:number,reference:string,paidAt:string){
+ const safe=(v:string)=>escapeHtml(String(v||"—"));
+ const usd=Number(amountUsd||0).toFixed(2),etb=Number(amountEtb||0).toLocaleString("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2});
+ const content='<div style="text-align:center"><div style="font-size:10px;letter-spacing:2px;color:#62ddca;font-weight:900">NUMELIXA · OFFICIAL RECEIPT</div><h1 style="font-size:28px;color:#f2fffc;margin:10px 0">Payment verified</h1><div style="display:inline-block;border:3px double #62e5cf;border-radius:50%;width:108px;height:108px;padding-top:25px;box-sizing:border-box;color:#62e5cf;transform:rotate(-9deg);font-weight:900"><div style="font-size:24px">✓</div><div style="font-size:9px;letter-spacing:1px">PAID</div><div style="font-size:8px">NUMELIXA</div></div></div><div style="margin:24px 0;padding:22px;border-radius:18px;background:#041d25;border:1px solid rgba(100,235,211,.2)"><div style="font-size:10px;color:#679596;letter-spacing:1.5px;font-weight:800">AMOUNT RECEIVED</div><div style="font-size:34px;font-weight:900;color:#62e5cf;margin:8px 0">$'+usd+' USD</div><div style="font-size:16px;color:#dffff8">'+etb+' ETB</div></div><table role="presentation" style="width:100%;border-collapse:collapse;color:#dffff8;font-size:13px">'+[['Receipt ID',receiptId],['Payment service',service],['Payer number',payerPhone],['Receiving number',receiverPhone],['Transaction reference',reference],['Date',paidAt]].map(([k,v])=>'<tr><td style="padding:9px 4px;color:#7fa5a7;border-bottom:1px solid #16404a">'+k+'</td><td style="padding:9px 4px;text-align:right;border-bottom:1px solid #16404a;font-weight:700">'+safe(v)+'</td></tr>').join('')+'</table><p style="font-size:12px;line-height:1.7;color:#a9ccca;margin-top:22px">Hello '+safe(name||"there")+', your incoming payment was verified against the payer, receiving SIM, exact amount and unique transaction reference. Your Numelixa USD wallet has been credited.</p><p style="text-align:center;margin-top:22px"><a href="https://numelixa.com/wallet/receipt?reference='+encodeURIComponent(receiptId)+'" style="display:inline-block;padding:13px 20px;border-radius:12px;background:#62e5cf;color:#032027;text-decoration:none;font-weight:900">View wallet receipt</a></p>';
+ return shell(content,'Official Numelixa receipt '+receiptId+' · Payment verified.');
 }
