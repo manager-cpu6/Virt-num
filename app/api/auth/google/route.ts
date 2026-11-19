@@ -12,8 +12,8 @@ export async function POST(req:Request){
   const body=await req.json().catch(()=>null);
   const credential=String(body?.credential||"").trim();
   if(!credential)return NextResponse.json({ok:false,error:"Google sign-in token is missing."},{status:400});
-  const clientId=String(process.env.GOOGLE_CLIENT_ID||process.env.GOOGLE_WEB_CLIENT_ID||"").trim();
-  if(!clientId)return NextResponse.json({ok:false,error:"Google sign-in is not configured yet."},{status:503});
+  const allowedClientIds=[process.env.GOOGLE_CLIENT_ID,process.env.GOOGLE_WEB_CLIENT_ID].map(value=>String(value||"").trim()).filter(Boolean);
+  if(!allowedClientIds.length)return NextResponse.json({ok:false,error:"Google sign-in is not configured yet."},{status:503});
 
   const verify=await fetch("https://oauth2.googleapis.com/tokeninfo?id_token="+encodeURIComponent(credential),{cache:"no-store"});
   if(!verify.ok)return NextResponse.json({ok:false,error:"Google could not verify this sign-in. Please try again."},{status:401});
@@ -25,7 +25,7 @@ export async function POST(req:Request){
   const expiresAt=Number(profile.exp||0);
   const verified=profile.email_verified===true||String(profile.email_verified).toLowerCase()==="true";
   const issuerValid=issuer==="accounts.google.com"||issuer==="https://accounts.google.com";
-  if(audience!==clientId||!issuerValid||!Number.isFinite(expiresAt)||expiresAt<=Math.floor(Date.now()/1000)||!googleId||!email.includes("@")||!verified){
+  if(!allowedClientIds.includes(audience)||!issuerValid||!Number.isFinite(expiresAt)||expiresAt<=Math.floor(Date.now()/1000)||!googleId||!email.includes("@")||!verified){
    return NextResponse.json({ok:false,error:"Google account verification failed. Use a verified Google account."},{status:401});
   }
 
