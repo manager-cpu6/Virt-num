@@ -6,17 +6,17 @@ import {useEffect,useMemo,useState} from "react";
 
 type Activity={id:string;service:string;country:string;phone:string;type:string;time:string};
 type ActiveNumber={id:string;service:string;country:string;phone:string;status:string;createdAt:string;expiresAt:string|null};
-type Popular={service:string;country:string;label:string;flag:string;available?:boolean};
+type Promo={tag:string;title:string;text:string;cta:string;href:string};
 
-const promos=[
- {tag:"LIVE NUMBERS",title:"Your next number is already waiting.",text:"Browse live stock across popular apps and countries. Pick a service and start in seconds.",cta:"Explore numbers",href:"/services"},
- {tag:"INSTANT SMS",title:"Watch the verification arrive.",text:"Your number, activation status and incoming SMS stay together in one clean workspace.",cta:"See how it works",href:"/numbers"},
- {tag:"DEVELOPER API",title:"Power your product with Numelixa.",text:"One API for live numbers, orders, balances and verification workflows.",cta:"Open Developer API",href:"/developers"}
+const promos:Promo[]=[
+ {tag:"LIVE CATALOG",title:"Find a number for your next verification.",text:"Browse the live service list and check availability by country before purchase.",cta:"Explore services",href:"/services"},
+ {tag:"ORDER TRACKING",title:"Keep your activation and SMS together.",text:"Track the number, activation status and messages reported for your order.",cta:"View your orders",href:"/numbers"},
+ {tag:"DEVELOPER API",title:"Integrate verified number workflows.",text:"Explore the documented API for services, stock, orders, balances and SMS retrieval.",cta:"Open API docs",href:"/developers/docs"}
 ];
 
 function flagFor(country:string){
  const flags:Record<string,string>={US:"🇺🇸",GB:"🇬🇧",NG:"🇳🇬",CA:"🇨🇦",DE:"🇩🇪",FR:"🇫🇷",BR:"🇧🇷",IN:"🇮🇳",AU:"🇦🇺",AE:"🇦🇪",ZA:"🇿🇦"};
- return flags[country]||"🌍";
+ return flags[country]||"◎";
 }
 
 function ago(value:string){
@@ -27,10 +27,8 @@ function ago(value:string){
  return min+"m ago";
 }
 
-function serviceLetter(name:string){return (name.trim()[0]||"N").toUpperCase()}
-
 export default function HomeLiveBoard(){
- const[data,setData]=useState<{popular:Popular[];activeNumbers:ActiveNumber[];activity:Activity[]}>({popular:[],activeNumbers:[],activity:[]});
+ const[data,setData]=useState<{activeNumbers:ActiveNumber[];activity:Activity[]}>({activeNumbers:[],activity:[]});
  const[promo,setPromo]=useState(0);
  const[stamp,setStamp]=useState(Date.now());
 
@@ -70,23 +68,6 @@ export default function HomeLiveBoard(){
    <div className="live-v2-status"><i/>{data.activity.length?"LIVE":"WAITING"} <small>Auto refresh</small></div>
   </div>
 
-  <div className="live-v2-popular">
-   <div className="live-v2-section-label"><span>POPULAR RIGHT NOW</span><Link href="/services">View all →</Link></div>
-   <div className="live-v2-popular-row">
-    {(data.popular.length?data.popular.slice(0,6):[
-     {service:"whatsapp",country:"US",label:"WhatsApp",flag:"🇺🇸"},
-     {service:"telegram",country:"GB",label:"Telegram",flag:"🇬🇧"},
-     {service:"instagram",country:"US",label:"Instagram",flag:"🇺🇸"},
-     {service:"facebook",country:"NG",label:"Facebook",flag:"🇳🇬"},
-     {service:"google",country:"US",label:"Google",flag:"🇺🇸"},
-     {service:"tiktok",country:"NG",label:"TikTok",flag:"🇳🇬"}
-    ]).map(s=><Link key={s.service+s.country} href={"/countries?service="+encodeURIComponent(s.service)} className="live-v2-service">
-      <ServiceLogo id={String(s.service)} name={s.label} className="live-v2-service-logo"/>
-      <span><b>{s.label}</b><small>{s.flag} {s.country}</small></span>
-      <i>↗</i>
-    </Link>)}
-   </div>
-  </div>
 
   <div className="live-v2-main-grid">
    <div className="live-v2-numbers-card">
@@ -112,7 +93,7 @@ export default function HomeLiveBoard(){
     </div>
     <div className="live-sms-stream">
      {data.activity.length?data.activity.slice(0,4).map(a=><div className="live-sms-row" key={a.id}>
-       <span className="live-sms-icon">{serviceLetter(a.service)}</span>
+       <ServiceLogo id={a.service} name={a.service} className="live-sms-icon"/>
        <div><b>{a.service} <em>{a.country}</em></b><small>{a.phone} · {a.type}</small></div>
        <time>{ago(a.time)}</time>
       </div>):<div className="live-sms-empty"><span className="sms-empty-icon">✦</span><b>No recent SMS activity</b><small>Your completed verifications will appear here when available.</small></div>}
