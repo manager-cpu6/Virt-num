@@ -30,6 +30,10 @@ export default function AdminSystemMaintenance(){
     <article className="admin-app-version-card"><div><b>Website</b><span>numelixa.com and customer web pages</span></div><strong>{settings.websiteEnabled?"ON":"OFF"}</strong><small>{settings.websiteEnabled?"Visitors see the maintenance page.":"Website remains available."}</small><button className={settings.websiteEnabled?"secondary-btn":"primary-btn"} disabled={busy} onClick={()=>save({...settings,websiteEnabled:!settings.websiteEnabled})}>{settings.websiteEnabled?"Disable website maintenance":"Enable website maintenance"}</button></article>
     <article className="admin-app-version-card"><div><b>Android App</b><span>Numelixa native Android application</span></div><strong>{settings.appEnabled?"ON":"OFF"}</strong><small>{settings.appEnabled?"Normal app screens are blocked; Help Team Chat remains available.":"App remains available."}</small><button className={settings.appEnabled?"secondary-btn":"primary-btn"} disabled={busy} onClick={()=>save({...settings,appEnabled:!settings.appEnabled})}>{settings.appEnabled?"Disable app maintenance":"Enable app maintenance"}</button></article>
    </div>
+   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}>
+    <button className="primary-btn" disabled={busy||both} onClick={()=>save({...settings,websiteEnabled:true,appEnabled:true})}>Enable maintenance on both</button>
+    <button className="secondary-btn" disabled={busy||(!settings.websiteEnabled&&!settings.appEnabled)} onClick={()=>save({...settings,websiteEnabled:false,appEnabled:false})}>Restore both platforms</button>
+   </div>
    <div className="admin-form" style={{marginTop:18}}>
     <label>Maintenance message<textarea rows={3} maxLength={240} value={settings.message} onChange={e=>setSettings(s=>({...s,message:e.target.value}))}/></label>
     <button className="primary-btn" disabled={busy} onClick={()=>save(settings)}>{busy?"Saving…":"Save maintenance message"}</button>
