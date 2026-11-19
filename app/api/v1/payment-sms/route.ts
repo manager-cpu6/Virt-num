@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import crypto from "crypto";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
+import {sendEmailFrom,ethiopiaPaymentReceiptEmail} from "@/lib/mailer";
 import {applyReferralReward} from "@/lib/referrals";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 function digest(s:string){return crypto.createHash("sha256").update(s).digest();}
@@ -68,7 +69,7 @@ export async function POST(req:Request){
       credited=true;
      });}catch(e:any){if(e?.code===11000)reason="duplicate_transaction_reference";else if(e instanceof Error&&e.message==="PAYMENT_ORDER_ALREADY_CLAIMED")reason="order_already_processed";else throw e;}finally{await session.endSession();}
      matched=credited;creditedOrderId=credited?String(order.orderId):"";
-     if(credited){reason="payer_phone_amount_receiver_and_sms_verified";try{await applyReferralReward({userId:String(order.userId),paymentReference:String(order.orderId),amountUsd:Number(order.amountUsd||0),description:"Ethiopia payment verified by incoming SMS"});}catch(error){console.error("[REFERRAL REWARD]",error)}try{await notifyUser(String(order.userId),"Payment confirmed","Your Ethiopia payment was verified and your Numelixa wallet has been credited.",{type:"payment",orderId:String(order.orderId)});}catch{}}
+     if(credited){reason="payer_phone_amount_receiver_and_sms_verified";try{await applyReferralReward({userId:String(order.userId),paymentReference:String(order.orderId),amountUsd:Number(order.amountUsd||0),description:"Ethiopia payment verified by incoming SMS"});}catch(error){console.error("[REFERRAL REWARD]",error)}try{await notifyUser(String(order.userId),"Payment confirmed","Your Ethiopia payment was verified and your Numelixa wallet has been credited.",{type:"payment",orderId:String(order.orderId)});}catch{}try{const paidUser=await (await collection<any>("users")).findOne({_id:String(order.userId)},{projection:{email:1,name:1}});if(paidUser?.email){const receiptId=String(order.receiptId||order.orderId),paidAt=new Date().toLocaleString("en-ET",{timeZone:"Africa/Addis_Ababa"});await sendEmailFrom("payment",String(paidUser.email),"Payment verified — Numelixa receipt "+receiptId,ethiopiaPaymentReceiptEmail(String(paidUser.name||""),receiptId,String(order.methodName||order.method||"Ethiopia Payment"),String(parsed.payerPhone||order.payerPhone||""),String(order.receiverPhone||""),Number(order.amountUsd||0),Number(order.amountEtb||0),safeReference,paidAt));}}catch(error){console.error("[ETHIOPIA PAYMENT RECEIPT EMAIL]",error instanceof Error?error.message:"send failed")}}
     }
    }
   }
