@@ -77,6 +77,7 @@ const notificationIconFor=(data:Record<string,string>)=>{
 };
 const channelFor=(data:Record<string,string>)=>{
  const type=String(data.type||"").toLowerCase();
+ if(type==="updates_post")return "updates";
  if(["sms","verification","verification_code"].includes(type))return "verification";
  if(["security","login","login_approval","account_security"].includes(type))return "security";
  if(["admin","announcement","push_test"].includes(type))return "admin";
