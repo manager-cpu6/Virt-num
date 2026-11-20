@@ -11,7 +11,7 @@ export default function AppChrome({docs=false}:{docs?:boolean}){
  if(authPath)return null;
 
  const publicPath=path==="/"||[
-  "/pricing","/terms","/privacy","/refund-policy","/cookie-policy",
+  "/pricing","/terms","/privacy","/refunds","/cookies","/acceptable-use","/refund-policy","/cookie-policy",
   "/account-deletion","/clients","/partners","/legal","/security","/services","/countries","/mobile-apps",
   "/faq","/rules","/support"
  ].some(x=>path===x||path.startsWith(x+"/"));
