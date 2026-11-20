@@ -2,7 +2,8 @@
 import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
-import ServiceLogo from "@/components/ServiceLogo";
+import ServiceLogo,{canonicalServiceBrand} from "@/components/ServiceLogo";
+import PublicFooter from "@/components/PublicFooter";
 
 type Service={id:string;code:string;name:string};
 
@@ -29,7 +30,13 @@ export default function ServicesPage(){
  const filtered=useMemo(()=>{
   const q=query.trim().toLocaleLowerCase();
   const rows=services.filter(item=>!q||(item.name+" "+item.id+" "+item.code).toLocaleLowerCase().includes(q));
-  return rows.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:"base"}));
+  const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","gmail","youtube"];
+  return rows.sort((a,b)=>{
+   const aBrand=canonicalServiceBrand(a.id,a.name),bBrand=canonicalServiceBrand(b.id,b.name);
+   const aRank=popularOrder.indexOf(aBrand),bRank=popularOrder.indexOf(bBrand);
+   const ar=aRank<0?popularOrder.length:aRank,br=bRank<0?popularOrder.length:bRank;
+   return ar-br||a.name.localeCompare(b.name,undefined,{sensitivity:"base"});
+  });
  },[services,query]);
  const visible=query.trim()||showAll?filtered:filtered.slice(0,16);
 
@@ -65,5 +72,6 @@ export default function ServicesPage(){
    :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
 
   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try a different service name or identifier.</span></div>}
+  <PublicFooter/>
  </div>;
 }
