@@ -8,6 +8,19 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 function digest(s:string){return crypto.createHash("sha256").update(s).digest();}
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
+function extractPayerPhone(body:string){
+ const pattern=/(?<![0-9])(?:\+251|251|0)[79](?:[\s-]?\d){8}(?![0-9])/g;
+ const reference=/(?:transfer\s*id|reference|\bref\b|transaction\s*(?:id|no|number|ref)|txn\s*(?:id|no|ref)|trace\s*(?:id|no)|receipt\s*(?:id|no)|order\s*(?:id|no))\s*[:#=-]?\s*$/i;
+ const matches=[...body.matchAll(pattern)].filter(m=>!reference.test(body.slice(Math.max(0,(m.index||0)-45),m.index||0)));
+ const selected=matches.sort((a,b)=>{
+  const score=(m:RegExpExecArray)=>{const before=body.slice(Math.max(0,(m.index||0)-55),m.index||0).toLowerCase();return /(?:from|sender|payer|customer|sent by)\D{0,45}$/.test(before)?3:before.includes("(")?2:1;};
+  return score(b)-score(a);
+ })[0]?.[0];
+ if(!selected)return "";
+ const digits=selected.replace(/[^0-9]/g,"");
+ const local=digits.startsWith("251")?"0"+digits.slice(3):digits;
+ return /^0[79]\d{8}$/.test(local)?local:"";
+}
 function nameKey(v:string){return v.normalize("NFKC").toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu," ").trim().split(/\s+/).filter(Boolean).sort().join(" ");}
 function editSimilarity(a:string,b:string){const x=Array.from(a),y=Array.from(b);if(x.join("")===y.join(""))return 1;if(!x.length||!y.length)return 0;const d=Array.from({length:x.length+1},()=>new Array(y.length+1).fill(0));for(let i=0;i<=x.length;i++)d[i][0]=i;for(let j=0;j<=y.length;j++)d[0][j]=j;for(let i=1;i<=x.length;i++)for(let j=1;j<=y.length;j++){const cost=x[i-1]===y[j-1]?0:1;d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+cost);if(i>1&&j>1&&x[i-1]===y[j-2]&&x[i-2]===y[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+cost);}return 1-d[x.length][y.length]/Math.max(x.length,y.length);}
 function nameSimilarity(a:string,b:string){const x=nameKey(a),y=nameKey(b);if(!x||!y)return 0;const character=editSimilarity(x,y),left=x.split(" "),right=y.split(" ");const score=(from:string[],to:string[])=>from.reduce((sum,word)=>sum+Math.max(...to.map(other=>editSimilarity(word,other))),0)/from.length;const token=(score(left,right)+score(right,left))/2;return Math.max(character,token);}
@@ -22,8 +35,7 @@ function parse(body:string){
  let amount:number|null=null;
  for(const pattern of amountPatterns){const m=body.match(pattern);if(m){const n=Number(m[1].replace(/,/g,""));if(Number.isFinite(n)&&n>0){amount=n;break;}}}
 
- const payerMatch=body.match(/(?:from|sender|payer|customer|debited\s+from|sent\s+by|mobile(?:\s+number)?|phone(?:\s+number)?|የላኪ|ላኪ)\D{0,45}(\+?251[\s-]?[79](?:[\s-]?\d){8}|0[79](?:[\s-]?\d){8})/i);
- const payerPhone=payerMatch?phone(payerMatch[1]):"";
+ const payerPhone=extractPayerPhone(body);
  const namePattern=/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/giu;
  const nameCandidates=[...body.matchAll(namePattern)].map(m=>m[1].trim().replace(/[.,;:-]+$/,"")).filter(n=>!["sender","payer","customer","account","bank"].includes(n.toLowerCase()));
  const payerName=nameCandidates[nameCandidates.length-1]||"";
