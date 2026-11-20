@@ -9,6 +9,6 @@ export default function AppChrome({docs=false}:{docs?:boolean}){
  if(publicPath)return null;
  // These route components already include PublicFooter. Keep the global footer
  // for app routes that do not render one, but never mount two copies.
- const routeOwnsFooter=["/dashboard","/account","/services"].includes(path);
+ const routeOwnsFooter=["/dashboard","/account","/services"].some(route=>path===route||path.startsWith(route+"/"));
  return <><BottomNav/>{routeOwnsFooter?null:<PublicFooter/>}</>;
 }
