@@ -120,6 +120,6 @@ A provider-specific cancellation defect in the public v1 cancel handler was iden
 
 ## Build and release verification
 
-- GitHub Actions website lint/typecheck/build has passed on an earlier feature-branch commit. Newer commits must pass the current run before acceptance.
+- GitHub Actions website lint, typecheck and production build passed on feature-branch commit `8a8785fcbddd02af31954d51a9f73af266a156be`.
 - Vercel preview creation was rejected by the Vercel API with HTTP 402 due to the team's daily deployment limit. No Vercel preview or production deployment is claimed.
 - No production branch, production domain, Vercel environment configuration or production database is changed by this feature branch.
