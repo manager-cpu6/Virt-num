@@ -1,2 +1,24 @@
 import Link from "next/link";
-export default function PublicFooter(){return <footer className="nx-public-footer"><div><a className="nx-footer-brand" href="/"><img src="/numelixa-brand.svg" alt="" width="34" height="34"/><b>NUMELIXA</b></a><p>Global virtual numbers and SMS verification, in one secure workspace.</p><small>© 2026 Numelixa. All rights reserved.</small></div><nav><Link href="/pricing">Pricing</Link><Link href="/services">Services</Link><Link href="/clients">For Clients</Link><Link href="/partners">For Partners</Link><Link href="/legal">Legal Center</Link><Link href="/security">Security</Link><Link href="/mobile-apps">Mobile app</Link><Link href="/support">Help Center & Contact</Link><Link href="/developers/docs">API Documentation</Link><Link href="/developers">API Access</Link><Link href="/terms">Terms of Service</Link><Link href="/privacy">Privacy Policy</Link><Link href="/refund-policy">Refund Policy</Link><Link href="/cookie-policy">Cookie Policy</Link><Link href="/rules">Acceptable Use</Link><Link href="/account-deletion">Account Deletion</Link><a href="mailto:support@numelixa.com?subject=Numelixa%20Support%20Enquiry">support@numelixa.com</a></nav></footer>}
+
+const groups=[
+ {title:"Explore",links:[["Pricing","/pricing"],["Services","/services"],["Mobile app","/mobile-apps"],["API documentation","/developers/docs"]]},
+ {title:"Company",links:[["For clients","/clients"],["For partners","/partners"],["Help center","/support"],["Security","/security"]]},
+ {title:"Legal & policies",links:[["Legal center","/legal"],["Terms of service","/terms"],["Privacy policy","/privacy"],["Refund policy","/refund-policy"],["Cookie policy","/cookie-policy"],["Acceptable use","/rules"],["Account deletion","/account-deletion"]]},
+];
+
+export default function PublicFooter(){
+ return <footer className="nx-public-footer">
+  <div className="nx-footer-brand-column">
+   <a className="nx-footer-brand" href="/"><img src="/numelixa-brand.svg" alt="" width="34" height="34"/><b>NUMELIXA</b></a>
+   <p>Global virtual numbers and SMS verification, in one secure workspace.</p>
+   <small>© 2026 Numelixa. All rights reserved.</small>
+   <a className="nx-footer-email" href="mailto:support@numelixa.com?subject=Numelixa%20Support%20Enquiry">support@numelixa.com</a>
+  </div>
+  <div className="nx-footer-groups">
+   {groups.map(group=><section className="nx-footer-group" key={group.title}>
+    <h2>{group.title}</h2>
+    <nav aria-label={group.title}>{group.links.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}</nav>
+   </section>)}
+  </div>
+ </footer>;
+}
