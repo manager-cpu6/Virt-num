@@ -22,8 +22,23 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
   const stream=bucket.openDownloadStream(objectId);
   const chunks:Buffer[]=[];
   for await(const chunk of stream)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk));
-  const body=Buffer.concat(chunks);
-  return new Response(body,{headers:{"Content-Type":type,"Content-Length":String(body.length),"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});
+  const fullBody=Buffer.concat(chunks),range=_req.headers.get("range");
+  const headers:Record<string,string>={"Content-Type":type,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Accept-Ranges":"bytes"};
+  if(range){
+   const match=/^bytes=(\\d*)-(\\d*)$/.exec(range.trim());
+   if(!match||(!match[1]&&!match[2]))return new Response(null,{status:416,headers:{"Content-Range":"bytes */"+fullBody.length,"Cache-Control":"private, no-store"}});
+   let start:number,end:number;
+   if(!match[1]){const suffix=Number(match[2]);if(!Number.isSafeInteger(suffix)||suffix<=0)return new Response(null,{status:416,headers:{"Content-Range":"bytes */"+fullBody.length}});start=Math.max(0,fullBody.length-suffix);end=fullBody.length-1;}
+   else{start=Number(match[1]);end=match[2]?Number(match[2]):fullBody.length-1;}
+   if(!Number.isSafeInteger(start)||!Number.isSafeInteger(end)||start<0||end<start||start>=fullBody.length)return new Response(null,{status:416,headers:{"Content-Range":"bytes */"+fullBody.length,"Cache-Control":"private, no-store"}});
+   end=Math.min(end,fullBody.length-1);
+   const body=fullBody.subarray(start,end+1);
+   headers["Content-Length"]=String(body.length);
+   headers["Content-Range"]="bytes "+start+"-"+end+"/"+fullBody.length;
+   return new Response(new Uint8Array(body),{status:206,headers});
+  }
+  headers["Content-Length"]=String(fullBody.length);
+  return new Response(new Uint8Array(fullBody),{headers});
  }catch(error){
   const message=error instanceof Error?error.message:"";
   return NextResponse.json({ok:false,error:"Media not found."},{status:404});
