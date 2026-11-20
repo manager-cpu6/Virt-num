@@ -5,7 +5,7 @@ const groups=[
  {title:"CLIENTS",links:[["For Clients","/clients"],["Help Center","/faq"],["Contact Support","/support"]]},
  {title:"PARTNERS",links:[["For Partners","/partners"]]},
  {title:"DEVELOPERS",links:[["API Documentation","/developers/docs"],["Developer Portal","/developers"],["Webhooks","/developers/docs#webhooks"]]},
- {title:"LEGAL",links:[["Terms of Service","/terms"],["Privacy Policy","/privacy"],["Refund Policy","/refund-policy"],["Cookie Policy","/cookie-policy"],["Acceptable Use","/rules"],["Account Deletion","/account-deletion"]]}
+ {title:"LEGAL",links:[["Terms of Service","/terms"],["Privacy Policy","/privacy"],["Refund Policy","/refunds"],["Cookie Policy","/cookies"],["Acceptable Use","/acceptable-use"],["Account Deletion","/account-deletion"]]}
 ];
 
 export default function PublicFooter(){
