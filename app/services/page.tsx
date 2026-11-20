@@ -3,7 +3,6 @@ import {useEffect,useMemo,useState} from "react";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
 import ServiceLogo,{canonicalServiceBrand} from "@/components/ServiceLogo";
-import PublicFooter from "@/components/PublicFooter";
 
 type Service={id:string;code:string;name:string};
 
@@ -72,6 +71,6 @@ export default function ServicesPage(){
    :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
 
   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try a different service name or identifier.</span></div>}
-  <PublicFooter/>
+  
  </div>;
 }
