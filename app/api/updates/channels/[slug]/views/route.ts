@@ -7,6 +7,8 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  try{
   const user=await requireUser(),{slug}=await params;
   const settings=await (await collection<any>("settings")).findOne({_id:"updates"});
+  const account=await (await collection<any>("users")).findOne({_id:String(user.id)},{projection:{updatesPreferences:1}});
+  if(account?.updatesPreferences?.hideUpdates===true)return NextResponse.json({ok:false,error:"Updates is hidden in your account settings."},{status:404});
   if(settings?.enabled!==true)return NextResponse.json({ok:false,error:"Updates is currently unavailable."},{status:404});
   const body=await req.json().catch(()=>null),postId=String(body?.postId||"").trim();
   if(!postId)return NextResponse.json({ok:false,error:"Post ID is required."},{status:400});
