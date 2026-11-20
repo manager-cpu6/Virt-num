@@ -18,7 +18,7 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
   const body=await req.json().catch(()=>({}));
   const subscriptions=await collection<any>("updateSubscriptions");
   const now=new Date();
-  await subscriptions.updateOne({channelId,userId},{$setOnInsert:{channelId,userId,joinedAt:now},$set:{notificationsEnabled:body?.notificationsEnabled!==false,updatedAt:now}},{upsert:true});
+  try{await subscriptions.updateOne({channelId,userId},{$setOnInsert:{channelId,userId,joinedAt:now},$set:{notificationsEnabled:body?.notificationsEnabled!==false,updatedAt:now}},{upsert:true});}catch(error){if((error as any)?.code!==11000)throw error;await subscriptions.updateOne({channelId,userId},{$set:{notificationsEnabled:body?.notificationsEnabled!==false,updatedAt:now}});}
   return NextResponse.json({ok:true,joined:true,notificationsEnabled:body?.notificationsEnabled!==false,subscriberCount:await subscriptions.countDocuments({channelId})});
  }catch(error){
   const message=error instanceof Error?error.message:"";
