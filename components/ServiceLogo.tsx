@@ -7,21 +7,17 @@ const aliases:Record<string,string>={
  tt:"tiktok",tiktok:"tiktok",tiktoklite:"tiktok",go:"google",google:"google",googlevoice:"googlevoice",gmail:"gmail",youtube:"youtube",youtubemusic:"youtubemusic",
  am:"amazon",amazon:"amazon",amazonprime:"amazon",amazonshop:"amazon",op:"openai",openai:"openai",chatgpt:"openai",claudeai:"claude",
  tw:"x",twitter:"x",x:"x",ms:"microsoft",microsoft:"microsoft",microsoftteams:"microsoftteams",ap:"apple",apple:"apple",
- oi:"openai",sn:"snapchat",snapchat:"snapchat",ds:"discord",discord:"discord",li:"linkedin",linkedin:"linkedin",pp:"paypal",paypal:"paypal",
- rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",vb:"viber",viber:"viber",sg:"signal",signal:"signal",
- vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",ebay:"ebay",uber:"uber",airbnb:"airbnb",pinterest:"pinterest",twitch:"twitch",
- steam:"steam",dropbox:"dropbox",slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail",
- "1xbet":"1xbet","1bet":"1xbet",vercel:"vercel",xbox:"xbox",playstation:"playstation",epicgames:"epicgames",roblox:"roblox",coinbase:"coinbase",kucoin:"kucoin",bitget:"bitget",grab:"grab",bolt:"bolt",olx:"olx",shopee:"shopee",rakuten:"rakuten",tinder:"tinder",bumble:"bumble",wechat:"wechat",line:"line",yahoo:"yahoo",hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda"
-};
-const domains:Record<string,string>={
- whatsapp:"whatsapp.com",facebook:"facebook.com",instagram:"instagram.com",threads:"threads.net",telegram:"telegram.org",tiktok:"tiktok.com",
- google:"google.com",googlevoice:"voice.google.com",gmail:"mail.google.com",youtube:"youtube.com",youtubemusic:"music.youtube.com",
- amazon:"amazon.com",openai:"openai.com",claude:"claude.ai",x:"x.com",microsoft:"microsoft.com",microsoftteams:"teams.microsoft.com",apple:"apple.com",
- snapchat:"snapchat.com",discord:"discord.com",linkedin:"linkedin.com",paypal:"paypal.com",reddit:"reddit.com",spotify:"spotify.com",
- netflix:"netflix.com",viber:"viber.com",signal:"signal.org",vk:"vk.com",yandex:"yandex.com",binance:"binance.com",bybit:"bybit.com",
- okx:"okx.com",ebay:"ebay.com",uber:"uber.com",airbnb:"airbnb.com",pinterest:"pinterest.com",twitch:"twitch.tv",steam:"steampowered.com",
- dropbox:"dropbox.com",slack:"slack.com",zoom:"zoom.us",notion:"notion.so",canva:"canva.com",figma:"figma.com",capcut:"capcut.com",protonmail:"proton.me",
- "1xbet":"1xbet.com",vercel:"vercel.com",xbox:"xbox.com",playstation:"playstation.com",epicgames:"epicgames.com",roblox:"roblox.com",coinbase:"coinbase.com",kucoin:"kucoin.com",bitget:"bitget.com",grab:"grab.com",bolt:"bolt.eu",olx:"olx.com",shopee:"shopee.com",rakuten:"rakuten.com",tinder:"tinder.com",bumble:"bumble.com",wechat:"wechat.com",line:"line.me",yahoo:"yahoo.com",hulu:"hulu.com",disneyplus:"disneyplus.com",paramountplus:"paramountplus.com",bookingdotcom:"booking.com",expedia:"expedia.com",agoda:"agoda.com"
+ oi:"openai",sn:"snapchat",snapchat:"snapchat",ds:"discord",discord:"discord",li:"linkedin",linkedin:"linkedin",
+ pp:"paypal",paypal:"paypal",rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",
+ vb:"viber",viber:"viber",sg:"signal",signal:"signal",vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",
+ ebay:"ebay",uber:"uber",airbnb:"airbnb",pinterest:"pinterest",twitch:"twitch",steam:"steam",dropbox:"dropbox",
+ slack:"slack",zoom:"zoom",notion:"notion",canva:"canva",figma:"figma",capcut:"capcut",protonmail:"protonmail",
+ "1xbet":"1xbet","1bet":"1xbet",vercel:"vercel",xbox:"xbox",playstation:"playstation",epicgames:"epicgames",
+ roblox:"roblox",coinbase:"coinbase",kucoin:"kucoin",bitget:"bitget",grab:"grab",bolt:"bolt",olx:"olx",
+ shopee:"shopee",rakuten:"rakuten",tinder:"tinder",bumble:"bumble",wechat:"wechat",line:"line",yahoo:"yahoo",
+ hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",booking:"bookingdotcom",bookingcom:"bookingdotcom",
+ expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",googleplay:"googleplay",
+ microsoft365:"microsoft365",teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",
 };
 export function canonicalServiceBrand(id:string,name:string){
  const normalize=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
@@ -30,13 +26,19 @@ export function canonicalServiceBrand(id:string,name:string){
  for(const key of keys){if(a===key||b===key||(key.length>=3&&(a.startsWith(key)||b.startsWith(key))))return aliases[key]}
  return "";
 }
+function serviceSlug(id:string,name:string){
+ const brand=canonicalServiceBrand(id,name);
+ if(brand)return brand;
+ // Simple Icons hosts thousands of transparent, official brand SVGs. Use the
+ // service's display name, never a numeric provider identifier, as the slug.
+ return name.toLowerCase().replace(/[^a-z0-9]/g,"");
+}
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
  const [failed,setFailed]=useState(false);
- const brand=canonicalServiceBrand(id,name);
- const domain=domains[brand];
- const src=domain?"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128":"";
- return <span className={className||"service-icon"} role="img" aria-label={name+" official logo"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
-  {src&&!failed?<img src={src} alt="" width="40" height="40" loading="lazy" decoding="async" onError={()=>setFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:5,boxSizing:"border-box"}}/>:
-   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>}
+ const slug=serviceSlug(id,name);
+ const initials=name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"?";
+ return <span className={className||"service-icon"} role="img" aria-label={name+" official brand mark"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"visible",position:"relative",background:"transparent",border:0,boxShadow:"none"}}>
+  {slug&&!failed?<img src={"https://cdn.simpleicons.org/"+encodeURIComponent(slug)} alt="" width="56" height="56" loading="lazy" decoding="async" onError={()=>setFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:0,boxSizing:"border-box",background:"transparent"}}/>:
+   <span aria-hidden="true" style={{fontSize:16,fontWeight:850,letterSpacing:"-.04em",color:"rgba(190,215,245,.78)"}}>{initials}</span>}
  </span>
 }
