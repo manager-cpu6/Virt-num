@@ -13,11 +13,12 @@ export async function GET(){
   const rows=await (await collection<any>("updateChannels")).find({}).sort({updatedAt:-1}).limit(200).toArray();
   const subs=await collection<any>("updateSubscriptions");
   const posts=await collection<any>("updatePosts");
+  const blocks=await collection<any>("updateBlocks");
   const output=[];
   for(const c of rows){
    const id=String(c._id);
-   const [actualSubscribers,postCount]=await Promise.all([subs.countDocuments({channelId:id}),posts.countDocuments({channelId:id})]);
-   output.push({...c,_id:id,actualSubscribers,postCount,publicSubscribers:c.subscriberDisplayMode==="custom"?Number(c.subscriberDisplayValue||0):actualSubscribers});
+   const [actualSubscribers,postCount,blockedUsers]=await Promise.all([subs.countDocuments({channelId:id}),posts.countDocuments({channelId:id}),blocks.countDocuments({channelId:id})]);
+   output.push({...c,_id:id,actualSubscribers,postCount,blockedUsers,publicSubscribers:c.subscriberDisplayMode==="custom"?Number(c.subscriberDisplayValue||0):actualSubscribers});
   }
   return NextResponse.json({ok:true,channels:output},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
