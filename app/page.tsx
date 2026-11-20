@@ -5,6 +5,7 @@ import {headers} from "next/headers";
 import FirstPartyCheckout from "@/components/FirstPartyCheckout";
 import CryptoPaymentPage from "@/components/CryptoPaymentPage";
 import LivePhoneDemo from "@/components/LivePhoneDemo";
+import HomeServiceDiscovery from "@/components/HomeServiceDiscovery";
 import AndroidDownloadPage from "@/components/AndroidDownloadPage";
 import type {Metadata} from "next";
 
@@ -56,6 +57,17 @@ export default async function LandingPage() {
 
         <section className="landing-stats"><div><strong>Live catalog</strong><span>Browse services and country availability</span></div><div><strong>One workspace</strong><span>Numbers, orders, SMS and wallet</span></div><div><strong>Web + Android</strong><span>Use your Numelixa account across devices</span></div></section>
 
+        <HomeServiceDiscovery />
+
+        <section className="nx-home-workspace">
+          <div className="nx-home-section-heading"><div><span>ONE CONNECTED WORKSPACE</span><h2>Every part of your workflow, together.</h2><p>Use the same Numelixa account to manage numbers, activation orders, incoming SMS and wallet activity.</p></div></div>
+          <div className="nx-home-workspace-grid">
+            <Link href="/numbers"><span>01</span><b>Numbers & activations</b><small>Choose a service and country, then manage your active number.</small><i>→</i></Link>
+            <Link href="/dashboard"><span>02</span><b>Orders & SMS</b><small>Track order status, retrieve messages and review completed activations.</small><i>→</i></Link>
+            <Link href="/wallet"><span>03</span><b>USD wallet</b><small>Review your balance, payment activity and supported top-up methods.</small><i>→</i></Link>
+          </div>
+        </section>
+
         <section id="features" className="landing-section">
           <div className="landing-section-head"><span>WHY NUMELIXA</span><h2>Everything you need to verify.<br /><em>Nothing you don't.</em></h2></div>
           <div className="landing-feature-grid">
@@ -105,6 +117,21 @@ export default async function LandingPage() {
             <div><b>◈</b><span><strong>Wallet control</strong><small>Track every credit movement</small></span><i>✓</i></div>
             <div><b>🔔</b><span><strong>Native alerts</strong><small>Stay informed on Android</small></span><i>✓</i></div>
           </div>
+        </section>
+
+        <section className="nx-home-platform-links">
+          <div className="nx-home-section-heading"><div><span>BUILT AROUND YOUR WORKFLOW</span><h2>Get help, build integrations, grow with Numelixa.</h2><p>Find the right resource whether you are using the platform, building an integration or exploring a business partnership.</p></div></div>
+          <div className="nx-home-platform-grid">
+            <article><span className="nx-home-platform-icon">↗</span><h3>Official Android app</h3><p>Manage your account, wallet, numbers and push notifications from the native mobile app.</p><Link href="/mobile-apps">Explore mobile app →</Link></article>
+            <article><span className="nx-home-platform-icon">⌘</span><h3>Developer resources</h3><p>Read the API documentation and review supported integration capabilities.</p><Link href="/developers/docs">Open API documentation →</Link></article>
+            <article><span className="nx-home-platform-icon">?</span><h3>Customer support</h3><p>Get help with payments, activation orders, SMS delivery and account access.</p><Link href="/support">Visit support center →</Link></article>
+            <article><span className="nx-home-platform-icon">◇</span><h3>Partner with us</h3><p>Discuss technical, API, reseller and business partnership opportunities.</p><Link href="/partners">Explore partnerships →</Link></article>
+          </div>
+        </section>
+
+        <section className="nx-home-payments">
+          <div><span>WALLET & PAYMENTS</span><h2>Clear balance. Secure checkout.</h2><p>Review your wallet in USD and choose from payment methods currently enabled for your account. Payment availability is confirmed during checkout.</p><Link href="/payment-method" className="landing-primary">View payment options →</Link></div>
+          <div className="nx-home-payment-points"><span><b>USD</b><small>Wallet balance</small></span><span><b>Secure</b><small>Checkout flow</small></span><span><b>Tracked</b><small>Payment history</small></span></div>
         </section>
 
         <section className="landing-final"><span>READY WHEN YOU ARE</span><h2>Start with Numelixa today.</h2><p>Get your first virtual number in a few taps.</p><Link href="/signup" className="landing-primary">Create free account <span>→</span></Link></section>
