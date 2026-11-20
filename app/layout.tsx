@@ -22,6 +22,7 @@ import AnalyticsTracker from "@/components/AnalyticsTracker";
 import SystemMaintenanceGate from "@/components/SystemMaintenanceGate";
 import CookieConsent from "@/components/CookieConsent";
 import {collection} from "@/lib/mongo";
+import {getUser} from "@/lib/auth";
 
 export const metadata:Metadata={
  metadataBase:new URL("https://numelixa.com"),
@@ -44,13 +45,15 @@ export default async function RootLayout({children}:{children:React.ReactNode}){
  const isCheckoutHost=host==="checkout.numelixa.com"||host==="payment.numelixa.com";
  let websiteMaintenance=false;
  let maintenanceMessage="Numelixa is temporarily under maintenance. Please check back soon.";
+ let initialAdminVerified=false;
  if(!isDownloadHost){
   try{const state=await (await collection<any>("settings")).findOne({_id:"systemMaintenance"});websiteMaintenance=state?.websiteEnabled===true;maintenanceMessage=String(state?.message||maintenanceMessage);}catch{}
+  if(websiteMaintenance){try{const currentUser=await getUser();initialAdminVerified=String(currentUser?.role||"").toLowerCase()==="admin";}catch{}}
  }
 
  return <html lang="en"><body>{isDownloadHost
   ? <div className="app-shell"><main className="page-shell docs-host-page">{children}</main></div>
-  : <SystemMaintenanceGate initialEnabled={websiteMaintenance} initialMessage={maintenanceMessage}>
+  : <SystemMaintenanceGate initialEnabled={websiteMaintenance} initialMessage={maintenanceMessage} initialAdminVerified={initialAdminVerified}>
      {!isCheckoutHost&&!isSupportHost&&<><MobileAppBootstrap/><LoginApprovalGate/><AnalyticsTracker/></>}
      <div className={isSupportHost?"nx-support-host-shell":isCheckoutHost?"nx-checkout-shell":isDocsHost?"app-shell docs-host-shell":"app-shell"}>
       <main className={isSupportHost?"nx-support-host-main":isCheckoutHost?"nx-checkout-page":isDocsHost?"page-shell docs-host-page":"page-shell docs-host-page"}>{children}</main>
