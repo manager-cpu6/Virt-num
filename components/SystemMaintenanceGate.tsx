@@ -18,17 +18,33 @@ export default function SystemMaintenanceGate({children,initialEnabled=false,ini
  const path=usePathname()||"/";
  const [enabled,setEnabled]=useState(initialEnabled);
  const [message,setMessage]=useState(initialMessage||"Numelixa is temporarily under maintenance. Please check back soon.");
+ const [adminVerified,setAdminVerified]=useState(false);
  useEffect(()=>{
   let alive=true;
-  const refresh=async()=>{try{const r=await fetch("/api/system/status",{cache:"no-store"});const d=await r.json();if(alive&&d.ok){setEnabled(d.websiteEnabled===true);setMessage(String(d.message||message));}}catch{}};
+  const verifyAdmin=async()=>{
+   try{
+    const r=await fetch("/api/me",{cache:"no-store",credentials:"include"});
+    if(!r.ok)return;
+    const d=await r.json();
+    if(alive&&String(d?.user?.role||"").toLowerCase()==="admin")setAdminVerified(true);
+   }catch{}
+  };
+  void verifyAdmin();
+  const refresh=async()=>{
+   try{
+    const r=await fetch("/api/system/status",{cache:"no-store"});
+    const d=await r.json();
+    if(alive&&d.ok){setEnabled(d.websiteEnabled===true);setMessage(String(d.message||"Numelixa is temporarily under maintenance. Please check back soon."));}
+   }catch{}
+  };
   void refresh();
-  const id=window.setInterval(refresh,30000);
+  const id=window.setInterval(()=>{void refresh();void verifyAdmin()},30000);
   return()=>{alive=false;window.clearInterval(id)};
  },[]);
- // Keep the administrator console and sign-in/recovery routes reachable during
- // maintenance. Otherwise an expired admin session gets redirected to /login,
- // which the maintenance screen would hide and leave no way to switch maintenance off.
- if(isMaintenanceExemptPath(path))return <>{children}</>;
+ // Admin routes are server-protected by requireAdmin. An authenticated site
+ // administrator is also exempt on the public root so the maintenance notice
+ // never blocks their way back to the console.
+ if(isMaintenanceExemptPath(path)||adminVerified)return <>{children}</>;
  if(!enabled)return <>{children}</>;
  return <main style={{minHeight:"75vh",display:"grid",placeItems:"center",padding:"32px 20px",background:"#030817",color:"#f5f8ff"}}>
   <section style={{width:"min(100%,560px)",textAlign:"center",padding:"36px 28px",borderRadius:28,border:"1px solid #24415f",background:"linear-gradient(145deg,#0c1b32,#071124)",boxShadow:"0 24px 80px #0008"}}>
