@@ -15,7 +15,7 @@ function publicChannel(channel:any,actual:number){
   actualSubscriberCount:actual,
   publicSubscriberCount:mode==="custom"&&Number.isSafeInteger(custom)&&custom>=0?custom:actual,
   subscriberDisplayMode:mode,
-  latestPost:channel.latestPost||null,updatedAt:channel.updatedAt||channel.createdAt||null
+  latestPost:channel.latestPost||null,joined:channel.joined===true,notificationsEnabled:channel.notificationsEnabled!==false,updatedAt:channel.updatedAt||channel.createdAt||null
  };
 }
 export async function GET(){
@@ -37,12 +37,13 @@ export async function GET(){
   for(const channel of channels){
    const id=String(channel._id);
    if(blocked.has(id))continue;
-   const [actual,latest]=await Promise.all([
+   const [actual,latest,membership]=await Promise.all([
     subscriptions.countDocuments({channelId:id}),
-    posts.findOne({channelId:id,status:"published"},{sort:{publishedAt:-1}})
+    posts.findOne({channelId:id,status:"published"},{sort:{publishedAt:-1}}),
+    subscriptions.findOne({channelId:id,userId:String(user.id)})
    ]);
    const latestPost=latest?{id:String(latest._id),title:String(latest.title||""),body:String(latest.body||""),publishedAt:latest.publishedAt||null,type:String(latest.type||"text")}:null;
-   output.push(publicChannel({...channel,latestPost},actual));
+   output.push(publicChannel({...channel,latestPost,joined:Boolean(membership),notificationsEnabled:membership?.notificationsEnabled!==false},actual));
   }
   return NextResponse.json({ok:true,enabled:true,hidden:false,notificationsEnabled,channels:output},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
