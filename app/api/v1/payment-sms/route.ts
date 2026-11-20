@@ -13,15 +13,15 @@ function editSimilarity(a:string,b:string){const x=Array.from(a),y=Array.from(b)
 function nameSimilarity(a:string,b:string){const x=nameKey(a),y=nameKey(b);if(!x||!y)return 0;const character=editSimilarity(x,y),left=x.split(" "),right=y.split(" ");const score=(from:string[],to:string[])=>from.reduce((sum,word)=>sum+Math.max(...to.map(other=>editSimilarity(word,other))),0)/from.length;const token=(score(left,right)+score(right,left))/2;return Math.max(character,token);}
 const providerMethods:Record<string,string[]>={EBIRR:["ebirr","coopay_ebirr"],COOPAY_EBIRR:["coopay_ebirr"],KAAFI:["kaafi_ebirr"],KAAFI_EBIRR:["kaafi_ebirr"],CBE:["cbe_birr","cbe_bank"],CBE_BIRR:["cbe_birr"],CBE_BANK:["cbe_bank"],MPESA:["mpesa"],M_PESA:["mpesa"],TELEBIRR:["telebirr"]};
 function parse(body:string){
+ // Parse only currency-labelled amounts (ETB/Birr). Never interpret Transfer ID or other numeric IDs as money.
  const amountPatterns=[
-  /(?:amount|received|credited|deposit|paid|transfer(?:red)?)\s*(?:of|is|was|:|=)?\s*(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)/i,
-  /(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)/i,
-  /([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)\b/i,
-  /(?:amount|received|credited|deposit|paid|transfer(?:red)?)\s*(?:of|is|was|:|=)?\s*([\d,]+(?:\.\d{1,2})?)/i
+  /\b(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)\b/i,
+  /\b([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)\b/i,
+  /\b(?:amount|credited|deposit(?:ed)?|paid)\s*(?:of|is|was|:|=)?\s*(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)\b/i
  ];
  let amount:number|null=null;
  for(const pattern of amountPatterns){const m=body.match(pattern);if(m){const n=Number(m[1].replace(/,/g,""));if(Number.isFinite(n)&&n>0){amount=n;break;}}}
- const ref=body.match(/(?:reference|ref(?:erence)?\s*(?:no|number)?|txn(?:\s*id)?|transaction\s*(?:id|no|number)|trans(?:action)?\s*no)\s*[:#= -]*([A-Z0-9-]{6,})/i)?.[1]||"";
+
  const payerMatch=body.match(/(?:from|sender|payer|customer|debited\s+from|sent\s+by|mobile(?:\s+number)?|phone(?:\s+number)?|የላኪ|ላኪ)\D{0,45}(\+?251[\s-]?[79](?:[\s-]?\d){8}|0[79](?:[\s-]?\d){8})/i);
  const payerPhone=payerMatch?phone(payerMatch[1]):"";
  const namePattern=/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/giu;
@@ -29,7 +29,7 @@ function parse(body:string){
  const payerName=nameCandidates[nameCandidates.length-1]||"";
  const negative=/(?:failed|unsuccessful|declined|reversed|cancelled|canceled|rejected|not successful|አልተሳካም|ውድቅ)/i.test(body);
  const positive=!negative&&/(?:received|credited|deposit(?:ed)?|has been received|you have received|payment successful|payment completed|transaction successful|transaction completed|transfer successful|transfer completed|successfully transferred|successfully sent|sent successfully|debited successfully|money received|has been deposited|ደረሰ|ገቢ ሆኗል|ተቀብለዋል)/i.test(body);
- return {amount,reference:ref,payerPhone,payerName,positive};
+ return {amount,payerPhone,payerName,positive};
 }
 export async function POST(req:Request){
  try{
@@ -42,7 +42,7 @@ export async function POST(req:Request){
   if(!raw||!allowed)return NextResponse.json({ok:true,matched:false,reason:"not_supported_wallet_sms"});
   const payments=await collection<any>("payments");
   let matched=false,reason="sms_missing_amount_or_sender_number",creditedOrderId="",checkedOrderIds:any[]=[];
-  const safeReference=parsed.reference||("SMS-"+crypto.createHash("sha256").update(provider+"|"+raw).digest("hex"));
+  const safeReference="SMS-"+crypto.createHash("sha256").update(provider+"|"+parsed.payerPhone+"|"+String(parsed.amount)+"|"+raw).digest("hex");
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
    const cutoff=new Date(Date.now()-30*60*1000);
    const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
@@ -61,7 +61,7 @@ export async function POST(req:Request){
      try{await session.withTransaction(async()=>{
       const claims=await collection<any>("paymentSmsClaims");
       await claims.insertOne({_id:crypto.createHash("sha256").update(String(order.method)+"|"+safeReference).digest("hex"),provider,method:String(order.method),transactionReference:safeReference,orderId:String(order.orderId),createdAt:new Date()},{session});
-      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:parsed.reference||null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_payer_phone_exact_amount_optional_name_similarity_80_receiver_and_unique_reference"}},{session,returnDocument:"before"});
+      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_payer_phone_exact_amount_optional_name_similarity_80_receiver_and_sms_fingerprint"}},{session,returnDocument:"before"});
       if(!claimed)throw new Error("PAYMENT_ORDER_ALREADY_CLAIMED");
       const users=await collection<any>("users"),user=await users.findOneAndUpdate({_id:String(order.userId)},{$inc:{coins:Number(order.coins)}},{session,returnDocument:"after"});
       if(!user)throw new Error("Payment user not found");
