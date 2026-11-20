@@ -1,13 +1,13 @@
 import {NextResponse} from "next/server";
 import {GridFSBucket,ObjectId} from "mongodb";
-import {getMongoDb} from "@/lib/mongo";
+import {collection,getMongoDb} from "@/lib/mongo";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
  try{
   const {id}=await params;
   if(!/^[a-f0-9]{24}$/i.test(id))return NextResponse.json({ok:false,error:"Media not found."},{status:404});
-  const settings=await (await import("@/lib/mongo")).collection<any>("settings").then(c=>c.findOne({_id:"updates"}));\n  if(settings?.enabled!==true)return NextResponse.json({ok:false,error:"Updates is currently unavailable."},{status:404});\n  const db=await getMongoDb(),bucket=new GridFSBucket(db,{bucketName:"updatesMedia"}),objectId=new ObjectId(id);
+  const settings=await (await collection<any>("settings")).findOne({_id:"updates"});\n  if(settings?.enabled!==true)return NextResponse.json({ok:false,error:"Updates is currently unavailable."},{status:404});\n  const db=await getMongoDb(),bucket=new GridFSBucket(db,{bucketName:"updatesMedia"}),objectId=new ObjectId(id);
   const files=await bucket.find({_id:objectId}).limit(1).toArray(),file=files[0];
   if(!file)return NextResponse.json({ok:false,error:"Media not found."},{status:404});
   const type=String(file.contentType||file.metadata?.contentType||"application/octet-stream");
