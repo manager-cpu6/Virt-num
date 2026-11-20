@@ -27,7 +27,7 @@ export async function POST(req:Request){
   if(!validMagic(type,bytes))return NextResponse.json({ok:false,error:"The file content does not match its declared media type."},{status:415});
   const bucket=new GridFSBucket(await getMongoDb(),{bucketName:"updatesMedia"});
   const name=String(file.name||"upload").replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,120);
-  const stream=bucket.openUploadStream(name,{contentType:type,metadata:{uploadedBy:String(admin.id),createdAt:new Date(),size:bytes.length}});
+  const stream=bucket.openUploadStream(name,{contentType:type,metadata:{uploadedBy:String(admin.id),createdAt:new Date(),size:bytes.length,contentType:type}});
   await new Promise<void>((resolve,reject)=>{stream.once("finish",()=>resolve());stream.once("error",reject);stream.end(bytes);});
   return NextResponse.json({ok:true,media:{id:String(stream.id),url:"/api/updates/media/"+String(stream.id),type:type.startsWith("video/")?"video":"image",contentType:type,size:bytes.length}},{status:201});
  }catch(error){
