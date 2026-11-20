@@ -12,7 +12,7 @@ export default function AppChrome({docs=false}:{docs?:boolean}){
 
  const publicPath=path==="/"||[
   "/pricing","/terms","/privacy","/refund-policy","/cookie-policy",
-  "/account-deletion","/clients","/partners","/legal","/security",
+  "/account-deletion","/clients","/partners","/legal","/security","/services","/countries","/mobile-apps",
   "/faq","/rules","/support"
  ].some(x=>path===x||path.startsWith(x+"/"));
 
