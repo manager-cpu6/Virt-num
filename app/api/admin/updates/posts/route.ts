@@ -7,7 +7,8 @@ export const dynamic="force-dynamic";
 const clean=(v:unknown,max:number)=>String(v??"").trim().slice(0,max);
 const allowedTypes=new Set(["text","image","gallery","video","announcement","update","service","maintenance","new-number","link","rich"]);
 function safeHttps(v:unknown){const value=clean(v,1800);if(!value)return "";try{const u=new URL(value);return u.protocol==="https:"?u.toString():""}catch{return ""}}
-function mediaUrl(v:unknown){const value=clean(v,1800);if(/^\\/api\\/updates\\/media\\/[a-f0-9]{24}$/i.test(value))return value;return safeHttps(value);}\nfunction normalizedMedia(raw:unknown){if(!Array.isArray(raw))return [];return raw.slice(0,10).map((x:any)=>({url:mediaUrl(x?.url||x),type:x?.type==="video"?"video":"image",alt:clean(x?.alt,140)})).filter(x=>x.url);}
+function mediaUrl(v:unknown){const value=clean(v,1800),prefix="/api/updates/media/";if(value.startsWith(prefix)&&/^[a-f0-9]{24}$/i.test(value.slice(prefix.length)))return value;return safeHttps(value);}
+function normalizedMedia(raw:unknown){if(!Array.isArray(raw))return [];return raw.slice(0,10).map((x:any)=>({url:mediaUrl(x?.url||x),type:x?.type==="video"?"video":"image",alt:clean(x?.alt,140)})).filter(x=>x.url);}
 function display(b:any){const mode=b.viewDisplayMode==="custom"?"custom":"automatic",value=Number(b.viewDisplayValue??0);if(mode==="custom"&&(!Number.isSafeInteger(value)||value<0||value>10000000000))throw new Error("Displayed views must be a whole number from 0 to 10,000,000,000.");return {viewDisplayMode:mode,viewDisplayValue:mode==="custom"?value:null};}
 async function notifySubscribers(channel:any,post:any){
  const settings=await (await collection<any>("settings")).findOne({_id:"updates"});
@@ -17,7 +18,10 @@ async function notifySubscribers(channel:any,post:any){
  if(!userIds.length)return {sent:0,failed:0};
  const blocks=await (await collection<any>("updateBlocks")).find({channelId:String(channel._id),userId:{$in:userIds}},{projection:{userId:1}}).toArray();
  const blocked=new Set(blocks.map(x=>String(x.userId)));
- const candidates=userIds.filter(x=>!blocked.has(x));\n const users=await (await collection<any>("users")).find({_id:{$in:candidates}},{projection:{_id:1,updatesPreferences:1}}).toArray();\n const allowed=new Set(users.filter(x=>x.updatesPreferences?.hideUpdates!==true&&x.updatesPreferences?.notificationsEnabled!==false).map(x=>String(x._id)));\n const recipients=candidates.filter(x=>allowed.has(x));
+ const candidates=userIds.filter(x=>!blocked.has(x));
+ const users=await (await collection<any>("users")).find({_id:{$in:candidates}},{projection:{_id:1,updatesPreferences:1}}).toArray();
+ const allowed=new Set(users.filter(x=>x.updatesPreferences?.hideUpdates!==true&&x.updatesPreferences?.notificationsEnabled!==false).map(x=>String(x._id)));
+ const recipients=candidates.filter(x=>allowed.has(x));
  const devices=await (await collection<any>("deviceTokens")).find({userId:{$in:recipients},platform:"android",enabled:{$ne:false}},{projection:{token:1}}).toArray();
  const tokens=[...new Set(devices.map(x=>String(x.token||"")).filter(x=>x.length>=20))];
  if(!tokens.length)return {sent:0,failed:0};
