@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 const groups=[
  {title:"PRODUCT",links:[["Services","/services"],["Pricing","/pricing"],["Mobile App","/mobile-apps"],["Wallet","/wallet"]]},
@@ -12,7 +13,7 @@ export default function PublicFooter(){
  return <footer className="nx-global-footer">
   <div className="nx-global-footer-inner">
    <div className="nx-global-footer-brand">
-    <Link href="/" className="nx-global-footer-logo"><img src="/numelixa-brand.svg" alt="Numelixa" width="34" height="34"/><span>NUMELIXA</span></Link>
+    <Link href="/" className="nx-global-footer-logo"><Image src="/numelixa-brand.svg" alt="Numelixa" width={34} height={34}/><span>NUMELIXA</span></Link>
     <p>Global virtual numbers and SMS verification in one secure workspace.</p>
     <a className="nx-global-footer-email" href="mailto:support@numelixa.com">support@numelixa.com</a>
     <small>© {new Date().getFullYear()} Numelixa. All rights reserved.</small>
