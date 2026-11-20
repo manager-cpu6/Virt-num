@@ -12,6 +12,11 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
   const db=await getMongoDb(),bucket=new GridFSBucket(db,{bucketName:"updatesMedia"}),objectId=new ObjectId(id);
   const files=await bucket.find({_id:objectId}).limit(1).toArray(),file=files[0];
   if(!file)return NextResponse.json({ok:false,error:"Media not found."},{status:404});
+  const mediaPath="/api/updates/media/"+id;
+  const post=await (await collection<any>("updatePosts")).findOne({status:"published","media.url":mediaPath},{projection:{channelId:1}});
+  if(!post)return NextResponse.json({ok:false,error:"Media not found."},{status:404});
+  const channel=await (await collection<any>("updateChannels")).findOne({_id:String(post.channelId),status:"active"},{projection:{_id:1}});
+  if(!channel)return NextResponse.json({ok:false,error:"Media not found."},{status:404});
   const type=String(file.contentType||file.metadata?.contentType||"application/octet-stream");
   if(!["image/png","image/jpeg","image/webp","image/gif","video/mp4","video/webm"].includes(type))return NextResponse.json({ok:false,error:"Unsupported media."},{status:415});
   const stream=bucket.openDownloadStream(objectId);
