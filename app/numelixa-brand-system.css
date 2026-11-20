@@ -1,0 +1,138 @@
+.nx-global-footer{width:100%;margin-top:0;background:#050b18;color:#f4f7fc;border-top:1px solid #263957;padding:46px 22px 28px}
+.nx-global-footer-inner{width:min(100%,1240px);margin:0 auto;display:grid;grid-template-columns:minmax(210px,1.05fr) minmax(0,2.8fr);gap:46px}
+.nx-global-footer-brand{max-width:290px}
+.nx-global-footer-logo{display:inline-flex;align-items:center;gap:10px;color:#f4f7fc;font-size:17px;font-weight:900;letter-spacing:.04em}
+.nx-global-footer-logo img{width:34px;height:34px;object-fit:contain;display:block}
+.nx-global-footer-brand p{margin:16px 0;color:#98a9c2;font-size:13px;line-height:1.65}
+.nx-global-footer-email{display:inline-block;color:#35d6e3;font-size:13px;font-weight:750;margin:4px 0 18px}
+.nx-global-footer-brand small{display:block;color:#71839e;font-size:11px;line-height:1.5}
+.nx-global-footer-groups{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:22px}
+.nx-global-footer-groups nav{display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0}
+.nx-global-footer-groups h2{margin:4px 0 7px;color:#71839e;font-size:10px;font-weight:900;letter-spacing:.13em}
+.nx-global-footer-groups a{color:#b7c5d8;font-size:12px;line-height:1.45;transition:color .16s}
+.nx-global-footer-groups a:hover{color:#35d6e3}
+.page-shell:has(>.public-landing){width:100%;max-width:none;margin:0;padding:0}
+@media(max-width:900px){.nx-global-footer-inner{grid-template-columns:1fr;gap:30px}.nx-global-footer-brand{max-width:520px}.nx-global-footer-groups{grid-template-columns:repeat(3,minmax(0,1fr));row-gap:28px}}
+@media(max-width:560px){.nx-global-footer{padding:34px 18px 24px}.nx-global-footer-groups{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px 16px}.nx-global-footer-groups nav:last-child{grid-column:1/-1}.nx-global-footer-groups a{font-size:12px}}
+.nx-partners-page{padding-bottom:20px}
+.nx-partner-grid article button{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(53,214,227,.24);border-radius:12px;padding:10px 13px;background:#0d1930;color:#35d6e3;font-size:12px;font-weight:850;cursor:pointer}
+.nx-partner-contact{align-items:start!important}
+.nx-partner-form{width:min(100%,650px);display:grid;gap:13px}
+.nx-partner-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.nx-partner-form label{display:grid;gap:7px;color:#b8c9df;font-size:12px;font-weight:800}
+.nx-partner-form input,.nx-partner-form select,.nx-partner-form textarea{width:100%;min-height:45px;border:1px solid #263957;border-radius:12px;padding:11px 12px;background:#071329;color:#f4f7fc;outline:none}
+.nx-partner-form textarea{resize:vertical;line-height:1.55}
+.nx-partner-form input:focus,.nx-partner-form select:focus,.nx-partner-form textarea:focus{border-color:#35d6e3;box-shadow:0 0 0 3px rgba(53,214,227,.1)}
+.nx-partner-message{grid-column:1/-1}
+.nx-partner-honeypot{position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important}
+.nx-partner-submit{min-height:48px;border:0;border-radius:13px;padding:0 17px;background:linear-gradient(110deg,#35d6e3,#4388ff);color:#04121f;font-weight:900;cursor:pointer}
+.nx-partner-submit:disabled{opacity:.6;cursor:wait}
+.nx-partner-form>small{color:#8297b5;font-size:11px;line-height:1.5}
+.nx-partner-alert{padding:12px 14px;border-radius:12px;font-size:12px;line-height:1.5}
+.nx-partner-alert span{display:block;margin-top:5px;font-weight:800}
+.nx-partner-alert.error{background:#351a29;border:1px solid #754052;color:#ffb8c7}
+.nx-partner-alert.success{background:#0d302b;border:1px solid #236c5d;color:#a1f1d6}
+@media(max-width:640px){.nx-partner-form-grid{grid-template-columns:1fr}.nx-partner-contact{display:grid!important}.nx-partner-form{width:100%}}
+
+.public-landing{max-width:100%;overflow:hidden;background:radial-gradient(ellipse at 78% 0%,rgba(53,214,227,.09),transparent 34%),#050b18;color:#f4f7fc}
+.public-landing .landing-nav{width:min(100% - 40px,1240px);margin:0 auto;border-bottom:1px solid rgba(145,177,220,.12)}
+.public-landing .landing-brand b{color:#f4f7fc!important;font-weight:900}
+.public-landing .landing-brand small{color:#98a9c2!important}
+.public-landing .landing-copy h1{color:#f4f7fc!important;max-width:720px}
+.public-landing .landing-badge{color:#35d6e3!important;background:rgba(53,214,227,.08);border:1px solid rgba(53,214,227,.17);border-radius:999px;padding:8px 12px}
+.public-landing .landing-badge span{background:#35d6e3!important;box-shadow:0 0 0 5px rgba(53,214,227,.12)!important}
+.public-landing .landing-primary,.public-landing .landing-start{background:linear-gradient(110deg,#35d6e3,#4388ff)!important;color:#04121f!important;border:0!important;box-shadow:0 12px 30px rgba(53,214,227,.13)!important}
+.public-landing .landing-secondary{background:#0d1930!important;border:1px solid #263957!important;color:#dce8f7!important}
+.public-landing .landing-proof span{color:#98a9c2!important}
+.nx-home-discovery,.nx-home-workspace,.nx-home-platform-links,.nx-home-payments{width:min(100% - 40px,1180px);margin:54px auto}
+.nx-home-section-heading{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:18px}
+.nx-home-section-heading>div>span,.nx-home-payments>div:first-child>span{font-size:10px;letter-spacing:.17em;font-weight:900;color:#35d6e3}
+.nx-home-section-heading h2,.nx-home-payments h2{font-size:clamp(25px,3.8vw,36px);letter-spacing:-.045em;line-height:1.08;margin:9px 0;color:#f4f7fc}
+.nx-home-section-heading p,.nx-home-payments p{max-width:650px;color:#98a9c2;font-size:13px;line-height:1.7;margin:0}
+.nx-home-section-heading>a{color:#35d6e3;font-size:12px;font-weight:850;white-space:nowrap}
+.nx-home-service-search{display:flex;align-items:center;gap:10px;padding:0 14px;min-height:52px;border:1px solid #263957;border-radius:16px;background:#0d1930;color:#98a9c2}
+.nx-home-service-search>span{font-size:24px}
+.nx-home-service-search input{flex:1;min-width:0;border:0!important;outline:0!important;background:transparent!important;color:#f4f7fc!important;box-shadow:none!important}
+.nx-home-service-search button{border:0;background:transparent;color:#98a9c2;font-size:22px}
+.nx-home-service-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin-top:14px}
+.nx-home-service-card{display:flex;align-items:center;gap:11px;min-width:0;padding:14px;border:1px solid #263957;border-radius:17px;background:linear-gradient(145deg,#0d1930,#081329);transition:transform .16s,border-color .16s}
+.nx-home-service-card:hover{transform:translateY(-2px);border-color:rgba(53,214,227,.45)}
+.nx-home-service-card .service-icon{width:42px;height:42px;flex:0 0 42px;border-radius:13px}
+.nx-home-service-card>span:nth-child(2){display:grid;gap:4px;min-width:0;flex:1}
+.nx-home-service-card b{font-size:13px;color:#f4f7fc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nx-home-service-card small{font-size:10px;color:#98a9c2;line-height:1.4}
+.nx-home-service-card i{font-style:normal;color:#35d6e3}
+.nx-home-service-state{margin-top:12px;padding:20px;border-radius:15px;background:#0d1930;color:#98a9c2;font-size:12px}
+.nx-home-service-state.error{color:#ffb8c7;border:1px solid rgba(255,100,124,.25)}
+.nx-home-service-state a,.nx-home-discovery-foot a{color:#35d6e3;font-weight:800}
+.nx-home-discovery-foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:13px;color:#7486a5;font-size:11px}
+.nx-home-workspace-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.nx-home-workspace-grid>a{position:relative;display:grid;gap:9px;padding:20px;border-radius:19px;border:1px solid #263957;background:linear-gradient(145deg,#0d1930,#081329)}
+.nx-home-workspace-grid>a>span{color:#35d6e3;font-size:10px;font-weight:900;letter-spacing:.12em}
+.nx-home-workspace-grid b{font-size:16px;color:#f4f7fc}
+.nx-home-workspace-grid small{color:#98a9c2;font-size:12px;line-height:1.6;max-width:280px}
+.nx-home-workspace-grid i{position:absolute;right:17px;bottom:17px;font-style:normal;color:#35d6e3}
+.nx-home-platform-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.nx-home-platform-grid article{padding:19px;border:1px solid #263957;border-radius:19px;background:linear-gradient(145deg,#0d1930,#081329)}
+.nx-home-platform-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px;background:rgba(53,214,227,.1);color:#35d6e3;font-weight:900}
+.nx-home-platform-grid h3{font-size:15px;margin:13px 0 7px;color:#f4f7fc}
+.nx-home-platform-grid p{min-height:58px;color:#98a9c2;font-size:12px;line-height:1.6}
+.nx-home-platform-grid a{font-size:11px;font-weight:850;color:#35d6e3}
+.nx-home-payments{display:grid;grid-template-columns:1.3fr 1fr;gap:28px;align-items:center;padding:26px;border:1px solid #263957;border-radius:24px;background:linear-gradient(135deg,#0d1930,#081329)}
+.nx-home-payments h2{margin-top:9px}
+.nx-home-payments p{margin-bottom:18px}
+.nx-home-payment-points{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.nx-home-payment-points span{display:grid;gap:6px;padding:14px 10px;border-radius:14px;background:#071329;border:1px solid #263957}
+.nx-home-payment-points b{font-size:16px;color:#35d6e3}
+.nx-home-payment-points small{font-size:10px;color:#98a9c2}
+@media(max-width:900px){.nx-home-service-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-home-platform-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.nx-home-workspace-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){.public-landing .landing-nav{width:calc(100% - 28px)}.nx-home-discovery,.nx-home-workspace,.nx-home-platform-links,.nx-home-payments{width:calc(100% - 28px);margin:38px auto}.nx-home-section-heading{align-items:flex-start;flex-direction:column}.nx-home-service-grid{grid-template-columns:1fr 1fr;gap:8px}.nx-home-service-card{padding:10px;gap:8px}.nx-home-service-card .service-icon{width:36px;height:36px;flex-basis:36px}.nx-home-service-card small{font-size:9px}.nx-home-workspace-grid,.nx-home-platform-grid{grid-template-columns:1fr 1fr;gap:9px}.nx-home-workspace-grid>a,.nx-home-platform-grid article{padding:14px}.nx-home-platform-grid p{min-height:78px}.nx-home-payments{grid-template-columns:1fr;padding:18px}.nx-home-payment-points{grid-template-columns:repeat(3,1fr)}.nx-home-payment-points span{padding:11px 8px}}
+@media(max-width:390px){.nx-home-service-grid,.nx-home-workspace-grid,.nx-home-platform-grid{grid-template-columns:1fr}}
+
+:root{
+ --nx-bg:#050b18;--nx-bg-raised:#0d1930;--nx-surface:#0d1930;--nx-surface-2:#12213b;
+ --nx-border:#263957;--nx-border-strong:rgba(53,214,227,.42);
+ --nx-cyan:#35d6e3;--nx-blue:#4388ff;--nx-text:#f4f7fc;--nx-muted:#98a9c2;
+ --nx-subtle:#71839e;--nx-success:#35c98a;--nx-warning:#ffb547;--nx-danger:#ff647c;
+ --nx-glass-line:rgba(38,57,87,.88);--nx-glass-line-strong:rgba(53,214,227,.4);
+ --nx-glass-text:#f4f7fc;--nx-glass-shadow:0 14px 38px rgba(0,0,0,.2);
+ --nx-radius-lg:20px;--nx-radius-xl:24px;
+}
+html,body{background:#050b18!important;color:#f4f7fc!important}
+body{background:linear-gradient(180deg,#071329 0,#050b18 440px,#050b18 100%)!important}
+::selection{background:rgba(53,214,227,.25);color:#fff}
+.topbar{background:rgba(5,11,24,.9)!important;border-color:#263957!important}
+.topbar .coin-pill{background:#0d1930!important;color:#f4f7fc!important;border-color:#263957!important}
+.topbar .icon-btn{background:#0d1930!important;color:#dce8f7!important;border-color:#263957!important}
+.primary-btn,.support-submit,.admin-primary-btn,.nx-primary-action{background:linear-gradient(110deg,#35d6e3,#4388ff)!important;color:#04121f!important;border:0!important;box-shadow:0 10px 26px rgba(53,214,227,.12)!important}
+.secondary-btn,.orders-refresh,.account-edit-btn{background:#12213b!important;color:#dce8f7!important;border:1px solid #263957!important}
+.market-hero,.country-banner,.service-search-box,.form-card,.helper-card,.service-card,.country-card,.quick-card,.home-live-card,.live-board,.section-card,.wallet-card,.order-card,.account-card,.admin-card,.admin-section,.stat-card,.provider-card,.account-profile-card,.account-wallet-card,.account-security-card,.account-sessions-card,.orders-stat-strip,.orders-tabs,.nx-wallet-content,.nx-wallet-custom,.nx-wallet-checkout-summary,.nx-wallet-methods,.nx-wallet-guide,.nx-chooser-card{background:#0d1930!important;border:1px solid #263957!important;color:#f4f7fc!important;box-shadow:0 12px 34px rgba(0,0,0,.2)!important;backdrop-filter:none!important}
+.service-card:hover,.country-card:hover,.quick-card:hover,.order-card:hover,.account-action-card:hover{border-color:rgba(53,214,227,.45)!important}
+.service-card b,.country-card b,.quick-card b,.account-identity h1,.account-wallet-copy strong,.nx-wallet-balance,.section-head h2,.market-hero h1,.country-banner b{color:#f4f7fc!important}
+.service-card small,.country-card small,.quick-card small,.section-head p,.market-hero p,.country-name small,.account-identity p,.account-profile-footer,.account-wallet-copy small{color:#98a9c2!important}
+.eyebrow,.section-head .eyebrow,.nx-wallet-eyebrow{color:#35d6e3!important}
+.service-icon,.service-card .service-icon,.countries-page .country-row .flag{background:#12213b!important;border:1px solid #263957!important}
+.country-list{background:#0d1930!important;border:1px solid #263957!important}
+.countries-page .country-row{border-bottom-color:rgba(152,169,194,.12)!important}
+.countries-page .country-name b{color:#f4f7fc!important}
+.countries-page .country-price b{color:#35d6e3!important}
+.account-profile-card{background:linear-gradient(145deg,#12213b,#0d1930)!important;border-color:#263957!important;box-shadow:0 14px 38px rgba(0,0,0,.2)!important}
+.account-profile-glow{display:none!important}
+.account-avatar-premium{background:#12213b!important;border-color:#263957!important;color:#35d6e3!important}
+.account-member-pill{background:rgba(53,214,227,.08)!important;border:1px solid rgba(53,214,227,.22)!important;color:#35d6e3!important}
+.account-wallet-orb,.security-icon{background:#12213b!important;color:#35d6e3!important}
+.nx-wallet-hero{background:radial-gradient(circle at 90% 8%,rgba(53,214,227,.09),transparent 34%),linear-gradient(145deg,#0d1930,#081329)!important;border-color:#263957!important;box-shadow:0 18px 44px rgba(0,0,0,.2)!important}
+.nx-wallet-orb{background:#12213b!important;border-color:#263957!important;color:#35d6e3!important;box-shadow:none!important}
+.nx-wallet-amount-grid button{background:#12213b!important;border-color:#263957!important;color:#f4f7fc!important}
+.nx-wallet-amount-grid button.selected{border-color:#35d6e3!important;box-shadow:0 0 0 1px rgba(53,214,227,.18)!important}
+.nx-wallet-methods>div{background:#12213b!important;border-color:#263957!important}
+.reference-dashboard{color:#f4f7fc!important}
+body:has(.reference-dashboard){background:#050b18!important}
+body:has(.reference-dashboard) .page-shell{background:transparent!important}
+.reference-dashboard .hero-card.home-hero-refresh{background:linear-gradient(145deg,#12213b,#0d1930)!important;border-color:#263957!important;box-shadow:0 16px 40px rgba(0,0,0,.22)!important}
+.reference-dashboard .coin-pill,.reference-dashboard .icon-btn,.reference-dashboard .home-menu-btn{background:#12213b!important;border-color:#263957!important;color:#35d6e3!important}
+.nx-public-page,.nx-guide-page,.nx-developer-portal{background:#050b18!important;color:#f4f7fc!important}
+.nx-public-nav,.nx-guide-nav{background:rgba(5,11,24,.92)!important;border-color:#263957!important}
+.nx-public-hero,.nx-guide-hero{color:#f4f7fc!important}
+.nx-public-eyebrow,.nx-guide-kicker{color:#35d6e3!important}
+@media(max-width:640px){.page-shell{padding:12px 14px calc(124px + env(safe-area-inset-bottom))!important}.service-card,.country-card,.quick-card{border-radius:16px!important}}

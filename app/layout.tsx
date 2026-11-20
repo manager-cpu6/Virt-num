@@ -13,6 +13,7 @@ import "./numelixa-liquid-glass.css";
 import "./support/support.css";
 import "./numelixa-public-pages.css";
 import "./numelixa-platform.css";
+import "./numelixa-brand-system.css";
 import type {Metadata,Viewport} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
