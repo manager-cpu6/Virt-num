@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import TopBar from "@/components/TopBar";
+import ServiceLogo,{canonicalServiceBrand} from "@/components/ServiceLogo";
 import {useCallback,useEffect,useMemo,useState} from "react";
 
 type Order={
@@ -12,6 +13,17 @@ const tabs:{id:Tab;label:string}[]=[
  {id:"all",label:"All orders"},{id:"active",label:"Active"},{id:"received",label:"Received"},
  {id:"cancelled",label:"Cancelled"},{id:"failed",label:"Failed"}
 ];
+const brandNames:Record<string,string>={
+ whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",instagram:"Instagram",facebook:"Facebook",google:"Google",
+ discord:"Discord",x:"X",amazon:"Amazon",microsoft:"Microsoft",paypal:"PayPal",snapchat:"Snapchat",
+ googlepay:"Google Pay",apple:"Apple",youtube:"YouTube",openai:"OpenAI"
+};
+function serviceName(value?:string|null){
+ const raw=String(value||"").trim();
+ if(!raw)return "SMS service";
+ const brand=canonicalServiceBrand(raw,raw);
+ return brandNames[brand]||raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
+}
 function statusLabel(status:string){
  switch(status.toLowerCase()){
   case "waiting":return "Waiting for SMS";
@@ -86,11 +98,11 @@ export default function Numbers(){
    <div className="orders-list nx-orders-list">
     {visible.length?visible.map(item=>{
      const status=item.status.toLowerCase(),waiting=["waiting","cancelling"].includes(status),received=status==="received";
-     const price=Number(item.price_usd);
+     const price=Number(item.price_usd),name=serviceName(item.service);
      return <article className={"order-card "+(received?"received":"")+(waiting?" waiting":"")} key={item.id}>
       <div className="order-card-top">
-       <div className={"order-service-icon "+(received?"good":"")}>{received?"✓":waiting?"◷":status==="failed"?"!":"↻"}</div>
-       <div className="order-service-copy"><strong>{item.service||"SMS service"}</strong><small>{item.country||"Country unavailable"}{item.country_code?" · "+item.country_code:""}</small></div>
+       <ServiceLogo id={item.service||""} name={name} className="order-service-brand"/>
+       <div className="order-service-copy"><strong>{name}</strong><small>{item.country||"Country unavailable"}{item.country_code?" · "+item.country_code:""}</small></div>
        <span className={"order-status "+(received?"good":"")}>{statusLabel(status)}</span>
       </div>
       <div className="order-number-box"><span>{item.phone_number||"Number not available"}</span>{item.phone_number&&<button type="button" className="nx-order-copy" onClick={()=>void copy(item.phone_number!,"Number")}>Copy</button>}</div>
