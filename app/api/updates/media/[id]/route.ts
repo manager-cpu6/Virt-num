@@ -18,7 +18,7 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
   const chunks:Buffer[]=[];
   for await(const chunk of stream)chunks.push(Buffer.isBuffer(chunk)?chunk:Buffer.from(chunk));
   const body=Buffer.concat(chunks);
-  return new Response(body,{headers:{"Content-Type":type,"Content-Length":String(body.length),"Cache-Control":"public, max-age=86400, stale-while-revalidate=604800","X-Content-Type-Options":"nosniff","Content-Security-Policy":"default-src 'none'; sandbox"}});
+  return new Response(body,{headers:{"Content-Type":type,"Content-Length":String(body.length),"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});
  }catch(error){
   const message=error instanceof Error?error.message:"";
   return NextResponse.json({ok:false,error:"Media not found."},{status:404});
