@@ -28,90 +28,77 @@ export async function generateMetadata():Promise<Metadata>{
 }
 
 export default async function LandingPage() {
-  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
-  if(host==="app.numelixa.com")return <AndroidDownloadPage/>;
-  if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
-  if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
-  const user = await getUser().catch(() => null);
-  if (user) redirect("/dashboard");
+ const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
+ if(host==="app.numelixa.com")return <AndroidDownloadPage/>;
+ if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
+ if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
+ const user=await getUser().catch(()=>null);
+ if(user)redirect("/dashboard");
 
-  return (
-    <div className="public-landing">
-      <header className="landing-nav">
-        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-brand.svg" alt=""/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
-        <nav><a href="#features">Platform</a><a href="#how">How it works</a><Link href="/services">Services</Link><Link href="/pricing">Pricing</Link><Link href="/developers/docs">Developers</Link><Link href="/support">Support</Link></nav>
-        <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div>
-      </header>
+ return <div className="public-landing nx-landing-v2">
+  <header className="landing-nav">
+   <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-brand.svg" alt=""/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
+   <nav aria-label="Main navigation"><a href="#features">Platform</a><a href="#how">How it works</a><Link href="/services">Services</Link><Link href="/pricing">Pricing</Link><Link href="/developers/docs">Developers</Link><Link href="/support">Support</Link></nav>
+   <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Get started <span>↗</span></Link></div>
+  </header>
 
-      <main>
-        <section className="landing-hero">
-          <div className="landing-copy">
-            <div className="landing-badge"><span /> LIVE GLOBAL SMS PLATFORM</div>
-            <h1>Numbers, without the noise.</h1>
-            <p>Get a virtual number for supported services, manage your numbers and keep everything in one place.</p>
-            <div className="landing-cta"><Link href="/signup" className="landing-primary">Get a Number <span>→</span></Link><Link href="/login" className="landing-secondary">Sign in</Link></div>
-            <div className="landing-proof"><span>✓ Live service catalog</span><span>✓ Order & SMS tracking</span><span>✓ USD wallet</span></div>
-          </div>
-          <LivePhoneDemo />
-        </section>
-
-        <section className="landing-stats"><div><strong>Live catalog</strong><span>Browse services and country availability</span></div><div><strong>One workspace</strong><span>Numbers, orders, SMS and wallet</span></div><div><strong>Web + Android</strong><span>Use your Numelixa account across devices</span></div></section>
-
-        <section id="features" className="landing-section">
-          <div className="landing-section-head"><span>WHY NUMELIXA</span><h2>Everything you need to verify.<br /><em>Nothing you don't.</em></h2></div>
-          <div className="landing-feature-grid">
-            <article><div>↗</div><b>Live availability</b><p>Choose a service and check country stock and price before placing an order.</p></article>
-            <article><div>SMS</div><b>SMS tracking</b><p>Follow activation status and view incoming verification messages in your account.</p></article>
-            <article><div>◎</div><b>Country selection</b><p>Explore the countries returned by the live catalog for the service you select.</p></article>
-            <article><div>⌑</div><b>Account controls</b><p>Manage your profile, sessions, wallet, orders and support from one account.</p></article>
-          </div>
-        </section>
-
-        <section className="landing-live-strip" aria-label="Numelixa live activity">
-          <div className="landing-live-panel">
-            <span className="eyebrow">Live network</span>
-            <h3>Your numbers and messages, in one place.</h3>
-            <p>A preview of the workflow. Your real orders and incoming messages appear after sign-in.</p>
-            <div className="live-feed-list"><div className="live-feed-row"><b>Real order activity</b><span>AVAILABLE AFTER SIGN-IN</span></div></div>
-          </div>
-          <div className="landing-video-panel">
-            <span className="eyebrow">Product preview</span>
-            <div className="video-screen"><span className="video-live">APP PREVIEW</span></div>
-            <h3>See it in motion.</h3>
-            <p>Fast number selection, live SMS status and a clean verification workflow.</p>
-          </div>
-          <div className="landing-people-panel">
-            <span className="eyebrow">ONE ACCOUNT</span>
-            <h3>Your workflow stays together.</h3>
-            <p>Move between the website and native Android app while keeping your Numelixa account and order history in one place.</p>
-            <div className="people-row">
-              <span><b>Product access</b><small>Web dashboard · Native Android app</small></span>
-            </div>
-          </div>
-        </section>
-
-        <section id="how" className="landing-how">
-          <div className="landing-section-head"><span>HOW IT WORKS</span><h2>From sign up to code<br /><em>in three simple steps.</em></h2></div>
-          <div className="landing-steps">
-            <article><span>01</span><div><b>Create your account</b><p>Sign up with email or phone. Verify your account with a secure one-time code.</p></div></article>
-            <article><span>02</span><div><b>Choose a number</b><p>Select your service and country, then use your balance to get a live number.</p></div></article>
-            <article><span>03</span><div><b>Receive your code</b><p>Keep the order open and your SMS verification code appears when it arrives.</p></div></article>
-          </div>
-        </section>
-
-        <section id="security" className="landing-security">
-          <div><span className="landing-badge">BUILT FOR TRUST</span><h2>Your verification workspace,<br /><em>all in one place.</em></h2><p>Numelixa combines numbers, SMS, wallet, orders and account security into one clean experience across web and Android.</p><Link href="/signup" className="landing-primary">Start now <span>→</span></Link></div>
-          <div className="security-panel">
-            <div><b>🔒</b><span><strong>Secure sessions</strong><small>Manage your active devices</small></span><i>✓</i></div>
-            <div><b>◈</b><span><strong>Wallet control</strong><small>Track every credit movement</small></span><i>✓</i></div>
-            <div><b>🔔</b><span><strong>Native alerts</strong><small>Stay informed on Android</small></span><i>✓</i></div>
-          </div>
-        </section>
-
-        <section className="landing-final"><span>READY WHEN YOU ARE</span><h2>Start with Numelixa today.</h2><p>Get your first virtual number in a few taps.</p><Link href="/signup" className="landing-primary">Create free account <span>→</span></Link></section>
-      </main>
-
-      <PublicFooter/>
+  <main>
+   <section className="landing-hero nx-hero-v2">
+    <div className="landing-copy">
+     <div className="landing-badge"><span/> VIRTUAL NUMBERS · GLOBAL SMS</div>
+     <h1>Numbers,<br/><em>without the noise.</em></h1>
+     <p>Get a virtual number for supported services. Follow incoming verification messages and manage your numbers in one secure workspace.</p>
+     <div className="landing-cta"><Link href="/signup" className="landing-primary">Get a Number <span>↗</span></Link><Link href="/login" className="landing-secondary">Sign in to your account</Link></div>
+     <div className="landing-proof"><span><i/> Service availability by country</span><span><i/> Order and SMS tracking</span><span><i/> Web and Android</span></div>
     </div>
-  );
+    <LivePhoneDemo/>
+   </section>
+
+   <section className="landing-stats nx-value-row" aria-label="Platform overview">
+    <div><strong>Service catalog</strong><span>Browse supported services and countries</span></div>
+    <div><strong>SMS inbox</strong><span>Keep activation messages with each order</span></div>
+    <div><strong>One workspace</strong><span>Numbers, wallet and order history</span></div>
+   </section>
+
+   <section id="features" className="landing-section nx-section-v2">
+    <div className="landing-section-head"><span>THE NUMELIXA WORKSPACE</span><h2>Everything in reach.<br/><em>Nothing in the way.</em></h2><p>One clear workflow from choosing a service to checking its verification status.</p></div>
+    <div className="landing-feature-grid">
+     <article><div>⌕</div><b>Explore services</b><p>Find supported platforms and review country availability before placing an order.</p></article>
+     <article><div>↗</div><b>Choose with clarity</b><p>See the available options and displayed price before confirming your selection.</p></article>
+     <article><div>▤</div><b>Follow incoming SMS</b><p>Keep verification messages and order status together in your workspace.</p></article>
+     <article><div>◈</div><b>Stay in control</b><p>Manage your wallet, orders, account settings and support from one place.</p></article>
+    </div>
+   </section>
+
+   <section className="nx-product-band">
+    <div className="nx-product-band-copy"><span className="nx-section-kicker">A CLEARER WAY TO VERIFY</span><h2>From service selection<br/><em>to SMS received.</em></h2><p>Choose a supported service, select an available country and follow the activation from your Numelixa account.</p><Link href="/services" className="nx-text-link">Explore services <b>↗</b></Link></div>
+    <div className="nx-product-steps">
+     <article><span>01</span><div><b>Browse the catalog</b><p>Compare supported services and country options.</p></div><i>⌕</i></article>
+     <article><span>02</span><div><b>Place your order</b><p>Review the displayed price and confirm with your wallet.</p></div><i>＋</i></article>
+     <article><span>03</span><div><b>Check your inbox</b><p>See the message and verification status for your order.</p></div><i>✓</i></article>
+    </div>
+   </section>
+
+   <section id="how" className="landing-how nx-section-v2">
+    <div className="landing-section-head"><span>HOW IT WORKS</span><h2>A focused workflow,<br/><em>in three steps.</em></h2></div>
+    <div className="landing-steps">
+     <article><span>01</span><div><b>Create your account</b><p>Sign up with an available account method and complete the verification steps.</p></div></article>
+     <article><span>02</span><div><b>Choose a number</b><p>Select a supported service and country, then review the price before ordering.</p></div></article>
+     <article><span>03</span><div><b>Receive your code</b><p>Follow the order and check its inbox when a verification message arrives.</p></div></article>
+    </div>
+   </section>
+
+   <section id="security" className="landing-security nx-security-v2">
+    <div><span className="landing-badge">BUILT AROUND CONTROL</span><h2>Your verification workspace,<br/><em>all in one place.</em></h2><p>Keep your numbers, messages, wallet and account controls together across the Numelixa website and Android app.</p><Link href="/signup" className="landing-primary">Create your account <span>↗</span></Link></div>
+    <div className="security-panel">
+     <div><b>⌑</b><span><strong>Account sessions</strong><small>Review your active devices</small></span><i>✓</i></div>
+     <div><b>◈</b><span><strong>Wallet activity</strong><small>Keep track of account movements</small></span><i>✓</i></div>
+     <div><b>⌁</b><span><strong>Order notifications</strong><small>Stay informed about order updates</small></span><i>✓</i></div>
+    </div>
+   </section>
+
+   <section className="landing-final nx-final-v2"><span>YOUR NEXT STEP</span><h2>Make verification simpler.</h2><p>Explore the Numelixa catalog and choose the workflow that fits your needs.</p><div><Link href="/signup" className="landing-primary">Get started <span>↗</span></Link><Link href="/services" className="nx-final-link">Browse services</Link></div></section>
+  </main>
+  <PublicFooter/>
+ </div>;
 }
