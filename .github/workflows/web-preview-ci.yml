@@ -1,0 +1,33 @@
+name: Numelixa Web Preview CI
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: ['**']
+    paths:
+      - 'app/**'
+      - 'components/**'
+      - 'lib/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/web-preview-ci.yml'
+permissions:
+  contents: read
+concurrency:
+  group: numelixa-web-preview-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Build Next.js production bundle
+        run: npm run build
