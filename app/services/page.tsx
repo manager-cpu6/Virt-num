@@ -39,6 +39,15 @@ export default function ServicesPage(){
   });
  },[services,query]);
  const visible=query.trim()||showAll?filtered:filtered.slice(0,16);
+ const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","googlepay","microsoft","discord","snapchat","youtube","amazon","openai","x","spotify","paypal"];
+ const popularServices=useMemo(()=>{
+  const byBrand=new Map<string,Service>();
+  for(const item of services){
+   const brand=canonicalServiceBrand(item.id,item.name);
+   if(brand&&!byBrand.has(brand))byBrand.set(brand,item);
+  }
+  return popularOrder.map(brand=>byBrand.get(brand)).filter((item):item is Service=>Boolean(item));
+ },[services]);
 
  return <div className="services-page">
   <TopBar/>
@@ -61,6 +70,18 @@ export default function ServicesPage(){
    <input value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search services by name or ID…" autoComplete="off" aria-label="Search services"/>
    {query&&<button type="button" className="search-clear" onClick={()=>setQuery("")} aria-label="Clear search">×</button>}
   </div>
+
+  {!query&&!loading&&popularServices.length>0&&<section className="popular-service-strip" aria-label="Popular services">
+   <div className="popular-service-heading"><div><span>POPULAR SERVICES</span><b>Recognized brands, ready to explore</b></div><span className="popular-service-live">LIVE CATALOG</span></div>
+   <div className="popular-service-window">
+    <div className="popular-service-track">
+     {[...popularServices,...popularServices].map((item,index)=><Link key={item.id+"-"+index} className="popular-service-item" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}>
+      <ServiceLogo id={item.id} name={item.name} className="popular-service-icon"/>
+      <span>{item.name}</span>
+     </Link>)}
+    </div>
+   </div>
+  </section>}
 
   <div className="section-head service-section-head">
    <div><h2>{query?"Search results":"Available services"}</h2><span className="service-count">{loading?"Loading live catalog…":query?filtered.length.toLocaleString()+" matching services":services.length.toLocaleString()+" services returned by catalog"}</span></div>
