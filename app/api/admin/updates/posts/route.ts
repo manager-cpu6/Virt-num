@@ -7,7 +7,7 @@ export const dynamic="force-dynamic";
 const clean=(v:unknown,max:number)=>String(v??"").trim().slice(0,max);
 const allowedTypes=new Set(["text","image","gallery","video","announcement","update","service","maintenance","new-number","link","rich"]);
 function safeHttps(v:unknown){const value=clean(v,1800);if(!value)return "";try{const u=new URL(value);return u.protocol==="https:"?u.toString():""}catch{return ""}}
-function normalizedMedia(raw:unknown){if(!Array.isArray(raw))return [];return raw.slice(0,10).map((x:any)=>({url:safeHttps(x?.url||x),type:x?.type==="video"?"video":"image",alt:clean(x?.alt,140)})).filter(x=>x.url);}
+function mediaUrl(v:unknown){const value=clean(v,1800);if(/^\\/api\\/updates\\/media\\/[a-f0-9]{24}$/i.test(value))return value;return safeHttps(value);}\nfunction normalizedMedia(raw:unknown){if(!Array.isArray(raw))return [];return raw.slice(0,10).map((x:any)=>({url:mediaUrl(x?.url||x),type:x?.type==="video"?"video":"image",alt:clean(x?.alt,140)})).filter(x=>x.url);}
 function display(b:any){const mode=b.viewDisplayMode==="custom"?"custom":"automatic",value=Number(b.viewDisplayValue??0);if(mode==="custom"&&(!Number.isSafeInteger(value)||value<0||value>10000000000))throw new Error("Displayed views must be a whole number from 0 to 10,000,000,000.");return {viewDisplayMode:mode,viewDisplayValue:mode==="custom"?value:null};}
 async function notifySubscribers(channel:any,post:any){
  const settings=await (await collection<any>("settings")).findOne({_id:"updates"});
