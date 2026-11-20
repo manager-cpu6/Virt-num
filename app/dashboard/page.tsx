@@ -3,7 +3,6 @@ import TopBar from "@/components/TopBar";
 import HomeLiveBoard from "@/components/HomeLiveBoard";
 import MobileAppDownloadCTA from "@/components/MobileAppDownloadCTA";
 import DashboardWalletCard from "@/components/DashboardWalletCard";
-import PublicFooter from "@/components/PublicFooter";
 import {getUser} from "@/lib/auth";
 import {redirect} from "next/navigation";
 export const dynamic="force-dynamic";
@@ -29,6 +28,5 @@ export default async function DashboardPage(){
   </section>
   <a className="nx-whatsapp-help" href="https://wa.me/252907868526" target="_blank" rel="noopener noreferrer" aria-label="Contact Numelixa support on WhatsApp"><span className="nx-whatsapp-icon" aria-hidden="true"><img src="https://cdn.simpleicons.org/whatsapp/FFFFFF" alt="" width="25" height="25" /></span><span><b>Need help?</b><small>Chat with us on WhatsApp</small></span><strong>→</strong></a>
   <MobileAppDownloadCTA/>
-  <PublicFooter/>
  </div>
 }
