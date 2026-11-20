@@ -17,8 +17,8 @@ async function notifySubscribers(channel:any,post:any){
  if(!userIds.length)return {sent:0,failed:0};
  const blocks=await (await collection<any>("updateBlocks")).find({channelId:String(channel._id),userId:{$in:userIds}},{projection:{userId:1}}).toArray();
  const blocked=new Set(blocks.map(x=>String(x.userId)));
- const allowed=userIds.filter(x=>!blocked.has(x));
- const devices=await (await collection<any>("deviceTokens")).find({userId:{$in:allowed},platform:"android",enabled:{$ne:false}},{projection:{token:1}}).toArray();
+ const candidates=userIds.filter(x=>!blocked.has(x));\n const users=await (await collection<any>("users")).find({_id:{$in:candidates}},{projection:{_id:1,updatesPreferences:1}}).toArray();\n const allowed=new Set(users.filter(x=>x.updatesPreferences?.hideUpdates!==true&&x.updatesPreferences?.notificationsEnabled!==false).map(x=>String(x._id)));\n const recipients=candidates.filter(x=>allowed.has(x));
+ const devices=await (await collection<any>("deviceTokens")).find({userId:{$in:recipients},platform:"android",enabled:{$ne:false}},{projection:{token:1}}).toArray();
  const tokens=[...new Set(devices.map(x=>String(x.token||"")).filter(x=>x.length>=20))];
  if(!tokens.length)return {sent:0,failed:0};
  const preview=String(post.body||post.title||"New channel post").replace(/\s+/g," ").slice(0,150);
