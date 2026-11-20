@@ -84,8 +84,8 @@ export async function DELETE(req:Request){
   const channel=await (await collection<any>("updateChannels")).findOne({_id:id});
   if(!channel)return NextResponse.json({ok:false,error:"Channel not found."},{status:404});
   const [members,posts,views]=await Promise.all([collection<any>("updateSubscriptions"),collection<any>("updatePosts"),collection<any>("updatePostViews")]);
-  await Promise.all([members.deleteMany({channelId:id}),collection<any>("updateBlocks").then(c=>c.deleteMany({channelId:id})),posts.deleteMany({channelId:id})]);
   const postIds=(await posts.find({channelId:id},{projection:{_id:1}}).toArray()).map(x=>String(x._id));
+  await Promise.all([members.deleteMany({channelId:id}),collection<any>("updateBlocks").then(c=>c.deleteMany({channelId:id})),posts.deleteMany({channelId:id})]);
   if(postIds.length)await views.deleteMany({postId:{$in:postIds}});
   await (await collection<any>("updateChannels")).deleteOne({_id:id});
   return NextResponse.json({ok:true,deleted:true});
