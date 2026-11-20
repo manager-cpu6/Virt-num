@@ -1,2 +1,28 @@
 import Link from "next/link";
-export default function PublicFooter(){return <footer className="nx-public-footer"><div><a className="nx-footer-brand" href="/"><img src="/numelixa-brand.svg" alt="" width="34" height="34"/><b>NUMELIXA</b></a><p>Global virtual numbers and SMS verification, in one secure workspace.</p><small>© 2026 Numelixa. All rights reserved.</small></div><nav><Link href="/pricing">Pricing</Link><Link href="/services">Services</Link><Link href="/clients">For Clients</Link><Link href="/partners">For Partners</Link><Link href="/legal">Legal Center</Link><Link href="/security">Security</Link><Link href="/mobile-apps">Mobile app</Link><Link href="/support">Help Center & Contact</Link><Link href="/developers/docs">API Documentation</Link><Link href="/developers">API Access</Link><Link href="/terms">Terms of Service</Link><Link href="/privacy">Privacy Policy</Link><Link href="/refund-policy">Refund Policy</Link><Link href="/cookie-policy">Cookie Policy</Link><Link href="/rules">Acceptable Use</Link><Link href="/account-deletion">Account Deletion</Link><a href="mailto:support@numelixa.com?subject=Numelixa%20Support%20Enquiry">support@numelixa.com</a></nav></footer>}
+
+const groups=[
+ {title:"PRODUCT",links:[["Services","/services"],["Pricing","/pricing"],["Mobile App","/mobile-apps"],["Wallet","/wallet"]]},
+ {title:"CLIENTS",links:[["For Clients","/clients"],["Help Center","/faq"],["Contact Support","/support"]]},
+ {title:"PARTNERS",links:[["For Partners","/partners"]]},
+ {title:"DEVELOPERS",links:[["API Documentation","/developers/docs"],["Developer Portal","/developers"],["Webhooks","/developers/docs#webhooks"]]},
+ {title:"LEGAL",links:[["Terms of Service","/terms"],["Privacy Policy","/privacy"],["Refund Policy","/refund-policy"],["Cookie Policy","/cookie-policy"],["Acceptable Use","/rules"],["Account Deletion","/account-deletion"]]}
+];
+
+export default function PublicFooter(){
+ return <footer className="nx-global-footer">
+  <div className="nx-global-footer-inner">
+   <div className="nx-global-footer-brand">
+    <Link href="/" className="nx-global-footer-logo"><img src="/numelixa-brand.svg" alt="Numelixa" width="34" height="34"/><span>NUMELIXA</span></Link>
+    <p>Global virtual numbers and SMS verification in one secure workspace.</p>
+    <a className="nx-global-footer-email" href="mailto:support@numelixa.com">support@numelixa.com</a>
+    <small>© {new Date().getFullYear()} Numelixa. All rights reserved.</small>
+   </div>
+   <div className="nx-global-footer-groups">
+    {groups.map(group=><nav key={group.title} aria-label={group.title}>
+     <h2>{group.title}</h2>
+     {group.links.map(([label,href])=><Link href={href} key={href}>{label}</Link>)}
+    </nav>)}
+   </div>
+  </div>
+ </footer>;
+}
