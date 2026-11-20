@@ -14,11 +14,11 @@ function isMaintenanceExemptPath(path:string){
  return MAINTENANCE_EXEMPT_PATHS.some((prefix)=>path===prefix||path.startsWith(prefix+"/"));
 }
 
-export default function SystemMaintenanceGate({children,initialEnabled=false,initialMessage=""}:{children:React.ReactNode;initialEnabled?:boolean;initialMessage?:string}){
+export default function SystemMaintenanceGate({children,initialEnabled=false,initialMessage="",initialAdminVerified=false}:{children:React.ReactNode;initialEnabled?:boolean;initialMessage?:string;initialAdminVerified?:boolean}){
  const path=usePathname()||"/";
  const [enabled,setEnabled]=useState(initialEnabled);
  const [message,setMessage]=useState(initialMessage||"Numelixa is temporarily under maintenance. Please check back soon.");
- const [adminVerified,setAdminVerified]=useState(false);
+ const [adminVerified,setAdminVerified]=useState(initialAdminVerified);
  useEffect(()=>{
   let alive=true;
   const verifyAdmin=async()=>{
