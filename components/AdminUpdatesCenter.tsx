@@ -74,7 +74,7 @@ export default function AdminUpdatesCenter(){
     <input style={field} placeholder="Post title" value={postTitle} onChange={e=>setPostTitle(e.target.value)}/>
     <select style={field} value={postType} onChange={e=>setPostType(e.target.value)}>{["text","announcement","update","service","maintenance","new-number","image","gallery","video","link","rich"].map(x=><option key={x} value={x}>{x}</option>)}</select>
     <textarea style={{...field,minHeight:150}} placeholder="Write the announcement or update…" value={postBody} onChange={e=>setPostBody(e.target.value)}/>
-    {["image","gallery","video"].includes(postType)&&<label style={muted}>Upload media · PNG, JPEG, WebP, GIF, MP4 or WebM · max 8 MB each</label><input style={field} type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" multiple onChange={e=>setMediaFiles(Array.from(e.target.files||[]))}/>{mediaFiles.length>0&&<p style={muted}>{mediaFiles.length} file(s) selected: {mediaFiles.map(f=>f.name).join(", ")}</p>}<textarea style={{...field,minHeight:70}} placeholder="Optional external HTTPS media URLs (one per line)" value={mediaUrls} onChange={e=>setMediaUrls(e.target.value)}/>}
+    {["image","gallery","video"].includes(postType)&&<><label style={muted}>Upload media · PNG, JPEG, WebP, GIF, MP4 or WebM · max 8 MB each</label><input style={field} type="file" accept="image/png,image/jpeg,image/webp,image/gif,video/mp4,video/webm" multiple onChange={e=>setMediaFiles(Array.from(e.target.files||[]))}/>{mediaFiles.length>0&&<p style={muted}>{mediaFiles.length} file(s) selected: {mediaFiles.map(f=>f.name).join(", ")}</p>}<textarea style={{...field,minHeight:70}} placeholder="Optional external HTTPS media URLs (one per line)" value={mediaUrls} onChange={e=>setMediaUrls(e.target.value)}/></>}
     <label style={muted}>Public view display</label><select style={field} value={viewMode} onChange={e=>setViewMode(e.target.value)}><option value="automatic">Actual unique daily views</option><option value="custom">Custom presentation value</option></select>
     {viewMode==="custom"&&<input style={field} type="number" min="0" step="1" value={viewValue} onChange={e=>setViewValue(e.target.value)}/>}
     <button disabled={busy||!channelId||(!postTitle.trim()&&!postBody.trim())} style={button} onClick={publish}>Publish post</button>
@@ -85,6 +85,6 @@ export default function AdminUpdatesCenter(){
     <div style={{display:"flex",gap:8}}><button style={{...button,padding:"8px 10px",background:"#12213b",color:"#f4f7fc"}} onClick={()=>postAction(p,"archive")}>Archive</button><button style={{...button,padding:"8px 10px",background:"#3b1827",color:"#ff9cac"}} onClick={()=>postAction(p,"delete")}>Delete</button></div>
    </article>)}</div>}</section>
   </div>}
-  <p style={{...muted,marginTop:18}}>Real subscriber and view metrics are stored separately from public display overrides. Channel media fields currently accept HTTPS URLs; binary media upload requires a configured storage service and is not represented as enabled here.</p>
+  <p style={{...muted,marginTop:18}}>Real subscriber and view metrics are stored separately from public display overrides. Uploaded media is stored in the Updates GridFS bucket with file type and size validation.</p>
  </main>
 }
