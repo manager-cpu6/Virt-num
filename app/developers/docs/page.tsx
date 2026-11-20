@@ -85,6 +85,37 @@ console.log(await api("/orders", {
   method: "POST",
   body: JSON.stringify({ country: "usa", service: "whatsapp" }),
 }));`,
+ TypeScript:`const BASE = "https://www.numelixa.com/api/v1";
+const apiKey = process.env.NUMELIXA_API_KEY;
+if (!apiKey) throw new Error("NUMELIXA_API_KEY is required");
+
+type ApiResult<T> = { ok: true } & T;
+async function request<T>(path: string, init: RequestInit = {}): Promise<ApiResult<T>> {
+  const response = await fetch(BASE + path, {
+    ...init,
+    redirect: "manual",
+    headers: {
+      Authorization: "Bearer " + apiKey,
+      Accept: "application/json",
+      ...(init.body ? { "Content-Type": "application/json" } : {}),
+      ...init.headers,
+    },
+  });
+  if (response.status >= 300 && response.status < 400) throw new Error("Unexpected API redirect");
+  const data = await response.json() as ApiResult<T> | { ok: false; error?: string };
+  if (!response.ok || data.ok !== true) throw new Error(("error" in data && data.error) || ("HTTP " + response.status));
+  return data as ApiResult<T>;
+}
+
+const account = await request<{ account: { balance: number; currency: string } }>("/account");
+const stock = await request<{ stock: { available: boolean; count: number; price: number; currency: string } }>("/stock?country=usa&service=whatsapp");
+if (stock.stock.available) {
+  const order = await request<{ order: { id: string; number: string; price: number; expiresIn: number } }>("/orders", {
+    method: "POST",
+    body: JSON.stringify({ country: "usa", service: "whatsapp" }),
+  });
+  console.log(account.account.balance, order.order.id);
+}`,
  PHP:`<?php
 $base = "${BASE}";
 $key = getenv("NUMELIXA_API_KEY");
@@ -127,8 +158,8 @@ const sections=[
  {id:"inventory",title:"Services, countries & stock",desc:"Find supported services and check available inventory before buying."},
  {id:"orders",title:"Orders",desc:"Purchase a number, save the order ID, retrieve the SMS code and cancel eligible orders."},
  {id:"webhooks",title:"Webhooks",desc:"Receive order and SMS events on your server instead of polling the API repeatedly."},
- {id:"errors",title:"Errors & reliability",desc:"Handle HTTP statuses, timeouts, retries and idempotency safely."},
- {id:"examples",title:"Code examples",desc:"Copy complete examples for cURL, Python, JavaScript/Node.js and PHP."}
+ {id:"errors",title:"Errors & reliability",desc:"Handle HTTP statuses, timeouts, safe backoff and idempotent order reconciliation."},
+ {id:"examples",title:"Code examples",desc:"Copy complete examples for cURL, Python, JavaScript, TypeScript and PHP."}
 ];
 
 function Code({value}:{value:string}){
@@ -160,7 +191,7 @@ export default function Docs(){
     <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:20}}><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>REST · JSON</span><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>Bearer API key</span><span style={{padding:"7px 10px",borderRadius:9,background:"#0d2a37",color:"#9cece3",fontSize:12}}>Webhook-ready</span></div>
    </section>
    <div className="nx-docs-sidebar"><label className="nx-docs-search"><span>⌕</span><input type="search" value={query} onChange={event=>setQuery(event.target.value)} placeholder="Search documentation…" aria-label="Search documentation"/></label><nav aria-label="Documentation contents">{visibleSections.map((s,i)=><button key={s.id} aria-current={section===s.id?"page":undefined} onClick={()=>{setSection(s.id);document.getElementById(s.id)?.scrollIntoView({behavior:"smooth",block:"start"})}} style={{textAlign:"left",padding:15,borderRadius:14,border:"1px solid "+(section===s.id?"rgba(123,229,216,.5)":"rgba(109,222,230,.12)"),background:section===s.id?"rgba(20,91,104,.35)":"rgba(5,28,39,.65)",color:"#edf9ff",cursor:"pointer"}}><span style={{display:"block",color:"#7be5d8",fontSize:10,fontWeight:900,letterSpacing:1.5}}>0{i+1}</span><b>{s.title}</b><span style={{display:"block",fontSize:12,color:"#91acbc",lineHeight:1.5,marginTop:4}}>{s.desc}</span></button>)}</nav>{visibleSections.length===0&&<p className="nx-docs-no-results">No matching sections.</p>}</div>
-   <section id="overview" style={panel}><h2 style={{marginTop:0}}>01 · Overview & authentication</h2><p style={{color:"#a8c0ce"}}>All requests target the API base URL. Send your key on every request. Keep it on a private server, never inside a public frontend or distributed APK.</p><p><b>Base URL</b><br/><code>{BASE}</code></p><p><b>Authentication header</b><br/><code>Authorization: Bearer YOUR_SECRET_API_KEY</code></p><p><b>Standard headers</b><br/><code>Accept: application/json</code><br/><code>Content-Type: application/json</code> for JSON request bodies.</p><div style={{padding:14,borderRadius:12,background:"rgba(255,194,94,.07)",border:"1px solid rgba(255,194,94,.2)",color:"#f4d8a3",fontSize:13}}>Do not add <code>-L</code> / automatic redirect following to API examples. A redirect can hide a wrong URL or an authentication problem; inspect 3xx responses instead.</div></section>
+   <section id="overview" style={panel}><h2 style={{marginTop:0}}>01 · Overview & authentication</h2><p style={{color:"#a8c0ce"}}>All requests target the API base URL. Send your key on every request. Keep it on a private server, never inside a public frontend or distributed APK.</p><p><b>Base URL</b><br/><code>{BASE}</code></p><p><b>Authentication</b><br/><code>Authorization: Bearer nx_live_…</code> or <code>X-API-Key: nx_live_…</code>. Keys are provisioned automatically for each account. Keep the secret on a private server; never embed it in a browser or APK.</p><p><b>Standard headers</b><br/><code>Accept: application/json</code><br/><code>Content-Type: application/json</code> for JSON request bodies.</p><div style={{padding:14,borderRadius:12,background:"rgba(255,194,94,.07)",border:"1px solid rgba(255,194,94,.2)",color:"#f4d8a3",fontSize:13}}>Do not add <code>-L</code> / automatic redirect following to API examples. A redirect can hide a wrong URL or an authentication problem; inspect 3xx responses instead.</div></section>
    <section id="account" style={panel}><h2 style={{marginTop:0}}>02 · Account & balance</h2><p style={{color:"#a8c0ce"}}>Verify that your key is active before starting an order. Use the balance and transaction endpoints to reconcile wallet changes.</p><Code value={`curl --fail-with-body -sS "${BASE}/account" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/balance" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/transactions" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json"`}/></section>
    <section id="inventory" style={panel}><h2 style={{marginTop:0}}>03 · Services, countries & stock</h2><p style={{color:"#a8c0ce"}}>Discover the supported catalog first. Check stock and price immediately before purchasing because availability can change.</p><Code value={`curl --fail-with-body -sS "${BASE}/services" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/countries?service=whatsapp" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><Code value={`curl --fail-with-body -sS "${BASE}/stock?country=usa&service=whatsapp" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/></section>
    <section id="orders" style={panel}><h2 style={{marginTop:0}}>04 · Orders lifecycle</h2><h3>List orders</h3><Code value={`curl --fail-with-body -sS "${BASE}/orders?limit=25" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><h3>Purchase a number</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders" \\\n  -H "Authorization: Bearer ${KEY}" \\\n  -H "Accept: application/json" \\\n  -H "Content-Type: application/json" \\\n  --data '{"country":"usa","service":"whatsapp"}'`}/><h3>Retrieve an order</h3><Code value={`curl --fail-with-body -sS "${BASE}/orders/ORDER_ID" -H "Authorization: Bearer ${KEY}" -H "Accept: application/json"`}/><h3>Request SMS code</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders/code" -H "Authorization: Bearer ${KEY}" -H "Content-Type: application/json" -H "Accept: application/json" --data '{"orderId":"ORDER_ID"}'`}/><h3>Cancel an eligible waiting order (provider caveat)</h3><Code value={`curl --fail-with-body -sS -X POST "${BASE}/orders/cancel" -H "Authorization: Bearer ${KEY}" -H "Content-Type: application/json" -H "Accept: application/json" --data '{"orderId":"ORDER_ID"}'`}/><p style={{color:"#a8c0ce",fontSize:13}}>Save the returned order ID. If a purchase times out, check order history before retrying. Important: the current public cancellation route calls the 5SIM cancellation adapter directly; confirm provider compatibility before relying on it for TigerSMS-routed orders.</p></section>
