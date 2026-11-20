@@ -2,7 +2,7 @@
 import {useCallback,useEffect,useState} from "react";
 
 type Channel={_id:string;name:string;slug:string;description?:string;category?:string;status:string;visibility?:string;verified?:boolean;featured?:boolean;avatarUrl?:string;coverUrl?:string;actualSubscribers?:number;publicSubscribers?:number;postCount?:number;subscriberDisplayMode?:string;subscriberDisplayValue?:number|null};
-type Post={_id:string;channelId:string;title?:string;body?:string;type:string;status:string;actualViews?:number;displayViews?:number;viewDisplayMode?:string;viewDisplayValue?:number|null;publishedAt?:string|null};
+type Post={_id:string;channelId:string;title?:string;body?:string;type:string;status:string;actualViews?:number;displayViews?:number;viewDisplayMode?:string;viewDisplayValue?:number|null;publishedAt?:string|null;media?:{url:string;type:string}[];links?:string[]};
 const panel:React.CSSProperties={border:"1px solid #263957",background:"#0d1930",borderRadius:20,padding:18};
 const field:React.CSSProperties={width:"100%",minHeight:44,border:"1px solid #263957",background:"#071329",color:"#f4f7fc",borderRadius:11,padding:"10px 12px",outline:"none"};
 const button:React.CSSProperties={border:0,borderRadius:11,padding:"11px 15px",fontWeight:800,cursor:"pointer",background:"#35d6e3",color:"#04121f"};
