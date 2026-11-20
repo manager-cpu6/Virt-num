@@ -6,6 +6,7 @@ import ServiceLogo,{canonicalServiceBrand} from "@/components/ServiceLogo";
 import PublicFooter from "@/components/PublicFooter";
 
 type Service={id:string;code:string;name:string};
+const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","discord","x","amazon","microsoft","paypal","snapchat","googlepay","apple","youtube","openai"];
 
 export default function ServicesPage(){
  const[services,setServices]=useState<Service[]>([]);
@@ -30,16 +31,13 @@ export default function ServicesPage(){
  const filtered=useMemo(()=>{
   const q=query.trim().toLocaleLowerCase();
   const rows=services.filter(item=>!q||(item.name+" "+item.id+" "+item.code).toLocaleLowerCase().includes(q));
-  const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","gmail","youtube"];
   return rows.sort((a,b)=>{
    const aBrand=canonicalServiceBrand(a.id,a.name),bBrand=canonicalServiceBrand(b.id,b.name);
-   const aRank=popularOrder.indexOf(aBrand),bRank=popularOrder.indexOf(bBrand);
-   const ar=aRank<0?popularOrder.length:aRank,br=bRank<0?popularOrder.length:bRank;
-   return ar-br||a.name.localeCompare(b.name,undefined,{sensitivity:"base"});
+   const ar=popularOrder.indexOf(aBrand),br=popularOrder.indexOf(bBrand);
+   return (ar<0?popularOrder.length:ar)-(br<0?popularOrder.length:br)||a.name.localeCompare(b.name,undefined,{sensitivity:"base"});
   });
  },[services,query]);
  const visible=query.trim()||showAll?filtered:filtered.slice(0,16);
- const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","googlepay","microsoft","discord","snapchat","youtube","amazon","openai","x","spotify","paypal"];
  const popularServices=useMemo(()=>{
   const byBrand=new Map<string,Service>();
   for(const item of services){
@@ -48,6 +46,17 @@ export default function ServicesPage(){
   }
   return popularOrder.map(brand=>byBrand.get(brand)).filter((item):item is Service=>Boolean(item));
  },[services]);
+
+ async function retry(){
+  setLoading(true);setError("");
+  try{
+   const response=await fetch("/api/catalog/services",{cache:"no-store",credentials:"include"});
+   const data=await response.json();
+   if(!response.ok||!data.ok)throw new Error(data.error||"Live catalog unavailable");
+   setServices(Array.isArray(data.services)?data.services:[]);
+  }catch(reason){setError(reason instanceof Error?reason.message:"Unable to load live services");}
+  finally{setLoading(false);}
+ }
 
  return <div className="services-page">
   <TopBar/>
@@ -72,7 +81,7 @@ export default function ServicesPage(){
   </div>
 
   {!query&&!loading&&popularServices.length>0&&<section className="popular-service-strip" aria-label="Popular services">
-   <div className="popular-service-heading"><div><span>POPULAR SERVICES</span><b>Recognized brands, ready to explore</b></div><span className="popular-service-live">LIVE CATALOG</span></div>
+   <div className="popular-service-heading"><div><span>POPULAR SERVICES</span><b>Top brands from the live catalog</b></div><span className="popular-service-live">LIVE CATALOG</span></div>
    <div className="popular-service-window">
     <div className="popular-service-track">
      {[...popularServices,...popularServices].map((item,index)=><Link key={item.id+"-"+index} className="popular-service-item" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}>
@@ -89,7 +98,7 @@ export default function ServicesPage(){
   </div>
 
   {loading?<div className="service-loading" role="status">Loading live services…</div>
-   :error?<div className="helper-card" role="alert"><b>Live catalog unavailable</b><span>{error}. Please retry in a moment.</span><button className="secondary-btn" onClick={()=>{setLoading(true);setError("");fetch("/api/catalog/services",{cache:"no-store",credentials:"include"}).then(async response=>{const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"Live catalog unavailable");setServices(Array.isArray(data.services)?data.services:[])}).catch(reason=>setError(reason instanceof Error?reason.message:"Unable to load live services")).finally(()=>setLoading(false));}}>Retry</button></div>
+   :error?<div className="helper-card" role="alert"><b>Live catalog unavailable</b><span>{error}. Please retry in a moment.</span><button className="secondary-btn" onClick={()=>void retry()}>Retry</button></div>
    :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
 
   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No matching service</b><span>Try a different service name or identifier.</span></div>}
