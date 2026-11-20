@@ -7,6 +7,8 @@ export async function POST(req:Request,{params}:{params:Promise<{slug:string}>})
  try{
   const user=await requireUser(),{slug}=await params;
   const settings=await (await collection<any>("settings")).findOne({_id:"updates"});
+  const account=await (await collection<any>("users")).findOne({_id:String(user.id)},{projection:{updatesPreferences:1}});
+  if(account?.updatesPreferences?.hideUpdates===true)return NextResponse.json({ok:false,error:"Updates is hidden in your account settings."},{status:404});
   if(settings?.enabled!==true)return NextResponse.json({ok:false,error:"Updates is currently unavailable."},{status:404});
   const channel=await (await collection<any>("updateChannels")).findOne({slug,status:"active",visibility:{$ne:"private"}});
   if(!channel)return NextResponse.json({ok:false,error:"Channel not found."},{status:404});
