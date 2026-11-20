@@ -52,6 +52,8 @@ export async function POST(req:Request){
  try{
   await requireAdmin();
   const b=await req.json().catch(()=>null),channelId=clean(b?.channelId,120),title=clean(b?.title,120),body=clean(b?.body,12000),type=clean(b?.type||"text",32);
+  const requestId=clean(b?.requestId,120);
+  if(requestId){const previous=await (await collection<any>("updatePosts")).findOne({requestId});if(previous)return NextResponse.json({ok:true,post:{...previous,_id:String(previous._id)},notifications:{sent:0,failed:0},duplicate:true});}
   if(!channelId||!allowedTypes.has(type))return NextResponse.json({ok:false,error:"Choose a channel and a supported post type."},{status:400});
   if(!title&&!body)return NextResponse.json({ok:false,error:"A post needs a title or message."},{status:400});
   const channel=await (await collection<any>("updateChannels")).findOne({_id:channelId});
@@ -60,7 +62,7 @@ export async function POST(req:Request){
   if(["image","gallery","video"].includes(type)&&!media.length)return NextResponse.json({ok:false,error:"Add at least one verified HTTPS media URL for this post."},{status:400});
   const links=Array.isArray(b?.links)?b.links.slice(0,10).map((x:any)=>safeHttps(x)).filter(Boolean):[];
   const id=mongoId(),view=display(b||{});
-  const post={_id:id,channelId,title,body,type,media,links,status,viewDisplayMode:view.viewDisplayMode,viewDisplayValue:view.viewDisplayValue,createdAt:now,publishedAt:status==="published"?now:null,updatedAt:now,createdBy:String((await requireAdmin()).id)};
+  const post={_id:id,channelId,title,body,type,media,links,status,viewDisplayMode:view.viewDisplayMode,viewDisplayValue:view.viewDisplayValue,requestId:requestId||undefined,createdAt:now,publishedAt:status==="published"?now:null,updatedAt:now,createdBy:String((await requireAdmin()).id)};
   await (await collection<any>("updatePosts")).insertOne(post);
   const delivery=status==="published"?await notifySubscribers(channel,post):{sent:0,failed:0};
   return NextResponse.json({ok:true,post:{...post,_id:id,actualViews:0,displayViews:view.viewDisplayMode==="custom"?view.viewDisplayValue:0},notifications:delivery},{status:201});
