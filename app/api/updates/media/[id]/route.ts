@@ -25,7 +25,7 @@ export async function GET(_req:Request,{params}:{params:Promise<{id:string}>}){
   const fullBody=Buffer.concat(chunks),range=_req.headers.get("range");
   const headers:Record<string,string>={"Content-Type":type,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff","Accept-Ranges":"bytes"};
   if(range){
-   const match=/^bytes=(\\d*)-(\\d*)$/.exec(range.trim());
+   const match=/^bytes=(\d*)-(\d*)$/.exec(range.trim());
    if(!match||(!match[1]&&!match[2]))return new Response(null,{status:416,headers:{"Content-Range":"bytes */"+fullBody.length,"Cache-Control":"private, no-store"}});
    let start:number,end:number;
    if(!match[1]){const suffix=Number(match[2]);if(!Number.isSafeInteger(suffix)||suffix<=0)return new Response(null,{status:416,headers:{"Content-Range":"bytes */"+fullBody.length}});start=Math.max(0,fullBody.length-suffix);end=fullBody.length-1;}
