@@ -62,7 +62,7 @@ export async function POST(req:Request){
   if(["image","gallery","video"].includes(type)&&!media.length)return NextResponse.json({ok:false,error:"Add at least one verified HTTPS media URL for this post."},{status:400});
   const links=Array.isArray(b?.links)?b.links.slice(0,10).map((x:any)=>safeHttps(x)).filter(Boolean):[];
   const id=mongoId(),view=display(b||{});
-  const post={_id:id,channelId,title,body,type,media,links,status,viewDisplayMode:view.viewDisplayMode,viewDisplayValue:view.viewDisplayValue,requestId:requestId||undefined,createdAt:now,publishedAt:status==="published"?now:null,updatedAt:now,createdBy:String((await requireAdmin()).id)};
+  const post={_id:id,channelId,title,body,type,media,links,status,viewDisplayMode:view.viewDisplayMode,viewDisplayValue:view.viewDisplayValue,...(requestId?{requestId}:{}),createdAt:now,publishedAt:status==="published"?now:null,updatedAt:now,createdBy:String((await requireAdmin()).id)};
   await (await collection<any>("updatePosts")).insertOne(post);
   const delivery=status==="published"?await notifySubscribers(channel,post):{sent:0,failed:0};
   return NextResponse.json({ok:true,post:{...post,_id:id,actualViews:0,displayViews:view.viewDisplayMode==="custom"?view.viewDisplayValue:0},notifications:delivery},{status:201});
