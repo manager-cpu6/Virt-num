@@ -16,11 +16,11 @@ export default function LivePhoneDemo(){
  const [transition,setTransition]=useState<"in"|"out">("in");
  const [copied,setCopied]=useState<"number"|"code"|null>(null);
  useEffect(()=>{
-  const timer=window.setInterval(()=>{
+  let swapTimer:number|undefined;\n  const timer=window.setInterval(()=>{
    setTransition("out");
-   window.setTimeout(()=>{setActive(value=>(value+1)%messages.length);setTransition("in");},260);
+   swapTimer=window.setTimeout(()=>{setActive(value=>(value+1)%messages.length);setTransition("in");},260);
   },5200);
-  return ()=>window.clearInterval(timer);
+  return ()=>{window.clearInterval(timer);if(swapTimer!==undefined)window.clearTimeout(swapTimer);};
  },[]);
  const message=messages[active];
  async function copy(value:string,kind:"number"|"code"){
@@ -48,7 +48,7 @@ export default function LivePhoneDemo(){
      <div className="nx-code-row"><span>VERIFICATION CODE</span><strong key={message.code}>{message.code}</strong></div>
      <button className="nx-copy-code" type="button" onClick={()=>copy(message.code.replace(" ",""),"code")}>{copied==="code"?"Code copied ✓":"Copy verification code"} <span>↗</span></button>
     </div>
-    <div className="nx-sms-rotation"><div className="nx-sms-dots" aria-label={"Sample message "+(active+1)+" of 6"}>{messages.map((item,index)=><span key={item.service} className={index===active?"active":""}/>)}</div><span>{String(active+1).padStart(2,"0")} / 06</span></div>
+    <div className="nx-sms-rotation"><div className="nx-sms-dots" aria-label={"Sample message "+(active+1)+" of 6"}>{messages.map((item,index)=><span key={item.service} className={index===active?"active":""}/>)}</div><span>{String(active+1).padStart(2,"0")} / 06</span><div className="nx-sms-progress"><i key={active}/></div></div>
     <div className="nx-phone-nav"><span className="active"><b>⌂</b>Home</span><span><b>◎</b>Numbers</span><span><b>▣</b>Wallet</span><span><b>◷</b>Orders</span></div>
    </div>
   </div>
