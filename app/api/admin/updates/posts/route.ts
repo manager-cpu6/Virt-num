@@ -63,7 +63,7 @@ export async function POST(req:Request){
   const links=Array.isArray(b?.links)?b.links.slice(0,10).map((x:any)=>safeHttps(x)).filter(Boolean):[];
   const id=mongoId(),view=display(b||{});
   const post={_id:id,channelId,title,body,type,media,links,status,viewDisplayMode:view.viewDisplayMode,viewDisplayValue:view.viewDisplayValue,...(requestId?{requestId}:{}),createdAt:now,publishedAt:status==="published"?now:null,updatedAt:now,createdBy:String((await requireAdmin()).id)};
-  await (await collection<any>("updatePosts")).insertOne(post);
+  try{await (await collection<any>("updatePosts")).insertOne(post);}catch(error){if((error as any)?.code===11000&&requestId){const existing=await (await collection<any>("updatePosts")).findOne({requestId});if(existing)return NextResponse.json({ok:true,post:{...existing,_id:String(existing._id)},notifications:{sent:0,failed:0},duplicate:true});}throw error;}
   const delivery=status==="published"?await notifySubscribers(channel,post):{sent:0,failed:0};
   return NextResponse.json({ok:true,post:{...post,_id:id,actualViews:0,displayViews:view.viewDisplayMode==="custom"?view.viewDisplayValue:0},notifications:delivery},{status:201});
  }catch(error){
