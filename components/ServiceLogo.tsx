@@ -31,15 +31,12 @@ export function canonicalServiceBrand(id:string,name:string){
  return "";
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [attempt,setAttempt]=useState(0);
+ const [failed,setFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
  const domain=domains[brand];
- const sources=brand?[
-  "https://cdn.simpleicons.org/"+encodeURIComponent(brand),
-  ...(domain?["https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"]:[])
- ]:[];
- return <span className={className||"service-icon"} role="img" aria-label={name+" logo"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
-  {attempt<sources.length?<img src={sources[attempt]} alt="" width="40" height="40" loading="lazy" decoding="async" onError={()=>setAttempt(value=>Math.min(value+1,sources.length))} style={{width:"100%",height:"100%",objectFit:"contain",padding:5,boxSizing:"border-box"}}/>:
+ const src=domain?"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128":"";
+ return <span className={className||"service-icon"} role="img" aria-label={name+" official logo"} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative"}}>
+  {src&&!failed?<img src={src} alt="" width="40" height="40" loading="lazy" decoding="async" onError={()=>setFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:5,boxSizing:"border-box"}}/>:
    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>}
  </span>
 }
