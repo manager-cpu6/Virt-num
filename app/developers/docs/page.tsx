@@ -213,6 +213,6 @@ export default function Docs(){
    <section style={panel}><h2 style={{marginTop:0}}>Security checklist</h2><ul style={{color:"#b4cbd6",paddingLeft:22}}><li>Never expose API keys in browser JavaScript, mobile apps, screenshots or public repositories.</li><li>Use HTTPS for your backend and webhook receiver.</li><li>Rotate a key immediately if it may have leaked.</li><li>Validate webhook signatures and reject duplicate event IDs.</li><li>Keep a local order ledger and reconcile status after timeouts.</li></ul><a href="https://support.numelixa.com/" style={{color:"#7be5d8",fontWeight:800}}>Need help? Contact developer support →</a></section>
    <nav className="nx-docs-prev-next" aria-label="Documentation page navigation"><button type="button" disabled={!previousSection} onClick={()=>{if(previousSection){setSection(previousSection.id);document.getElementById(previousSection.id)?.scrollIntoView({behavior:"smooth",block:"start"})}}}>← {previousSection?.title||"Previous"}</button><button type="button" disabled={!nextSection} onClick={()=>{if(nextSection){setSection(nextSection.id);document.getElementById(nextSection.id)?.scrollIntoView({behavior:"smooth",block:"start"})}}}>{nextSection?.title||"Next"} →</button></nav>
   </div>
-  <footer style={{marginTop:24,padding:18,borderTop:"1px solid rgba(109,222,230,.12)",fontSize:12,color:"#7895a5"}}>Numelixa Developer Documentation · API v1 · Use the live API contract and account permissions as the source of truth.</footer>
+  
  </main>
 }
