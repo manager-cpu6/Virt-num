@@ -56,7 +56,7 @@ function serviceSlugs(id:string,name:string){
  return [...new Set(candidates)].filter(Boolean);
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [failed,setFailed]=useState<string[]>([]);
+ const [failed,setFailed]=useState<string[]>([]);\n const [faviconFailed,setFaviconFailed]=useState(false);
  const slugs=serviceSlugs(id,name);
  const current=slugs.find(slug=>!failed.includes(slug))||"";
  const initials=name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"?";
