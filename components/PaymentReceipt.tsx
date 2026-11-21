@@ -11,7 +11,7 @@ const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"
 const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:0}).format(Math.ceil(Number(n)||0));
 export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData|null;onContinue:()=>void}){
  if(!receipt)return <section className="nx-receipt-loading" aria-live="polite"><span className="nx-receipt-loader"/>Preparing your verified Numelixa receipt…</section>;
- return <section className="nx-payment-receipt" aria-label="Verified Numelixa payment receipt">
+ return <section className="nx-payment-receipt" aria-label="Verified Numelixa payment receipt" style={{position:"fixed",inset:0,zIndex:9999,overflowY:"auto",width:"100%",maxWidth:"none",minHeight:"100svh",margin:0,padding:"clamp(18px,4vw,42px)",borderRadius:0,boxSizing:"border-box",background:"#ffffff",color:"#111827"}}>
   <div className="nx-receipt-top"><div className="nx-receipt-brand"><img className="nx-receipt-brandmark" src="/numelixa-brand.svg" alt="" width="40" height="40"/><span><b>NUMELIXA</b><small>GLOBAL DIGITAL SERVICES</small></span></div><div className="nx-receipt-status"><i/> VERIFIED PAYMENT</div></div>
   <div className="nx-receipt-title"><span>OFFICIAL PAYMENT RECEIPT</span><h2>Payment received.</h2><p>Your wallet top-up has been verified and credited successfully.</p></div>
   <div className="nx-receipt-amount"><small>AMOUNT PAID</small><strong>{usd(receipt.amountUsd)}</strong><span>{receipt.amountEtb>0?etb(receipt.amountEtb)+" ETB":"Payment confirmed in USD"}</span></div>
