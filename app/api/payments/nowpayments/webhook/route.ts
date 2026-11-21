@@ -3,7 +3,7 @@ import {applyReferralReward} from "@/lib/referrals";
 import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
-import {sendEmailFrom,coinPaymentSuccessEmail} from "@/lib/mailer";
+import {sendTransactionalEmail} from "@/lib/email-system";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -44,7 +44,7 @@ export async function POST(req:Request){
   await (await collection("coinTransactions")).insertOne({_id:mongoId(),userId:p.userId,type:"credit",amount:Number(p.coins),balanceAfter:Number(u.coins),reference:p.orderId,description:"NOWPayments wallet top-up",createdAt:new Date()});
   try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
   try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(error){console.error("[NOWPAYMENTS PUSH]",error);}
-  try{const paidUser=await users.findOne({_id:p.userId},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmailFrom("payment",String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),String(body.pay_currency||body.price_currency||"Crypto"),String(p.orderId)));}catch(error){console.error("[NOWPAYMENTS PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
+  try{const paidUser=await users.findOne({_id:p.userId},{projection:{email:1,name:1}});if(paidUser?.email)await sendTransactionalEmail("wallet_deposit_success",String(paidUser.email),{USER_NAME:String(paidUser.name||"there"),AMOUNT:Number(p.amountUsd||0).toFixed(2),CURRENCY:"USD",NEW_BALANCE:"Your updated Numelixa wallet balance",DEPOSIT_ID:String(body.payment_id||p.orderId),DEPOSIT_DATE:new Date().toISOString(),PAYMENT_SOURCE:"Crypto · "+String(body.pay_currency||body.price_currency||"Crypto"),WALLET_URL:"https://numelixa.com/wallet"},"wallet-deposit:nowpayments:"+String(p.orderId));}catch(error){console.error("[NOWPAYMENTS PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
   return NextResponse.json({ok:true});
  }catch(e){console.error("[NOWPAYMENTS WEBHOOK]",e);return NextResponse.json({ok:false,error:"Webhook failed"},{status:500});}
 }
