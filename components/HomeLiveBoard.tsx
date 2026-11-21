@@ -5,7 +5,7 @@ import ServiceLogo from "@/components/ServiceLogo";
 import {useEffect,useMemo,useState} from "react";
 
 type Activity={id:string;service:string;country:string;phone:string;type:string;time:string};
-type ActiveNumber={id:string;service:string;country:string;phone:string;status:string;createdAt:string;expiresAt:string|null};
+
 type Promo={tag:string;title:string;text:string;cta:string;href:string};
 
 const promos:Promo[]=[
@@ -28,7 +28,7 @@ function ago(value:string){
 }
 
 export default function HomeLiveBoard(){
- const[data,setData]=useState<{activeNumbers:ActiveNumber[];activity:Activity[]}>({activeNumbers:[],activity:[]});
+ const[data,setData]=useState<{activity:Activity[]}>({activity:[]});
  const[promo,setPromo]=useState(0);
  const[stamp,setStamp]=useState(Date.now());
 
@@ -50,13 +50,7 @@ export default function HomeLiveBoard(){
 
  const p=promos[promo];
 
- const liveNumbers=useMemo<Array<{country:string;flag:string;number:string;service:string;status:string}>>(()=>data.activeNumbers.map(n=>({
-  country:n.country||"—",
-  flag:flagFor(String(n.country||"").toUpperCase()),
-  number:n.phone||"••••",
-  service:n.service,
-  status:n.status
- })),[data.activeNumbers]);
+ const liveServices=useMemo(()=>Array.from(new Map(data.activity.map(a=>[a.service.toLowerCase(),a])).values()).slice(0,6),[data.activity]);
 
  return <section className="home-live-board-v2">
   <div className="live-v2-heading">
@@ -72,18 +66,17 @@ export default function HomeLiveBoard(){
   <div className="live-v2-main-grid">
    <div className="live-v2-numbers-card">
     <div className="live-v2-card-top">
-     <div><span className="live-v2-kicker">YOUR NUMBERS</span><h3>Active number orders</h3></div>
-     <span className="live-v2-counter"><i/> {liveNumbers.length ? `${liveNumbers.length} ACTIVE` : "NO ACTIVE ORDERS"}</span>
+     <div><span className="live-v2-kicker">LIVE SERVICE STREAM</span><h3>Recently verified services</h3></div>
+     <span className="live-v2-counter"><i/> {liveServices.length ? `${liveServices.length} SERVICES` : "AWAITING ACTIVITY"}</span>
     </div>
-
     <div className="live-number-list">
-     {liveNumbers.length?liveNumbers.map((n:{country:string;flag:string;number:string;service:string;status:string},i:number)=><div className="live-number-item" key={n.number+i}>
-       <span className="live-number-flag">{n.flag}</span>
-       <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
-       <span className="live-number-state"><i/>{n.status==="waiting"?"Waiting for SMS":"Active"}</span>
-      </div>):<div className="live-sms-empty"><span className="sms-empty-icon">＋</span><b>No active number orders</b><small>Numbers you purchase will appear here while waiting for SMS.</small></div>}
+     {liveServices.length?liveServices.map((a,i)=><div className="live-number-item" key={a.service+i}>
+       <ServiceLogo id={a.service} name={a.service} className="live-sms-icon"/>
+       <div className="live-number-info"><b>{a.service}</b><small>{flagFor(String(a.country||"").toUpperCase())} {a.country} · Verified activity</small></div>
+       <span className="live-number-state"><i/>{ago(a.time)}</span>
+      </div>):<div className="live-sms-empty"><span className="sms-empty-icon">✦</span><b>Services will appear here</b><small>Recent verified service activity will rotate here. Personal phone numbers are never displayed.</small></div>}
     </div>
-    <Link href="/services" className="live-v2-card-action">Get a live number <span>→</span></Link>
+    <Link href="/services" className="live-v2-card-action">Explore services <span>→</span></Link>
    </div>
 
    <div className="live-v2-sms-card">
@@ -94,7 +87,7 @@ export default function HomeLiveBoard(){
     <div className="live-sms-stream">
      {data.activity.length?data.activity.slice(0,4).map(a=><div className="live-sms-row" key={a.id}>
        <ServiceLogo id={a.service} name={a.service} className="live-sms-icon"/>
-       <div><b>{a.service} <em>{a.country}</em></b><small>{a.phone} · {a.type}</small></div>
+       <div><b>{a.service} <em>{a.country}</em></b><small>{a.type} · {a.country}</small></div>
        <time>{ago(a.time)}</time>
       </div>):<div className="live-sms-empty"><span className="sms-empty-icon">✦</span><b>No recent SMS activity</b><small>Your completed verifications will appear here when available.</small></div>}
     </div>
