@@ -1,0 +1,5 @@
+import {NextResponse} from "next/server";
+import {requireUser,mongoId} from "@/lib/auth";
+import {collection} from "@/lib/mongo";
+export const runtime="nodejs";export const dynamic="force-dynamic";
+export async function POST(req:Request,{params}:{params:Promise<{slug:string}>}){try{const user=await requireUser(),{slug}=await params,b=await req.json(),postId=String(b.postId||""),channel=await (await collection<any>("updatesChannels")).findOne({slug,status:"active"});if(!channel||!postId)return NextResponse.json({ok:false,error:"Post not found."},{status:404});const posts=await collection<any>("updatesPosts"),post=await posts.findOne({_id:postId,channelId:String(channel._id),status:"published"});if(!post)return NextResponse.json({ok:false,error:"Post not found."},{status:404});const views=await collection<any>("updatesViews"),exists=await views.findOne({postId,userId:user.id});if(!exists){await views.insertOne({_id:mongoId(),postId,userId:user.id,createdAt:new Date()});await posts.updateOne({_id:postId},{$inc:{views:1}})}return NextResponse.json({ok:true})}catch{return NextResponse.json({ok:false,error:"Unable to record view."},{status:401})}}

@@ -21,6 +21,8 @@ const brandNames:Record<string,string>={
 function serviceName(value?:string|null){
  const raw=String(value||"").trim();
  if(!raw)return "SMS service";
+ const key=raw.toLowerCase().replace(/[^a-z0-9]/g,"");
+ if(key==="chatgpt"||key==="cg")return "ChatGPT";
  const brand=canonicalServiceBrand(raw,raw);
  return brandNames[brand]||raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
