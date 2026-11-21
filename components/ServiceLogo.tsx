@@ -48,9 +48,7 @@ export function canonicalServiceBrand(id:string,name:string){
  if(!b&&aliases[a])return aliases[a];
  // Match a brand followed only by common provider suffixes, never arbitrary prefixes.
  const keys=Object.keys(aliases).filter(k=>k.length>=3).sort((x,y)=>y.length-x.length);
- for(const value of [a,b]){
-  for(const key of keys)if(value.startsWith(key)&&/^(?:sms|otp|verification|activation|number|service|app|lite|business)$/.test(value.slice(key.length)))return aliases[key];
- }
+ for(const key of keys)if(b.startsWith(key)&&/^(?:sms|otp|verification|activation|number|service|app|lite|business)$/.test(b.slice(key.length)))return aliases[key];
  // Combined labels such as "TikTok / Douyin" intentionally prefer the named TikTok product.
  if(b.includes("twitter"))return "x";
  if(b.includes("tiktok"))return "tiktok";
