@@ -23,14 +23,14 @@ const aliases:Record<string,string>={
  zupee:"zupee",huya:"huya",moneza:"moneza",miratorg:"miratorg",hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",
  booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",
  googleplay:"googleplay",microsoft365:"microsoft365",teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",
- novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta"
+ novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta",\n ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr"
 };
 const brandNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",douyin:"Douyin",instagram:"Instagram",facebook:"Facebook",google:"Google",
  discord:"Discord",x:"X",amazon:"Amazon",alibabadotcom:"Alibaba",alibabacloud:"Alibaba Cloud",microsoft:"Microsoft",paypal:"PayPal",
  moneza:"Moneza",snapchat:"Snapchat",googlepay:"Google Pay",googleplay:"Google Play",apple:"Apple",youtube:"YouTube",openai:"OpenAI",
  threads:"Threads",linkedin:"LinkedIn",reddit:"Reddit",spotify:"Spotify",netflix:"Netflix",viber:"Viber",signal:"Signal",imo:"imo",
- novaposhta:"Nova Poshta"
+ novaposhta:"Nova Poshta",ebirr:"eBirr",coopayebirr:"Coopay eBirr",kaafiebirr:"Kaafi eBirr",cbebirr:"CBE Birr",cbe:"Commercial Bank of Ethiopia",mpesa:"M-Pesa",telebirr:"telebirr"
 };
 const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta"].includes(v)));
 const domainByBrand:Record<string,string>={
