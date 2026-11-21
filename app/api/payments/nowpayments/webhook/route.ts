@@ -30,6 +30,7 @@ export async function POST(req:Request){
   const status=String(body.payment_status||"").toLowerCase();
   if(["failed","expired","refunded"].includes(status)){
    await payments.updateOne({_id:p._id,status:{$ne:"paid"}},{$set:{status,raw:body,updatedAt:new Date(),txid:String(body.payment_id||p.txid||"")}});
+   try{const owner=await (await collection<any>("users")).findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(owner?.email)await sendTransactionalEmail("payment_failed",String(owner.email),{USER_NAME:String(owner.name||"there"),AMOUNT:Number(p.amountUsd||0).toFixed(2),CURRENCY:"USD",TRANSACTION_ID:String(body.payment_id||p.orderId),PAYMENT_DATE:new Date().toISOString(),RETRY_URL:"https://numelixa.com/wallet"},"payment-failed:nowpayments:"+String(p.orderId));}catch(error){console.error("[NOWPAYMENTS PAYMENT FAILED EMAIL]",error instanceof Error?error.message:"send failed")}
    return NextResponse.json({ok:true});
   }
   if(status!=="finished"){
