@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 import {applyReferralReward} from "@/lib/referrals";
 import {collection,getMongoClient,mongoId} from "@/lib/mongo";
 import {notifyUser} from "@/lib/notifications";
-import {sendEmailFrom,coinPaymentSuccessEmail} from "@/lib/mailer";
+import {sendTransactionalEmail} from "@/lib/email-system";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
@@ -48,7 +48,7 @@ export async function POST(req:Request){
   if(creditedNow){
    try{await applyReferralReward({userId:String(p.userId),paymentReference:String(p.orderId),amountUsd:Number(p.amountUsd||0),description:"Verified Sifalo wallet top-up"});}catch(error){console.error("[REFERRAL REWARD]",error)}
    try{await notifyUser(String(p.userId),"💰 Payment confirmed","Your wallet was credited with $"+Number(p.amountUsd||0).toFixed(2)+" USD.",{paymentId:String(p._id),type:"payment"});}catch(e){console.error("[SIFALO PUSH]",e);}
-   try{const paidUser=await (await collection<any>("users")).findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(paidUser?.email)await sendEmailFrom("payment",String(paidUser.email),"Payment successful — USD wallet topped up",coinPaymentSuccessEmail(String(paidUser.name||""),Number(p.coins),Number(p.amountUsd),"Somalia mobile money",String(p.orderId)));}catch(error){console.error("[SOMALIA PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
+   try{const paidUser=await (await collection<any>("users")).findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(paidUser?.email)await sendTransactionalEmail("wallet_deposit_success",String(paidUser.email),{USER_NAME:String(paidUser.name||"there"),AMOUNT:Number(p.amountUsd||0).toFixed(2),CURRENCY:"USD",NEW_BALANCE:"Your updated Numelixa wallet balance",DEPOSIT_ID:String(p.txid||p.orderId),DEPOSIT_DATE:new Date().toISOString(),PAYMENT_SOURCE:"Local mobile payment",WALLET_URL:"https://numelixa.com/wallet"},"wallet-deposit:sifalo:"+String(p.orderId));}catch(error){console.error("[SOMALIA PAYMENT EMAIL]",error instanceof Error?error.message:"send failed");}
   }
   return NextResponse.json({ok:true});
  }catch(e){console.error("[SIFALO WEBHOOK]",e);return NextResponse.json({ok:false,error:"Webhook processing failed."},{status:500});}
