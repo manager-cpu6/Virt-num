@@ -21,15 +21,15 @@ function fallbackConfig():SmtpConfig|null{
  return{host,port,user,pass,from};
 }
 
-type SenderKey="info"|"payment"|"welcome"|"noreply"|"team"|"system"|"notification";
+type SenderKey="info"|"payment"|"welcome"|"noreply"|"forgot"|"withdrawal"|"team"|"system"|"notification";
 const SENDER_ADDRESS:Record<SenderKey,string>={
  info:"info@numelixa.com",payment:"payment@numelixa.com",welcome:"welcome@numelixa.com",
- noreply:"noreplay@numelixa.com",team:"team@numelixa.com",system:"system@numelixa.com",
+ noreply:"noreplay@numelixa.com",forgot:"forgot@numelixa.com",withdrawal:"request@numelixa.com",team:"team@numelixa.com",system:"system@numelixa.com",
  notification:"notification@numelixa.com"
 };
 const SENDER_PREFIX:Record<SenderKey,string>={
  info:"SPACEMAIL_INFO",payment:"SPACEMAIL_PAYMENT",welcome:"SPACEMAIL_WELCOME",
- noreply:"SPACEMAIL_NOREPLAY",team:"SPACEMAIL_TEAM",system:"SPACEMAIL_SYSTEM",
+ noreply:"SPACEMAIL_NOREPLAY",forgot:"SPACEMAIL_FORGOT",withdrawal:"SPACEMAIL_WITHDRAWAL",team:"SPACEMAIL_TEAM",system:"SPACEMAIL_SYSTEM",
  notification:"SPACEMAIL_NOTIFICATION"
 };
 function smtpConfig(sender:SenderKey="info"):SmtpConfig{
@@ -52,23 +52,23 @@ function makeTransporter(config:SmtpConfig){const credentialFingerprint=createHa
  const transporter=nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,requireTLS:config.port===587,auth:{user:config.user,pass:config.pass},tls:{minVersion:"TLSv1.2",servername:config.host},connectionTimeout:8000,greetingTimeout:8000,socketTimeout:12000,pool:true,maxConnections:3,maxMessages:50} as any);
  g[key]=transporter;
  return transporter;}
-async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];await transporter.sendMail({from:"Numelixa <"+config.from+">",to,replyTo:config.from,subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
+async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string,sender:SenderKey){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];const displayName:Record<SenderKey,string>={info:"Numelixa",payment:"Numelixa Payments",welcome:"Numelixa Welcome",noreply:"Numelixa",forgot:"Numelixa Account Security",withdrawal:"Numelixa Withdrawals",team:"Numelixa Support",system:"Numelixa",notification:"Numelixa"};await transporter.sendMail({from:'"'+displayName[sender]+'" <'+config.from+'>',to,replyTo:"support@numelixa.com",subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
 function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
 export async function sendEmail(to:string,subject:string,html:string){return sendEmailFrom("info",to,subject,html);}
 export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,html:string){
  const config=smtpConfig(sender);
  try{
-  await sendWithConfig(config,to,subject,html);
+  await sendWithConfig(config,to,subject,html,sender);
   return;
  }catch(error){
   // A TLS/socket failure is safe to retry once. A provider rate limit is not:
   // hammering the same mailbox makes the block last longer.
   if(!isRateLimitedError(error)&&config.port===465&&isSocketTlsError(error)){
-   try{await sendWithConfig({...config,port:587},to,subject,html);return;}
+   try{await sendWithConfig({...config,port:587},to,subject,html,sender);return;}
    catch(fallbackError){
     if(isRateLimitedError(fallbackError)){
      const fallback=fallbackConfig();
-     if(fallback){await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html);return;}
+     if(fallback){await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html,sender);return;}
     }
     const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
     throw new Error("Spacemail SMTP error: "+message);
@@ -76,12 +76,12 @@ export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,ht
   }
   if(!isRateLimitedError(error)&&isSocketTlsError(error)){
    await new Promise(resolve=>setTimeout(resolve,350));
-   try{await sendWithConfig(config,to,subject,html);return;}catch{}
+   try{await sendWithConfig(config,to,subject,html,sender);return;}catch{}
   }
   if(isRateLimitedError(error)){
    const fallback=fallbackConfig();
    if(fallback){
-    try{await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html);return;}catch(fallbackError){
+    try{await sendWithConfig({...fallback,from:SENDER_ADDRESS[sender]},to,subject,html,sender);return;}catch(fallbackError){
      const message=fallbackError instanceof Error?fallbackError.message:String(fallbackError);
      throw new Error("EMAIL_RATE_LIMITED: "+message);
     }
@@ -94,8 +94,8 @@ export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,ht
 }
 
 const shell=(content:string,preheader:string)=>{
- const logo='<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto"><tr><td align="center" valign="middle" style="width:46px;height:46px;border-radius:15px;background:linear-gradient(135deg,#58e6cf,#0c777a);color:#031d25;font-family:Arial,Helvetica,sans-serif;font-size:22px;font-weight:900;line-height:46px;text-align:center;vertical-align:middle;box-shadow:0 10px 28px rgba(39,218,190,.25)">N</td></tr></table>';
- return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"></head><body style="margin:0;background:#061d24;font-family:Arial,Helvetica,sans-serif;color:#ecfffb"><div style="display:none;max-height:0;overflow:hidden;opacity:0">'+preheader+'</div><div style="padding:34px 14px;background:radial-gradient(circle at 50% 0,#0b5960 0,#061d24 46%,#04151b 100%);min-height:100vh"><div style="max-width:590px;margin:auto"><div style="padding:4px 8px 18px">'+logo+'<div style="margin-top:10px;font-size:11px;font-weight:800;letter-spacing:3px;color:#78dccc">NUMELIXA</div></div><div style="background:rgba(7,40,48,.96);border:1px solid rgba(116,235,214,.16);border-radius:28px;padding:30px 26px;box-shadow:0 24px 70px rgba(0,0,0,.3)">'+content+'</div><div style="padding:22px 8px;text-align:center;color:#62898c;font-size:11px;line-height:1.6">Numelixa · Global Virtual Numbers<br>Secure account & SMS services</div></div></div></body></html>';
+ const logo='<img src="https://numelixa.com/numelixa-brand.svg" width="56" height="56" alt="Numelixa" style="display:block;width:56px;height:56px;object-fit:contain;border:0;margin:0 auto" />';
+ return '<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"></head><body style="margin:0;background:#061d24;font-family:Arial,Helvetica,sans-serif;color:#ecfffb"><div style="display:none;max-height:0;overflow:hidden;opacity:0">'+preheader+'</div><div style="padding:34px 14px;background:radial-gradient(circle at 50% 0,#0b5960 0,#061d24 46%,#04151b 100%);min-height:100vh"><div style="max-width:590px;margin:auto"><div style="padding:4px 8px 18px">'+logo+'<div style="margin-top:10px;font-size:11px;font-weight:800;letter-spacing:3px;color:#78dccc">NUMELIXA</div></div><div style="background:rgba(7,40,48,.96);border:1px solid rgba(116,235,214,.16);border-radius:28px;padding:30px 26px;box-shadow:0 24px 70px rgba(0,0,0,.3)">'+content+'</div><div style="padding:22px 8px;text-align:center;color:#62898c;font-size:11px;line-height:1.6">Numelixa · Virtual numbers. Connected.<br><a href="mailto:support@numelixa.com" style="color:#b8c2d5;text-decoration:underline">support@numelixa.com</a> · <a href="https://support.numelixa.com" style="color:#b8c2d5;text-decoration:underline">Support Center</a><br>© 2026 Numelixa. All rights reserved.</div></div></div></body></html>';
 };
 
 export function verificationEmail(code:string){
