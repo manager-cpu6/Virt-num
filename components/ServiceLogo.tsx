@@ -58,7 +58,6 @@ function serviceSlugs(id:string,name:string){
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
  const [failed,setFailed]=useState<string[]>([]);
  const [faviconFailed,setFaviconFailed]=useState(false);
- const [faviconFailed,setFaviconFailed]=useState(false);
  const slugs=serviceSlugs(id,name);
  const current=slugs.find(slug=>!failed.includes(slug))||"";
  const initials=name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"?";
