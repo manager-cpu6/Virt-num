@@ -40,7 +40,7 @@ const domainByBrand:Record<string,string>={
  openai:"openai.com",paypal:"paypal.com",apple:"apple.com",google:"google.com",youtube:"youtube.com",
  discord:"discord.com",telegram:"telegram.org",whatsapp:"whatsapp.com",tiktok:"tiktok.com",douyin:"douyin.com",
  instagram:"instagram.com",facebook:"facebook.com",snapchat:"snapchat.com",spotify:"spotify.com",netflix:"netflix.com",
- linkedin:"linkedin.com",reddit:"reddit.com",x:"x.com",threads:"threads.net",imo:"imo.im",novaposhta:"novaposhta.ua"
+ linkedin:"linkedin.com",reddit:"reddit.com",x:"x.com",threads:"threads.net",imo:"imo.im",novaposhta:"novaposhta.ua",ebirr:"ebirr.com",coopayebirr:"ebirr.com",kaafiebirr:"ebirr.com",cbebirr:"combanketh.et",cbe:"combanketh.et",mpesa:"m-pesabusiness.safaricom.et",telebirr:"ethiotelecom.et"
 };
 const normalize=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 export function canonicalServiceBrand(id:string,name:string){
