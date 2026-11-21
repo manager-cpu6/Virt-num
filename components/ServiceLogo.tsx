@@ -56,12 +56,17 @@ function serviceSlugs(id:string,name:string){
  return [...new Set(candidates)].filter(Boolean);
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [failed,setFailed]=useState<string[]>([]);\n const [faviconFailed,setFaviconFailed]=useState(false);
+ const [failed,setFailed]=useState<string[]>([]);
+ const [faviconFailed,setFaviconFailed]=useState(false);
+ const [faviconFailed,setFaviconFailed]=useState(false);
  const slugs=serviceSlugs(id,name);
  const current=slugs.find(slug=>!failed.includes(slug))||"";
  const initials=name.trim().split(/\s+/).filter(Boolean).slice(0,2).map(part=>part[0]).join("").toUpperCase()||"?";
+ const domainByBrand:Record<string,string>={amazon:"amazon.com",microsoft:"microsoft.com",openai:"openai.com",chatgpt:"chatgpt.com",paypal:"paypal.com",apple:"apple.com",google:"google.com",youtube:"youtube.com",discord:"discord.com",telegram:"telegram.org",whatsapp:"whatsapp.com",tiktok:"tiktok.com",instagram:"instagram.com",facebook:"facebook.com",snapchat:"snapchat.com",spotify:"spotify.com",netflix:"netflix.com",linkedin:"linkedin.com",reddit:"reddit.com",x:"x.com",threads:"threads.net"};
+ const domain=domainByBrand[slugs[0]]||((slugs[0]||"service")+".com");
  return <span className={className||"service-icon"} role="img" aria-label={name+" brand mark"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"visible",position:"relative",background:"transparent",border:0,boxShadow:"none"}}>
   {current?<img key={current} src={"https://cdn.simpleicons.org/"+encodeURIComponent(current)} alt="" width="56" height="56" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={()=>setFailed(old=>[...old,current])} style={{width:"100%",height:"100%",objectFit:"contain",padding:0,boxSizing:"border-box",background:"transparent"}}/>:
+   !faviconFailed?<img src={"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"} alt="" width="56" height="56" loading="lazy" onError={()=>setFaviconFailed(true)} style={{width:"78%",height:"78%",objectFit:"contain"}}/>:
    <span aria-hidden="true" style={{fontSize:16,fontWeight:850,letterSpacing:"-.04em",color:"rgba(190,215,245,.78)"}}>{initials}</span>}
  </span>
 }
