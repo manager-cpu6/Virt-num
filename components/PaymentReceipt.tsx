@@ -8,7 +8,7 @@ function Barcode({value}:{value:string}){
  let cursor=10;return <svg role="img" aria-label={"Barcode for receipt "+value} viewBox={"0 0 "+(bits.total+20)+" 58"} width="100%" height="58" preserveAspectRatio="none" shapeRendering="crispEdges">{bits.bars.map((bar,i)=>{const x=cursor;cursor+=bits.widths[i];return bar?<rect key={i} x={x} y="0" width={bits.widths[i]} height="48" fill="#111827"/>:null;})}</svg>;
 }
 const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
-const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
+const etb=(n:number)=>new Intl.NumberFormat("en-ET",{maximumFractionDigits:0}).format(Math.ceil(Number(n)||0));
 export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData|null;onContinue:()=>void}){
  const [message,setMessage]=useState("");const [emailBusy,setEmailBusy]=useState(false);
  async function emailReceipt(){if(!receipt)return;setEmailBusy(true);setMessage("");try{const response=await fetch("/api/wallet/receipt/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reference:receipt.orderId})});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"Unable to email receipt.");setMessage("Receipt sent to "+data.email+".")}catch(error){setMessage(error instanceof Error?error.message:"Unable to email receipt.")}finally{setEmailBusy(false)}}
