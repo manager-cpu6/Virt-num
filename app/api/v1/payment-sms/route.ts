@@ -30,7 +30,6 @@ function parse(body:string){
  const amountPatterns=[
   /\b(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)\b/i,
   /\b([\d,]+(?:\.\d{1,2})?)\s*(?:ETB|Birr)\b/i,
-  /\b(?:amount|credited|deposit(?:ed)?|paid)\s*(?:of|is|was|:|=)?\s*(?:ETB|Birr)\s*([\d,]+(?:\.\d{1,2})?)\b/i
  ];
  let amount:number|null=null;
  for(const pattern of amountPatterns){const m=body.match(pattern);if(m){const n=Number(m[1].replace(/,/g,""));if(Number.isFinite(n)&&n>0){amount=n;break;}}}
@@ -39,7 +38,7 @@ function parse(body:string){
  const namePattern=/(?:from|sender|payer|customer(?:\s+name)?|sender\s+name|name|sent\s+by|የላኪ\s*ስም|ላኪ)\s*[:#=-]?\s*([\p{L}][\p{L}.' -]{1,60}?)(?=\s*(?:\+?251|0[79]\d{8}|,|;|\(|\b(?:phone|mobile|account|sent|received|paid|credited|transferred|on|at|ref|txn|amount|ETB|Birr)\b|$))/giu;
  const nameCandidates=[...body.matchAll(namePattern)].map(m=>m[1].trim().replace(/[.,;:-]+$/,"")).filter(n=>!["sender","payer","customer","account","bank"].includes(n.toLowerCase()));
  const payerName=nameCandidates[nameCandidates.length-1]||"";
- const negative=/(?:failed|unsuccessful|declined|reversed|cancelled|canceled|rejected|not successful|አልተሳካም|ውድቅ)/i.test(body);
+ const negative=/(?:not\\s+(?:received|credited|deposited|successful)|pending|processing|failed|unsuccessful|declined|reversed|cancelled|canceled|rejected|not successful|አልተሳካም|ውድቅ)/i.test(body);
  const positive=!negative&&/(?:received|credited|deposit(?:ed)?|has been received|you have received|payment successful|payment completed|transaction successful|transaction completed|transfer successful|transfer completed|successfully transferred|successfully sent|sent successfully|debited successfully|money received|has been deposited|ደረሰ|ገቢ ሆኗል|ተቀብለዋል)/i.test(body);
  return {amount,payerPhone,payerName,positive};
 }
