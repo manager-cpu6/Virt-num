@@ -62,3 +62,30 @@
  .nx-live-demo{transform:scale(.84)!important;margin:-25px -20px!important}
 }
 @media(prefers-reduced-motion:reduce){.nx-live-number,.nx-live-sms{animation:none!important}}
+
+/* Verified brand catalogue, purposeful loading and dashboard wallet refresh. */
+.nx-service-loading{display:grid!important;justify-items:center;gap:10px;padding:34px 18px!important;text-align:center;border:1px solid rgba(76,161,255,.16)!important;border-radius:24px;background:radial-gradient(circle at 50% 0,rgba(22,119,255,.13),transparent 55%),rgba(5,18,37,.7)!important;color:#eaf5ff!important}
+.nx-service-loading>b{font-size:14px;color:#eaf5ff}.nx-service-loading>small{font-size:11px;color:#8ea8c8}
+.nx-loading-orbit{display:block;width:34px;height:34px;border:3px solid rgba(53,214,227,.18);border-top-color:#35d6e3;border-right-color:#4388ff;border-radius:50%;animation:nxBrandSpin .8s linear infinite}
+@keyframes nxBrandSpin{to{transform:rotate(360deg)}}
+.nx-service-skeleton-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,620px);margin-top:12px}
+.nx-service-skeleton-grid i{height:70px;border-radius:16px;border:1px solid rgba(123,171,225,.12);background:linear-gradient(100deg,rgba(13,35,65,.7),rgba(37,75,120,.34),rgba(13,35,65,.7));background-size:200% 100%;animation:nxSkeletonSweep 1.5s ease-in-out infinite}
+@keyframes nxSkeletonSweep{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.nx-dashboard-balance-v2{position:relative;isolation:isolate;overflow:hidden;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:22px!important;min-height:172px!important;padding:clamp(22px,4vw,34px)!important;margin:20px 0 26px!important;border:1px solid rgba(91,173,255,.26)!important;border-radius:28px!important;background:radial-gradient(circle at 85% 12%,rgba(0,217,255,.2),transparent 32%),radial-gradient(circle at 12% 110%,rgba(113,59,255,.2),transparent 42%),linear-gradient(120deg,#061329,#0b2850 58%,#07152c)!important;box-shadow:0 26px 65px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.06)!important;color:#f4f9ff!important}
+.nx-dashboard-balance-v2:after{content:"";position:absolute;z-index:-1;right:-72px;top:-130px;width:310px;height:310px;border:1px solid rgba(109,204,255,.18);border-radius:50%;box-shadow:0 0 0 28px rgba(109,204,255,.025),0 0 0 58px rgba(109,204,255,.02),0 0 0 90px rgba(109,204,255,.015)}
+.nx-dashboard-balance-copy{position:relative;z-index:1;display:grid;gap:8px;min-width:0}
+.nx-dashboard-balance-label{display:flex;align-items:center;gap:9px;color:#8ec9f6!important;font-size:9px!important;font-weight:900;letter-spacing:.18em}
+.nx-dashboard-balance-label i{width:6px;height:6px;border-radius:50%;background:#35d6a0;box-shadow:0 0 0 4px rgba(53,214,160,.1)}
+.nx-dashboard-balance-copy strong{font-size:clamp(36px,6vw,54px)!important;line-height:1!important;letter-spacing:-.065em!important;font-variant-numeric:tabular-nums;color:#fff!important}
+.nx-dashboard-balance-copy small{font-size:11px!important;color:#9bb7d7!important}
+.nx-dashboard-wallet-actions{position:relative;z-index:2;display:grid;gap:10px;min-width:160px}
+.nx-dashboard-topup{display:flex!important;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 17px!important;border-radius:14px!important;background:linear-gradient(105deg,#1677ff,#00c8ec)!important;color:#fff!important;font-size:12px!important;font-weight:900!important;box-shadow:0 12px 28px rgba(22,119,255,.22)!important}
+.nx-dashboard-topup span{font-size:18px}.nx-dashboard-topup b{font-size:17px}
+.nx-dashboard-wallet-manage{color:#a9d9ff!important;text-align:center;font-size:10px;font-weight:800}
+.nx-dashboard-wallet-art{position:absolute;right:clamp(180px,26vw,330px);top:25px;width:110px;height:110px;display:grid;place-items:center;opacity:.55}
+.nx-wallet-art-orbit{width:94px;height:94px;border:1px solid rgba(118,211,255,.35);border-radius:50%;box-shadow:0 0 0 13px rgba(118,211,255,.035),inset 0 0 25px rgba(0,217,255,.07)}
+.nx-wallet-art-chip{position:absolute;display:grid;place-items:center;width:45px;height:45px;border-radius:14px;background:linear-gradient(140deg,rgba(22,119,255,.8),rgba(113,59,255,.72));border:1px solid rgba(255,255,255,.32);color:white;font-size:13px;font-weight:950;letter-spacing:-.05em;box-shadow:0 12px 26px rgba(0,0,0,.25)}
+.live-v2-main-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.live-v2-heading p{max-width:540px}
+@media(max-width:640px){.nx-dashboard-balance-v2{align-items:flex-start!important;flex-direction:column!important;gap:18px!important;min-height:0!important;padding:22px!important}.nx-dashboard-wallet-actions{width:100%;grid-template-columns:1fr 1fr;align-items:center}.nx-dashboard-wallet-art{right:18px;top:8px;transform:scale(.72);transform-origin:top right}.nx-dashboard-balance-copy{max-width:72%}.nx-dashboard-balance-copy strong{font-size:36px!important}.live-v2-main-grid{grid-template-columns:1fr!important}.nx-service-skeleton-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.nx-loading-orbit,.nx-service-skeleton-grid i{animation:none!important}}
