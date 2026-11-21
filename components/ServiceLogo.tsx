@@ -33,7 +33,7 @@ const brandNames:Record<string,string>={
  threads:"Threads",linkedin:"LinkedIn",reddit:"Reddit",spotify:"Spotify",netflix:"Netflix",viber:"Viber",signal:"Signal",imo:"imo",
  novaposhta:"Nova Poshta",ebirr:"eBirr",coopayebirr:"Coopay eBirr",kaafiebirr:"Kaafi eBirr",cbebirr:"CBE Birr",cbe:"Commercial Bank of Ethiopia",mpesa:"M-Pesa",telebirr:"telebirr"
 };
-const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta"].includes(v)));
+const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta","ebirr","coopayebirr","kaafiebirr","cbebirr","cbe","mpesa","telebirr"].includes(v)));
 const domainByBrand:Record<string,string>={
  zupee:"zupee.com",huya:"huya.com",moneza:"moneza.com",miratorg:"miratorg.ru",chatgpt:"chatgpt.com",
  amazon:"amazon.com",alibabadotcom:"alibaba.com",alibabacloud:"alibabacloud.com",microsoft:"microsoft.com",
