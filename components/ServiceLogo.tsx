@@ -37,7 +37,8 @@ export function canonicalServiceBrand(id:string,name:string){
 }
 export function fullServiceName(value:string){
  const raw=String(value||"").trim();if(!raw)return "SMS service";
- const key=normalize(raw),brand=aliases[key]||key;
+ const key=normalize(raw);if(key==="chatgpt"||key==="cg")return "ChatGPT";
+ const brand=aliases[key]||key;
  if(brandNames[brand])return brandNames[brand];
  return raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
