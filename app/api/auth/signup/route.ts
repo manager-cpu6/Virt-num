@@ -16,6 +16,7 @@ export async function POST(req:Request){
   if(existing?.verifiedAt)return NextResponse.json({ok:false,error:"This email already has a verified account. Sign in instead."},{status:409});
   const now=new Date();
   const id=existing?String(existing._id):mongoId();
+  const createdAccount=!existing;
   if(existing){
     // Reuse the unverified account instead of trapping the address forever.
     // Keep the stable user ID so the existing account's API key remains valid.
@@ -30,6 +31,7 @@ export async function POST(req:Request){
 
   }
   await ensureApiKey(id);
+  if(createdAccount){try{await sendTransactionalEmail("welcome",email,{USER_NAME:name,YEAR:new Date().getFullYear()},"welcome:"+id);}catch(error){console.error("[WELCOME EMAIL]",error instanceof Error?error.message:String(error));}}
   const nativeClient=req.headers.get("x-numelixa-client")==="android-app";
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
