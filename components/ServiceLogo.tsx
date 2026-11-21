@@ -11,7 +11,7 @@ const aliases:Record<string,string>={
  am:"amazon",az:"amazon",amazon:"amazon",amazonprime:"amazon",amazonshop:"amazon",
  alibaba:"alibabadotcom",alibabacom:"alibabadotcom",alibabadotcom:"alibabadotcom",alibabacloud:"alibabacloud",
  ap:"apple",apple:"apple",op:"openai",oi:"openai",openai:"openai",cg:"chatgpt",chatgpt:"chatgpt",claudeai:"claude",claude:"claude",
- tw:"x",twitter:"x",xtwitter:"x",x:"x",ms:"microsoft",mi:"microsoft",microsoft:"microsoft",microsoftteams:"microsoftteams",
+ tw:"x",twitter:"x",tewitter:"x",xtwitter:"x",xtewitter:"x",x:"x",ms:"microsoft",mi:"microsoft",microsoft:"microsoft",microsoftteams:"microsoftteams",
  sn:"snapchat",snapchat:"snapchat",ds:"discord",discord:"discord",li:"linkedin",linkedin:"linkedin",
  pp:"paypal",paypal:"paypal",rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",
  vb:"viber",viber:"viber",sg:"signal",signal:"signal",vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",
