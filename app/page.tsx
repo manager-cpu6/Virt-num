@@ -7,12 +7,14 @@ import FirstPartyCheckout from "@/components/FirstPartyCheckout";
 import CryptoPaymentPage from "@/components/CryptoPaymentPage";
 import LivePhoneDemo from "@/components/LivePhoneDemo";
 import AndroidDownloadPage from "@/components/AndroidDownloadPage";
+import EthiopiaPaymentCheckout from "@/components/EthiopiaPaymentCheckout";
 import type {Metadata} from "next";
 
 export const dynamic = "force-dynamic";
 
 export async function generateMetadata():Promise<Metadata>{
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
+ if(host==="ethio.virtunumber.online")return {metadataBase:new URL("https://ethio.virtunumber.online"),title:"Ethiopia Payment | Numelixa",description:"Secure Ethiopian mobile wallet and bank payments for Numelixa.",robots:{index:false,follow:false},icons:{icon:"https://www.numelixa.com/numelixa-brand.svg"}};
  if(host==="app.numelixa.com")return {
   metadataBase:new URL("https://app.numelixa.com"),
   title:{absolute:"Numelixa APK Download | Official Numelixa Android App"},
@@ -32,6 +34,7 @@ export default async function LandingPage() {
   if(host==="app.numelixa.com")return <AndroidDownloadPage/>;
   if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
   if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
+  if(host==="ethio.virtunumber.online")return <EthiopiaPaymentCheckout/>;
   const user = await getUser().catch(() => null);
   if (user) redirect("/dashboard");
 
@@ -55,7 +58,7 @@ export default async function LandingPage() {
           <LivePhoneDemo />
         </section>
 
-        <section className="landing-stats"><div><strong>Live catalog</strong><span>Browse services and country availability</span></div><div><strong>One workspace</strong><span>Numbers, orders, SMS and wallet</span></div><div><strong>Web + Android</strong><span>Use your Numelixa account across devices</span></div></section>
+        <section className="landing-stats"><div><strong>Live catalog</strong><span>Browse services and country availability</span></div><div><strong>One workspace</strong><span>Numbers, orders, SMS and wallet</span></div><div><strong>Since 2023</strong><span>Building virtual-number services from 2023 through 2026</span></div></section>
 
         <section id="features" className="landing-section">
           <div className="landing-section-head"><span>WHY NUMELIXA</span><h2>Everything you need to verify.<br /><em>Nothing you don't.</em></h2></div>
@@ -108,7 +111,7 @@ export default async function LandingPage() {
           </div>
         </section>
 
-        <section className="landing-final"><span>READY WHEN YOU ARE</span><h2>Start with Numelixa today.</h2><p>Get your first virtual number in a few taps.</p><Link href="/signup" className="landing-primary">Create free account <span>→</span></Link></section>
+        <section className="landing-final"><span>ESTABLISHED 2023 · SERVING THROUGH 2026</span><h2>Start with Numelixa today.</h2><p>Get your first virtual number in a few taps.</p><Link href="/signup" className="landing-primary">Create free account <span>→</span></Link></section>
       </main>
 
       <PublicFooter/>
