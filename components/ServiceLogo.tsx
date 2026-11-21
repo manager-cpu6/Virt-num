@@ -32,7 +32,12 @@ const normalize=(v:string)=>v.toLowerCase().replace(/[^a-z0-9]/g,"");
 export function canonicalServiceBrand(id:string,name:string){
  const a=normalize(id),b=normalize(name);
  const keys=Object.keys(aliases).sort((x,y)=>y.length-x.length);
- for(const key of keys){if(a===key||b===key||(key.length>=3&&(a.startsWith(key)||b.startsWith(key))))return aliases[key]}
+ // The actual service label is authoritative. Provider-specific short IDs can
+ // collide with unrelated brand aliases (for example Huya vs a "pp" provider ID).
+ for(const key of keys){if(b===key)return aliases[key]}
+ for(const key of keys){if(a===key)return aliases[key]}
+ for(const key of keys){if(key.length>=3&&b.startsWith(key))return aliases[key]}
+ for(const key of keys){if(key.length>=3&&a.startsWith(key))return aliases[key]}
  return "";
 }
 export function fullServiceName(value:string){
