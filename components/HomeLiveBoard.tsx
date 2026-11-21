@@ -70,7 +70,7 @@ export default function HomeLiveBoard(){
 
     <div className="live-number-list">
      {loading?<div className="live-sms-empty"><span className="nx-loading-orbit"/><b>Loading your numbers</b><small>Checking your active orders securely</small></div>:liveNumbers.length?liveNumbers.map((n:{country:string;flag:string;number:string;service:string;status:string},i:number)=><div className="live-number-item" key={n.number+i}>
-       <span className="live-number-flag">{n.flag}</span>
+       <span className="live-number-flag">{n.flag}</span><ServiceLogo id={n.service} name={n.service} className="live-number-brand"/>
        <div className="live-number-info"><b>{n.number}</b><small>{n.service} · {n.country}</small></div>
        <span className="live-number-state"><i/>{n.status==="waiting"?"Waiting for SMS":"Active"}</span>
       </div>):<div className="live-sms-empty"><span className="sms-empty-icon">＋</span><b>No active number orders</b><small>Numbers you purchase will appear here while waiting for SMS.</small></div>}
@@ -81,7 +81,7 @@ export default function HomeLiveBoard(){
    <div className="live-v2-sms-card">
     <div className="live-v2-card-top">
      <div><span className="live-v2-kicker">INCOMING SMS</span><h3>Verification stream</h3></div>
-     <span className="live-v2-ping"><i/> LIVE</span>
+     <span className="live-v2-ping"><i/> {loading?"SYNCING":data.activity.length?"YOUR HISTORY":"NO RECENT SMS"}</span>
     </div>
     <div className="live-sms-stream">
      {loading?<div className="live-sms-empty"><span className="nx-loading-orbit"/><b>Loading your SMS history</b><small>Only your own completed orders are shown here</small></div>:data.activity.filter(a=>hasKnownServiceBrand(a.service,a.service)).slice(0,4).length?data.activity.filter(a=>hasKnownServiceBrand(a.service,a.service)).slice(0,4).map(a=><div className="live-sms-row" key={a.id}>
