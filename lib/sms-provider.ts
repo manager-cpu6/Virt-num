@@ -16,8 +16,8 @@ export async function providerConfigured(){return (await activeProvider())==="ti
 export const configured=providerConfigured;
 export async function balance(){return (await activeProvider())==="tiger"?tiger.balance():five.balance()}
 export async function listCountries(){return (await activeProvider())==="tiger"?tiger.listCountries():five.listCountries()}
-const POPULAR_SERVICE_ORDER=["whatsapp","facebook","instagram","telegram","tiktok","google","snapchat","x","twitter","discord","amazon","microsoft","apple","openai","viber","signal","linkedin","reddit","paypal","uber"] as const;
-const SERVICE_ALIASES:Record<string,string[]>={whatsapp:["whatsapp","wa"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],telegram:["telegram","tg"],tiktok:["tiktok","tt"],google:["google","go"],snapchat:["snapchat","sn"],x:["x","twitter","tw"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt"],viber:["viber"],signal:["signal"],linkedin:["linkedin"],reddit:["reddit"],paypal:["paypal"],uber:["uber"]};
+const POPULAR_SERVICE_ORDER=["whatsapp","facebook","instagram","telegram","tiktok","douyin","alibabadotcom","imo","moneza","google","snapchat","x","twitter","discord","amazon","microsoft","apple","openai","viber","signal","linkedin","reddit","paypal","uber"] as const;
+const SERVICE_ALIASES:Record<string,string[]>={whatsapp:["whatsapp","wa"],facebook:["facebook","fb"],instagram:["instagram","ig","threads"],telegram:["telegram","tg"],tiktok:["tiktok","tt"],douyin:["douyin","douying"],alibabadotcom:["alibaba","alibabacom","alibabadotcom"],imo:["imo"],moneza:["moneza"],google:["google","go"],snapchat:["snapchat","sn"],x:["x","twitter","tw"],discord:["discord"],amazon:["amazon"],microsoft:["microsoft","ms"],apple:["apple"],openai:["openai","chatgpt"],viber:["viber"],signal:["signal"],linkedin:["linkedin"],reddit:["reddit"],paypal:["paypal"],uber:["uber"]};
 function serviceRank(service:any){
  const normalize=(v:any)=>String(v||"").toLowerCase().replace(/[^a-z0-9]/g,"");
  const id=normalize(service?.id??service?.code),name=normalize(service?.name);

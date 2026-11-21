@@ -14,6 +14,7 @@ import "./support/support.css";
 import "./numelixa-public-pages.css";
 import "./numelixa-platform.css";
 import "./numelixa-service-refresh.css";
+import "./numelixa-loading.css";
 import type {Metadata,Viewport} from "next";
 import {headers} from "next/headers";
 import AppChrome from "@/components/AppChrome";
