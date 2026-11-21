@@ -56,8 +56,8 @@ export async function POST(req:Request){
   let matched=false,reason="sms_missing_amount_or_sender_number",creditedOrderId="",checkedOrderIds:any[]=[];
   const safeReference="SMS-"+crypto.createHash("sha256").update(provider+"|"+parsed.payerPhone+"|"+String(parsed.amount)+"|"+raw).digest("hex");
   if(parsed.positive&&parsed.amount&&parsed.payerPhone){
-   const cutoff=new Date(Date.now()-30*60*1000);
-   const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(10).toArray();
+   const cutoff=new Date(Date.now()-24*60*60*1000);
+   const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(50).toArray();
    checkedOrderIds=recentByPhone.map((o:any)=>o._id);
    const possible=recentByPhone.filter((o:any)=>Number(o.amountEtb)===parsed.amount);
    const candidates=possible.filter((o:any)=>{const saved=String(o.payerName||"").trim();return !saved||!payerName||nameSimilarity(saved,payerName)>=0.8;});
