@@ -63,7 +63,8 @@ export async function POST(req:Request){
    const named=possible.filter((o:any)=>String(o.payerName||"").trim()&&payerName&&nameKey(String(o.payerName))===nameKey(payerName));
    const fuzzy=named.length?named:possible.filter((o:any)=>String(o.payerName||"").trim()&&payerName&&nameSimilarity(String(o.payerName),payerName)>=0.8);
    const unnamed=possible.filter((o:any)=>!String(o.payerName||"").trim());
-   let candidates=named.length?named:fuzzy.length?fuzzy:unnamed;
+   const hasSavedPayerNames=possible.some((o:any)=>String(o.payerName||"").trim());
+   let candidates=named.length?named:fuzzy.length?fuzzy:(hasSavedPayerNames?[]:unnamed);
    // Duplicate checkout attempts by the same account are common. Resolve those to the newest pending order; never choose between different users automatically.
    if(candidates.length>1&&new Set(candidates.map((o:any)=>String(o.userId))).size===1){candidates=[...candidates].sort((a:any,b:any)=>new Date(b.createdAt||0).getTime()-new Date(a.createdAt||0).getTime()).slice(0,1);}
    reason=recentByPhone.length===0?"no_matching_recent_order":possible.length===0?"amount_mismatch":candidates.length===0?"payer_name_mismatch":candidates.length>1?"multiple_matching_orders":"receiving_sim_mismatch";
