@@ -8,7 +8,7 @@ function Barcode({value}:{value:string}){
  let cursor=10;return <svg role="img" aria-label={"Barcode for receipt "+value} viewBox={"0 0 "+(bits.total+20)+" 58"} width="100%" height="58" preserveAspectRatio="none" shapeRendering="crispEdges">{bits.bars.map((bar,i)=>{const x=cursor;cursor+=bits.widths[i];return bar?<rect key={i} x={x} y="0" width={bits.widths[i]} height="48" fill="#111827"/>:null;})}</svg>;
 }
 const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD"}).format(Number(n)||0);
-const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:2}).format(Number(n)||0);
+const etb=(n:number)=>new Intl.NumberFormat("en-ET",{minimumFractionDigits:2,maximumFractionDigits:0}).format(Math.ceil(Number(n)||0));
 export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData|null;onContinue:()=>void}){
  const [message,setMessage]=useState("");const [emailBusy,setEmailBusy]=useState(false);
  async function emailReceipt(){if(!receipt)return;setEmailBusy(true);setMessage("");try{const response=await fetch("/api/wallet/receipt/email",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({reference:receipt.orderId})});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"Unable to email receipt.");setMessage("Receipt sent to "+data.email+".")}catch(error){setMessage(error instanceof Error?error.message:"Unable to email receipt.")}finally{setEmailBusy(false)}}
@@ -28,9 +28,9 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
   </div>
   <div className="nx-receipt-barcode"><Barcode value={receipt.receiptId}/><b>{receipt.receiptId}</b><small>Scan the barcode, then verify this code at</small><a href={"/receipt/verify?code="+encodeURIComponent(receipt.receiptId)}>numelixa.com/receipt/verify</a></div>
   <div className="nx-receipt-proof"><b>Verification record</b><p>{receipt.verification}</p><span>Receipt issued from the Numelixa payment ledger after successful server-side credit.</span></div>
-  <div className="nx-receipt-actions"><button type="button" onClick={()=>window.print()}>Print / Save PDF</button><button type="button" onClick={share}>Share receipt</button><button type="button" disabled={emailBusy} onClick={emailReceipt}>{emailBusy?"Sending…":"Email receipt"}</button></div>
-  {message&&<p className="nx-receipt-message" role="status">{message}</p>}
+  <div className="nx-receipt-actions"><button type="button" onClick={()=>window.print()}>Print receipt</button></div>
+  {message&&<p className="nx-receipt-message" role="status">{message}</p>}<style jsx global>{`@media print{@page{size:A4 portrait;margin:8mm}html,body{background:#fff!important;margin:0!important;padding:0!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.nx-wallet-page{padding:0!important;background:#fff!important}.nx-wallet-page>a{display:none!important}.nx-payment-receipt{width:100%!important;max-width:100%!important;min-height:0!important;margin:0!important;padding:8mm!important;box-shadow:none!important;border:0!important;break-inside:avoid;page-break-inside:avoid}.nx-receipt-actions,.nx-receipt-continue,.nx-receipt-message{display:none!important}.nx-receipt-title,.nx-receipt-amount,.nx-receipt-grid,.nx-receipt-barcode,.nx-receipt-proof,.nx-receipt-signature{break-inside:avoid;page-break-inside:avoid}}`}</style>
   <button className="nx-receipt-continue" type="button" onClick={onContinue}>Continue to wallet <span>→</span></button>
-  <footer>Thank you for choosing Numelixa · numelixa.com</footer>
+  <div className="nx-receipt-signature"><span>Authorized digital signature</span><strong>Numelixa Team</strong><small>Payments &amp; Wallet Operations · NUMELIXA</small></div><footer>Thank you for choosing Numelixa · numelixa.com</footer>
  </section>;
 }
