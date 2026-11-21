@@ -44,7 +44,8 @@ const domainByBrand:Record<string,string>={
 const normalize=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 export function canonicalServiceBrand(id:string,name:string){
  const a=normalize(id),b=normalize(name);
- if(aliases[b])return aliases[b];\n if(!b&&aliases[a])return aliases[a];
+ if(aliases[b])return aliases[b];
+ if(!b&&aliases[a])return aliases[a];
  // Match a brand followed only by common provider suffixes, never arbitrary prefixes.
  const keys=Object.keys(aliases).filter(k=>k.length>=3).sort((x,y)=>y.length-x.length);
  for(const value of [a,b]){
