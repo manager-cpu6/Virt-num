@@ -51,7 +51,8 @@ export function canonicalServiceBrand(id:string,name:string){
   for(const key of keys)if(value.startsWith(key)&&/^(?:sms|otp|verification|activation|number|service|app|lite|business)$/.test(value.slice(key.length)))return aliases[key];
  }
  // Combined labels such as "TikTok / Douyin" intentionally prefer the named TikTok product.
- if(b.includes("twitter"))return "x";\n if(b.includes("tiktok"))return "tiktok";
+ if(b.includes("twitter"))return "x";
+ if(b.includes("tiktok"))return "tiktok";
  if(b.includes("douyin")||b.includes("douying"))return "douyin";
  return "";
 }
@@ -65,7 +66,8 @@ export function fullServiceName(value:string){
  return brandNames[brand]||raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [simpleFailed,setSimpleFailed]=useState(false);\n const [faviconFailed,setFaviconFailed]=useState(false);
+ const [simpleFailed,setSimpleFailed]=useState(false);
+ const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
  if(!brand)return null;
  const slug=brand==="chatgpt"?"chatgpt":brand;
