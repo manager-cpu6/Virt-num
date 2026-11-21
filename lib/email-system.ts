@@ -1,0 +1,72 @@
+import {collection} from "@/lib/mongo";
+import {sendEmailFrom} from "@/lib/mailer";
+
+export type EmailEvent =
+ | "otp_verification" | "welcome" | "forgot_password" | "password_reset_success"
+ | "number_activation" | "verification_code_received" | "payment_receipt"
+ | "wallet_deposit_success" | "withdrawal_request" | "withdrawal_approved"
+ | "withdrawal_completed" | "withdrawal_rejected" | "payment_failed" | "login_security_alert";
+
+type Sender = "noreply" | "welcome" | "forgot" | "payment" | "withdrawal";
+const routing:Record<EmailEvent,{sender:Sender;from:string;name:string;subject:string}> = {
+ otp_verification:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"Your Numelixa verification code"},
+ welcome:{sender:"welcome",from:"welcome@numelixa.com",name:"Numelixa Welcome",subject:"Welcome to Numelixa"},
+ forgot_password:{sender:"forgot",from:"forgot@numelixa.com",name:"Numelixa Account Security",subject:"Reset your Numelixa password"},
+ password_reset_success:{sender:"forgot",from:"forgot@numelixa.com",name:"Numelixa Account Security",subject:"Your Numelixa password has been updated"},
+ number_activation:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"Your virtual number is ready"},
+ verification_code_received:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"Your verification code has arrived"},
+ payment_receipt:{sender:"payment",from:"payment@numelixa.com",name:"Numelixa Payments",subject:"Payment confirmed — Numelixa receipt"},
+ wallet_deposit_success:{sender:"payment",from:"payment@numelixa.com",name:"Numelixa Payments",subject:"Your Numelixa wallet has been credited"},
+ withdrawal_request:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Withdrawal request received"},
+ withdrawal_approved:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Your withdrawal has been approved"},
+ withdrawal_completed:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Your withdrawal has been completed"},
+ withdrawal_rejected:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Update on your withdrawal request"},
+ payment_failed:{sender:"payment",from:"payment@numelixa.com",name:"Numelixa Payments",subject:"We couldn't complete your payment"},
+ login_security_alert:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"New sign-in to your Numelixa account"}
+};
+
+const esc=(v:unknown)=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+function safeUrl(value:unknown){try{const u=new URL(String(value||""));return u.protocol==="https:"&&(/(^|\\.)numelixa\\.com$/i.test(u.hostname))?u.toString():"https://numelixa.com";}catch{return "https://numelixa.com";}}
+const year=new Date().getFullYear();
+function shell(title:string,preheader:string,body:string,cta?:{label:string;url:string}){
+ const button=cta?'<tr><td align="center" style="padding:4px 28px 28px"><a href="'+safeUrl(cta.url)+'" style="display:inline-block;padding:14px 24px;background:#e9edf7;color:#10131d;text-decoration:none;font-size:14px;font-weight:700;border-radius:10px">'+esc(cta.label)+'</a></td></tr>':"";
+ return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><title>'+esc(title)+'</title></head><body style="margin:0;padding:0;background:#070910;color:#f4f6fb;font-family:Arial,Helvetica,sans-serif"><div style="display:none;max-height:0;overflow:hidden;opacity:0">'+esc(preheader)+'</div><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#070910;padding:24px 12px"><tr><td align="center"><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background:#10131d;border:1px solid #252b3a;border-radius:18px;overflow:hidden"><tr><td align="center" style="padding:28px 24px 22px"><img src="https://numelixa.com/numelixa-brand.svg" width="54" height="54" alt="Numelixa" style="display:block;width:54px;height:54px;object-fit:contain;border:0"><div style="margin-top:12px;font-size:17px;font-weight:700;letter-spacing:2px;color:#f4f6fb">NUMELIXA</div><div style="margin-top:5px;font-size:12px;color:#858fa2">Virtual numbers. Connected.</div></td></tr><tr><td style="padding:0 28px"><div style="height:1px;background:#252b3a"></div></td></tr><tr><td align="left" style="padding:28px 28px 20px"><h1 style="margin:0 0 14px;font-size:25px;line-height:1.25;color:#f4f6fb">'+esc(title)+'</h1>'+body+'</td></tr>'+button+'<tr><td style="padding:0 28px"><div style="height:1px;background:#252b3a"></div></td></tr><tr><td align="center" style="padding:22px 24px"><p style="margin:0;color:#858fa2;font-size:12px;line-height:1.7">Need assistance? Our support team is here to help.</p><p style="margin:10px 0 0;font-size:12px"><a href="mailto:support@numelixa.com" style="color:#c4ccda">support@numelixa.com</a> · <a href="https://support.numelixa.com" style="color:#c4ccda">Numelixa Support</a></p><p style="margin:16px 0 0;color:#626d80;font-size:11px">© '+year+' Numelixa. All rights reserved.</p></td></tr></table></td></tr></table></body></html>';
+}
+function line(label:string,value:unknown){return '<tr><td style="padding:10px 0;border-bottom:1px solid #252b3a;color:#aab2c2;font-size:13px">'+esc(label)+'</td><td align="right" style="padding:10px 0;border-bottom:1px solid #252b3a;color:#f4f6fb;font-size:13px;font-weight:700;word-break:break-word">'+esc(value||"—")+'</td></tr>';}
+function details(rows:Array<[string,unknown]>){return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:18px 0">'+rows.map(([k,v])=>line(k,v)).join("")+'</table>';}
+function render(type:EmailEvent,d:Record<string,unknown>){
+ const name=esc(d.USER_NAME||d.userName||"there"),url=safeUrl(d.VERIFY_URL||d.RESET_URL||d.ACTIVATION_URL||d.TRANSACTION_URL||d.WALLET_URL||d.WITHDRAWAL_URL||d.SECURITY_URL||d.RETRY_URL||d.DASHBOARD_URL);
+ const p=(s:string)=>'<p style="margin:0 0 14px;color:#aab2c2;font-size:14px;line-height:1.7">'+s+'</p>';
+ const box=(s:unknown)=>'<div style="margin:18px 0;padding:18px;background:#171c29;border:1px solid #252b3a;border-radius:12px;text-align:center;color:#f4f6fb;font-size:25px;font-weight:800;letter-spacing:3px">'+esc(s)+'</div>';
+ switch(type){
+ case "otp_verification":return shell("Verify your Numelixa email","Your verification code expires soon.",p("Hello "+name+", use this code to verify your email address.")+box(d.OTP_CODE)+p("This code expires in "+esc(d.OTP_EXPIRY||"10 minutes")+". Never share it with anyone."),{label:"Verify email",url});
+ case "welcome":return shell("Welcome to Numelixa","Your Numelixa account is ready.",p("Hello "+name+", welcome. Numelixa helps you access virtual numbers and verification services from one account.")+p("Choose a service, select a country, get your number and follow the activation to receive SMS."),{label:"Explore Numelixa",url});
+ case "forgot_password":return shell("Reset your password","A secure password reset was requested.",p("Hello "+name+", we received a request to reset your Numelixa password.")+p("This secure link expires in "+esc(d.RESET_EXPIRY||"30 minutes")+". If you did not request it, ignore this email."),{label:"Reset password",url});
+ case "password_reset_success":return shell("Your password has been updated","Your Numelixa account password was changed.",p("Hello "+name+", your password was successfully changed on "+esc(d.RESET_DATE||"your account just now")+".") +p("If you did not make this change, contact support immediately."),{label:"Review account",url});
+ case "number_activation":return shell("Your virtual number is ready","Your number activation has succeeded.",p("Hello "+name+", your number activation is confirmed.")+details([["Number",d.PHONE_NUMBER],["Service",d.SERVICE_NAME],["Country",d.COUNTRY_NAME],["Order ID",d.ORDER_ID],["Status",d.ACTIVATION_STATUS||"Active"]]),{label:"View activation",url});
+ case "verification_code_received":return shell("Your verification code has arrived","A new SMS was received for your active number.",p("Hello "+name+", a message was received for your activation.")+box(d.RECEIVED_CODE)+details([["Service",d.SERVICE_NAME],["Number",d.PHONE_NUMBER],["Order ID",d.ORDER_ID]]),{label:"Open activation",url});
+ case "payment_receipt":return shell("Payment confirmed","Your Numelixa payment has been verified.",p("Hello "+name+", your payment was confirmed.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Transaction ID",d.TRANSACTION_ID],["Payment date",d.PAYMENT_DATE],["Payment method",d.PAYMENT_METHOD]]),{label:"View transaction",url});
+ case "wallet_deposit_success":return shell("Your wallet has been credited","Your deposit was confirmed and added to your wallet.",p("Hello "+name+", your Numelixa wallet balance has been updated.")+details([["Amount added",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["New balance",String(d.NEW_BALANCE||"")+" "+String(d.CURRENCY||"")],["Deposit reference",d.DEPOSIT_ID],["Date",d.DEPOSIT_DATE],["Payment source",d.PAYMENT_SOURCE]]),{label:"View my wallet",url});
+ case "withdrawal_request":return shell("Withdrawal request received","Your withdrawal is pending review.",p("Hello "+name+", we received your withdrawal request. It has not yet been approved or paid.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Request ID",d.WITHDRAWAL_ID],["Submitted",d.REQUEST_DATE],["Destination",d.WITHDRAWAL_DESTINATION],["Status","Pending review"]]),{label:"View withdrawal request",url});
+ case "withdrawal_approved":return shell("Your withdrawal has been approved","Your withdrawal request was approved.",p("Hello "+name+", your withdrawal has been approved. Approval does not mean the funds have arrived yet.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Withdrawal ID",d.WITHDRAWAL_ID],["Approved",d.APPROVED_DATE],["Destination",d.WITHDRAWAL_DESTINATION],["Status","Approved"]]),{label:"View withdrawal",url});
+ case "withdrawal_completed":return shell("Your withdrawal is complete","Your withdrawal was successfully processed.",p("Hello "+name+", your withdrawal has been completed.")+details([["Amount sent",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Transaction ID",d.TRANSACTION_ID],["Withdrawal ID",d.WITHDRAWAL_ID],["Completed",d.COMPLETED_DATE],["Destination",d.WITHDRAWAL_DESTINATION]]),{label:"View transaction",url});
+ case "withdrawal_rejected":return shell("Update on your withdrawal","Your withdrawal request was rejected.",p("Hello "+name+", unfortunately your withdrawal request was rejected.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Withdrawal ID",d.WITHDRAWAL_ID],["Date",d.REJECTION_DATE],["Reason",d.REJECTION_REASON||"Please contact support for details."]]),{label:"View withdrawal details",url});
+ case "payment_failed":return shell("We couldn't complete your payment","Your payment attempt was unsuccessful.",p("Hello "+name+", your payment could not be completed. Check the payment method and try again. No successful charge is implied by this message.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Transaction reference",d.TRANSACTION_ID],["Date",d.PAYMENT_DATE]]),{label:"Retry payment",url});
+ case "login_security_alert":return shell("New sign-in to your Numelixa account","A new sign-in was detected.",p("Hello "+name+", we detected a new sign-in to your account.")+details([["Date and time",d.LOGIN_DATE],["Device",d.DEVICE_INFO||"Not available"],["Approximate location",d.LOCATION_INFO||"Not available"]])+p("If this wasn't you, secure your account and contact support."),{label:"Review account",url});
+ }
+}
+export async function sendTransactionalEmail(type:EmailEvent,to:string,data:Record<string,unknown>,eventId?:string){
+ const route=routing[type];if(!route)throw new Error("Unsupported Numelixa email event.");
+ const recipient=String(to||"").trim().toLowerCase();
+ if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient))throw new Error("Invalid email recipient.");
+ const testMode=process.env.EMAIL_TEST_MODE==="true";
+ const testRecipient=String(process.env.EMAIL_TEST_RECIPIENT||"").trim().toLowerCase();
+ if(testMode&&(!testRecipient||recipient!==testRecipient))throw new Error("EMAIL_TEST_MODE only permits EMAIL_TEST_RECIPIENT.");
+ const html=render(type,data||{});
+ const key=eventId?type+":"+eventId:"";
+ let events:any=null;
+ if(key){events=await collection<any>("emailDeliveryEvents");try{await events.insertOne({_id:key,type,to:recipient,status:"sending",createdAt:new Date()});}catch(error){if((error as any)?.code===11000)return {ok:true,duplicate:true};throw error;}}
+ try{await sendEmailFrom(route.sender,recipient,route.subject,html);if(key)await events.updateOne({_id:key},{$set:{status:"sent",sentAt:new Date()}});return {ok:true,from:route.from};}
+ catch(error){if(key)await events.deleteOne({_id:key});throw error;}
+}
+export const emailSenderRouting=Object.fromEntries(Object.entries(routing).map(([event,value])=>[event,{from:value.from,name:value.name,subject:value.subject}]));
