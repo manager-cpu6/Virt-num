@@ -26,7 +26,7 @@ const routing:Record<EmailEvent,{sender:Sender;from:string;name:string;subject:s
 };
 
 const esc=(v:unknown)=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-function safeUrl(value:unknown){try{const u=new URL(String(value||""));return u.protocol==="https:"&&(/(^|\\.)numelixa\\.com$/i.test(u.hostname))?u.toString():"https://numelixa.com";}catch{return "https://numelixa.com";}}
+function safeUrl(value:unknown){try{const u=new URL(String(value||""));return u.protocol==="https:"&&(/(^|\.)numelixa\.com$/i.test(u.hostname))?u.toString():"https://numelixa.com";}catch{return "https://numelixa.com";}}
 const year=new Date().getFullYear();
 function shell(title:string,preheader:string,body:string,cta?:{label:string;url:string}){
  const button=cta?'<tr><td align="center" style="padding:4px 28px 28px"><a href="'+safeUrl(cta.url)+'" style="display:inline-block;padding:14px 24px;background:#e9edf7;color:#10131d;text-decoration:none;font-size:14px;font-weight:700;border-radius:10px">'+esc(cta.label)+'</a></td></tr>':"";
@@ -58,7 +58,7 @@ function render(type:EmailEvent,d:Record<string,unknown>){
 export async function sendTransactionalEmail(type:EmailEvent,to:string,data:Record<string,unknown>,eventId?:string){
  const route=routing[type];if(!route)throw new Error("Unsupported Numelixa email event.");
  const recipient=String(to||"").trim().toLowerCase();
- if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(recipient))throw new Error("Invalid email recipient.");
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(recipient))throw new Error("Invalid email recipient.");
  const testMode=process.env.EMAIL_TEST_MODE==="true";
  const testRecipient=String(process.env.EMAIL_TEST_RECIPIENT||"").trim().toLowerCase();
  if(testMode&&(!testRecipient||recipient!==testRecipient))throw new Error("EMAIL_TEST_MODE only permits EMAIL_TEST_RECIPIENT.");
