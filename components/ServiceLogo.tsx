@@ -23,7 +23,8 @@ const aliases:Record<string,string>={
  zupee:"zupee",huya:"huya",moneza:"moneza",miratorg:"miratorg",hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",
  booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",
  googleplay:"googleplay",microsoft365:"microsoft365",teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",
- novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta",\n ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr"
+ novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta",
+ ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr"
 };
 const brandNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",douyin:"Douyin",instagram:"Instagram",facebook:"Facebook",google:"Google",
