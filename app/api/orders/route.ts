@@ -175,7 +175,6 @@ export async function POST(req:Request){
           ACTIVATION_STATUS:"Number assigned — waiting for SMS",
           ACTIVATION_URL:"https://numelixa.com/get-code/"+id
         },"number-ready:"+id);
-      }
       }catch(emailError){
         console.error("[PURCHASE EMAIL]",{
           orderId:id,
