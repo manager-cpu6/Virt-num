@@ -203,3 +203,10 @@ body{
 .people-row span{color:#d7d2e6;font-size:10px}.people-row small{display:block;color:#918ba6;font-size:8px;margin-top:2px}
 @media(max-width:760px){.landing-live-strip{grid-template-columns:1fr}.nx-live-demo{height:540px}.nx-live-phone{width:286px;height:535px}}
 @media(max-width:480px){.nx-live-demo{height:450px;transform:scale(.86);margin:-22px -20px}.nx-live-phone{width:274px;height:520px}}
+
+/* Clear, visible country flags in the public sample activity card */
+.nx-live-number-row{display:flex!important;align-items:center!important;gap:10px!important;flex-wrap:wrap!important}
+.nx-live-flag{width:42px!important;height:34px!important;display:grid!important;place-items:center!important;flex:0 0 42px!important;border-radius:10px!important;background:#f8fbff!important;border:1px solid rgba(125,165,210,.45)!important;color:#111827!important;font-size:25px!important;line-height:1!important;overflow:hidden!important;box-shadow:0 4px 12px rgba(0,0,0,.16)!important}
+.nx-live-country{display:flex!important;flex-direction:column!important;gap:2px!important;min-width:74px!important}.nx-live-country small{font-size:8px!important;letter-spacing:.12em!important;color:#7f96b4!important}.nx-live-country b{font-size:11px!important;color:#eaf4ff!important}
+.nx-live-number-row>strong{margin-left:auto!important;font-size:13px!important;white-space:nowrap!important}
+@media(max-width:520px){.nx-live-number-row>strong{font-size:11px!important}.nx-live-country b{font-size:10px!important}}
