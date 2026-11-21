@@ -1,6 +1,7 @@
 import {collection} from "@/lib/mongo";
 import {check,finalize} from "@/lib/sms-provider";
 import {notifyUser} from "@/lib/notifications";
+import {sendTransactionalEmail} from "@/lib/email-system";
 
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
 
@@ -35,6 +36,14 @@ export async function watchOrderForPush(orderId:string,userId:string){
     );
 
     if(changed){
+     try{
+      const owner=await (await collection<any>("users")).findOne({_id:userId},{projection:{email:1,name:1}});
+      if(owner?.email)await sendTransactionalEmail("verification_code_received",String(owner.email),{
+       USER_NAME:String(owner.name||"there"),RECEIVED_CODE:code,SERVICE_NAME:String(order.service||"SMS service"),
+       PHONE_NUMBER:String(order.phoneNumber||""),ORDER_ID:orderId,ACTIVATION_URL:"https://numelixa.com/get-code/"+orderId
+      },"sms-code:"+orderId);
+     }catch(error){console.error("[SMS CODE EMAIL]",error instanceof Error?error.message:"send failed")}
+
      try{await finalize(String(order.providerOrderId),order.provider==="tiger"?"tiger":"5sim")}catch(error){
       console.error("[ORDER WATCHER FINALIZE]",error);
      }
