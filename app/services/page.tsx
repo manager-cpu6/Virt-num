@@ -6,7 +6,7 @@ import ServiceLogo,{canonicalServiceBrand,hasKnownServiceBrand} from "@/componen
 import PublicFooter from "@/components/PublicFooter";
 
 type Service={id:string;code:string;name:string};
-const popularOrder=["whatsapp","telegram","tiktok","instagram","facebook","google","discord","x","amazon","microsoft","paypal","snapchat","googlepay","apple","youtube","openai"];
+const popularOrder=["whatsapp","telegram","tiktok","douyin","alibabadotcom","imo","instagram","facebook","google","discord","x","amazon","microsoft","paypal","snapchat","googlepay","apple","youtube","openai"];
 
 export default function ServicesPage(){
  const[services,setServices]=useState<Service[]>([]);
