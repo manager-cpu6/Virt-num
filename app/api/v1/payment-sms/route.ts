@@ -91,7 +91,7 @@ export async function POST(req:Request){
    }
   }
   if(!matched&&checkedOrderIds.length)await payments.updateMany({_id:{$in:checkedOrderIds},credited:{$ne:true}},{$set:{smsLastCheck:{reason,payerName,payerPhone:parsed.payerPhone,amount:parsed.amount,checkedAt:new Date()}}});
-  await (await collection<any>("ebirrSmsEvents")).insertOne({provider,amount:parsed.amount,transactionReference:safeReference,providerTransactionId:transferReference||null,payerName:payerName||null,payerPhone:parsed.payerPhone||null,simPhone:String(body.receivingSimPhone||""),simOperator:String(body.simOperator||""),smsOrigin:String(body.senderPhone||""),rawBody:raw,matched,reason,creditedOrderId:creditedOrderId||null,receivedAt:new Date(),deviceId:String(body.deviceId||"")});
+  await (await collection<any>("ebirrSmsEvents")).updateOne({_id:crypto.createHash("sha256").update(provider+"|"+safeReference).digest("hex")},{$set:{provider,amount:parsed.amount,transactionReference:safeReference,providerTransactionId:transferReference||null,payerName:payerName||null,payerPhone:parsed.payerPhone||null,simPhone:String(body.receivingSimPhone||""),simOperator:String(body.simOperator||""),smsOrigin:String(body.senderPhone||""),rawBody:raw,matched,reason,creditedOrderId:creditedOrderId||null,lastCheckedAt:new Date(),deviceId:String(body.deviceId||"")},$setOnInsert:{receivedAt:new Date()}},{upsert:true});
   return NextResponse.json({ok:true,matched,reason});
  }catch(e){console.error("[EBIRR SMS INGEST]",e);return NextResponse.json({ok:false,error:"Unable to process incoming payment SMS."},{status:500});}
 }
