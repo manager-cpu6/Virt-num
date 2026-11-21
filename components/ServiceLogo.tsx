@@ -11,7 +11,7 @@ const aliases:Record<string,string>={
  am:"amazon",az:"amazon",amazon:"amazon",amazonprime:"amazon",amazonshop:"amazon",
  alibaba:"alibabadotcom",alibabacom:"alibabadotcom",alibabadotcom:"alibabadotcom",alibabacloud:"alibabacloud",
  ap:"apple",apple:"apple",op:"openai",oi:"openai",openai:"openai",cg:"chatgpt",chatgpt:"chatgpt",claudeai:"claude",claude:"claude",
- tw:"x",twitter:"x",x:"x",ms:"microsoft",mi:"microsoft",microsoft:"microsoft",microsoftteams:"microsoftteams",
+ tw:"x",twitter:"x",xtwitter:"x",x:"x",ms:"microsoft",mi:"microsoft",microsoft:"microsoft",microsoftteams:"microsoftteams",
  sn:"snapchat",snapchat:"snapchat",ds:"discord",discord:"discord",li:"linkedin",linkedin:"linkedin",
  pp:"paypal",paypal:"paypal",rd:"reddit",reddit:"reddit",sp:"spotify",spotify:"spotify",nf:"netflix",netflix:"netflix",
  vb:"viber",viber:"viber",sg:"signal",signal:"signal",vk:"vk",yandex:"yandex",binance:"binance",bybit:"bybit",okx:"okx",
@@ -44,14 +44,14 @@ const domainByBrand:Record<string,string>={
 const normalize=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 export function canonicalServiceBrand(id:string,name:string){
  const a=normalize(id),b=normalize(name);
- for(const value of [a,b])if(aliases[value])return aliases[value];
+ for(const value of [b,a])if(aliases[value])return aliases[value];
  // Match a brand followed only by common provider suffixes, never arbitrary prefixes.
  const keys=Object.keys(aliases).filter(k=>k.length>=3).sort((x,y)=>y.length-x.length);
  for(const value of [a,b]){
   for(const key of keys)if(value.startsWith(key)&&/^(?:sms|otp|verification|activation|number|service|app|lite|business)$/.test(value.slice(key.length)))return aliases[key];
  }
  // Combined labels such as "TikTok / Douyin" intentionally prefer the named TikTok product.
- if(b.includes("tiktok"))return "tiktok";
+ if(b.includes("twitter"))return "x";\n if(b.includes("tiktok"))return "tiktok";
  if(b.includes("douyin")||b.includes("douying"))return "douyin";
  return "";
 }
@@ -65,7 +65,7 @@ export function fullServiceName(value:string){
  return brandNames[brand]||raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
 export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
- const [failed,setFailed]=useState(false);
+ const [simpleFailed,setSimpleFailed]=useState(false);\n const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
  if(!brand)return null;
  const slug=brand==="chatgpt"?"chatgpt":brand;
@@ -74,7 +74,7 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
  const sourceFailed=failed;
  if(!useSimple&&!domain)return null;
  return <span className={className||"service-icon"} role="img" aria-label={fullServiceName(name)+" logo"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative",background:"transparent",border:0,boxShadow:"none"}}>
-  {!sourceFailed&&useSimple?<img src={"https://cdn.simpleicons.org/"+encodeURIComponent(slug)} alt="" width="56" height="56" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={()=>setFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:0,boxSizing:"border-box",background:"transparent"}}/>:
-   domain?<img src={"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"} alt="" width="56" height="56" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFailed(true)} style={{width:"78%",height:"78%",objectFit:"contain"}}/>:null}
+  {useSimple&&!simpleFailed?<img src={"https://cdn.simpleicons.org/"+encodeURIComponent(slug)} alt="" width="56" height="56" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={()=>setSimpleFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:0,boxSizing:"border-box",background:"transparent"}}/>:
+   domain&&!faviconFailed?<img src={"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"} alt="" width="56" height="56" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFaviconFailed(true)} style={{width:"78%",height:"78%",objectFit:"contain"}}/>:null}
  </span>;
 }
