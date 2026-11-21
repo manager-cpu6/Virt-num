@@ -1,5 +1,5 @@
 import {NextResponse} from "next/server";
-import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,cancelOrAlreadyClosed,getPrice,activeProvider} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendEmailFrom,purchaseSuccessEmail} from "@/lib/mailer";
+import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,cancelOrAlreadyClosed,getPrice,activeProvider} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendTransactionalEmail} from "@/lib/email-system";
 import {notifyUser} from "@/lib/notifications";
 import {watchOrderForPush} from "@/lib/order-watcher";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
@@ -166,20 +166,16 @@ export async function POST(req:Request){
       // The activation is durable. Email is best-effort so SMTP issues can never
       // turn a successful 5SIM purchase into a failed purchase.
       try{
-        const base=new URL(req.url).origin;
-        const buyerName=String(fresh.name||"there");
-        await sendEmailFrom("system",
-          String(fresh.email||u.email||""),
-          "Number secured — Numelixa purchase complete",
-          purchaseSuccessEmail(
-            buyerName,
-            service,
-            country,
-            number,
-            Number((price/(Number(settings.coinsPerUsd)||100)).toFixed(2)),
-            base+"/get-code/"+id
-          )
-        );
+        await sendTransactionalEmail("number_activation",String(fresh.email||u.email||""),{
+          USER_NAME:String(fresh.name||"there"),
+          PHONE_NUMBER:number,
+          SERVICE_NAME:service,
+          COUNTRY_NAME:country,
+          ORDER_ID:id,
+          ACTIVATION_STATUS:"Number assigned — waiting for SMS",
+          ACTIVATION_URL:"https://numelixa.com/get-code/"+id
+        },"number-ready:"+id);
+      }
       }catch(emailError){
         console.error("[PURCHASE EMAIL]",{
           orderId:id,
