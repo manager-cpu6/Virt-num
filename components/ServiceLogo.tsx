@@ -18,7 +18,7 @@ const aliases:Record<string,string>={
  shopee:"shopee",rakuten:"rakuten",tinder:"tinder",bumble:"bumble",wechat:"wechat",line:"line",yahoo:"yahoo",
  hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",booking:"bookingdotcom",bookingcom:"bookingdotcom",
  expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",googleplay:"googleplay",microsoft365:"microsoft365",
- teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",airtel:"airtel",tiktoklite:"tiktok",
+ teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",airtel:"airtel",
 };
 
 const brandNames:Record<string,string>={
