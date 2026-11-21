@@ -45,3 +45,9 @@ body:has(.nx-verify-page) .page-shell{width:100%!important;max-width:none!import
 /* Responsive admin email campaign workspace */
 .nx-admin-email-grid{grid-template-columns:minmax(0,1.15fr) minmax(280px,.85fr)}
 @media(max-width:800px){.nx-admin-email-grid{grid-template-columns:minmax(0,1fr)!important}}
+
+/* Refined support contact panel */
+.nx-support-contact-card{padding:22px!important;border-radius:22px!important;background:linear-gradient(150deg,rgba(15,36,67,.96),rgba(7,19,39,.98))!important;border:1px solid rgba(93,163,230,.24)!important;box-shadow:0 18px 50px rgba(0,0,0,.25)!important}
+.nx-support-contact-title{margin:10px 0 16px!important;color:#f2f7ff!important;font-size:19px!important;letter-spacing:-.035em!important}
+.nx-support-contact-card .nx-support-kicker{color:#79ddff!important}
+.nx-support-contact-row{border:1px solid rgba(117,165,220,.14)!important;border-radius:14px!important;background:rgba(7,18,36,.55)!important;padding:13px!important;margin-top:9px!important}

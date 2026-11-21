@@ -27,7 +27,7 @@ export default function LivePhoneDemo(){
     <div className="nx-live-appbar"><span className="nx-live-logo"><img src="/numelixa-brand.svg" alt="" width="24" height="24"/></span><b>Numelixa</b><i>•••</i></div>
     <div className="nx-live-number" key={"number-"+index}>
      <small>NUMBER ACTIVITY</small>
-     <div className="nx-live-number-row"><span className="nx-live-flag" aria-label={item.country}>{item.flag}</span><strong>{item.number}</strong></div>
+     <div className="nx-live-number-row"><span className="nx-live-flag" role="img" aria-label={item.country+" flag"}>{item.flag}</span><span className="nx-live-country"><small>COUNTRY</small><b>{item.country}</b></span><strong>{item.number}</strong></div>
      <span><i/> {item.service} · {item.country}</span>
     </div>
     <div className="nx-live-sms" key={"sms-"+index}>

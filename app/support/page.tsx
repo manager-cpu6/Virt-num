@@ -59,10 +59,10 @@ export default function SupportPage(){
    </section>
    <aside className="nx-support-sidebar">
     <section className="nx-support-contact-card">
-     <span className="nx-support-kicker">OFFICIAL CONTACT OPTIONS</span>
+     <span className="nx-support-kicker">MORE WAYS TO GET HELP</span><h3 className="nx-support-contact-title">Reach the Numelixa team</h3>
      <div className="nx-support-contact-row"><span className="nx-support-contact-icon">✉</span><div><b>support@numelixa.com</b><small>General support and policy enquiries</small></div><button type="button" onClick={async()=>{try{await navigator.clipboard.writeText("support@numelixa.com")}catch{}}} aria-label="Copy support email">Copy</button></div>
      <a className="nx-support-contact-row" href="https://wa.me/252907868526" target="_blank" rel="noreferrer"><span className="nx-support-contact-icon whatsapp">◉</span><div><b>WhatsApp Support</b><small>+252 907 868526</small></div><i>↗</i></a>
-     <a className="nx-support-contact-row" href="https://support.numelixa.com/" target="_blank" rel="noreferrer"><span className="nx-support-contact-icon">?</span><div><b>Online Help Center</b><small>Official support portal</small></div><i>↗</i></a>
+     <a className="nx-support-contact-row" href="https://support.numelixa.com/" target="_blank" rel="noreferrer"><span className="nx-support-contact-icon">?</span><div><b>Online Help Center</b><small>Support portal</small></div><i>↗</i></a>
      <div className="nx-support-contact-links"><a href="/clients">For Clients</a><a href="/faq">Frequently asked questions</a><a href="/partners">For Partners</a></div>
     </section>
     <section className="nx-support-help-card"><span className="nx-support-help-icon"><svg viewBox="0 0 24 24"><path d="M12 3 4 6v5c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-3Z"/><path d="m9 12 2 2 4-4"/></svg></span><h3>Your account is protected</h3><p>Never share your password, one-time code, recovery code or full bank-card details with anyone.</p></section>

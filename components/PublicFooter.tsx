@@ -10,8 +10,8 @@ export default function PublicFooter(){
  return <footer className="nx-public-footer">
   <div className="nx-footer-brand-column">
    <a className="nx-footer-brand" href="/"><img src="/numelixa-brand.svg" alt="" width="34" height="34"/><b>NUMELIXA</b></a>
-   <p>Global virtual numbers and SMS verification, in one secure workspace.</p>
-   <small>© 2026 Numelixa. All rights reserved.</small>
+   <p>Global virtual numbers and SMS verification, in one secure workspace. Serving customers since 2023.</p>
+   <small>Founded in 2023 · Serving through 2026<br/>© 2026 Numelixa. All rights reserved.</small>
    <a className="nx-footer-email" href="mailto:support@numelixa.com?subject=Numelixa%20Support%20Enquiry">support@numelixa.com</a>
   </div>
   <div className="nx-footer-groups">

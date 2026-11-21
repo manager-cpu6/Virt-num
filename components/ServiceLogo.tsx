@@ -23,23 +23,24 @@ const aliases:Record<string,string>={
  zupee:"zupee",huya:"huya",moneza:"moneza",miratorg:"miratorg",hulu:"hulu",disneyplus:"disneyplus",paramountplus:"paramountplus",
  booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",
  googleplay:"googleplay",microsoft365:"microsoft365",teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",
- novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta"
+ novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta",
+ ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr"
 };
 const brandNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",douyin:"Douyin",instagram:"Instagram",facebook:"Facebook",google:"Google",
  discord:"Discord",x:"X",amazon:"Amazon",alibabadotcom:"Alibaba",alibabacloud:"Alibaba Cloud",microsoft:"Microsoft",paypal:"PayPal",
  moneza:"Moneza",snapchat:"Snapchat",googlepay:"Google Pay",googleplay:"Google Play",apple:"Apple",youtube:"YouTube",openai:"OpenAI",
  threads:"Threads",linkedin:"LinkedIn",reddit:"Reddit",spotify:"Spotify",netflix:"Netflix",viber:"Viber",signal:"Signal",imo:"imo",
- novaposhta:"Nova Poshta"
+ novaposhta:"Nova Poshta",ebirr:"eBirr",coopayebirr:"Coopay eBirr",kaafiebirr:"Kaafi eBirr",cbebirr:"CBE Birr",cbe:"Commercial Bank of Ethiopia",mpesa:"M-Pesa",telebirr:"telebirr"
 };
-const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta"].includes(v)));
+const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta","ebirr","coopayebirr","kaafiebirr","cbebirr","cbe","mpesa","telebirr"].includes(v)));
 const domainByBrand:Record<string,string>={
  zupee:"zupee.com",huya:"huya.com",moneza:"moneza.com",miratorg:"miratorg.ru",chatgpt:"chatgpt.com",
  amazon:"amazon.com",alibabadotcom:"alibaba.com",alibabacloud:"alibabacloud.com",microsoft:"microsoft.com",
  openai:"openai.com",paypal:"paypal.com",apple:"apple.com",google:"google.com",youtube:"youtube.com",
  discord:"discord.com",telegram:"telegram.org",whatsapp:"whatsapp.com",tiktok:"tiktok.com",douyin:"douyin.com",
  instagram:"instagram.com",facebook:"facebook.com",snapchat:"snapchat.com",spotify:"spotify.com",netflix:"netflix.com",
- linkedin:"linkedin.com",reddit:"reddit.com",x:"x.com",threads:"threads.net",imo:"imo.im",novaposhta:"novaposhta.ua"
+ linkedin:"linkedin.com",reddit:"reddit.com",x:"x.com",threads:"threads.net",imo:"imo.im",novaposhta:"novaposhta.ua",ebirr:"ebirr.com",coopayebirr:"ebirr.com",kaafiebirr:"ebirr.com",cbebirr:"combanketh.et",cbe:"combanketh.et",mpesa:"m-pesabusiness.safaricom.et",telebirr:"ethiotelecom.et"
 };
 const normalize=(v:string)=>v.toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9]/g,"");
 export function canonicalServiceBrand(id:string,name:string){
