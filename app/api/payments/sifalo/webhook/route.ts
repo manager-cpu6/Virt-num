@@ -30,7 +30,7 @@ export async function POST(req:Request){
    if(verifiedCode===600||verifiedCode===604){try{const owner=await (await collection<any>("users")).findOne({_id:String(p.userId)},{projection:{email:1,name:1}});if(owner?.email)await sendTransactionalEmail("payment_failed",String(owner.email),{USER_NAME:String(owner.name||"there"),AMOUNT:Number(p.amountUsd||0).toFixed(2),CURRENCY:"USD",TRANSACTION_ID:String(p.orderId),PAYMENT_DATE:new Date().toISOString(),RETRY_URL:"https://numelixa.com/wallet"},"payment-failed:sifalo:"+String(p.orderId));}catch(error){console.error("[SIFALO PAYMENT FAILED EMAIL]",error instanceof Error?error.message:"send failed")}}
    return NextResponse.json({ok:true});
   }
-  if(!Number.isFinite(Number(body.amount))||Math.round(Number(body.amount)*100)!==Math.round(Number(p.amountUsd)*100)||String(body.currency||"USD").toUpperCase()!=="USD")return NextResponse.json({ok:false,error:"Payment amount mismatch"},{status:400});
+  const expectedProviderAmount=Number(p.providerAmountUsd??p.amountUsd);if(!Number.isFinite(Number(body.amount))||Math.round(Number(body.amount)*100)!==Math.round(expectedProviderAmount*100)||String(body.currency||"USD").toUpperCase()!=="USD")return NextResponse.json({ok:false,error:"Payment amount mismatch"},{status:400});
   const client=getMongoClient();
   const session=client.startSession();
   let creditedNow=false;
