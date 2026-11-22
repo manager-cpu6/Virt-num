@@ -263,14 +263,15 @@ function Providers({stats}:{stats:Stats|null}){
 
 
 function AdminPayments(){
- const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[webshareHost,setWebshareHost]=useState(""),[websharePort,setWebsharePort]=useState(""),[webshareUsername,setWebshareUsername]=useState(""),[websharePassword,setWebsharePassword]=useState(""),[binanceApiKey,setBinanceApiKey]=useState(""),[binanceApiSecret,setBinanceApiSecret]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null);
- async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok){setState(d);setWebshareHost((old:string)=>old||d.binance?.webshareHost||"");setWebsharePort((old:string)=>old||d.binance?.websharePort||"");}}
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[webshareHost,setWebshareHost]=useState(""),[websharePort,setWebsharePort]=useState(""),[webshareUsername,setWebshareUsername]=useState(""),[websharePassword,setWebsharePassword]=useState(""),[binanceApiKey,setBinanceApiKey]=useState(""),[binanceApiSecret,setBinanceApiSecret]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null),[cardOpen,setCardOpen]=useState(false),[cardApproved,setCardApproved]=useState(false);
+ async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok){setState(d);setCardOpen(d.cardPayment?.open===true);setCardApproved(d.cardPayment?.approved===true);setWebshareHost((old:string)=>old||d.binance?.webshareHost||"");setWebsharePort((old:string)=>old||d.binance?.websharePort||"");}}
  useEffect(()=>{
   load();
   const refreshId=window.setInterval(load,30000);
   const tickId=window.setInterval(()=>setState((old:any)=>old?({...old,payments:(old.payments||[]).map((p:any)=>p.status==="pending"?({...p,secondsRemaining:Math.max(0,Number(p.secondsRemaining||0)-1)}):p)}):old),1000);
   return()=>{window.clearInterval(refreshId);window.clearInterval(tickId)};
  },[]);
+ async function saveCardSettings(){setBusy(true);setMsg("");setMsgError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open:cardOpen,surchargeApproved:cardApproved})});const d=await r.json();setMsg(d.ok?(cardOpen?"Visa / Mastercard checkout opened.":"Visa / Mastercard checkout closed."):(d.error||"Unable to save card settings."));setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to save card payment settings.");setMsgError(true)}finally{setBusy(false)}}
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
  async function saveBinanceConnection(){
   setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
@@ -317,6 +318,14 @@ function AdminPayments(){
    </div>)}
   </Table>
   <div className="admin-two-col">
+  <Table title="Mastercard / Visa Control">
+   <div className="payment-provider-card"><div><b>Card checkout visibility</b><small>{state.cardPayment?.configured?"Sifalo hosted checkout is configured. Card details are entered on Sifalo's protected checkout page.":"Sifalo API credentials are not configured in Vercel yet."}</small></div><strong style={{color:cardOpen?"#5ee6c2":"#ffbd8b"}}>{cardOpen?"OPEN":"CLOSED"}</strong></div>
+   <label style={{display:"flex",alignItems:"center",gap:10,margin:"14px 0",color:"#eaf3ff"}}><input type="checkbox" checked={cardOpen} onChange={e=>setCardOpen(e.target.checked)}/> Open Visa / Mastercard option for customers</label>
+   <label style={{display:"flex",alignItems:"flex-start",gap:10,margin:"12px 0",color:"#b9cbe0",fontSize:13,lineHeight:1.6}}><input type="checkbox" checked={cardApproved} onChange={e=>setCardApproved(e.target.checked)} style={{marginTop:3}}/> I confirm the displayed card surcharge and its VAT / processing / other allocation have been reviewed and are permitted by applicable law and card-network rules.</label>
+   <p className="admin-help">The checkout adds 40% to the selected wallet amount: 15% VAT allocation, 20% card processing and 5% other service charges. Do not open card payments until the surcharge and tax treatment are approved for your operating markets.</p>
+   <button className="primary-btn" disabled={busy} onClick={saveCardSettings}>{busy?"Saving…":"Save Mastercard Control"}</button>
+   {msg&&<div className={msgError?"error-box":"success-box"} style={{marginTop:10}}>{msg}</div>}
+  </Table>
   <Table title="Active payment method">
    <div className="payment-provider-card"><div><b>NOWPayments</b><small>Existing crypto payment method</small></div><button className={state.activeProvider==="nowpayments"?"primary-btn":"secondary-btn"} disabled={busy||!state.nowpayments.configured} onClick={()=>activate("nowpayments")}>{state.activeProvider==="nowpayments"?"OPEN NOWPAYMENTS":"Open NOWPayments"}</button></div>
    <div className="payment-provider-card"><div><b>PayPal</b><small>PayPal REST API · dynamic checkout + webhook</small></div><button className={state.activeProvider==="paypal"?"primary-btn":"secondary-btn"} disabled={busy||!state.paypal.configured} onClick={()=>activate("paypal")}>{state.activeProvider==="paypal"?"OPEN PAYPAL":"Open PayPal"}</button></div>

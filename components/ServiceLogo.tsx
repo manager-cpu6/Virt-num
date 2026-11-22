@@ -24,14 +24,14 @@ const aliases:Record<string,string>={
  booking:"bookingdotcom",bookingcom:"bookingdotcom",expedia:"expedia",agoda:"agoda",googlepay:"googlepay",gpay:"googlepay",
  googleplay:"googleplay",microsoft365:"microsoft365",teams:"microsoftteams",kakaotalk:"kakaotalk",imo:"imo",skype:"skype",
  novaposhta:"novaposhta",novaposta:"novaposhta",novapoahta:"novaposhta",
- ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr"
+ ebirr:"ebirr",ebirrwallet:"ebirr",coopayebirr:"coopayebirr",kaafiebirr:"kaafiebirr",cbebirr:"cbebirr",cbe:"cbe",mpesa:"mpesa",mpesaethiopia:"mpesa",telebirr:"telebirr",other:"other",anyothers:"other",anyother:"other",others:"other"
 };
 const brandNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",douyin:"Douyin",instagram:"Instagram",facebook:"Facebook",google:"Google",
  discord:"Discord",x:"X",amazon:"Amazon",alibabadotcom:"Alibaba",alibabacloud:"Alibaba Cloud",microsoft:"Microsoft",paypal:"PayPal",
  moneza:"Moneza",snapchat:"Snapchat",googlepay:"Google Pay",googleplay:"Google Play",apple:"Apple",youtube:"YouTube",openai:"OpenAI",
  threads:"Threads",linkedin:"LinkedIn",reddit:"Reddit",spotify:"Spotify",netflix:"Netflix",viber:"Viber",signal:"Signal",imo:"imo",
- novaposhta:"Nova Poshta",ebirr:"eBirr",coopayebirr:"Coopay eBirr",kaafiebirr:"Kaafi eBirr",cbebirr:"CBE Birr",cbe:"Commercial Bank of Ethiopia",mpesa:"M-Pesa",telebirr:"telebirr"
+ novaposhta:"Nova Poshta",ebirr:"eBirr",coopayebirr:"Coopay eBirr",kaafiebirr:"Kaafi eBirr",cbebirr:"CBE Birr",cbe:"Commercial Bank of Ethiopia",mpesa:"M-Pesa",telebirr:"telebirr",other:"Other"
 };
 const simpleIconSlugs=new Set(Object.values(aliases).filter(v=>!["imo","moneza","miratorg","douyin","novaposhta","ebirr","coopayebirr","kaafiebirr","cbebirr","cbe","mpesa","telebirr"].includes(v)));
 const domainByBrand:Record<string,string>={
@@ -70,6 +70,7 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
  const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
  if(!brand)return null;
+ if(brand==="other")return <span className={className||"service-icon"} role="img" aria-label="Other service" title="Other" style={{display:"inline-grid",placeItems:"center",flexShrink:0}}><svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><g fill="currentColor"><rect x="7" y="7" width="13" height="13" rx="3"/><rect x="28" y="7" width="13" height="13" rx="3"/><rect x="7" y="28" width="13" height="13" rx="3"/><rect x="28" y="28" width="13" height="13" rx="3"/></g></svg></span>;
  const slug=brand==="chatgpt"?"chatgpt":brand;
  const domain=domainByBrand[brand];
  const useSimple=simpleIconSlugs.has(slug);

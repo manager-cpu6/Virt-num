@@ -8,6 +8,7 @@ import CryptoPaymentPage from "@/components/CryptoPaymentPage";
 import LivePhoneDemo from "@/components/LivePhoneDemo";
 import AndroidDownloadPage from "@/components/AndroidDownloadPage";
 import EthiopiaPaymentCheckout from "@/components/EthiopiaPaymentCheckout";
+import SecureCardCheckout from "@/components/SecureCardCheckout";
 import type {Metadata} from "next";
 
 export const dynamic = "force-dynamic";
@@ -35,6 +36,7 @@ export default async function LandingPage() {
   if(host==="checkout.numelixa.com")return <FirstPartyCheckout/>;
   if(host==="payment.numelixa.com")return <CryptoPaymentPage/>;
   if(host==="ethio.virtunumber.online")return <EthiopiaPaymentCheckout/>;
+  if(host==="secure.payment.numelixa.com")return <SecureCardCheckout/>;
   const user = await getUser().catch(() => null);
   if (user) redirect("/dashboard");
 

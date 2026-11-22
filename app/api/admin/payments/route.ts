@@ -30,6 +30,7 @@ export async function GET(){
  try{
   await requireAdmin();
   const s=await getPaymentSettings();
+  const cardSettings=await (await collection<any>("settings")).findOne({_id:"payments"});
   const rows=await (await collection<any>("payments")).find({provider:"binance_personal",status:{$in:["pending","paid","expired","cancelled"]}}).sort({createdAt:-1}).limit(100).toArray();
   const now=Date.now();
   const payments=rows.map((p:any)=>({
@@ -41,12 +42,19 @@ export async function GET(){
    reservationActive:p.status==="pending"&&p.reservationActive!==false&&p.expiresAt&&new Date(p.expiresAt).getTime()>now,
    paidAt:p.paidAt||null,txid:p.status==="paid"?String(p.txid||""):""
   }));
-  return NextResponse.json({ok:true,activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId?s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance,payments});
+  return NextResponse.json({ok:true,cardPayment:{open:cardSettings?.cardPaymentOpen===true,approved:cardSettings?.cardSurchargeApproved===true,surchargePercent:Number(cardSettings?.cardSurchargePercent??40),configured:Boolean(process.env.SIFALO_API_USER&&process.env.SIFALO_API_KEY)},activeProvider:s.activeProvider,paypal:{configured:s.paypal.configured,clientId:s.paypal.clientId?s.paypal.clientId.slice(0,8)+"…":""},nowpayments:s.nowpayments,binance:s.binance,payments});
  }catch(e){return NextResponse.json({ok:false,error:"Unauthorized"},{status:401});}
 }
 export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
+  if(action==="save_card_settings"){
+    const open=b.open===true,approved=b.surchargeApproved===true;
+    if(open&&!approved)return NextResponse.json({ok:false,error:"Confirm that card surcharges are permitted by applicable law and card-network rules before opening this option."},{status:400});
+    if(open&&(!process.env.SIFALO_API_USER||!process.env.SIFALO_API_KEY))return NextResponse.json({ok:false,error:"Configure the Sifalo API username and key in Vercel before opening card payments."},{status:400});
+    await (await collection<any>("settings")).updateOne({_id:"payments"},{$set:{cardPaymentOpen:open,cardSurchargeApproved:approved,cardSurchargePercent:40,updatedAt:new Date()}},{upsert:true});
+    return NextResponse.json({ok:true,cardPayment:{open,approved,surchargePercent:40}});
+  }
   if(action==="clear_all_payment_orders"){
     const payments=await collection<any>("payments");
     const result=await payments.deleteMany({provider:"binance_personal",status:{$in:["pending","paid","expired","cancelled"]}});

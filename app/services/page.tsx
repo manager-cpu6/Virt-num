@@ -6,7 +6,7 @@ import ServiceLogo,{canonicalServiceBrand,hasKnownServiceBrand} from "@/componen
 import PublicFooter from "@/components/PublicFooter";
 
 type Service={id:string;code:string;name:string};
-const popularOrder=["whatsapp","telegram","tiktok","douyin","alibabadotcom","imo","instagram","facebook","google","discord","x","amazon","microsoft","paypal","snapchat","googlepay","apple","youtube","openai"];
+const popularOrder=["whatsapp","telegram","tiktok","douyin","alibabadotcom","imo","instagram","facebook","google","other","discord","x","amazon","microsoft","paypal","snapchat","googlepay","apple","youtube","openai"];
 
 export default function ServicesPage(){
  const[services,setServices]=useState<Service[]>([]);
@@ -86,7 +86,7 @@ export default function ServicesPage(){
     <div className="popular-service-track">
      {[...popularServices,...popularServices].map((item,index)=><Link key={item.id+"-"+index} className="popular-service-item" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}>
       <ServiceLogo id={item.id} name={item.name} className="popular-service-icon"/>
-      <span>{item.name}</span>
+      <span>{canonicalServiceBrand(item.id,item.name)==="other"?"Other":item.name}</span>
      </Link>)}
     </div>
    </div>
@@ -99,7 +99,7 @@ export default function ServicesPage(){
 
   {loading?<div className="service-loading nx-service-loading" role="status" aria-label="Loading verified services"><span className="nx-loading-orbit"/><b>Preparing your service catalog</b><small>Checking verified brand marks and live availability</small><div className="nx-service-skeleton-grid">{Array.from({length:8},(_,i)=><i key={i}/>)}</div></div>
    :error?<div className="helper-card" role="alert"><b>Live catalog unavailable</b><span>{error}. Please retry in a moment.</span><button className="secondary-btn" onClick={()=>void retry()}>Retry</button></div>
-   :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
+   :<div className="service-grid">{visible.map(item=><Link key={item.id} className="service-card" href={"/countries?service="+encodeURIComponent(item.id)+"&name="+encodeURIComponent(item.name)}><ServiceLogo id={item.id} name={item.name}/><div><b>{canonicalServiceBrand(item.id,item.name)==="other"?"Other":item.name}</b><small>View countries and live price</small></div><span className="chevron" aria-hidden="true">›</span></Link>)}</div>}
 
   {!loading&&!error&&!filtered.length&&<div className="helper-card"><b>No verified service found</b><span>Try another name. Services without a confirmed brand mark are kept out of the public catalog view.</span></div>}
   <PublicFooter/>
