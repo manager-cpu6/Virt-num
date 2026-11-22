@@ -23,7 +23,7 @@ export default function SecureCardCheckout(){
      <div style={{height:1,background:"#294967",margin:"4px 0"}}/>
      <div style={{display:"flex",justifyContent:"space-between",fontSize:18,color:"#f5f8ff"}}><b>Total (+{feeRate}%)</b><b>{usd(total)}</b></div>
     </div>
-    <p style={{fontSize:12,color:"#8fa8c5",lineHeight:1.6,marginTop:14}}>Card details are entered only on Sifalo Pay’s protected hosted checkout. Numelixa does not collect or store your full card number or security code. The fee breakdown is shown before you continue.</p>
+    <p style={{fontSize:12,color:"#8fa8c5",lineHeight:1.6,marginTop:14}}>Card details are entered only on the payment provider’s protected hosted checkout. Numelixa does not collect or store your full card number or security code. The fee breakdown is shown before you continue.</p>
     <button onClick={start} disabled={busy||base<=0} style={{width:"100%",marginTop:16,padding:16,border:0,borderRadius:14,background:"linear-gradient(100deg,#18d6d0,#2689ff)",color:"#031022",fontSize:15,fontWeight:950,cursor:busy?"wait":"pointer"}}>{busy?"Opening secure checkout…":"Continue to Visa / Mastercard checkout →"}</button>
     {error&&<p role="alert" style={{color:"#ffb7aa",fontSize:13,marginTop:12}}>{error}</p>}
    </section>}
