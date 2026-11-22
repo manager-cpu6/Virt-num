@@ -113,7 +113,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><Link href="/admin/email" className="primary-btn">✉ Email center</Link><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="app updates"?"📱 App Updates":x}</button>)}</div>
+  <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="merchants"&&<AdminMerchants/>}
   {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
@@ -124,6 +124,7 @@ export default function AdminPanel(){
   {tab==="providers"&&<Providers stats={stats}/>}
   {tab==="services"&&<AdminServiceCatalog/>}
   {tab==="payments"&&<AdminPayments/>}
+  {tab==="mastercard control"&&<AdminMastercardControl/>}
   {tab==="local payments"&&<Table title="Local Payments"><p className="admin-help">Open or close Local Payment independently from Crypto Payment. When closed, customers only see Crypto Payment.</p><a href="/admin/local-payments" className="primary-btn" style={{display:"inline-flex",textDecoration:"none",alignItems:"center",justifyContent:"center"}}>Manage Local Payments →</a></Table>}
   {tab==="ebirr"&&<Table title="eBirr Ethiopia"><p className="admin-help">Control eBirr checkout availability, the ETB per USD rate, the receiving number, SMS device pairing and customer payment verification.</p><a href="/admin/ebirr" className="primary-btn" style={{display:"inline-flex",textDecoration:"none",alignItems:"center",justifyContent:"center"}}>Open eBirr controls →</a></Table>}
   {tab==="pricing"&&stats&&<PricingForm stats={stats} onSave={saveSettings}/>}
@@ -354,4 +355,38 @@ function AdminPayments(){
   </Table>
   </div>
  </div>
+}
+
+
+function AdminMastercardControl(){
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[open,setOpen]=useState(false),[approved,setApproved]=useState(false),[configured,setConfigured]=useState(false),[message,setMessage]=useState(""),[isError,setIsError]=useState(false);
+ async function load(){setLoading(true);try{const r=await fetch("/api/admin/payments",{cache:"no-store",credentials:"include"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Admin authorization required.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setConfigured(d.cardPayment?.configured===true);setMessage("");}catch(e){setMessage(e instanceof Error?e.message:"Unable to load Mastercard settings.");setIsError(true);}finally{setLoading(false);}}
+ useEffect(()=>{void load();},[]);
+ async function save(){setBusy(true);setMessage("");setIsError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open,surchargeApproved:approved})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to save card settings.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setMessage(open?"Visa / Mastercard is now OPEN for customers.":"Visa / Mastercard is now CLOSED.");}catch(e){setMessage(e instanceof Error?e.message:"Unable to save Mastercard settings.");setIsError(true);}finally{setBusy(false);}}
+ return <div className="admin-payment-stack">
+  <Table title="Mastercard Control — Visa / Mastercard">
+   <p className="admin-help">This is the customer-facing card payment switch. Turn it ON to show Visa / Mastercard beside Local Payment and Crypto Payment at wallet top-up, or OFF to hide it.</p>
+   <div className="payment-provider-card"><div><b>Visa / Mastercard checkout</b><small>{configured?"Hosted payment gateway credentials detected.":"Payment gateway credentials are missing from Vercel; the option cannot be opened yet."}</small></div><strong style={{color:open?"#5ee6c2":"#ffbd8b",fontSize:14}}>{loading?"CHECKING…":open?"OPEN":"CLOSED"}</strong></div>
+   <label style={{display:"flex",alignItems:"center",gap:12,margin:"18px 0",padding:16,border:"1px solid #294666",borderRadius:14,color:"#eaf3ff",fontWeight:800}}>
+    <input type="checkbox" checked={open} disabled={loading||busy||(!configured&&!open)} onChange={e=>setOpen(e.target.checked)} style={{width:22,height:22,accentColor:"#16b8a5"}}/>
+    <span>Enable Visa / Mastercard for customers</span>
+   </label>
+   <label style={{display:"flex",alignItems:"flex-start",gap:10,margin:"12px 0",padding:14,border:"1px solid #294666",borderRadius:12,color:"#c5d5e8",fontSize:13,lineHeight:1.6}}>
+    <input type="checkbox" checked={approved} disabled={loading||busy} onChange={e=>setApproved(e.target.checked)} style={{marginTop:3}}/>
+    <span>I confirm that the 40% card surcharge and its tax/fee treatment have been reviewed and are permitted by applicable law and card-network rules.</span>
+   </label>
+   <div className="admin-help" style={{padding:14,borderRadius:12,background:"rgba(24,95,145,.12)"}}>
+    <b style={{color:"#eaf3ff"}}>Customer fee breakdown</b>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:10}}><span>VAT allocation</span><b>15%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Card processing</span><b>20%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Other service charges</span><b>5%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:10,borderTop:"1px solid #294666",color:"#fff"}}><b>Total surcharge</b><b>40%</b></div>
+   </div>
+   <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}>
+    <button className="primary-btn" disabled={loading||busy||(!configured&&open)||(open&&!approved)} onClick={save}>{busy?"Saving…":open?"Save & Open Mastercard":"Save Mastercard Control"}</button>
+    <button className="secondary-btn" disabled={loading||busy} onClick={()=>void load()}>Refresh status</button>
+   </div>
+   {message&&<div className={isError?"error-box":"success-box"} style={{marginTop:12}}>{message}</div>}
+  </Table>
+ </div>;
 }
