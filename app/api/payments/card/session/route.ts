@@ -17,7 +17,7 @@ export async function POST(req:Request){try{
  const vat=round2(base*.15),processing=round2(base*.20),other=round2(base*.05),total=round2(base+vat+processing+other),coins=Math.round(base*wallet.coinsPerUsd);
  if(coins<1)return NextResponse.json({ok:false,error:"The wallet amount is too small."},{status:400});
  const orderId="sifalo_card_"+crypto.randomUUID(),now=new Date(),payments=await collection<any>("payments");
- await payments.insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:orderId,orderId,amountUsd:base,providerAmountUsd:total,cardSurchargeUsd:round2(total-base),cardSurchargePercent,cardFeeBreakdown:{vat,processing,other},coins,method:"card",account:"hosted_checkout",status:"pending",txid:null,packageId:"custom-usd-card",raw:null,createdAt:now,paidAt:null});
+ await payments.insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:orderId,orderId,amountUsd:base,providerAmountUsd:total,cardSurchargeUsd:round2(total-base),cardSurchargePercent:surchargePercent,cardFeeBreakdown:{vat,processing,other},coins,method:"card",account:"hosted_checkout",status:"pending",txid:null,packageId:"custom-usd-card",raw:null,createdAt:now,paidAt:null});
  const apiBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"?"https://spay-api.sifalo.net/gateway/":"https://api.sifalopay.com/gateway/";
  const checkoutBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"?"https://pay.sifalo.net/checkout/":"https://pay.sifalo.com/checkout/";
  const auth=Buffer.from(apiUser+":"+apiKey).toString("base64");
