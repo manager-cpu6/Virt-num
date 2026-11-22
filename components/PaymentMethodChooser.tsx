@@ -8,7 +8,7 @@ export default function PaymentMethodChooser(){
  function goLocal(){window.location.href="/local-payment?amount="+encodeURIComponent(amount);}
  function goCrypto(){window.location.href="https://payment.numelixa.com/?amount="+encodeURIComponent(amount)+"&returnTo="+encodeURIComponent("https://numelixa.com/wallet?payment=success");}
  function goCard(){window.location.href="https://secure.payment.numelixa.com/?amount="+encodeURIComponent(amount);}
- const base=Number(amount)||0,round2=(n:number)=>Math.round((n+Number.EPSILON)*100)/100,total=base+round2(base*.15)+round2(base*.20)+round2(base*.05);
+ const base=Number(amount)||0,round2=(n:number)=>Math.round((n+Number.EPSILON)*100)/100,total=base+round2(base*cardFee/100);
  return <main className="nx-method-chooser"><div className="nx-method-chooser-wrap">
  <header className="nx-chooser-nav"><a href="https://numelixa.com/wallet" className="nx-chooser-brand"><span className="nx-chooser-logo"><img src="/numelixa-brand.svg" alt="" width="34" height="34"/></span><span><b>Numelixa</b><small>Secure wallet checkout</small></span></a><span className="nx-chooser-secure"><i/> SECURE PAYMENT</span></header>
  <section className="nx-chooser-hero"><span className="nx-chooser-eyebrow">WALLET TOP-UP · {money(base)}</span><h1>Choose how<br/><em>you want to pay.</em></h1><p>Select a payment option below. You’ll continue to a secure page for the method you choose.</p></section>
