@@ -1,0 +1,33 @@
+"use client";
+import {useEffect,useState} from "react";
+const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
+export default function SecureCardCheckout(){
+ const [amount,setAmount]=useState("5.00"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[orderId,setOrderId]=useState(""),[status,setStatus]=useState(""),[feeRate,setFeeRate]=useState(40);
+ useEffect(()=>{const p=new URLSearchParams(location.search),raw=p.get("amount")||"5.00",id=p.get("order_id")||"";if(/^\d+(?:\.\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));setOrderId(id);setStatus(p.get("status")||"");fetch("/api/payments/card/config",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(d.ok)setFeeRate(Number(d.surchargePercent||40));}).catch(()=>{});},[]);
+ useEffect(()=>{if(!orderId||status==="paid")return;let active=true;const check=async()=>{try{const r=await fetch("/api/payments/card/status?orderId="+encodeURIComponent(orderId),{cache:"no-store",credentials:"include"});const d=await r.json();if(active&&r.ok&&d.ok){setStatus(d.status);if(d.status==="paid")history.replaceState(null,"","/?order_id="+encodeURIComponent(orderId)+"&status=paid");}}catch{}};void check();const timer=window.setInterval(check,5000);return()=>{active=false;window.clearInterval(timer)};},[orderId,status]);
+ const base=Number(amount)||0,fee=base*feeRate/100,total=base+fee,vat=base*.15,processing=base*.20,other=base*.05;
+ async function start(){if(busy)return;setBusy(true);setError("");try{const r=await fetch("/api/payments/card/session",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({amountUsd:base})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to start secure card checkout.");location.href=d.checkoutUrl;}catch(e){setError(e instanceof Error?e.message:"Unable to start payment.");setBusy(false);}}
+ return <main style={{minHeight:"100vh",padding:"24px 16px 56px",color:"#f4f8ff",background:"radial-gradient(ellipse at 50% 0%,rgba(0,217,255,.14),transparent 46%),linear-gradient(180deg,#030817,#071329 55%,#030817)",fontFamily:"system-ui,sans-serif"}}>
+  <div style={{maxWidth:610,margin:"0 auto"}}>
+   <a href="https://www.numelixa.com/wallet" style={{color:"#7adfff",textDecoration:"none",fontWeight:750}}>← Back to wallet</a>
+   <header style={{textAlign:"center",padding:"36px 0 24px"}}><div style={{display:"inline-flex",alignItems:"center",gap:10,color:"#dff6ff",fontWeight:900,letterSpacing:2,fontSize:12}}><img src="https://www.numelixa.com/numelixa-brand.svg" width="30" height="30" alt=""/> NUMELIXA · SECURE PAYMENT</div><h1 style={{fontSize:"clamp(34px,7vw,48px)",letterSpacing:"-1.8px",margin:"16px 0 8px"}}>Pay by card</h1><p style={{color:"#a7b7d0",lineHeight:1.7,margin:0}}>Continue to the protected card checkout to pay with Visa or Mastercard.</p></header>
+   {status==="paid"?<section style={{padding:24,borderRadius:22,border:"1px solid rgba(0,229,180,.3)",background:"rgba(0,90,80,.18)",textAlign:"center"}}><div style={{fontSize:32}}>✓</div><h2>Payment confirmed</h2><p style={{color:"#a7b7d0"}}>Your Numelixa wallet has been updated. You can return to your wallet.</p><a href="https://www.numelixa.com/wallet" style={{display:"inline-block",marginTop:12,color:"#071329",background:"#58e6ca",padding:"13px 20px",borderRadius:12,fontWeight:900,textDecoration:"none"}}>Open wallet</a></section>:status==="pending"?<section style={{padding:22,borderRadius:22,border:"1px solid #31516f",background:"#0b1d35"}}><h2>Payment is being confirmed</h2><p style={{color:"#a7b7d0",lineHeight:1.7}}>Your card provider has returned the payment. Numelixa is checking the final confirmation. Keep this page open or return to your wallet shortly.</p><small style={{color:"#8ca8c9"}}>Reference: {orderId}</small></section>:<section style={{padding:22,borderRadius:24,border:"1px solid rgba(95,168,224,.25)",background:"rgba(8,23,44,.94)",boxShadow:"0 22px 70px rgba(0,0,0,.28)"}}>
+    <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",gap:12,flexWrap:"wrap"}}><b style={{fontSize:14}}>Accepted cards</b><div style={{display:"flex",gap:8,alignItems:"center"}}><span style={{padding:"7px 13px",borderRadius:8,background:"#f4f7fc",color:"#153b80",fontWeight:950,fontStyle:"italic"}}>VISA</span><span style={{display:"flex",alignItems:"center",gap:0,padding:"7px 10px",borderRadius:8,background:"#f4f7fc"}}><i style={{width:19,height:19,borderRadius:"50%",background:"#e33b42",display:"block"}}/><i style={{width:19,height:19,borderRadius:"50%",background:"#f5a623",display:"block",marginLeft:-7,opacity:.92}}/></span></div></div>
+    <div style={{marginTop:20,padding:16,borderRadius:15,background:"#0d2745",border:"1px solid #274766"}}><small style={{color:"#9fb6d1",letterSpacing:1}}>WALLET TOP-UP</small><div style={{fontSize:27,fontWeight:950,marginTop:4}}>{usd(base)}</div></div>
+    <h3 style={{margin:"22px 0 10px"}}>Payment breakdown</h3>
+    <div style={{display:"grid",gap:10,fontSize:14,color:"#b6c8dd"}}>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>Wallet amount</span><b>{usd(base)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>VAT allocation (15%)</span><b>{usd(vat)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>Card processing charge (20%)</span><b>{usd(processing)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>Other service charges (5%)</span><b>{usd(other)}</b></div>
+     <div style={{height:1,background:"#294967",margin:"4px 0"}}/>
+     <div style={{display:"flex",justifyContent:"space-between",fontSize:18,color:"#f5f8ff"}}><b>Total (+{feeRate}%)</b><b>{usd(total)}</b></div>
+    </div>
+    <p style={{fontSize:12,color:"#8fa8c5",lineHeight:1.6,marginTop:14}}>Card details are entered only on Sifalo Pay’s protected hosted checkout. Numelixa does not collect or store your full card number or security code. The fee breakdown is shown before you continue.</p>
+    <button onClick={start} disabled={busy||base<=0} style={{width:"100%",marginTop:16,padding:16,border:0,borderRadius:14,background:"linear-gradient(100deg,#18d6d0,#2689ff)",color:"#031022",fontSize:15,fontWeight:950,cursor:busy?"wait":"pointer"}}>{busy?"Opening secure checkout…":"Continue to Visa / Mastercard checkout →"}</button>
+    {error&&<p role="alert" style={{color:"#ffb7aa",fontSize:13,marginTop:12}}>{error}</p>}
+   </section>}
+   <footer style={{textAlign:"center",color:"#7185a5",fontSize:11,marginTop:24}}>Encrypted hosted checkout · Numelixa</footer>
+  </div>
+ </main>
+}
