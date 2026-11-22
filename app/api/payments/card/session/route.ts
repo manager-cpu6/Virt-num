@@ -13,11 +13,11 @@ export async function POST(req:Request){try{
  if(!apiUser||!apiKey)return NextResponse.json({ok:false,error:"Card checkout is not configured yet."},{status:503});
  const body=await req.json(),base=Number(body.amountUsd),wallet=await getSettings();
  if(!Number.isFinite(base)||round2(base)!==base||base<wallet.minTopupUsd||base>wallet.maxTopupUsd||base>10000)return NextResponse.json({ok:false,error:"Enter a valid wallet amount within the allowed limits."},{status:400});
- const surchargePercent=Number(flags.cardSurchargePercent??40);if(surchargePercent!==40)return NextResponse.json({ok:false,error:"Card surcharge settings are invalid."},{status:503});
- const vat=round2(base*.15),processing=round2(base*.20),other=round2(base*.05),total=round2(base+vat+processing+other),coins=Math.round(base*wallet.coinsPerUsd);
+ const surchargePercent=Number(flags.cardSurchargePercent??40);if(!Number.isFinite(surchargePercent)||surchargePercent<0||surchargePercent>1000000)return NextResponse.json({ok:false,error:"Card surcharge settings are invalid."},{status:503});
+ const surcharge=round2(base*surchargePercent/100),vat=round2(surcharge*.375),processing=round2(surcharge*.5),other=round2(surcharge-vat-processing),total=round2(base+surcharge),coins=Math.round(base*wallet.coinsPerUsd);
  if(coins<1)return NextResponse.json({ok:false,error:"The wallet amount is too small."},{status:400});
  const orderId="sifalo_card_"+crypto.randomUUID(),now=new Date(),payments=await collection<any>("payments");
- await payments.insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:orderId,orderId,amountUsd:base,providerAmountUsd:total,cardSurchargeUsd:round2(total-base),cardSurchargePercent:surchargePercent,cardFeeBreakdown:{vat,processing,other},coins,method:"card",account:"hosted_checkout",status:"pending",txid:null,packageId:"custom-usd-card",raw:null,createdAt:now,paidAt:null});
+ await payments.insertOne({_id:mongoId(),userId:String(user.id),provider:"sifalo",providerId:orderId,orderId,amountUsd:base,providerAmountUsd:total,cardSurchargeUsd:round2(total-base),cardSurchargePercent:surchargePercent,cardFeeBreakdown:{vat,processing,other,vatPercent:round2(surchargePercent*.375),processingPercent:round2(surchargePercent*.5),otherPercent:round2(surchargePercent-surchargePercent*.875)},coins,method:"card",account:"hosted_checkout",status:"pending",txid:null,packageId:"custom-usd-card",raw:null,createdAt:now,paidAt:null});
  const apiBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"?"https://spay-api.sifalo.net/gateway/":"https://api.sifalopay.com/gateway/";
  const checkoutBase=String(process.env.SIFALO_ENV||"live").toLowerCase()==="staging"?"https://pay.sifalo.net/checkout/":"https://pay.sifalo.com/checkout/";
  const auth=Buffer.from(apiUser+":"+apiKey).toString("base64");
