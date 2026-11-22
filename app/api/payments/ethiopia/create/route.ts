@@ -1,6 +1,5 @@
 import {NextResponse} from "next/server";
 import crypto from "crypto";
-import crypto from "crypto";
 import {tokenHash} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
@@ -26,7 +25,7 @@ export async function POST(req:Request){try{
  if(!/^0[79][0-9]{8}$/.test(phone))return NextResponse.json({ok:false,error:"Enter your Ethiopian mobile number as 09XXXXXXXX."},{status:400});
  if(payerName&&(payerName.length<2||!/\p{L}{2}/u.test(payerName)))return NextResponse.json({ok:false,error:"Enter a valid payment account name or leave it blank."},{status:400});
  const accessToken=crypto.randomBytes(32).toString("base64url"),amountEtb=Math.ceil(amount*rate),coins=Math.round(amount*settings.coinsPerUsd),orderId="etpay_"+crypto.randomUUID(),receiptId="NX-"+crypto.randomBytes(8).toString("hex").toUpperCase(),now=new Date();
- const payment={_id:mongoId(),userId:String(user.id),provider:"ebirr_manual",providerId:orderId,orderId,receiptId,amountUsd:amount,amountEtb,exchangeRate:rate,coins,payerPhone:phone,payerName:payerName||null,receiverPhone:receiver,method,methodName:name,status:"awaiting_proof",checkoutTokenHash:tokenHash(accessToken),transactionReference:null,smsMatched:false,credited:false,createdAt:now,updatedAt:now};
+ const payment={_id:mongoId(),userId:String(checkout.userId),provider:"ebirr_manual",providerId:orderId,orderId,receiptId,amountUsd:amount,amountEtb,exchangeRate:rate,coins,payerPhone:phone,payerName:payerName||null,receiverPhone:receiver,method,methodName:name,status:"awaiting_proof",checkoutTokenHash:tokenHash(accessToken),transactionReference:null,smsMatched:false,credited:false,createdAt:now,updatedAt:now};
  await (await collection<any>("payments")).insertOne(payment);
  await sessions.updateOne({_id:checkout._id,usedAt:null},{$set:{usedAt:now,orderId}});
  return NextResponse.json({ok:true,accessToken,orderId,amountUsd:amount,amountEtb,exchangeRate:rate,receiverPhone:receiver,payerPhone:phone,payerName,method,methodName:name,instructions:String(saved.instructions||config?.ebirrInstructions||"Pay the exact ETB amount to the receiving account."),status:payment.status});
