@@ -3,9 +3,9 @@ import {useEffect,useState} from "react";
 const usd=(n:number)=>new Intl.NumberFormat("en-US",{style:"currency",currency:"USD",minimumFractionDigits:2,maximumFractionDigits:2}).format(n);
 export default function SecureCardCheckout(){
  const [amount,setAmount]=useState("5.00"),[busy,setBusy]=useState(false),[error,setError]=useState(""),[orderId,setOrderId]=useState(""),[status,setStatus]=useState(""),[feeRate,setFeeRate]=useState(40);
- useEffect(()=>{const p=new URLSearchParams(location.search),raw=p.get("amount")||"5.00",id=p.get("order_id")||"";if(/^\d+(?:\.\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));setOrderId(id);setStatus(p.get("status")||"");fetch("/api/payments/card/config",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(d.ok)setFeeRate(Number(d.surchargePercent||40));}).catch(()=>{});},[]);
+ useEffect(()=>{const p=new URLSearchParams(location.search),raw=p.get("amount")||"5.00",id=p.get("order_id")||"";if(/^\d+(?:\.\d{1,2})?$/.test(raw)&&Number(raw)>0)setAmount(Number(raw).toFixed(2));setOrderId(id);setStatus(p.get("status")||"");fetch("/api/payments/card/config",{cache:"no-store"}).then(r=>r.json()).then(d=>{if(d.ok)setFeeRate(Number.isFinite(Number(d.surchargePercent))?Number(d.surchargePercent):40);}).catch(()=>{});},[]);
  useEffect(()=>{if(!orderId||status==="paid")return;let active=true;const check=async()=>{try{const r=await fetch("/api/payments/card/status?orderId="+encodeURIComponent(orderId),{cache:"no-store",credentials:"include"});const d=await r.json();if(active&&r.ok&&d.ok){setStatus(d.status);if(d.status==="paid")history.replaceState(null,"","/?order_id="+encodeURIComponent(orderId)+"&status=paid");}}catch{}};void check();const timer=window.setInterval(check,5000);return()=>{active=false;window.clearInterval(timer)};},[orderId,status]);
- const base=Number(amount)||0,round2=(n:number)=>Math.round((n+Number.EPSILON)*100)/100,vat=round2(base*.15),processing=round2(base*.20),other=round2(base*.05),fee=vat+processing+other,total=base+fee;
+ const base=Number(amount)||0,round2=(n:number)=>Math.round((n+Number.EPSILON)*100)/100,fee=round2(base*feeRate/100),vat=round2(fee*.375),processing=round2(fee*.5),other=round2(fee-vat-processing),vatRate=feeRate*.375,processingRate=feeRate*.5,otherRate=feeRate-vatRate-processingRate,total=base+fee;
  async function start(){if(busy)return;setBusy(true);setError("");try{const r=await fetch("/api/payments/card/session",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({amountUsd:base})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to start secure card checkout.");location.href=d.checkoutUrl;}catch(e){setError(e instanceof Error?e.message:"Unable to start payment.");setBusy(false);}}
  return <main style={{minHeight:"100vh",padding:"24px 16px 56px",color:"#f4f8ff",background:"radial-gradient(ellipse at 50% 0%,rgba(0,217,255,.14),transparent 46%),linear-gradient(180deg,#030817,#071329 55%,#030817)",fontFamily:"system-ui,sans-serif"}}>
   <div style={{maxWidth:610,margin:"0 auto"}}>
@@ -17,9 +17,9 @@ export default function SecureCardCheckout(){
     <h3 style={{margin:"22px 0 10px"}}>Payment breakdown</h3>
     <div style={{display:"grid",gap:10,fontSize:14,color:"#b6c8dd"}}>
      <div style={{display:"flex",justifyContent:"space-between"}}><span>Wallet amount</span><b>{usd(base)}</b></div>
-     <div style={{display:"flex",justifyContent:"space-between"}}><span>VAT allocation (15%)</span><b>{usd(vat)}</b></div>
-     <div style={{display:"flex",justifyContent:"space-between"}}><span>Card processing charge (20%)</span><b>{usd(processing)}</b></div>
-     <div style={{display:"flex",justifyContent:"space-between"}}><span>Other service charges (5%)</span><b>{usd(other)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>VAT allocation ({vatRate.toFixed(2)}%)</span><b>{usd(vat)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>Card processing charge ({processingRate.toFixed(2)}%)</span><b>{usd(processing)}</b></div>
+     <div style={{display:"flex",justifyContent:"space-between"}}><span>Other service charges ({otherRate.toFixed(2)}%)</span><b>{usd(other)}</b></div>
      <div style={{height:1,background:"#294967",margin:"4px 0"}}/>
      <div style={{display:"flex",justifyContent:"space-between",fontSize:18,color:"#f5f8ff"}}><b>Total (+{feeRate}%)</b><b>{usd(total)}</b></div>
     </div>

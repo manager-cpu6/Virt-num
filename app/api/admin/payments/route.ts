@@ -49,11 +49,12 @@ export async function POST(req:Request){
  try{
   await requireAdmin();const b:any=await req.json();const action=String(b.action||"");
   if(action==="save_card_settings"){
-    const open=b.open===true,approved=b.surchargeApproved===true;
+    const open=b.open===true,approved=b.surchargeApproved===true,surchargePercent=Number(b.surchargePercent??40);
+    if(!Number.isFinite(surchargePercent)||surchargePercent<0||surchargePercent>1000000)return NextResponse.json({ok:false,error:"Enter a valid surcharge percentage between 0 and 1,000,000."},{status:400});
     if(open&&!approved)return NextResponse.json({ok:false,error:"Confirm that card surcharges are permitted by applicable law and card-network rules before opening this option."},{status:400});
     if(open&&(!process.env.SIFALO_API_USER||!process.env.SIFALO_API_KEY))return NextResponse.json({ok:false,error:"Configure the Sifalo API username and key in Vercel before opening card payments."},{status:400});
-    await (await collection<any>("settings")).updateOne({_id:"payments"},{$set:{cardPaymentOpen:open,cardSurchargeApproved:approved,cardSurchargePercent:40,updatedAt:new Date()}},{upsert:true});
-    return NextResponse.json({ok:true,cardPayment:{open,approved,surchargePercent:40}});
+    await (await collection<any>("settings")).updateOne({_id:"payments"},{$set:{cardPaymentOpen:open,cardSurchargeApproved:approved,cardSurchargePercent:surchargePercent,updatedAt:new Date()}},{upsert:true});
+    return NextResponse.json({ok:true,cardPayment:{open,approved,surchargePercent}});
   }
   if(action==="clear_all_payment_orders"){
     const payments=await collection<any>("payments");
