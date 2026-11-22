@@ -264,15 +264,15 @@ function Providers({stats}:{stats:Stats|null}){
 
 
 function AdminPayments(){
- const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[webshareHost,setWebshareHost]=useState(""),[websharePort,setWebsharePort]=useState(""),[webshareUsername,setWebshareUsername]=useState(""),[websharePassword,setWebsharePassword]=useState(""),[binanceApiKey,setBinanceApiKey]=useState(""),[binanceApiSecret,setBinanceApiSecret]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null),[cardOpen,setCardOpen]=useState(false),[cardApproved,setCardApproved]=useState(false);
- async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok){setState(d);setCardOpen(d.cardPayment?.open===true);setCardApproved(d.cardPayment?.approved===true);setWebshareHost((old:string)=>old||d.binance?.webshareHost||"");setWebsharePort((old:string)=>old||d.binance?.websharePort||"");}}
+ const[state,setState]=useState<any>(null),[clientId,setClientId]=useState(""),[secretKey,setSecretKey]=useState(""),[webshareHost,setWebshareHost]=useState(""),[websharePort,setWebsharePort]=useState(""),[webshareUsername,setWebshareUsername]=useState(""),[websharePassword,setWebsharePassword]=useState(""),[binanceApiKey,setBinanceApiKey]=useState(""),[binanceApiSecret,setBinanceApiSecret]=useState(""),[busy,setBusy]=useState(false),[msg,setMsg]=useState(""),[msgError,setMsgError]=useState(false),[binanceTest,setBinanceTest]=useState<any>(null),[cardOpen,setCardOpen]=useState(false),[cardApproved,setCardApproved]=useState(false),[cardFeeRate,setCardFeeRate]=useState(40);
+ async function load(){const d=await fetch("/api/admin/payments",{cache:"no-store"}).then(r=>r.json());if(d.ok){setState(d);setCardOpen(d.cardPayment?.open===true);setCardApproved(d.cardPayment?.approved===true);setCardFeeRate(Number(d.cardPayment?.surchargePercent??40));setWebshareHost((old:string)=>old||d.binance?.webshareHost||"");setWebsharePort((old:string)=>old||d.binance?.websharePort||"");}}
  useEffect(()=>{
   load();
   const refreshId=window.setInterval(load,30000);
   const tickId=window.setInterval(()=>setState((old:any)=>old?({...old,payments:(old.payments||[]).map((p:any)=>p.status==="pending"?({...p,secondsRemaining:Math.max(0,Number(p.secondsRemaining||0)-1)}):p)}):old),1000);
   return()=>{window.clearInterval(refreshId);window.clearInterval(tickId)};
  },[]);
- async function saveCardSettings(){setBusy(true);setMsg("");setMsgError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open:cardOpen,surchargeApproved:cardApproved})});const d=await r.json();setMsg(d.ok?(cardOpen?"Visa / Mastercard checkout opened.":"Visa / Mastercard checkout closed."):(d.error||"Unable to save card settings."));setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to save card payment settings.");setMsgError(true)}finally{setBusy(false)}}
+ async function saveCardSettings(){setBusy(true);setMsg("");setMsgError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open:cardOpen,surchargeApproved:cardApproved,surchargePercent:cardFeeRate})});const d=await r.json();setMsg(d.ok?(cardOpen?"Visa / Mastercard checkout opened.":"Visa / Mastercard checkout closed."):(d.error||"Unable to save card settings."));setMsgError(!d.ok);if(d.ok)await load();}catch{setMsg("Unable to save card payment settings.");setMsgError(true)}finally{setBusy(false)}}
  async function save(){setBusy(true);setMsg("");try{const d=await fetch("/api/admin/payments",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_paypal",clientId,secretKey})}).then(r=>r.json());setMsg(d.ok?"PayPal credentials saved and webhook connected.":d.error||"Unable to save PayPal.");if(d.ok){setClientId("");setSecretKey("");await load();}}finally{setBusy(false)}}
  async function saveBinanceConnection(){
   setBusy(true);setMsg("");setMsgError(false);setBinanceTest(null);
@@ -322,8 +322,8 @@ function AdminPayments(){
   <Table title="Mastercard / Visa Control">
    <div className="payment-provider-card"><div><b>Card checkout visibility</b><small>{state.cardPayment?.configured?"Sifalo hosted checkout is configured. Card details are entered on Sifalo's protected checkout page.":"Sifalo API credentials are not configured in Vercel yet."}</small></div><strong style={{color:cardOpen?"#5ee6c2":"#ffbd8b"}}>{cardOpen?"OPEN":"CLOSED"}</strong></div>
    <label style={{display:"flex",alignItems:"center",gap:10,margin:"14px 0",color:"#eaf3ff"}}><input type="checkbox" checked={cardOpen} onChange={e=>setCardOpen(e.target.checked)}/> Open Visa / Mastercard option for customers</label>
-   <label style={{display:"flex",alignItems:"flex-start",gap:10,margin:"12px 0",color:"#b9cbe0",fontSize:13,lineHeight:1.6}}><input type="checkbox" checked={cardApproved} onChange={e=>setCardApproved(e.target.checked)} style={{marginTop:3}}/> I confirm the displayed card surcharge and its VAT / processing / other allocation have been reviewed and are permitted by applicable law and card-network rules.</label>
-   <p className="admin-help">The checkout adds 40% to the selected wallet amount: 15% VAT allocation, 20% card processing and 5% other service charges. Do not open card payments until the surcharge and tax treatment are approved for your operating markets.</p>
+   <label style={{display:"flex",alignItems:"flex-start",gap:10,margin:"12px 0",color:"#b9cbe0",fontSize:13,lineHeight:1.6}}><input type="checkbox" checked={cardApproved} onChange={e=>setCardApproved(e.target.checked)} style={{marginTop:3}}/> I confirm the configured card surcharge and its fee/tax treatment have been reviewed and are permitted by applicable law and card-network rules.</label>
+   <div className="admin-form" style={{marginTop:12}}><label>Total card surcharge (%)<input type="number" min="0" step="0.01" value={cardFeeRate} onChange={e=>setCardFeeRate(Math.max(0,Number(e.target.value)||0))}/></label><p className="admin-help">The total surcharge is {cardFeeRate.toFixed(2)}%. It is allocated proportionally across VAT allocation (37.5%), card processing (50%) and other service charges (12.5%). Change this value to set the total fee.</p></div>
    <button className="primary-btn" disabled={busy} onClick={saveCardSettings}>{busy?"Saving…":"Save Mastercard Control"}</button>
    {msg&&<div className={msgError?"error-box":"success-box"} style={{marginTop:10}}>{msg}</div>}
   </Table>
@@ -359,10 +359,11 @@ function AdminPayments(){
 
 
 function AdminMastercardControl(){
- const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[open,setOpen]=useState(false),[approved,setApproved]=useState(false),[configured,setConfigured]=useState(false),[message,setMessage]=useState(""),[isError,setIsError]=useState(false);
- async function load(){setLoading(true);try{const r=await fetch("/api/admin/payments",{cache:"no-store",credentials:"include"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Admin authorization required.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setConfigured(d.cardPayment?.configured===true);setMessage("");}catch(e){setMessage(e instanceof Error?e.message:"Unable to load Mastercard settings.");setIsError(true);}finally{setLoading(false);}}
+ const [loading,setLoading]=useState(true),[busy,setBusy]=useState(false),[open,setOpen]=useState(false),[approved,setApproved]=useState(false),[configured,setConfigured]=useState(false),[feeRate,setFeeRate]=useState(40),[message,setMessage]=useState(""),[isError,setIsError]=useState(false);
+ const vatRate=feeRate*.375,processingRate=feeRate*.5,otherRate=feeRate-vatRate-processingRate;
+ async function load(){setLoading(true);try{const r=await fetch("/api/admin/payments",{cache:"no-store",credentials:"include"});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Admin authorization required.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setConfigured(d.cardPayment?.configured===true);setFeeRate(Number(d.cardPayment?.surchargePercent??40));setMessage("");setIsError(false);}catch(e){setMessage(e instanceof Error?e.message:"Unable to load Mastercard settings.");setIsError(true);}finally{setLoading(false);}}
  useEffect(()=>{void load();},[]);
- async function save(){setBusy(true);setMessage("");setIsError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open,surchargeApproved:approved})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to save card settings.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setMessage(open?"Visa / Mastercard is now OPEN for customers.":"Visa / Mastercard is now CLOSED.");}catch(e){setMessage(e instanceof Error?e.message:"Unable to save Mastercard settings.");setIsError(true);}finally{setBusy(false);}}
+ async function save(){setBusy(true);setMessage("");setIsError(false);try{const r=await fetch("/api/admin/payments",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"save_card_settings",open,surchargeApproved:approved,surchargePercent:feeRate})});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"Unable to save card settings.");setOpen(d.cardPayment?.open===true);setApproved(d.cardPayment?.approved===true);setFeeRate(Number(d.cardPayment?.surchargePercent??feeRate));setMessage(open?"Visa / Mastercard is now OPEN for customers.":"Visa / Mastercard is now CLOSED.");}catch(e){setMessage(e instanceof Error?e.message:"Unable to save Mastercard settings.");setIsError(true);}finally{setBusy(false);}}
  return <div className="admin-payment-stack">
   <Table title="Mastercard Control — Visa / Mastercard">
    <p className="admin-help">This is the customer-facing card payment switch. Turn it ON to show Visa / Mastercard beside Local Payment and Crypto Payment at wallet top-up, or OFF to hide it.</p>
@@ -373,17 +374,21 @@ function AdminMastercardControl(){
    </label>
    <label style={{display:"flex",alignItems:"flex-start",gap:10,margin:"12px 0",padding:14,border:"1px solid #294666",borderRadius:12,color:"#c5d5e8",fontSize:13,lineHeight:1.6}}>
     <input type="checkbox" checked={approved} disabled={loading||busy} onChange={e=>setApproved(e.target.checked)} style={{marginTop:3}}/>
-    <span>I confirm that the 40% card surcharge and its tax/fee treatment have been reviewed and are permitted by applicable law and card-network rules.</span>
+    <span>I confirm that the configured card surcharge and its fee/tax treatment have been reviewed and are permitted by applicable law and card-network rules.</span>
    </label>
+   <div className="admin-form" style={{marginTop:14}}>
+    <label>Total card surcharge (%)<input type="number" min="0" step="0.01" value={feeRate} disabled={loading||busy} onChange={e=>setFeeRate(Math.max(0,Number(e.target.value)||0))}/></label>
+   </div>
    <div className="admin-help" style={{padding:14,borderRadius:12,background:"rgba(24,95,145,.12)"}}>
-    <b style={{color:"#eaf3ff"}}>Customer fee breakdown</b>
-    <div style={{display:"flex",justifyContent:"space-between",marginTop:10}}><span>VAT allocation</span><b>15%</b></div>
-    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Card processing</span><b>20%</b></div>
-    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Other service charges</span><b>5%</b></div>
-    <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:10,borderTop:"1px solid #294666",color:"#fff"}}><b>Total surcharge</b><b>40%</b></div>
+    <b style={{color:"#eaf3ff"}}>Live fee allocation</b>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:10}}><span>VAT allocation ({vatRate.toFixed(2)}%)</span><b>{vatRate.toFixed(2)}%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Card processing ({processingRate.toFixed(2)}%)</span><b>{processingRate.toFixed(2)}%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:6}}><span>Other service charges ({otherRate.toFixed(2)}%)</span><b>{otherRate.toFixed(2)}%</b></div>
+    <div style={{display:"flex",justifyContent:"space-between",marginTop:10,paddingTop:10,borderTop:"1px solid #294666",color:"#fff"}}><b>Total surcharge</b><b>{feeRate.toFixed(2)}%</b></div>
+    <p style={{margin:"10px 0 0"}}>There is no fixed 40% setting. Change the total percentage above; the customer checkout recalculates the breakdown and final charge.</p>
    </div>
    <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}>
-    <button className="primary-btn" disabled={loading||busy||(!configured&&open)||(open&&!approved)} onClick={save}>{busy?"Saving…":open?"Save & Open Mastercard":"Save Mastercard Control"}</button>
+    <button className="primary-btn" disabled={loading||busy||(!configured&&open)||(open&&!approved)||!Number.isFinite(feeRate)||feeRate<0} onClick={save}>{busy?"Saving…":open?"Save & Open Mastercard":"Save Mastercard Control"}</button>
     <button className="secondary-btn" disabled={loading||busy} onClick={()=>void load()}>Refresh status</button>
    </div>
    {message&&<div className={isError?"error-box":"success-box"} style={{marginTop:12}}>{message}</div>}
