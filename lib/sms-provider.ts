@@ -65,11 +65,18 @@ export async function listServices(){
  const catalog=await (await collection<any>("settings")).findOne({_id:"serviceCatalog"});
  const hidden=new Set<string>(Array.isArray(catalog?.hiddenServices)?catalog.hiddenServices.map((v:any)=>String(v)):[]);
  const normalizeKey=(v:any)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
- return sorted.filter((service:any)=>![
+ const visible=sorted.filter((service:any)=>![
    normalizeKey(service?.id??service?.code),
    normalizeKey(service?.name),
    normalizeKey(service?.title)
  ].some(key=>hidden.has(key)));
+ const custom=(Array.isArray(catalog?.customServices)?catalog.customServices:[])
+  .filter((item:any)=>item&&item.providerServiceId&&item.name&&!hidden.has(normalizeKey(item.providerServiceId))&&!hidden.has(normalizeKey(item.name)))
+  .map((item:any)=>({id:String(item.providerServiceId),code:String(item.providerServiceId),name:String(item.name),title:String(item.name),icon:String(item.icon||""),category:"Other",custom:true}));
+ const overrides=new Map(custom.map((item:any)=>[normalizeKey(item.id),item]));
+ const merged=visible.map((service:any)=>overrides.get(normalizeKey(service?.id??service?.code))||service);
+ const present=new Set(merged.map((service:any)=>normalizeKey(service?.id??service?.code)));
+ return [...merged,...custom.filter((item:any)=>!present.has(normalizeKey(item.id)))];
 
 }
 export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
