@@ -6,6 +6,16 @@ import NumelixaIdCard from "@/components/NumelixaIdCard";
 import {getSettings} from "@/lib/settings";
 import PublicFooter from "@/components/PublicFooter";
 
+function QuickIcon({name}:{name:string}){
+ const paths:Record<string,React.ReactNode>={
+  service:<><path d="M4 7h16l-1.5 13h-13L4 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></>,
+  orders:<><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5M10 13h6M10 17h6"/></>,
+  wallet:<><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10h18M16 15h2"/></>,
+  api:<><path d="m8 8-4 4 4 4M16 8l4 4-4 4M14 5l-4 14"/></>
+ };
+ return <svg viewBox="0 0 24 24" width="23" height="23" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{paths[name]||paths.api}</svg>;
+}
+
 export default async function AccountPage(){
  const user=await getUser();
  if(!user)return <div className="auth-page"><div className="brand-mark"><img src="/numelixa-brand.svg" alt="Numelixa" width="42" height="42"/></div><h1>Welcome to Numelixa</h1><p>Your account keeps your numbers, orders and wallet together.</p><div className="form-card"><Link className="primary-btn full" href="/login">Sign in</Link><Link className="secondary-btn full" href="/signup">Create account</Link></div></div>;
@@ -33,7 +43,7 @@ export default async function AccountPage(){
    <div className="account-section-title"><div><span>QUICK ACCESS</span><h2>Everything you need</h2></div></div>
    <section className="account-action-grid" aria-label="Quick access">
     {quick.map(item=><Link href={item.href} key={item.href} className={"account-action-card account-action-card--"+item.tone}>
-      <span className="account-action-icon" aria-hidden="true">{item.icon==="shopping-bag"?"▱":item.icon==="receipt"?"▤":item.icon==="wallet"?"▰":"⌘"}</span>
+      <span className="account-action-icon" aria-hidden="true"><QuickIcon name={item.icon==="shopping-bag"?"service":item.icon==="receipt"?"orders":item.icon}/></span>
       <div><b>{item.title}</b><small>{item.detail}</small></div><i aria-hidden="true">↗</i>
     </Link>)}
    </section>
