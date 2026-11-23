@@ -21,7 +21,7 @@ export async function POST(req:Request){
   if(!user||user.suspendedAt)return NextResponse.json({ok:false,error:"This account is suspended or unavailable."},{status:403});
   await createSession(String(record.userId),requestMeta(req.headers));
   await claimDeviceTokenForUser(String(record.userId));
-  if(user.email)await notifyNewLogin(String(record.userId),String(user.email),String(user.name||"there"),req.headers);
+  if(user.email&&record.newAccount!==true)await notifyNewLogin(String(record.userId),String(user.email),String(user.name||"there"),req.headers);
   if(req.headers.get("x-numelixa-client")==="android-app"){
    const accessToken=await createMobileSession(String(record.userId),requestMeta(req.headers));
    return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||""),accessToken,welcome:record.newAccount===true,user:{id:String(record.userId),email:String(user.email||""),name:String(user.name||""),avatarUrl:String(user.avatarUrl||""),role:user.role||"user",verified_at:user.verifiedAt||new Date()}},{headers:{"Cache-Control":"no-store"}});
