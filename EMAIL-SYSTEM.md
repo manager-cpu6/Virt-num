@@ -12,7 +12,7 @@ The transactional email implementation lives in `lib/email-system.ts` and uses t
 | Payment receipt, wallet deposit, payment failure | `payment@numelixa.com` | Numelixa Payments |
 | Withdrawal request, approval, rejection | `request@numelixa.com` | Numelixa Withdrawals |
 
-All transactional templates use the actual `public/numelixa-brand.svg` logo and show `support@numelixa.com` plus the support-center link in the footer. Reply-To is `support@numelixa.com`.
+All transactional templates use the actual `public/numelixa-app-icon.webp` logo and show `support@numelixa.com` plus the support-center link in the footer. Reply-To is `support@numelixa.com`.
 
 The spelling `noreplay@numelixa.com` is intentional and must not be changed to `noreply`.
 
