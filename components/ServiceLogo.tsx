@@ -70,7 +70,7 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
  const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
  const fallback=<span className={className||"service-icon"} role="img" aria-label={fullServiceName(name)+" logo unavailable"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,position:"relative",overflow:"hidden",borderRadius:12,background:"linear-gradient(145deg,#071b35,#102b4c)",border:"1px solid rgba(0,217,255,.24)"}}>
-  <img src="/numelixa-brand.svg" alt="" width="30" height="30" style={{width:"72%",height:"72%",objectFit:"contain"}}/>
+  <img src="/numelixa-app-icon.webp" alt="" width="30" height="30" style={{width:"72%",height:"72%",objectFit:"contain"}}/>
   <b style={{position:"absolute",right:0,bottom:0,width:15,height:15,borderRadius:99,display:"grid",placeItems:"center",fontSize:10,lineHeight:1,color:"#fff",background:"#087d9b",border:"1px solid #071b35"}}>?</b>
  </span>;
  if(!brand||brand==="other")return fallback;
