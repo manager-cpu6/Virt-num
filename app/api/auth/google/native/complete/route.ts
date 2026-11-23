@@ -3,6 +3,7 @@ import crypto from "crypto";
 import {collection} from "@/lib/mongo";
 import {createSession,createMobileSession,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
+import {notifyNewLogin} from "@/lib/login-security";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -20,6 +21,7 @@ export async function POST(req:Request){
   if(!user||user.suspendedAt)return NextResponse.json({ok:false,error:"This account is suspended or unavailable."},{status:403});
   await createSession(String(record.userId),requestMeta(req.headers));
   await claimDeviceTokenForUser(String(record.userId));
+  if(user.email)await notifyNewLogin(String(record.userId),String(user.email),String(user.name||"there"),req.headers);
   if(req.headers.get("x-numelixa-client")==="android-app"){
    const accessToken=await createMobileSession(String(record.userId),requestMeta(req.headers));
    return NextResponse.json({ok:true,role:user.role||"user",email:String(user.email||""),accessToken,user:{id:String(record.userId),email:String(user.email||""),name:String(user.name||""),avatarUrl:String(user.avatarUrl||""),role:user.role||"user",verified_at:user.verifiedAt||new Date()}},{headers:{"Cache-Control":"no-store"}});
