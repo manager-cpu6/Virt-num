@@ -5,6 +5,7 @@ import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {ensureApiKey} from "@/lib/api-key";
 import {sendTransactionalEmail} from "@/lib/email-system";
 import {notifyNewLogin} from "@/lib/login-security";
+import {systemControlMessage} from "@/lib/system-controls";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -40,6 +41,7 @@ export async function POST(req:Request){
   if(user?.suspendedAt)return NextResponse.json({ok:false,code:"ACCOUNT_SUSPENDED",error:"Your Numelixa account is suspended. Reason: "+String(user.suspensionReason||"Your account requires review.")+" If you believe this is a mistake, contact https://support.numelixa.com to request a review."},{status:403});
   const now=new Date();
   const createdAccount=!user;
+  if(createdAccount){const paused=await systemControlMessage("stopNewUsers");if(paused)return NextResponse.json({ok:false,code:"NEW_USERS_STOPPED",error:paused},{status:503});}
   if(!user){
    const id=mongoId();
    user={_id:id,email,name:String(profile.name||email.split("@")[0]).slice(0,100),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
@@ -57,7 +59,7 @@ export async function POST(req:Request){
   if(createdAccount){try{await sendTransactionalEmail("welcome",email,{USER_NAME:String(user.name||profile.name||email.split("@")[0]),YEAR:new Date().getFullYear()},"welcome:"+id);}catch(error){console.error("[GOOGLE WELCOME EMAIL]",error instanceof Error?error.message:String(error));}}
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
-  if(user.email)await notifyNewLogin(id,String(user.email),String(user.name||profile.name||"there"),req.headers);
+  if(user.email&&!createdAccount)await notifyNewLogin(id,String(user.email),String(user.name||profile.name||"there"),req.headers);
   return NextResponse.json({ok:true,role:user.role||"user"});
  }catch(error){
   console.error("[GOOGLE SIGN IN]",error instanceof Error?error.message:String(error));

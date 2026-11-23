@@ -4,11 +4,14 @@ import {createSession,createMobileSession,passwordHash,tokenHash,requestMeta} fr
 import {claimDeviceTokenForUser} from "@/lib/notifications";
 import {ensureApiKey} from "@/lib/api-key";
 import {sendTransactionalEmail} from "@/lib/email-system";
+import {systemControlMessage} from "@/lib/system-controls";
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 export async function POST(req:Request){
  try{
+  const paused=await systemControlMessage("stopNewUsers");
+  if(paused)return NextResponse.json({ok:false,code:"NEW_USERS_STOPPED",error:paused},{status:503});
   const b=await req.json(),name=String(b.name||"").trim(),email=String(b.email||"").trim().toLowerCase(),password=String(b.password||""),referralCode=String(b.ref||b.referralCode||"").trim().toUpperCase().slice(0,24);
   if(name.length<2||!email.includes("@")||password.length<8)return NextResponse.json({ok:false,error:"Enter valid details. Password must be 8+ characters."},{status:400});
   const users=await collection<any>("users");
