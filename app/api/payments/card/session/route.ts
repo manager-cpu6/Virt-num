@@ -3,9 +3,12 @@ import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
+import {systemControlMessage} from "@/lib/system-controls";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=60;
 const round2=(n:number)=>Math.round((n+Number.EPSILON)*100)/100;
 export async function POST(req:Request){try{
+ const paused=await systemControlMessage("stopDeposit");
+ if(paused)return NextResponse.json({ok:false,code:"DEPOSITS_STOPPED",error:paused},{status:503});
  const user=await requireUser();if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your account before making a card payment."},{status:403});
  const flags=await (await collection<any>("settings")).findOne({_id:"payments"});
  if(flags?.cardPaymentOpen!==true||flags?.cardSurchargeApproved!==true)return NextResponse.json({ok:false,error:"Visa / Mastercard payments are currently unavailable."},{status:403});

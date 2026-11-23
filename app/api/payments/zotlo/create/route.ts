@@ -4,12 +4,15 @@ import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {createPaymentForm,packageIdForCoins} from "@/lib/zotlo";
 import {getSettings} from "@/lib/settings";
+import {systemControlMessage} from "@/lib/system-controls";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
 
 export async function POST(req:Request){
   try{
+    const paused=await systemControlMessage("stopDeposit");
+    if(paused)return NextResponse.json({ok:false,code:"DEPOSITS_STOPPED",error:paused},{status:503});
     const u=await requireUser();
     if(!u.verified_at)return NextResponse.json({ok:false,code:"EMAIL_VERIFICATION_REQUIRED",error:"Verify your email before buying coins."},{status:403});
     const body=await req.json();

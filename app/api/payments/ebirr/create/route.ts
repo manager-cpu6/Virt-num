@@ -3,10 +3,13 @@ import crypto from "crypto";
 import {requireUser} from "@/lib/auth";
 import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
+import {systemControlMessage} from "@/lib/system-controls";
 export const runtime="nodejs";export const dynamic="force-dynamic";
 function normalizePhone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
 export async function POST(req:Request){
  try{
+  const paused=await systemControlMessage("stopDeposit");
+  if(paused)return NextResponse.json({ok:false,code:"DEPOSITS_STOPPED",error:paused},{status:503});
   const user=await requireUser();
   if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before topping up your wallet."},{status:403});
   const config=await (await collection<any>("settings")).findOne({_id:"payments"});
