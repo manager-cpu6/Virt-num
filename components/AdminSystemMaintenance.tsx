@@ -1,8 +1,8 @@
 "use client";
 import {useEffect,useState} from "react";
 
-type Settings={websiteEnabled:boolean;appEnabled:boolean;message:string;updatedAt?:string|null;updatedBy?:string|null};
-const defaults:Settings={websiteEnabled:false,appEnabled:false,message:"Numelixa is temporarily under maintenance. Please check back soon."};
+type Settings={websiteEnabled:boolean;appEnabled:boolean;stopNewUsers:boolean;stopDeposit:boolean;stopOrders:boolean;message:string;updatedAt?:string|null;updatedBy?:string|null};
+const defaults:Settings={websiteEnabled:false,appEnabled:false,stopNewUsers:false,stopDeposit:false,stopOrders:false,message:"Numelixa is temporarily under maintenance. Please check back soon."};
 
 export default function AdminSystemMaintenance(){
  const [settings,setSettings]=useState<Settings>(defaults);
@@ -33,6 +33,13 @@ export default function AdminSystemMaintenance(){
    <div style={{display:"flex",gap:10,flexWrap:"wrap",marginTop:16}}>
     <button className="primary-btn" disabled={busy||both} onClick={()=>save({...settings,websiteEnabled:true,appEnabled:true})}>Enable maintenance on both</button>
     <button className="secondary-btn" disabled={busy||(!settings.websiteEnabled&&!settings.appEnabled)} onClick={()=>save({...settings,websiteEnabled:false,appEnabled:false})}>Restore both platforms</button>
+   </div>
+   <h3 style={{marginTop:24}}>Customer access & transaction controls</h3>
+   <p className="admin-help">These controls are enforced by the server APIs. Existing accounts can still sign in and view their wallets while a specific action is paused.</p>
+   <div className="admin-app-version-grid">
+    <article className="admin-app-version-card"><div><b>Stop New Users</b><span>Pause new registrations on web and Android</span></div><strong>{settings.stopNewUsers?"ON":"OFF"}</strong><small>{settings.stopNewUsers?"New registrations are blocked.":"New registrations are allowed."}</small><button className={settings.stopNewUsers?"secondary-btn":"primary-btn"} disabled={busy} onClick={()=>save({...settings,stopNewUsers:!settings.stopNewUsers})}>{settings.stopNewUsers?"Allow registrations":"Stop new registrations"}</button></article>
+    <article className="admin-app-version-card"><div><b>Stop Deposit</b><span>Pause wallet top-ups across local and crypto checkout</span></div><strong>{settings.stopDeposit?"ON":"OFF"}</strong><small>{settings.stopDeposit?"New deposits are blocked.":"Deposits are allowed."}</small><button className={settings.stopDeposit?"secondary-btn":"primary-btn"} disabled={busy} onClick={()=>save({...settings,stopDeposit:!settings.stopDeposit})}>{settings.stopDeposit?"Allow deposits":"Stop deposits"}</button></article>
+    <article className="admin-app-version-card"><div><b>Stop Orders</b><span>Pause new virtual-number purchases</span></div><strong>{settings.stopOrders?"ON":"OFF"}</strong><small>{settings.stopOrders?"New number orders are blocked.":"Number orders are allowed."}</small><button className={settings.stopOrders?"secondary-btn":"primary-btn"} disabled={busy} onClick={()=>save({...settings,stopOrders:!settings.stopOrders})}>{settings.stopOrders?"Allow orders":"Stop number orders"}</button></article>
    </div>
    <div className="admin-form" style={{marginTop:18}}>
     <label>Maintenance message<textarea rows={3} maxLength={240} value={settings.message} onChange={e=>setSettings(s=>({...s,message:e.target.value}))}/></label>
