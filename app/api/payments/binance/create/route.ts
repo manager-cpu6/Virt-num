@@ -4,6 +4,7 @@ import {collection,mongoId} from "@/lib/mongo";
 import {getSettings} from "@/lib/settings";
 import {getPaymentSettings} from "@/lib/payment-settings";
 import {getCoinDepositInstructions,getCryptoUsdPrice,personalApiConfigured} from "@/lib/binance-personal";
+import {systemControlMessage} from "@/lib/system-controls";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -12,6 +13,8 @@ function paymentResponse(p:any){return {ok:true,depositRequired:true,provider:"b
 
 export async function POST(req:Request){
  try{
+  const paused=await systemControlMessage("stopDeposit");
+  if(paused)return NextResponse.json({ok:false,code:"DEPOSITS_STOPPED",error:paused},{status:503});
   const user=await requireUser();
   if(!user.verified_at)return NextResponse.json({ok:false,error:"Verify your email before buying coins."},{status:403});
   const ps=await getPaymentSettings();
