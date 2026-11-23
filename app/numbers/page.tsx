@@ -8,10 +8,10 @@ type Order={
  id:string;status:string;phone_number?:string|null;service?:string|null;country?:string|null;
  country_code?:string|null;code?:string|null;price_usd?:number;expires_at?:string|null;created_at?:string|null;
 };
-type Tab="all"|"active"|"received"|"cancelled"|"failed";
+type Tab="all"|"active"|"received"|"cancelled";
 const tabs:{id:Tab;label:string}[]=[
  {id:"all",label:"All orders"},{id:"active",label:"Active"},{id:"received",label:"Received"},
- {id:"cancelled",label:"Cancelled"},{id:"failed",label:"Failed"}
+ {id:"cancelled",label:"Cancelled"}
 ];
 const brandNames:Record<string,string>={
  whatsapp:"WhatsApp",telegram:"Telegram",tiktok:"TikTok",instagram:"Instagram",facebook:"Facebook",google:"Google",
@@ -71,7 +71,6 @@ export default function Numbers(){
   active:orders.filter(item=>["waiting","cancelling"].includes(item.status.toLowerCase())),
   received:orders.filter(item=>item.status.toLowerCase()==="received"),
   cancelled:orders.filter(item=>["cancelled","refunded"].includes(item.status.toLowerCase())),
-  failed:orders.filter(item=>item.status.toLowerCase()==="failed")
  }),[orders]);
  const visible=useMemo(()=>{
   const q=query.trim().toLowerCase();
@@ -112,7 +111,7 @@ export default function Numbers(){
       <div className="order-card-footer"><span>{Number.isFinite(price)?"$"+price.toFixed(2)+" USD":"Price unavailable"}{waiting&&item.expires_at?" · "+remaining(item.expires_at):""}</span>{waiting?<Link href={"/get-code/"+encodeURIComponent(item.id)}>Open activation <b>→</b></Link>:<span className="order-complete">{statusLabel(status)}</span>}</div>
       <div className="nx-order-reference">Order ID · {item.id}</div>
      </article>
-    }):<div className="orders-empty"><div className="orders-empty-icon">{tab==="active"?"◷":tab==="received"?"✓":tab==="failed"?"!":"▤"}</div><h3>{query?"No matching orders":"No "+tabs.find(item=>item.id===tab)?.label.toLowerCase()}</h3><p>{query?"Try another search term.":"Your "+tabs.find(item=>item.id===tab)?.label.toLowerCase()+" will appear here when available."}</p>{tab==="all"&&<Link className="primary-btn" href="/services">Browse services <span>→</span></Link>}</div>}
+    }):<div className="orders-empty"><div className="orders-empty-icon">{tab==="active"?"◷":tab==="received"?"✓":"▤"}</div><h3>{query?"No matching orders":"No "+tabs.find(item=>item.id===tab)?.label.toLowerCase()}</h3><p>{query?"Try another search term.":"Your "+tabs.find(item=>item.id===tab)?.label.toLowerCase()+" will appear here when available."}</p>{tab==="all"&&<Link className="primary-btn" href="/services">Browse services <span>→</span></Link>}</div>}
    </div>
   </>}
  </div>;
