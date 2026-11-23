@@ -2,8 +2,32 @@ import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {sendPush} from "@/lib/push";
 import {requestMeta,createSession} from "@/lib/auth";
+import {sendTransactionalEmail} from "@/lib/email-system";
 
 export type LoginApprovalStatus="pending"|"approved"|"denied"|"expired";
+
+export async function notifyNewLogin(userId:string,email:string,name:string,h:Headers){
+ const meta=requestMeta(h);
+ const deviceKey=String(meta.deviceId||"").trim()||[meta.platform,meta.device,meta.browser,meta.userAgent].join("|");
+ const fingerprint=crypto.createHash("sha256").update(deviceKey).digest("hex");
+ const users=await collection<any>("users");
+ const user=await users.findOne({_id:String(userId)},{projection:{lastLoginDeviceHash:1}});
+ if(String(user?.lastLoginDeviceHash||"")===fingerprint)return {sent:false,reason:"known-device"};
+ await users.updateOne({_id:String(userId)},{$set:{lastLoginDeviceHash:fingerprint,lastLoginAt:new Date(),lastLoginIp:meta.ip||"",lastLoginDevice:meta.device||"",lastLoginPlatform:meta.platform||"",lastLoginBrowser:meta.browser||""}});
+ const location=[meta.city,meta.region,meta.country].filter(Boolean).join(", ")||"Location unavailable";
+ try{
+  await sendTransactionalEmail("login_security_alert",email,{
+   USER_NAME:name||"there",LOGIN_DATE:new Date().toISOString(),
+   DEVICE_INFO:meta.device||"Unknown device",PLATFORM_INFO:meta.platform||"Unknown platform",
+   BROWSER_INFO:meta.browser||"Unknown browser",LOGIN_IP:meta.ip||"Not available",
+   LOCATION_INFO:location,SECURITY_URL:"https://numelixa.com/security"
+  },"login-alert:"+String(userId)+":"+fingerprint);
+  return {sent:true};
+ }catch(error){
+  console.error("[LOGIN SECURITY EMAIL]",error instanceof Error?error.message:"send failed");
+  return {sent:false,reason:"email-failed"};
+ }
+}
 
 export async function extraSecurityEnabled(){
  const s=await (await collection<any>("settings")).findOne({_id:"security"});
