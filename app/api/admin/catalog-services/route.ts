@@ -23,7 +23,7 @@ export async function POST(req:Request){
   if(body?.action==="add_custom_service"){
     const name=String(body.name||"").trim().slice(0,80),providerServiceId=String(body.providerServiceId||"").trim().slice(0,100),icon=String(body.icon||"").trim().slice(0,500);
     if(name.length<2||!providerServiceId||!icon)return NextResponse.json({ok:false,error:"Enter the service name, provider service ID and icon URL."},{status:400});
-    if(!/^https:\/\//i.test(icon)&&!/^data:image\/(png|jpeg|webp|svg\+xml);base64,/i.test(icon)&&![...icon].length>0)return NextResponse.json({ok:false,error:"Use a secure HTTPS image URL or a supported image data URL."},{status:400});
+    if(!/^https:\/\//i.test(icon)&&!/^data:image\/(png|jpeg|webp);base64,/i.test(icon))return NextResponse.json({ok:false,error:"Use a secure HTTPS image URL or a supported image data URL."},{status:400});
     const live=await listServices(),provider=live.find((s:any)=>String(s.id??s.code??"").toLowerCase()===providerServiceId.toLowerCase());
     if(!provider)return NextResponse.json({ok:false,error:"Provider service ID was not found in the live catalog."},{status:404});
     const settings=await collection<any>("settings"),catalog=await settings.findOne({_id:"serviceCatalog"}),custom=Array.isArray(catalog?.customServices)?catalog.customServices:[];
