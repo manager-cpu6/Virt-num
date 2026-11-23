@@ -11,8 +11,14 @@ export async function notifyNewLogin(userId:string,email:string,name:string,h:He
  const deviceKey=String(meta.deviceId||"").trim()||[meta.platform,meta.device,meta.browser,meta.userAgent].join("|");
  const fingerprint=crypto.createHash("sha256").update(deviceKey).digest("hex");
  const users=await collection<any>("users");
- const user=await users.findOne({_id:String(userId)},{projection:{lastLoginDeviceHash:1}});
+ const user=await users.findOne({_id:String(userId)},{projection:{lastLoginDeviceHash:1,lastLoginAt:1}});
  if(String(user?.lastLoginDeviceHash||"")===fingerprint)return {sent:false,reason:"known-device"};
+ // The first successful sign-in is covered by the welcome message, not a login alert.
+ // Store its fingerprint so later unfamiliar devices can trigger a security alert.
+ if(!user?.lastLoginAt){
+  await users.updateOne({_id:String(userId)},{$set:{lastLoginDeviceHash:fingerprint,lastLoginAt:new Date(),lastLoginIp:meta.ip||"",lastLoginDevice:meta.device||"",lastLoginPlatform:meta.platform||"",lastLoginBrowser:meta.browser||""}});
+  return {sent:false,reason:"first-login-welcome-only"};
+ }
  await users.updateOne({_id:String(userId)},{$set:{lastLoginDeviceHash:fingerprint,lastLoginAt:new Date(),lastLoginIp:meta.ip||"",lastLoginDevice:meta.device||"",lastLoginPlatform:meta.platform||"",lastLoginBrowser:meta.browser||""}});
  const location=[meta.city,meta.region,meta.country].filter(Boolean).join(", ")||"Location unavailable";
  try{
