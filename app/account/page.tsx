@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type {ReactNode} from "react";
 import TopBar from "@/components/TopBar";
 import { getUser } from "@/lib/auth";
 import AccountSessions from "@/components/AccountSessions";
@@ -7,7 +8,7 @@ import {getSettings} from "@/lib/settings";
 import PublicFooter from "@/components/PublicFooter";
 
 function QuickIcon({name}:{name:string}){
- const paths:Record<string,React.ReactNode>={
+ const paths:Record<string,ReactNode>={
   service:<><path d="M4 7h16l-1.5 13h-13L4 7Z"/><path d="M9 7a3 3 0 0 1 6 0"/></>,
   orders:<><path d="M7 3h8l4 4v14H7z"/><path d="M15 3v5h5M10 13h6M10 17h6"/></>,
   wallet:<><rect x="3" y="6" width="18" height="15" rx="3"/><path d="M3 10h18M16 15h2"/></>,
