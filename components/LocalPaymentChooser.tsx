@@ -21,7 +21,7 @@ export default function LocalPaymentChooser(){
  const goEthiopia=async()=>{if(launching)return;setLaunching(true);setLaunchError("");try{const response=await fetch("/api/payments/ethiopia/session",{method:"POST",credentials:"include",headers:{"Content-Type":"application/json"}});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"Please sign in to your wallet, then try again.");location.href="https://ethio.virtunumber.online/?amount="+encodeURIComponent(amount)+"&checkout="+encodeURIComponent(data.token);}catch(error){setLaunchError(error instanceof Error?error.message:"Unable to open Ethiopia checkout.");setLaunching(false);}};
  const back="/payment-method?amount="+encodeURIComponent(amount);
  return <main className="nx-local-pay-page"><div className="nx-local-pay-shell">
-  <header className="nx-local-pay-nav"><Link href={back}>← Payment methods</Link><span><img src="/numelixa-brand.svg" alt="" width="26" height="26"/> NUMELIXA · SECURE CHECKOUT</span></header>
+  <header className="nx-local-pay-nav"><Link href={back}>← Payment methods</Link><span><img src="/numelixa-app-icon.webp" alt="" width="26" height="26"/> NUMELIXA · SECURE CHECKOUT</span></header>
   <section className="nx-local-pay-hero"><span className="nx-guide-kicker">LOCAL PAYMENT</span><h1>Choose your<br/><em>payment country.</em></h1><p>Select where you will make your payment. Each country opens its own secure checkout with the relevant payment providers and instructions.</p></section>
   <section className="nx-local-pay-amount"><div><small>WALLET TOP-UP</small><strong>{money(Number(amount))}</strong></div><span>{loading?"Checking availability":"Secure checkout availability checked"}</span></section>
   <section className="nx-local-country-card">
