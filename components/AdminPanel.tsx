@@ -13,6 +13,7 @@ import AdminServiceCatalog from "@/components/AdminServiceCatalog";
 import AdminTrafficAnalytics from "@/components/AdminTrafficAnalytics";
 import AdminMerchants from "@/components/AdminMerchants";
 import AdminSystemMaintenance from "@/components/AdminSystemMaintenance";
+import AdminUserLookup from "@/components/AdminUserLookup";
 
 type Pack={coins:number;priceUsd:number;popular?:boolean};
 type Stats={users:number;verifiedUsers?:number;todayUsers?:number;monthlyUsers?:number;activeNumbers:number;todayOrders:number;revenueCoins:number;walletCoins?:number;orderStatuses?:{status:string;count:number}[];topServices?:{service:string;count:number;coins:number}[];analytics?:{pageViews:number;clicks:number;uniqueVisitors:number};settings:{markupPercent:number;coinsPerUsd:number;minTopupUsd:number;maxTopupUsd:number;coinPackages:Pack[];providerOperator:string;providerOperators:string[];smsProvider:"5sim"|"tiger";provider5simEnabled?:boolean;providerTigerEnabled?:boolean};providers:{name:string;status:string;balance?:any;balanceError?:string}[]};
@@ -113,7 +114,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><Link href="/admin/email" className="primary-btn">✉ Email center</Link><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","traffic sources","users","active otp","orders","pricing","providers","services","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
+  <div className="admin-tabs">{["overview","traffic sources","users","user lookup","active otp","orders","pricing","providers","services","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="merchants"&&<AdminMerchants/>}
   {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
