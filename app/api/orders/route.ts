@@ -2,6 +2,7 @@ import {NextResponse} from "next/server";
 import {after} from "next/server";import {collection,mongoId} from "@/lib/mongo";import {requireUser} from "@/lib/auth";import {purchase,cancel,cancelOrAlreadyClosed,getPrice,activeProvider} from "@/lib/sms-provider";import {getSettings,sellCoins} from "@/lib/settings";import {sendTransactionalEmail} from "@/lib/email-system";
 import {notifyUser} from "@/lib/notifications";
 import {watchOrderForPush} from "@/lib/order-watcher";
+import {systemControlMessage} from "@/lib/system-controls";
 export const runtime="nodejs";export const dynamic="force-dynamic";export const maxDuration=300;
 export async function POST(req:Request){
   let providerOrderId="",service="",country="",userId="",price=0;
@@ -9,6 +10,8 @@ export async function POST(req:Request){
   let walletDebited=false;
 
   try{
+    const paused=await systemControlMessage("stopOrders");
+    if(paused)return NextResponse.json({ok:false,code:"ORDERS_STOPPED",error:paused},{status:503});
     const u=await requireUser();
     userId=String(u.id||"");
 
