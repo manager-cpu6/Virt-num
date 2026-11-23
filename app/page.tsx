@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
 
 export async function generateMetadata():Promise<Metadata>{
  const host=(await headers()).get("host")?.split(":")[0].toLowerCase()||"";
- if(host==="ethio.virtunumber.online")return {metadataBase:new URL("https://ethio.virtunumber.online"),title:"Ethiopia Payment | Numelixa",description:"Secure Ethiopian mobile wallet and bank payments for Numelixa.",robots:{index:false,follow:false},icons:{icon:"https://www.numelixa.com/numelixa-brand.svg"}};
+ if(host==="ethio.virtunumber.online")return {metadataBase:new URL("https://ethio.virtunumber.online"),title:"Ethiopia Payment | Numelixa",description:"Secure Ethiopian mobile wallet and bank payments for Numelixa.",robots:{index:false,follow:false},icons:{icon:"https://www.numelixa.com/numelixa-app-icon.webp"}};
  if(host==="app.numelixa.com")return {
   metadataBase:new URL("https://app.numelixa.com"),
   title:{absolute:"Numelixa APK Download | Official Numelixa Android App"},
@@ -25,7 +25,7 @@ export async function generateMetadata():Promise<Metadata>{
   robots:{index:true,follow:true,googleBot:{index:true,follow:true}},
   openGraph:{type:"website",url:"https://app.numelixa.com/",siteName:"Numelixa",title:"Numelixa APK Download | Official Android App",description:"Get the official Numelixa Android app for virtual numbers, SMS, wallet and order updates.",images:[{url:"https://numelixa.com/numelixa-favicon.png",width:512,height:512,alt:"Numelixa Android app icon"}]},
   twitter:{card:"summary_large_image",title:"Numelixa APK Download | Official Android App",description:"Download the official Numelixa Android app.",images:["https://numelixa.com/numelixa-favicon.png"]},
-  icons:{icon:"https://numelixa.com/numelixa-brand.svg",apple:"https://numelixa.com/numelixa-favicon.png"}
+  icons:{icon:"https://numelixa.com/numelixa-app-icon.webp",apple:"https://numelixa.com/numelixa-favicon.png"}
  };
  return {};
 }
@@ -43,7 +43,7 @@ export default async function LandingPage() {
   return (
     <div className="public-landing">
       <header className="landing-nav">
-        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-brand.svg" alt=""/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
+        <Link href="/" className="landing-brand"><span className="landing-logo"><img src="/numelixa-app-icon.webp" alt=""/></span><span><b>Numelixa</b><small>Virtual Numbers · Global SMS</small></span></Link>
         <nav><a href="#features">Platform</a><a href="#how">How it works</a><Link href="/services">Services</Link><Link href="/pricing">Pricing</Link><Link href="/developers/docs">Developers</Link><Link href="/support">Support</Link></nav>
         <div className="landing-actions"><Link href="/login" className="landing-login">Sign in</Link><Link href="/signup" className="landing-start">Start now <span>→</span></Link></div>
       </header>
