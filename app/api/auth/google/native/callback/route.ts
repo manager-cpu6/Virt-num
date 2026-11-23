@@ -2,6 +2,7 @@ import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {ensureApiKey} from "@/lib/api-key";
 import {sendTransactionalEmail} from "@/lib/email-system";
+import {systemControlMessage} from "@/lib/system-controls";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -55,6 +56,7 @@ export async function GET(req:Request){
   if(user?.suspendedAt)return fail("account_suspended",403);
   const now=new Date();
   const createdAccount=!user;
+  if(createdAccount){const paused=await systemControlMessage("stopNewUsers");if(paused)return fail("new_registrations_paused",503);}
   if(!user){
    user={_id:mongoId(),email,name:String(profile.name||email.split("@")[0]).slice(0,100),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
    await users.insertOne(user);
@@ -66,7 +68,7 @@ export async function GET(req:Request){
   if(createdAccount){try{await sendTransactionalEmail("welcome",email,{USER_NAME:String(user.name||profile.name||email.split("@")[0]),YEAR:new Date().getFullYear()},"welcome:"+userId);}catch(error){console.error("[NATIVE GOOGLE WELCOME EMAIL]",error instanceof Error?error.message:String(error));}}
   const ticket=crypto.randomBytes(32).toString("hex");
   await (await collection<any>("googleNativeOAuthTickets")).insertOne({
-   _id:crypto.randomUUID(),ticketHash:hash(ticket),userId,createdAt:now,expiresAt:new Date(now.getTime()+3*60*1000)
+   _id:crypto.randomUUID(),ticketHash:hash(ticket),userId,newAccount:createdAccount,createdAt:now,expiresAt:new Date(now.getTime()+3*60*1000)
   });
   const callback=new URL(APP_CALLBACK);
   callback.searchParams.set("ticket",ticket);
