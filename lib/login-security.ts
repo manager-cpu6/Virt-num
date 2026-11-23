@@ -16,6 +16,19 @@ export async function notifyNewLogin(userId:string,email:string,name:string,h:He
  await users.updateOne({_id:String(userId)},{$set:{lastLoginDeviceHash:fingerprint,lastLoginAt:new Date(),lastLoginIp:meta.ip||"",lastLoginDevice:meta.device||"",lastLoginPlatform:meta.platform||"",lastLoginBrowser:meta.browser||""}});
  const location=[meta.city,meta.region,meta.country].filter(Boolean).join(", ")||"Location unavailable";
  try{
+  const devices=await (await collection<any>("deviceTokens")).find({
+   userId:String(userId),platform:"android",
+   updatedAt:{$gte:new Date(Date.now()-30*24*60*60*1000)}
+  }).toArray();
+  if(devices.length){
+   const push=await sendPush(
+    devices.map(x=>String(x.token||"")).filter(Boolean),
+    "New sign-in detected",
+    "Your Numelixa account was accessed from "+(meta.device||"a new device")+" · "+location,
+    {type:"security",url:"/security"}
+   );
+   if(push.invalidTokens?.length)await (await collection<any>("deviceTokens")).deleteMany({token:{$in:push.invalidTokens}});
+  }
   await sendTransactionalEmail("login_security_alert",email,{
    USER_NAME:name||"there",LOGIN_DATE:new Date().toISOString(),
    DEVICE_INFO:meta.device||"Unknown device",PLATFORM_INFO:meta.platform||"Unknown platform",
