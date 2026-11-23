@@ -15,7 +15,7 @@ export async function GET(){
   const ids=[...new Set(rows.flatMap((r:any)=>[String(r.requesterId),String(r.payerId)]))];
   const people=await (await collection<any>("users")).find({_id:{$in:ids}},{projection:{_id:1,name:1,publicId:1}}).toArray();
   const map=new Map(people.map((u:any)=>[String(u._id),u]));
-  return NextResponse.json({ok:true,requests:rows.map((r:any)=>{const a=map.get(String(r.requesterId)),b=map.get(String(r.payerId));return{
+  return NextResponse.json({ok:true,currentUserId:String(me.id),requests:rows.map((r:any)=>{const a=map.get(String(r.requesterId)),b=map.get(String(r.payerId));return{
    id:String(r._id),status:r.status,amountUsd:Number(r.amountUsd),amountCoins:Number(r.amountCoins),
    requester:{id:String(r.requesterId),name:String(a?.name||"Numelixa user"),publicId:String(a?.publicId||"")},
    payer:{id:String(r.payerId),name:String(b?.name||"Numelixa user"),publicId:String(b?.publicId||"")},
