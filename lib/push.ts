@@ -58,23 +58,7 @@ export type PushSendResult={
  errors:{code:string;message:string}[];successfulTokens?:string[];messageIds?:string[];emailSuccessCount?:number;emailFailureCount?:number;emailSuccessfulUserIds?:string[];
 };
 const sleep=(ms:number)=>new Promise(resolve=>setTimeout(resolve,ms));
-const notificationIconFor=(data:Record<string,string>)=>{
- const requested=String(data.iconType||data.notificationCategory||data.notificationIcon||"").toLowerCase().trim();
- const allowed=new Set(["admin","number","otp","auto","payment","gift","general","user","system","numelixa","announcement","success"]);
- if(allowed.has(requested))return "ic_notification_"+requested;
- const type=String(data.type||"").toLowerCase();
- if(type.includes("auto")||type.includes("automation")||type.includes("background"))return "ic_notification_auto";
- if(type.includes("otp")||type.includes("verification")||type==="sms"||type.includes("code"))return "ic_notification_otp";
- if(type.includes("number")||type.includes("order")||type.includes("activation")||type.includes("purchase"))return "ic_notification_number";
- if(type.includes("payment")||type.includes("wallet")||type.includes("deposit")||type.includes("balance"))return "ic_notification_payment";
- if(type.includes("gift")||type.includes("reward")||type.includes("bonus"))return "ic_notification_gift";
- if(type.includes("system")||type.includes("maintenance"))return "ic_notification_system";
- if(type.includes("success")||type.includes("completed"))return "ic_notification_success";
- if(type.includes("announcement")||type.includes("news"))return "ic_notification_announcement";
- if(type.includes("user")||type.includes("account"))return "ic_notification_user";
- if(type.includes("numelixa")||type.includes("brand"))return "ic_notification_numelixa";
- return "ic_notification_general";
-};
+const notificationIconFor=(_data:Record<string,string>)=>"ic_stat_numelixa";
 const channelFor=(data:Record<string,string>)=>{
  const type=String(data.type||"").toLowerCase();
  if(["sms","verification","verification_code"].includes(type))return "verification";
@@ -150,8 +134,8 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const copyCodePush=["sms","verification","verification_code"].includes(type)&&data.copyCode==="true"&&Boolean(code);
   const messageData=Object.fromEntries(Object.entries({
    url:data.url||"/",...data,
-   iconType:data.iconType||data.notificationCategory||"general",
-   notificationCategory:data.iconType||data.notificationCategory||"general",
+   iconType:"numelixa",
+   notificationCategory:"numelixa",
    title,body,...(copyCodePush?{code}:{})
   }).filter(([key])=>key!=="userIds").map(([key,value])=>[key,String(value)]));
   const payload={
