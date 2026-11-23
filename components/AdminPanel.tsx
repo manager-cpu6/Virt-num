@@ -116,6 +116,8 @@ export default function AdminPanel(){
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
   <div className="admin-tabs">{["overview","statistics","traffic sources","users","user lookup","active otp","orders","pricing","providers","services","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
+  {tab==="statistics"&&<Statistics stats={stats} waiting={waiting.length}/>}
+  {tab==="user lookup"&&<AdminUserLookup/>}
   {tab==="merchants"&&<AdminMerchants/>}
   {tab==="referrals"&&<div className="admin-card"><h2>Referral program</h2><p>Manage referral commissions, paying conversions and withdrawal approvals.</p><Link href="/admin/referrals" className="primary-btn">Open referral controls →</Link></div>}
   {tab==="traffic sources"&&<AdminTrafficAnalytics/>}
@@ -176,6 +178,30 @@ function PricingForm({stats,onSave}:{stats:Stats;onSave:(e:FormEvent<HTMLFormEle
  </Table>
 }
 
+function Statistics({stats,waiting}:{stats:Stats|null;waiting:number}){
+ const money=(coins:number)=>"$"+(Number(coins||0)/(Number(stats?.settings.coinsPerUsd)||100)).toFixed(2);
+ const metrics=[
+  ["All registered users",stats?.users??"—"],
+  ["New users today",stats?.todayUsers??"—"],
+  ["New users this month",stats?.monthlyUsers??"—"],
+  ["Verified accounts",stats?.verifiedUsers??"—"],
+  ["Active number orders",stats?.activeNumbers??"—"],
+  ["Orders started today",stats?.todayOrders??"—"],
+  ["Pending OTP orders",waiting],
+  ["Wallet funds in circulation",stats?money(stats.walletCoins||0):"—"],
+  ["Total credited volume",stats?money(stats.revenueCoins||0):"—"],
+  ["Website page views",stats?.analytics?.pageViews??"—"],
+  ["Website clicks",stats?.analytics?.clicks??"—"],
+  ["Unique visitor sessions",stats?.analytics?.uniqueVisitors??"—"]
+ ];
+ return <section style={{display:"grid",gap:16}}>
+  <div className="admin-card"><span className="eyebrow">PLATFORM PERFORMANCE</span><h2>Statistics</h2><p className="admin-help">Live totals from the Numelixa database. Today and monthly user counts use the server's calendar date; visitor totals are anonymous analytics sessions.</p><div className="admin-grid admin-grid-wide">{metrics.map(([label,value])=><div className="metric" key={String(label)}><span>{label}</span><strong>{typeof value==="number"?value.toLocaleString():value}</strong><small>live database</small></div>)}</div></div>
+  <div className="admin-two-col">
+   <Table title="Order status breakdown"><div className="admin-stat-list">{(stats?.orderStatuses||[]).length?(stats?.orderStatuses||[]).map(x=><div className="admin-row" key={x.status}><span><b>{x.status}</b><small>orders</small></span><strong>{x.count.toLocaleString()}</strong></div>):<div className="country-loading">No order data yet.</div>}</div></Table>
+   <Table title="Most requested services"><div className="admin-stat-list">{(stats?.topServices||[]).length?(stats?.topServices||[]).map(x=><div className="admin-row" key={x.service}><span><b>{x.service}</b><small>{money(x.coins)} credited</small></span><strong>{x.count.toLocaleString()}</strong></div>):<div className="country-loading">No service data yet.</div>}</div></Table>
+  </div>
+ </section>;
+}
 function Overview({stats,waiting}:{stats:Stats|null;waiting:number}){
  const statuses=stats?.orderStatuses||[];
  const services=stats?.topServices||[];
