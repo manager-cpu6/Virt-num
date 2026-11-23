@@ -69,8 +69,11 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
  const [simpleFailed,setSimpleFailed]=useState(false);
  const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
- if(!brand)return null;
- if(brand==="other")return <span className={className||"service-icon"} role="img" aria-label="Other service" title="Other" style={{display:"inline-grid",placeItems:"center",flexShrink:0}}><svg viewBox="0 0 48 48" width="28" height="28" aria-hidden="true"><g fill="currentColor"><rect x="7" y="7" width="13" height="13" rx="3"/><rect x="28" y="7" width="13" height="13" rx="3"/><rect x="7" y="28" width="13" height="13" rx="3"/><rect x="28" y="28" width="13" height="13" rx="3"/></g></svg></span>;
+ const fallback=<span className={className||"service-icon"} role="img" aria-label={fullServiceName(name)+" logo unavailable"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,position:"relative",overflow:"hidden",borderRadius:12,background:"linear-gradient(145deg,#071b35,#102b4c)",border:"1px solid rgba(0,217,255,.24)"}}>
+  <img src="/numelixa-brand.svg" alt="" width="30" height="30" style={{width:"72%",height:"72%",objectFit:"contain"}}/>
+  <b style={{position:"absolute",right:0,bottom:0,width:15,height:15,borderRadius:99,display:"grid",placeItems:"center",fontSize:10,lineHeight:1,color:"#fff",background:"#087d9b",border:"1px solid #071b35"}}>?</b>
+ </span>;
+ if(!brand||brand==="other")return fallback;
  const slug=brand==="chatgpt"?"chatgpt":brand;
  const domain=domainByBrand[brand];
  const useSimple=simpleIconSlugs.has(slug);
