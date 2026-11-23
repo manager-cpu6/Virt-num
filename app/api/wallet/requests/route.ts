@@ -26,11 +26,14 @@ export async function GET(){
 
 export async function POST(req:Request){
  try{
-  const me=await requireUser(),b=await req.json().catch(()=>null);
+  const me=await requireUser();
+  if(!me.verified_at)return NextResponse.json({ok:false,error:"Verify your Numelixa account before requesting wallet money."},{status:403});
+  const b=await req.json().catch(()=>null);
   const target=String(b?.userId||b?.publicId||"").trim(),amountUsd=Number(b?.amountUsd),note=String(b?.note||"").trim().slice(0,140);
   if(!/^\d{7}$/.test(target)||!validUsd(amountUsd))return NextResponse.json({ok:false,error:"Enter a valid 7-digit Numelixa ID and USD amount."},{status:400});
-  const users=await collection<any>("users"),to=await users.findOne({publicId:target},{projection:{_id:1,publicId:1,name:1,role:1,suspendedAt:1}});
+  const users=await collection<any>("users"),to=await users.findOne({publicId:target},{projection:{_id:1,publicId:1,name:1,role:1,suspendedAt:1,verifiedAt:1,phoneVerifiedAt:1}});
   if(!to||to.suspendedAt)return NextResponse.json({ok:false,error:"No active Numelixa account matches that ID."},{status:404});
+  if(!to.verifiedAt&&!to.phoneVerifiedAt)return NextResponse.json({ok:false,error:"The recipient must verify their Numelixa account before receiving wallet requests."},{status:403});
   const requesterId=String(me.id),payerId=String(to._id);
   if(requesterId===payerId)return NextResponse.json({ok:false,error:"You cannot request money from your own account."},{status:400});
   if(to.role==="admin")return NextResponse.json({ok:false,error:"Money requests to administrator accounts are unavailable."},{status:403});
@@ -45,7 +48,9 @@ export async function POST(req:Request){
 
 export async function PATCH(req:Request){
  try{
-  const me=await requireUser(),b=await req.json().catch(()=>null),id=String(b?.requestId||"").trim(),action=String(b?.action||"");
+  const me=await requireUser();
+  if(!me.verified_at)return NextResponse.json({ok:false,error:"Verify your Numelixa account before confirming wallet transfers."},{status:403});
+  const b=await req.json().catch(()=>null),id=String(b?.requestId||"").trim(),action=String(b?.action||"");
   if(!id||!["reject","confirm"].includes(action))return NextResponse.json({ok:false,error:"Choose Confirm or Reject for a valid request."},{status:400});
   const requests=await collection<any>("walletRequests"),request=await requests.findOne({_id:id,payerId:String(me.id)});
   if(!request)return NextResponse.json({ok:false,error:"This request was not found for your account."},{status:404});
@@ -75,7 +80,8 @@ export async function PATCH(req:Request){
     {_id:mongoId(),userId:String(me.id),type:"user_transfer_out",amount:-amount,balanceAfter:payerAfter,reference:id,description:"Money request paid to "+String(requester.publicId||fresh.requesterId),createdAt:now,receiptId},
     {_id:mongoId(),userId:String(fresh.requesterId),type:"user_transfer_in",amount,balanceAfter:requesterAfter,reference:id,description:"Money request received from "+String(payer.publicId||me.publicId||me.id),createdAt:now,receiptId}
    ],{session});
-   await requests.updateOne({_id:id,payerId:String(me.id),status:"pending"},{$set:{status:"confirmed",confirmedAt:now,updatedAt:now,receiptId,payerBalanceAfter:payerAfter,requesterBalanceAfter:requesterAfter}},{session});
+   const finalized=await requests.updateOne({_id:id,payerId:String(me.id),status:"pending"},{$set:{status:"confirmed",confirmedAt:now,updatedAt:now,receiptId,payerBalanceAfter:payerAfter,requesterBalanceAfter:requesterAfter}},{session});
+   if(!finalized.modifiedCount)throw new Error("REQUEST_ALREADY_PROCESSED");
    receipt={receiptId,requestId:id,amountUsd:Number(fresh.amountUsd),amountCoins:amount,paidBy:{name:String(payer.name||"Numelixa user"),publicId:String(payer.publicId||"")},paidTo:{name:String(requester.name||"Numelixa user"),publicId:String(requester.publicId||"")},paidAt:now.toISOString(),payerBalanceAfter:payerAfter,requesterBalanceAfter:requesterAfter,status:"COMPLETED"};
   });}finally{await session.endSession();}
   try{await notifyUser(String(request.requesterId),"Money received","$"+Number(request.amountUsd).toFixed(2)+" USD has been added to your Numelixa wallet.",{type:"wallet_transfer_received",requestId:id,receiptId:receipt?.receiptId||""});}catch(e){console.error("[WALLET TRANSFER PUSH]",e);}
