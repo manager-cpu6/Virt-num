@@ -65,9 +65,9 @@ export async function PATCH(req:Request){
    if(!fresh)throw new Error("REQUEST_ALREADY_PROCESSED");
    const users=await collection<any>("users"),payer=await users.findOne({_id:String(me.id)},{session}),requester=await users.findOne({_id:String(fresh.requesterId)},{session});
    if(!payer||!requester||payer.suspendedAt||requester.suspendedAt)throw new Error("ACCOUNT_UNAVAILABLE");
-   const debit=await users.updateOne({_id:String(me.id),coins:{$gte:amount},suspendedAt:{$exists:false}},{$inc:{coins:-amount},$set:{updatedAt:now}},{session});
+   const debit=await users.updateOne({_id:String(me.id),coins:{$gte:amount}},{$inc:{coins:-amount},$set:{updatedAt:now}},{session});
    if(!debit.modifiedCount)throw new Error("INSUFFICIENT_BALANCE");
-   const credit=await users.updateOne({_id:String(fresh.requesterId),suspendedAt:{$exists:false}},{$inc:{coins:amount},$set:{updatedAt:now}},{session});
+   const credit=await users.updateOne({_id:String(fresh.requesterId)},{$inc:{coins:amount},$set:{updatedAt:now}},{session});
    if(!credit.modifiedCount)throw new Error("ACCOUNT_UNAVAILABLE");
    const receiptId="NX-TR-"+String(id).replace(/[^a-zA-Z0-9]/g,"").slice(-16).toUpperCase();
    const payerAfter=Number(payer.coins)-amount,requesterAfter=Number(requester.coins)+amount;
