@@ -1,5 +1,6 @@
 "use client";
 import TopBar from "@/components/TopBar";
+import WalletMoneyRequests from "@/components/WalletMoneyRequests";
 import {useEffect,useMemo,useState} from "react";
 type User={coins?:number;verified_at?:string|null};
 type Pricing={coinsPerUsd?:number;minTopupUsd?:number;maxTopupUsd?:number};
@@ -23,6 +24,7 @@ export default function Wallet(){
    <p>Your available balance, shown in USD.</p>
    <div className="nx-wallet-hero-foot"><span><i/> Wallet secured</span><span>USD · United States Dollar</span></div>
   </section>
+  <WalletMoneyRequests/>
   <section className="nx-wallet-content">
    <div className="nx-wallet-heading"><div><span className="eyebrow">ADD FUNDS</span><h1>How much would you like to add?</h1><p>Choose a quick amount or enter your own. Ethiopia local transfers are calculated in ETB at the live rate; your USD wallet is credited only after the incoming payment SMS is verified.</p></div><span className="nx-wallet-lock">⌑ Secure</span></div>
    {paymentNotice&&<div className="nx-wallet-payment-success" role="status"><span>✓</span><div><b>Payment confirmed</b><small>{paymentNotice}</small></div></div>}
