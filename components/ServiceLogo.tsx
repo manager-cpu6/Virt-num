@@ -80,6 +80,6 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
  if(!useSimple&&!domain)return null;
  return <span className={className||"service-icon"} role="img" aria-label={fullServiceName(name)+" logo"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",position:"relative",background:"transparent",border:0,boxShadow:"none"}}>
   {useSimple&&!simpleFailed?<img src={"https://cdn.simpleicons.org/"+encodeURIComponent(slug)} alt="" width="56" height="56" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={()=>setSimpleFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:0,boxSizing:"border-box",background:"transparent"}}/>:
-   domain&&!faviconFailed?<img src={"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"} alt="" width="56" height="56" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFaviconFailed(true)} style={{width:"78%",height:"78%",objectFit:"contain"}}/>:null}
+   domain&&!faviconFailed?<img src={"https://www.google.com/s2/favicons?domain="+encodeURIComponent(domain)+"&sz=128"} alt="" width="56" height="56" loading="lazy" referrerPolicy="no-referrer" onError={()=>setFaviconFailed(true)} style={{width:"78%",height:"78%",objectFit:"contain"}}/>:fallback}
  </span>;
 }
