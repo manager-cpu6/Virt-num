@@ -41,7 +41,7 @@ export async function POST(req:Request){
   await ensureApiKey(userId);
   if(createdAccount){try{await sendTransactionalEmail("welcome",email,{USER_NAME:String(user.name||profile.name||email.split("@")[0]),YEAR:new Date().getFullYear()},"welcome:"+userId);}catch(error){console.error("[NATIVE GOOGLE WELCOME EMAIL]",error instanceof Error?error.message:String(error));}}
   const ticket=crypto.randomBytes(32).toString("hex");
-  await (await collection<any>("googleNativeOAuthTickets")).insertOne({_id:crypto.randomUUID(),ticketHash:hash(ticket),userId,createdAt:now,expiresAt:new Date(now.getTime()+3*60*1000)});
+  await (await collection<any>("googleNativeOAuthTickets")).insertOne({_id:crypto.randomUUID(),ticketHash:hash(ticket),userId,newAccount:createdAccount,createdAt:now,expiresAt:new Date(now.getTime()+3*60*1000)});
   return NextResponse.json({ok:true,ticket},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   console.error("[NATIVE GOOGLE CREDENTIAL]",error instanceof Error?error.message:String(error));
