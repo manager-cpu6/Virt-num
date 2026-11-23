@@ -65,7 +65,8 @@ export function fullServiceName(value:string){
  const brand=canonicalServiceBrand(raw,raw);
  return brandNames[brand]||raw.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase());
 }
-export default function ServiceLogo({id,name,className=""}:{id:string;name:string;className?:string}){
+export default function ServiceLogo({id,name,icon="",className=""}:{id:string;name:string;icon?:string;className?:string}){
+ const [customFailed,setCustomFailed]=useState(false);
  const [simpleFailed,setSimpleFailed]=useState(false);
  const [faviconFailed,setFaviconFailed]=useState(false);
  const brand=canonicalServiceBrand(id,name);
@@ -73,6 +74,7 @@ export default function ServiceLogo({id,name,className=""}:{id:string;name:strin
   <img src="/numelixa-app-icon.webp" alt="" width="30" height="30" style={{width:"72%",height:"72%",objectFit:"contain"}}/>
   <b style={{position:"absolute",right:0,bottom:0,width:15,height:15,borderRadius:99,display:"grid",placeItems:"center",fontSize:10,lineHeight:1,color:"#fff",background:"#087d9b",border:"1px solid #071b35"}}>?</b>
  </span>;
+ if(icon&&!customFailed)return <span className={className||"service-icon"} role="img" aria-label={fullServiceName(name)+" logo"} title={fullServiceName(name)} style={{display:"inline-grid",placeItems:"center",flexShrink:0,overflow:"hidden",background:"transparent",border:0,boxShadow:"none"}}><img src={icon} alt="" width="56" height="56" loading="lazy" decoding="async" referrerPolicy="no-referrer" onError={()=>setCustomFailed(true)} style={{width:"100%",height:"100%",objectFit:"contain",padding:2,boxSizing:"border-box"}}/></span>;
  if(!brand||brand==="other")return fallback;
  const slug=brand==="chatgpt"?"chatgpt":brand;
  const domain=domainByBrand[brand];
