@@ -13,20 +13,18 @@ export default async function AccountPage(){
  const initial=name.charAt(0).toUpperCase()||"U";
  const pricing=await getSettings();
  const balanceUsd=(Number(user.coins||0)/(Number(pricing.coinsPerUsd)||100)).toFixed(2);
+ const quick=[{href:"/services",icon:"shopping-bag",title:"Get a number",detail:"Choose a service",tone:"blue"},{href:"/numbers",icon:"receipt",title:"My orders",detail:"View your numbers",tone:"violet"},{href:"/wallet",icon:"wallet",title:"Wallet",detail:"Manage your balance",tone:"teal"},{href:"/developers/docs",icon:"code-2",title:"Developer API",detail:"Integrate with Numelixa",tone:"purple"}];
  return <div className="account-premium-page"><TopBar title="Account"/>
   <main className="account-premium-shell">
-   <section className="account-profile-card">
-    <div className="account-profile-glow"/>
-    <div className="account-profile-top">
-      <div className="account-avatar-premium">{initial}</div>
-      <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">♛ NUMELIXA MEMBER</span></div>
-      <Link href="/account" className="account-edit-btn" aria-label="Account settings">•••</Link>
+   <section className="account-profile-card"><div className="account-profile-glow"/>
+    <div className="account-profile-top"><div className="account-avatar-premium">{initial}</div>
+     <div className="account-identity"><div className="account-name-row"><h1>{name}</h1>{user.verified_at&&<span className="account-verified" aria-label="Verified">✓</span>}</div><p>{user.email}</p><span className="account-member-pill">NUMELIXA MEMBER</span></div>
+     <Link href="/account" className="account-edit-btn" aria-label="Account settings">•••</Link>
     </div>
     <div className="account-profile-footer"><span>{user.merchantEnabled||user.role==="merchant"?"Merchant account":"Personal account"}</span><span>{user.verified_at?"Verified":"Verification required"}</span></div>
    </section>
    <NumelixaIdCard publicId={user.publicId}/>
-   <section className="account-wallet-card">
-    <div className="account-wallet-orb">◈</div>
+   <section className="account-wallet-card"><div className="account-wallet-orb"><span aria-hidden="true">＄</span></div>
     <div className="account-wallet-copy"><span>AVAILABLE BALANCE</span><strong>${balanceUsd}</strong><small>USD available to spend</small></div>
     <Link href="/wallet" className="account-wallet-action">Add funds <b>↗</b></Link>
    </section>
@@ -34,12 +32,14 @@ export default async function AccountPage(){
    {user.verified_at&&<section className="account-security-card verified"><div className="security-icon">✓</div><div><b>Account verified</b><small>Your email is verified and your account is ready.</small></div><span>Secure</span></section>}
    <div className="account-section-title"><div><span>QUICK ACCESS</span><h2>Everything you need</h2></div></div>
    <section className="account-action-grid" aria-label="Quick access">
-    <Link href="/services" className="account-action-card account-action-card--get-number primary"><span className="account-action-icon">＋</span><div><b>Get a number</b><small>Choose a service</small></div><i>↗</i></Link>
-    <Link href="/numbers" className="account-action-card account-action-card--orders"><span className="account-action-icon">▣</span><div><b>My orders</b><small>View your numbers</small></div><i>↗</i></Link>
-    <Link href="/wallet" className="account-action-card account-action-card--wallet"><span className="account-action-icon">◈</span><div><b>Wallet</b><small>Manage your balance</small></div><i>↗</i></Link>
+    {quick.map(item=><Link href={item.href} key={item.href} className={"account-action-card account-action-card--"+item.tone}>
+      <span className="account-action-icon" aria-hidden="true">{item.icon==="shopping-bag"?"▱":item.icon==="receipt"?"▤":item.icon==="wallet"?"▰":"⌘"}</span>
+      <div><b>{item.title}</b><small>{item.detail}</small></div><i aria-hidden="true">↗</i>
+    </Link>)}
    </section>
    <AccountSessions/>
-   {(user.merchantEnabled||user.role==="merchant")&&<Link href="/merchant" className="account-admin-card"><span>↗</span><div><b>Merchant</b><small>Send and manage wallet funds</small></div><i>↗</i></Link>}{user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
+   {(user.merchantEnabled||user.role==="merchant")&&<Link href="/merchant" className="account-admin-card"><span>↗</span><div><b>Merchant</b><small>Send and manage wallet funds</small></div><i>↗</i></Link>}
+   {user.role==="admin"&&<Link href="/admin" className="account-admin-card"><span>✦</span><div><b>Admin Control Center</b><small>Manage Numelixa</small></div><i>↗</i></Link>}
    <form action="/api/auth/logout" method="post" className="account-logout-form"><button type="submit">Sign out <span>↗</span></button></form>
   </main>
   <PublicFooter/>
