@@ -57,7 +57,7 @@ export async function POST(req:Request){
   if(createdAccount){try{await sendTransactionalEmail("welcome",email,{USER_NAME:String(user.name||profile.name||email.split("@")[0]),YEAR:new Date().getFullYear()},"welcome:"+id);}catch(error){console.error("[GOOGLE WELCOME EMAIL]",error instanceof Error?error.message:String(error));}}
   await createSession(id,requestMeta(req.headers));
   await claimDeviceTokenForUser(id);
-  if(user.email)await notifyNewLogin(id,String(user.email),String(user.name||profile.name||"there"),req.headers);
+  if(user.email&&!createdAccount)await notifyNewLogin(id,String(user.email),String(user.name||profile.name||"there"),req.headers);
   return NextResponse.json({ok:true,role:user.role||"user"});
  }catch(error){
   console.error("[GOOGLE SIGN IN]",error instanceof Error?error.message:String(error));
