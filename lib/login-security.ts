@@ -34,7 +34,7 @@ export async function notifyNewLogin(userId:string,email:string,name:string,h:He
   await sendTransactionalEmail("login_security_alert",email,{
    USER_NAME:name||"there",LOGIN_DATE:new Date().toISOString(),
    DEVICE_INFO:meta.device||"Unknown device",PLATFORM_INFO:meta.platform||"Unknown platform",
-   BROWSER_INFO:meta.browser||"Unknown browser",LOGIN_IP:meta.ip||"Not available",
+   BROWSER_INFO:meta.browser||"Unknown browser",USER_AGENT:meta.userAgent||"Not available",LOGIN_IP:meta.ip||"Not available",
    LOCATION_INFO:location,SECURITY_URL:"https://numelixa.com/security"
   },"login-alert:"+String(userId)+":"+fingerprint);
   return {sent:true};
