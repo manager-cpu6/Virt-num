@@ -2,14 +2,14 @@
 import {useEffect,useState} from "react";
 import {useRouter} from "next/navigation";
 import ServiceLogo from "@/components/ServiceLogo";
-type Props={service:string;country:string;countryName?:string;icon?:string};
+type Props={service:string;country:string;countryName?:string;serviceName?:string;icon?:string};
 type Stock={count:number;priceUsd:number;currency:string};
 const common:Record<string,string>={whatsapp:"WhatsApp",wa:"WhatsApp",telegram:"Telegram",tg:"Telegram",google:"Google",go:"Google",facebook:"Facebook",fb:"Facebook",instagram:"Instagram",ig:"Instagram",threads:"Instagram",tiktok:"TikTok",tt:"TikTok",twitter:"X / Twitter",tw:"X / Twitter",x:"X",snapchat:"Snapchat",sn:"Snapchat",viber:"Viber",discord:"Discord",amazon:"Amazon",microsoft:"Microsoft",ms:"Microsoft",apple:"Apple",signal:"Signal",wechat:"WeChat",yahoo:"Yahoo",openai:"OpenAI/ChatGPT",op:"OpenAI/ChatGPT",claudeai:"Claude AI/Anthropic"};
 const iconAliases:Record<string,string>={wa:"whatsapp",fb:"facebook",ig:"instagram",threads:"instagram",tg:"telegram",tt:"tiktok",go:"google",tw:"x",sn:"snapchat",ms:"microsoft",op:"openai"};
 function nameOf(s:string){return common[s.toLowerCase()]||s.replace(/[_-]+/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
 function friendlyError(value:string){const x=value.toLowerCase();if(x.includes("no free")||x.includes("no stock")||x.includes("out of stock")||x.includes("no numbers"))return "No number is available for this service and country right now.";if(x.includes("not enough user balance")||x.includes("balance"))return "The number service is temporarily unavailable.";if(x.includes("price_changed")||x.includes("price changed")||x.includes("maxprice")||x.includes("wrong_max_price"))return "The number price changed. Please refresh and try again.";if(x.includes("bad country")||x.includes("bad operator")||x.includes("no product"))return "This service is temporarily unavailable in the selected country.";if(x.includes("server offline")||x.includes("temporarily unavailable")||x.includes("timeout"))return "The number service is temporarily unavailable. Please try again shortly.";if(x.includes("provider")||x.includes("5sim")||x.includes("tiger sms")||x.includes("tigersms")||x.includes("upstream"))return "Unable to reserve a number right now. Please try again.";return "We could not reserve a number right now. Your balance will be refunded if it was charged. Please try again."}
-export default function GetNumberClient({service,country,countryName,icon=""}:Props){
- const router=useRouter();const[loading,setLoading]=useState(false),[stock,setStock]=useState<Stock|null>(null),[checking,setChecking]=useState(true),[stockError,setStockError]=useState(""),[error,setError]=useState("");const name=nameOf(service),slug=iconAliases[service.toLowerCase()]||service.toLowerCase();
+export default function GetNumberClient({service,country,countryName,serviceName="",icon=""}:Props){
+ const router=useRouter();const[loading,setLoading]=useState(false),[stock,setStock]=useState<Stock|null>(null),[checking,setChecking]=useState(true),[stockError,setStockError]=useState(""),[error,setError]=useState("");const name=serviceName||nameOf(service),slug=iconAliases[service.toLowerCase()]||service.toLowerCase();
  async function loadStock(){
   setChecking(true);setStockError("");
   try{
