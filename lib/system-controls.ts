@@ -15,5 +15,6 @@ export async function getSystemControls(){
 export async function systemControlMessage(key:SystemControl){
  const controls=await getSystemControls();
  const flag=controls[key];
- return flag?controls[key+"Message"]:null;
+ const message=key==="stopNewUsers"?controls.stopNewUsersMessage:key==="stopDeposit"?controls.stopDepositMessage:controls.stopOrdersMessage;
+ return flag?message:null;
 }
