@@ -3,6 +3,7 @@ import crypto from "crypto";
 import {collection,mongoId} from "@/lib/mongo";
 import {ensureApiKey} from "@/lib/api-key";
 import {sendTransactionalEmail} from "@/lib/email-system";
+import {systemControlMessage} from "@/lib/system-controls";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -31,6 +32,7 @@ export async function POST(req:Request){
    return NextResponse.json({ok:false,error:"This account is suspended. Contact Numelixa Support."},{status:403});
   const now=new Date();
   const createdAccount=!user;
+  if(createdAccount){const paused=await systemControlMessage("stopNewUsers");if(paused)return NextResponse.json({ok:false,code:"NEW_USERS_STOPPED",error:paused},{status:503});}
   if(!user){
    user={_id:mongoId(),email,name:String(profile.name||email.split("@")[0]).slice(0,100),avatarUrl:String(profile.picture||"").slice(0,2048),role:"user",coins:0,verifiedAt:now,googleId,createdAt:now};
    await users.insertOne(user);
