@@ -1,10 +1,8 @@
 import {NextResponse} from "next/server";
-import {createHash} from "crypto";
 import {collection} from "@/lib/mongo";
 import {createSession,createMobileSession,passwordCheck,ensureAdmin,ensureSupportAdmin,requestMeta} from "@/lib/auth";
 import {claimDeviceTokenForUser} from "@/lib/notifications";
-import {extraSecurityEnabled,createLoginApproval} from "@/lib/login-security";
-import {sendTransactionalEmail} from "@/lib/email-system";
+import {extraSecurityEnabled,createLoginApproval,notifyNewLogin} from "@/lib/login-security";
 
 export const runtime="nodejs";export const dynamic="force-dynamic";
 
@@ -28,17 +26,10 @@ export async function POST(req:Request){
     return NextResponse.json({ok:false,approvalRequired:true,approvalId:approval.approvalId,expiresAt:approval.expiresAt,message:"Approve this login from your Numelixa Android app."},{status:202});
   }
 
-  await createSession(String(u._id),requestMeta(req.headers));
+  const meta=requestMeta(req.headers);
+  await createSession(String(u._id),meta);
   await claimDeviceTokenForUser(String(u._id));
-  const loginDevice=String(req.headers.get("user-agent")||"Unknown device").slice(0,240);
-  const deviceFingerprint=createHash("sha256").update(loginDevice+"|"+String(req.headers.get("x-device-id")||"")).digest("hex");
-  if(String(u.lastLoginDeviceHash||"")!==deviceFingerprint){
-   await (await collection<any>("users")).updateOne({_id:String(u._id)},{$set:{lastLoginDeviceHash:deviceFingerprint,lastLoginAt:new Date()}});
-   if(u.email)try{await sendTransactionalEmail("login_security_alert",String(u.email),{
-    USER_NAME:String(u.name||"there"),LOGIN_DATE:new Date().toISOString(),DEVICE_INFO:loginDevice,
-    LOCATION_INFO:"Not available",SECURITY_URL:"https://numelixa.com/account"
-   },"login-alert:"+String(u._id)+":"+deviceFingerprint);}catch(error){console.error("[LOGIN SECURITY EMAIL]",error instanceof Error?error.message:"send failed")}
-  }
+  if(u.email)await notifyNewLogin(String(u._id),String(u.email),String(u.name||"there"),req.headers);
   if(nativeClient){
    const accessToken=await createMobileSession(String(u._id),requestMeta(req.headers));
    return NextResponse.json({ok:true,role:u.role,accessToken,user:{id:String(u._id),email:u.email,name:u.name,role:u.role,verified_at:u.verifiedAt||null}},{headers:{"Cache-Control":"no-store"}});
