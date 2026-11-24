@@ -136,8 +136,8 @@ export async function sendPush(tokens:string[],title:string,body:string,data:Rec
   const copyCodePush=["sms","verification","verification_code"].includes(type)&&data.copyCode==="true"&&Boolean(code);
   const messageData=Object.fromEntries(Object.entries({
    url:data.url||"/",...data,
-   iconType:data.iconType||data.notificationCategory||"general",
-   notificationCategory:data.iconType||data.notificationCategory||"general",
+   iconType:"numelixa",
+   notificationCategory:"numelixa",
    title,body,...(copyCodePush?{code}:{})
   }).filter(([key])=>key!=="userIds").map(([key,value])=>[key,String(value)]));
   const payload={
