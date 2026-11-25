@@ -32,7 +32,7 @@ export const metadata:Metadata={
  title:{default:"Numelixa — Virtual Numbers & SMS Verification",template:"%s | Numelixa"},
  description:"Numelixa provides fast virtual phone numbers for receiving SMS verification codes online. Buy a number, receive SMS verification codes, manage your wallet and get real mobile alerts.",
  keywords:["Numelixa","Numelixa APK","Numelixa app","Numelixa Android","Numelixa iOS","virtual numbers","virtual phone numbers","SMS verification","receive SMS online","Android APK"],
- applicationName:"Numelixa",authors:[{name:"Numelixa"}],creator:"Numelixa",publisher:"Numelixa",category:"technology",
+ applicationName:"Numelixa",authors:[{name:"Numelixa"}],creator:"TAVORT",publisher:"TAVORT",category:"technology",other:{"parent-company":"TAVORT","brand-attribution":"A Tavort Company"},
  alternates:{canonical:"https://numelixa.com/"},
  icons:{icon:[{url:"/numelixa-app-icon.webp",type:"image/svg+xml"}],apple:"/numelixa-favicon.png"},
  openGraph:{type:"website",url:"https://numelixa.com/",siteName:"Numelixa",title:"Numelixa — Virtual Numbers & SMS Verification",description:"Fast virtual numbers, SMS verification, wallet and native mobile notifications.",images:[{url:"https://numelixa.com/numelixa-favicon.png",width:512,height:512,alt:"Numelixa app logo"}]},
