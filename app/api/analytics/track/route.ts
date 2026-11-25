@@ -1,5 +1,7 @@
 import {NextResponse} from "next/server";
 import {collection} from "@/lib/mongo";
+import crypto from "crypto";
+import {requireUser} from "@/lib/auth";
 
 export const runtime="nodejs";
 export const dynamic="force-dynamic";
@@ -31,6 +33,8 @@ export async function POST(req:Request){
     const campaignSource=String(body?.campaignSource||"").trim().toLowerCase().replace(/[^a-z0-9._-]/g,"").slice(0,120);
     const referrerHost=cleanHost(body?.referrerHost);
     const source=campaignSource||cleanHost(body?.source)||referrerHost||"direct";
+    let stableVisitorId=visitorId,authenticatedVisitor=false;
+    try{const user=await requireUser();stableVisitorId="acct-"+crypto.createHash("sha256").update(String(user.id)).digest("hex").slice(0,32);authenticatedVisitor=true}catch{}
     const countryCode=cleanLocation(req.headers.get("x-vercel-ip-country"),2).toUpperCase();
     const country=countryName(countryCode);
     const city=cleanLocation(req.headers.get("x-vercel-ip-city"),80);
@@ -39,7 +43,7 @@ export async function POST(req:Request){
       return NextResponse.json({ok:false},{status:400});
     }
     await (await collection<any>("analyticsEvents")).insertOne({
-      event,visitorId,path,label,source,referrerHost,campaignSource:campaignSource||null,
+      event,visitorId:stableVisitorId,authenticatedVisitor,path,label,source,referrerHost,campaignSource:campaignSource||null,
       countryCode,country:country||"Unknown",city:city||"Unknown",region:region||null,
       createdAt:new Date()
     });
