@@ -37,8 +37,9 @@ export async function POST(req:Request){
   }finally{await session.endSession()}
   const owner=await users.findOne({_id:userId},{projection:{email:1,name:1}});
   const balanceUsd=balanceAfter/(Number(settings.coinsPerUsd)||100);
-  try{if(owner?.email)await sendTransactionalEmail("voucher_redeemed",String(owner.email),{USER_NAME:String(owner.name||"there"),VOUCHER_CODE:voucherCode,AMOUNT:amountUsd.toFixed(2),CURRENCY:"USD",NEW_BALANCE:balanceUsd.toFixed(2),RECEIPT_NUMBER:receiptNumber,REDEEMED_DATE:now.toISOString(),WALLET_URL:"https://numelixa.com/wallet"},"voucher-redeemed:"+receiptNumber)}catch(error){console.error("[VOUCHER RECEIPT EMAIL]",error instanceof Error?error.message:"send failed")}
-  return NextResponse.json({ok:true,receipt:{receiptNumber,code:voucherCode,amountUsd,creditedCoins,balanceUsd,redeemedAt:now.toISOString(),status:"success"},emailSent:Boolean(owner?.email)},{headers:{"Cache-Control":"no-store"}});
+  let emailSent=false;
+  try{if(owner?.email){await sendTransactionalEmail("voucher_redeemed",String(owner.email),{USER_NAME:String(owner.name||"there"),VOUCHER_CODE:voucherCode,AMOUNT:amountUsd.toFixed(2),CURRENCY:"USD",NEW_BALANCE:balanceUsd.toFixed(2),RECEIPT_NUMBER:receiptNumber,REDEEMED_DATE:now.toISOString(),WALLET_URL:"https://numelixa.com/wallet"},"voucher-redeemed:"+receiptNumber);emailSent=true}}catch(error){console.error("[VOUCHER RECEIPT EMAIL]",error instanceof Error?error.message:"send failed")}
+  return NextResponse.json({ok:true,receipt:{receiptNumber,code:voucherCode,amountUsd,creditedCoins,balanceUsd,redeemedAt:now.toISOString(),status:"success"},emailSent},{headers:{"Cache-Control":"no-store"}});
  }catch(error){
   const code=error instanceof Error?error.message:"";
   const known:Record<string,string>={VOUCHER_INVALID:"This voucher is invalid, expired or unavailable.",VOUCHER_ALREADY_USED:"This voucher has already been redeemed by your account.",VOUCHER_EXHAUSTED:"This voucher has reached its redemption limit.",VOUCHER_USER_NOT_FOUND:"Your account could not be updated."};
