@@ -3,7 +3,7 @@ import TavortAttribution from "@/components/TavortAttribution";
 
 const groups=[
  {title:"Explore",links:[["Pricing","/pricing"],["Services","/services"],["Mobile app","/mobile-apps"],["API documentation","/developers/docs"]]},
- {title:"Company",links:[["For clients","/clients"],["For partners","/partners"],["Help center","/support"],["Security","/security"]]},
+ {title:"Company",links:[["About Numelixa","/about"],["Contact","/contact"],["For clients","/clients"],["For partners","/partners"],["Help center","/support"],["Security","/security"]]},
  {title:"Legal & policies",links:[["Legal center","/legal"],["Terms of service","/terms"],["Privacy policy","/privacy"],["Refund policy","/refund-policy"],["Cookie policy","/cookie-policy"],["Acceptable use","/rules"],["Account deletion","/account-deletion"]]},
 ];
 
