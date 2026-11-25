@@ -79,10 +79,39 @@ export async function listServices(){
  return [...merged,...custom.filter((item:any)=>!present.has(normalizeKey(item.id)))];
 
 }
-export async function servicePrices(service:string,countries:any[]=[]){return (await activeProvider())==="tiger"?tiger.servicePrices(service,countries):five.servicePrices(service,countries)}
-export async function stock(country:string,service:string,operator="any"){return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator)}
-export async function getPrice(country:string,service:string,operator="any",provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.getPrice(country,service,operator):five.getPrice(country,service,operator)}
-export async function purchase(country:string,service:string,maxPrice?:number,operator="any",provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.purchase(country,service,maxPrice,operator):five.purchase(country,service,maxPrice,operator)}
+const catalogKey=(v:any)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
+async function countryServiceDisabled(country:string,service:string){
+ const catalog=await (await collection<any>("settings")).findOne({_id:"serviceCatalog"});
+ const rows=Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[];
+ return rows.some((x:any)=>catalogKey(x?.countryId)===catalogKey(country)&&catalogKey(x?.serviceId)===catalogKey(service));
+}
+export async function servicePrices(service:string,countries:any[]=[]){
+ const raw=(await activeProvider())==="tiger"?await tiger.servicePrices(service,countries):await five.servicePrices(service,countries);
+ const out={...(raw||{})} as Record<string,any>;
+ const catalog=await (await collection<any>("settings")).findOne({_id:"serviceCatalog"});
+ const hidden=Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[];
+ for(const country of countries){
+  const id=String(country?.id??country?.code??"");
+  if(!id||!hidden.some((x:any)=>catalogKey(x?.countryId)===catalogKey(id)&&catalogKey(x?.serviceId)===catalogKey(service)))continue;
+  for(const key of [country?.id,country?.country,country?.iso,country?.iso2,country?.code,country?.name].filter(Boolean).map(String)){
+   const previous=out[key]||{};
+   out[key]={...previous,count:0,stock:0};
+  }
+ }
+ return out;
+}
+export async function stock(country:string,service:string,operator="any"){
+ if(await countryServiceDisabled(country,service))return {count:0,cost:0,rate:0};
+ return (await activeProvider())==="tiger"?tiger.getPrice(country,service,operator):five.stock(country,service,operator);
+}
+export async function getPrice(country:string,service:string,operator="any",provider?:SmsProvider){
+ if(await countryServiceDisabled(country,service))return {count:0,cost:0,rate:0};
+ const p=provider||await activeProvider();return p==="tiger"?tiger.getPrice(country,service,operator):five.getPrice(country,service,operator);
+}
+export async function purchase(country:string,service:string,maxPrice?:number,operator="any",provider?:SmsProvider){
+ if(await countryServiceDisabled(country,service))throw new Error("SERVICE_DISABLED_FOR_COUNTRY");
+ const p=provider||await activeProvider();return p==="tiger"?tiger.purchase(country,service,maxPrice,operator):five.purchase(country,service,maxPrice,operator);
+}
 export async function check(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.check(orderid):five.check(orderid)}
 export async function finalize(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.finalize(orderid):five.finalize(orderid)}
 export async function cancel(orderid:string,provider?:SmsProvider){const p=provider||await activeProvider();return p==="tiger"?tiger.cancel(orderid):five.cancel(orderid)}
