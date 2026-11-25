@@ -1,4 +1,5 @@
 import Link from "next/link";
+import TavortAttribution from "@/components/TavortAttribution";
 
 const groups=[
  {title:"Explore",links:[["Pricing","/pricing"],["Services","/services"],["Mobile app","/mobile-apps"],["API documentation","/developers/docs"]]},
@@ -12,6 +13,7 @@ export default function PublicFooter(){
    <a className="nx-footer-brand" href="/"><img src="/numelixa-app-icon.webp" alt="" width="34" height="34"/><b>NUMELIXA</b></a>
    <p>Global virtual numbers and SMS verification, in one secure workspace. Serving customers since 2023.</p>
    <small>Founded in 2023 · Serving through 2026<br/>© 2026 Numelixa. All rights reserved.</small>
+   <TavortAttribution mode="company"/>
    <a className="nx-footer-email" href="mailto:support@numelixa.com?subject=Numelixa%20Support%20Enquiry">support@numelixa.com</a>
   </div>
   <div className="nx-footer-groups">
