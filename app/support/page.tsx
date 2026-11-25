@@ -69,6 +69,6 @@ export default function SupportPage(){
     <section className="nx-support-help-card nx-support-steps"><span className="nx-support-kicker">WHAT HAPPENS NEXT</span><div><i>1</i><span><b>Request received</b><small>Your ticket is saved securely.</small></span></div><div><i>2</i><span><b>Team review</b><small>We investigate and update the status.</small></span></div><div><i>3</i><span><b>Issue solved</b><small>We send a confirmation email when possible.</small></span></div></section>
    </aside>
   </div>
-  <footer className="nx-support-footer"><span>© {new Date().getFullYear()} Numelixa</span><span>Customer Support · Secure account assistance</span></footer>
+  <footer className="nx-support-footer"><span>© {new Date().getFullYear()} Numelixa</span><span>Customer Support · Secure account assistance · A Tavort Company</span></footer>
  </main>;
 }
