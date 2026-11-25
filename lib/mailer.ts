@@ -21,23 +21,23 @@ function fallbackConfig():SmtpConfig|null{
  return{host,port,user,pass,from};
 }
 
-type SenderKey="info"|"payment"|"welcome"|"noreply"|"forgot"|"withdrawal"|"team"|"system"|"notification";
+type SenderKey="info"|"payment"|"welcome"|"noreply"|"forgot"|"withdrawal"|"team"|"system"|"notification"|"receipts";
 const SENDER_ADDRESS:Record<SenderKey,string>={
  info:"info@numelixa.com",payment:"payment@numelixa.com",welcome:"welcome@numelixa.com",
  noreply:"noreplay@numelixa.com",forgot:"forgot@numelixa.com",withdrawal:"request@numelixa.com",team:"team@numelixa.com",system:"system@numelixa.com",
- notification:"notification@numelixa.com"
+ notification:"notification@numelixa.com",receipts:"receipts@numelixa.com"
 };
 const SENDER_PREFIX:Record<SenderKey,string>={
  info:"SPACEMAIL_INFO",payment:"SPACEMAIL_PAYMENT",welcome:"SPACEMAIL_WELCOME",
  noreply:"SPACEMAIL_NOREPLAY",forgot:"SPACEMAIL_FORGOT",withdrawal:"SPACEMAIL_WITHDRAWAL",team:"SPACEMAIL_TEAM",system:"SPACEMAIL_SYSTEM",
- notification:"SPACEMAIL_NOTIFICATION"
+ notification:"SPACEMAIL_NOTIFICATION",receipts:"SPACEMAIL_RECEIPTS"
 };
 function smtpConfig(sender:SenderKey="info"):SmtpConfig{
  const prefix=SENDER_PREFIX[sender];
- const host=(process.env[prefix+"_HOST"]||process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
- const port=Number(process.env[prefix+"_PORT"]||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
- const user=(process.env[prefix+"_USER"]||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
- const pass=process.env[prefix+"_PASSWORD"]||process.env.SPACEMAIL_SMTP_PASSWORD||"";
+ const host=(process.env[prefix+"_HOST"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_HOST:"")||process.env.SPACEMAIL_SMTP_HOST||DEFAULT_HOST).trim();
+ const port=Number(process.env[prefix+"_PORT"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_PORT:"")||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
+ const user=(process.env[prefix+"_USER"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_USER:"")||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
+ const pass=process.env[prefix+"_PASSWORD"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_PASSWORD:"")||process.env.SPACEMAIL_SMTP_PASSWORD||"";
  const from=(process.env[prefix+"_FROM"]||SENDER_ADDRESS[sender]).trim();
  if(!user)throw new Error("Spacemail SMTP username is missing for "+sender+".");
  if(!pass)throw new Error("Spacemail SMTP password is missing for "+sender+".");
@@ -52,7 +52,7 @@ function makeTransporter(config:SmtpConfig){const credentialFingerprint=createHa
  const transporter=nodemailer.createTransport({host:config.host,port:config.port,secure:config.port===465,requireTLS:config.port===587,auth:{user:config.user,pass:config.pass},tls:{minVersion:"TLSv1.2",servername:config.host},connectionTimeout:8000,greetingTimeout:8000,socketTimeout:12000,pool:true,maxConnections:3,maxMessages:50} as any);
  g[key]=transporter;
  return transporter;}
-async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string,sender:SenderKey){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];const displayName:Record<SenderKey,string>={info:"Numelixa",payment:"Numelixa Payments",welcome:"Numelixa Welcome",noreply:"Numelixa",forgot:"Numelixa Account Security",withdrawal:"Numelixa Withdrawals",team:"Numelixa Support",system:"Numelixa",notification:"Numelixa"};await transporter.sendMail({from:'"'+displayName[sender]+'" <'+config.from+'>',to,replyTo:"support@numelixa.com",subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
+async function sendWithConfig(config:SmtpConfig,to:string,subject:string,html:string,sender:SenderKey){const transporter=makeTransporter(config);const domain=config.from.split("@")[1];const displayName:Record<SenderKey,string>={info:"Numelixa",payment:"Numelixa Payments",welcome:"Numelixa Welcome",noreply:"Numelixa",forgot:"Numelixa Account Security",withdrawal:"Numelixa Withdrawals",team:"Numelixa Support",system:"Numelixa",notification:"Numelixa",receipts:"Numelixa Receipts"};await transporter.sendMail({from:'"'+displayName[sender]+'" <'+config.from+'>',to,replyTo:"support@numelixa.com",subject,text:plain(html),html,messageId:"<numelixa-"+Date.now()+"-"+Math.random().toString(36).slice(2,10)+"@"+domain+">",date:new Date(),headers:{"X-Mailer":"Numelixa Transactional Mail","X-Application":"Numelixa","Auto-Submitted":"auto-generated"}});}
 function isSocketTlsError(error:unknown){const e=error as {code?:unknown;message?:unknown}|null;const code=String(e?.code||"");const message=String(e?.message||"").toLowerCase();return["ESOCKET","ECONNRESET","ETIMEDOUT","EPIPE","ECONNREFUSED"].includes(code)||message.includes("secure tls")||message.includes("network socket disconnected")||message.includes("socket disconnected");}
 export async function sendEmail(to:string,subject:string,html:string){return sendEmailFrom("info",to,subject,html);}
 export async function sendEmailFrom(sender:SenderKey,to:string,subject:string,html:string){
