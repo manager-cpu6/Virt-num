@@ -12,14 +12,28 @@ export async function GET(){
   const settings=await collection<any>("settings");
   const catalog=await settings.findOne({_id:"serviceCatalog"});
   const hidden:string[]=Array.isArray(catalog?.hiddenServices)?catalog.hiddenServices:[];
-  const services=await listServices();
-  return NextResponse.json({ok:true,hiddenServices:hidden,customServices:Array.isArray(catalog?.customServices)?catalog.customServices:[],services:services.map((s:any)=>({id:String(s.id??s.code??s.name??s.title??""),name:String(s.name??s.title??s.id??s.code??"")})).filter((s:any)=>s.id)});
+  const [services,countries]=await Promise.all([listServices(),listCountries()]);
+  return NextResponse.json({ok:true,hiddenServices:hidden,hiddenCountryServices:Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[],customServices:Array.isArray(catalog?.customServices)?catalog.customServices:[],services:services.map((s:any)=>({id:String(s.id??s.code??s.name??s.title??""),name:String(s.name??s.title??s.id??s.code??"")})).filter((s:any)=>s.id),countries:countries.map((x:any)=>({id:String(x.id??x.code??x.iso??""),name:String(x.name??x.country??x.title??x.id??"")})).filter((x:any)=>x.id)});
  }catch(e){return NextResponse.json({ok:false,error:e instanceof Error&&e.message==="AUTH_REQUIRED"?"Admin access required":"Unable to load service catalog."},{status:401})}
 }
 export async function POST(req:Request){
  try{
   await requireAdmin();
   const body=await req.json();
+  if(body?.action==="country_service"){
+    const countryId=String(body.countryId||"").trim().slice(0,100),serviceId=String(body.serviceId||"").trim().slice(0,100),action=body.mode==="restore"?"restore":"hide";
+    if(!countryId||!serviceId)return NextResponse.json({ok:false,error:"Choose both a country and a service."},{status:400});
+    const [countries,services]=await Promise.all([listCountries(),listServices()]);
+    const country=countries.find((x:any)=>String(x.id??x.code??x.iso??"")===countryId);
+    const service=services.find((x:any)=>String(x.id??x.code??"")===serviceId);
+    if(!country||!service)return NextResponse.json({ok:false,error:"The selected country or service is not in the live provider catalog."},{status:404});
+    const settings=await collection<any>("settings"),catalog=await settings.findOne({_id:"serviceCatalog"}),rows=Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[];
+    const key=(v:any)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
+    const matches=(x:any)=>key(x.countryId)===key(countryId)&&key(x.serviceId)===key(serviceId);
+    const next=action==="hide"?[...rows.filter((x:any)=>!matches(x)),{countryId, countryName:String(country.name??country.country??countryId),serviceId,serviceName:String(service.name??serviceId),updatedAt:new Date()}]:rows.filter((x:any)=>!matches(x));
+    await settings.updateOne({_id:"serviceCatalog"},{$set:{hiddenCountryServices:next,updatedAt:new Date()}},{upsert:true});
+    return NextResponse.json({ok:true,action,hiddenCountryServices:next});
+  }
   if(body?.action==="add_custom_service"){
     const name=String(body.name||"").trim().slice(0,80),providerServiceId=String(body.providerServiceId||"").trim().slice(0,100),icon=String(body.icon||"").trim().slice(0,500);
     if(name.length<2||!providerServiceId||!icon)return NextResponse.json({ok:false,error:"Enter the service name, provider service ID and icon URL."},{status:400});
