@@ -5,7 +5,7 @@ export type EmailEvent =
  | "otp_verification" | "welcome" | "forgot_password" | "password_reset_success"
  | "number_activation" | "verification_code_received" | "payment_receipt"
  | "wallet_deposit_success" | "withdrawal_request" | "withdrawal_approved"
- | "withdrawal_completed" | "withdrawal_rejected" | "payment_failed" | "login_security_alert";
+ | "withdrawal_completed" | "withdrawal_rejected" | "payment_failed" | "login_security_alert" | "voucher_redeemed";
 
 type Sender = "noreply" | "welcome" | "forgot" | "payment" | "withdrawal";
 const routing:Record<EmailEvent,{sender:Sender;from:string;name:string;subject:string}> = {
@@ -22,7 +22,8 @@ const routing:Record<EmailEvent,{sender:Sender;from:string;name:string;subject:s
  withdrawal_completed:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Your withdrawal has been completed"},
  withdrawal_rejected:{sender:"withdrawal",from:"request@numelixa.com",name:"Numelixa Withdrawals",subject:"Update on your withdrawal request"},
  payment_failed:{sender:"payment",from:"payment@numelixa.com",name:"Numelixa Payments",subject:"We couldn't complete your payment"},
- login_security_alert:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"New sign-in to your Numelixa account"}
+ login_security_alert:{sender:"noreply",from:"noreplay@numelixa.com",name:"Numelixa",subject:"New sign-in to your Numelixa account"},
+ voucher_redeemed:{sender:"payment",from:"payment@numelixa.com",name:"Numelixa Wallet",subject:"Your Numelixa voucher receipt"}
 };
 
 const esc=(v:unknown)=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
@@ -46,6 +47,7 @@ function render(type:EmailEvent,d:Record<string,unknown>){
  case "number_activation":return shell("Your virtual number is ready","Your number is ready for SMS verification.",p("Hello "+name+", your virtual number has been assigned and is ready for SMS verification.")+details([["Number",d.PHONE_NUMBER],["Service",d.SERVICE_NAME],["Country",d.COUNTRY_NAME],["Order ID",d.ORDER_ID],["Status",d.ACTIVATION_STATUS||"Active"]]),{label:"View activation",url});
  case "verification_code_received":return shell("Your verification code has arrived","A new SMS was received for your active number.",p("Hello "+name+", a message was received for your activation.")+box(d.RECEIVED_CODE)+details([["Service",d.SERVICE_NAME],["Number",d.PHONE_NUMBER],["Order ID",d.ORDER_ID]]),{label:"Open activation",url});
  case "payment_receipt":return shell("Payment confirmed","Your Numelixa payment has been verified.",p("Hello "+name+", your payment was confirmed.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Transaction ID",d.TRANSACTION_ID],["Payment date",d.PAYMENT_DATE],["Payment method",d.PAYMENT_METHOD]]),{label:"View transaction",url});
+ case "voucher_redeemed":return shell("Voucher redeemed successfully","Your Numelixa voucher was applied to your wallet.",p("Hello "+name+", your voucher was redeemed and the value has been added to your Numelixa wallet.")+details([["Voucher code",d.VOUCHER_CODE],["Amount credited",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"USD")],["Wallet balance",String(d.NEW_BALANCE||"")+" "+String(d.CURRENCY||"USD")],["Receipt number",d.RECEIPT_NUMBER],["Date",d.REDEEMED_DATE]]),{label:"View my wallet",url});
  case "wallet_deposit_success":return shell("Your wallet has been credited","Your deposit was confirmed and added to your wallet.",p("Hello "+name+", your Numelixa wallet balance has been updated.")+details([["Amount added",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["New balance",String(d.NEW_BALANCE||"")+" "+String(d.CURRENCY||"")],["Deposit reference",d.DEPOSIT_ID],["Date",d.DEPOSIT_DATE],["Payment source",d.PAYMENT_SOURCE]]),{label:"View my wallet",url});
  case "withdrawal_request":return shell("Withdrawal request received","Your withdrawal is pending review.",p("Hello "+name+", we received your withdrawal request. It has not yet been approved or paid.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Request ID",d.WITHDRAWAL_ID],["Submitted",d.REQUEST_DATE],["Destination",d.WITHDRAWAL_DESTINATION],["Status","Pending review"]]),{label:"View withdrawal request",url});
  case "withdrawal_approved":return shell("Your withdrawal has been approved","Your withdrawal request was approved.",p("Hello "+name+", your withdrawal has been approved. Approval does not mean the funds have arrived yet.")+details([["Amount",String(d.AMOUNT||"")+" "+String(d.CURRENCY||"")],["Withdrawal ID",d.WITHDRAWAL_ID],["Approved",d.APPROVED_DATE],["Destination",d.WITHDRAWAL_DESTINATION],["Status","Approved"]]),{label:"View withdrawal",url});
