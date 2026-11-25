@@ -8,6 +8,7 @@ export const runtime="nodejs";export const dynamic="force-dynamic";
 function digest(s:string){return crypto.createHash("sha256").update(s).digest();}
 function same(a:string,b:string){const x=digest(a),y=digest(b);return x.length===y.length&&crypto.timingSafeEqual(x,y);}
 function phone(v:string){return v.replace(/[^0-9]/g,"").replace(/^251/,"0");}
+function normalizeEtbAmount(value:unknown){const n=Number(value);return Number.isFinite(n)&&n>0?Math.ceil(Math.round(n*100)/100-1e-9):null;}
 function extractPayerPhone(body:string){
  const pattern=/(?<![0-9])(?:\+251|251|0)[79](?:[\s-]?\d){8}(?![0-9])/g;
  const reference=/(?:transfer\s*id|reference|\bref\b|transaction\s*(?:id|no|number|ref)|txn\s*(?:id|no|ref)|trace\s*(?:id|no)|receipt\s*(?:id|no)|order\s*(?:id|no))\s*[:#=-]?\s*$/i;
@@ -59,7 +60,9 @@ export async function POST(req:Request){
    const cutoff=new Date(Date.now()-24*60*60*1000);
    const recentByPhone=await payments.find({provider:"ebirr_manual",method:{$in:allowed},payerPhone:parsed.payerPhone,status:{$in:["awaiting_proof","pending_review"]},credited:{$ne:true},createdAt:{$gte:cutoff}}).limit(50).toArray();
    checkedOrderIds=recentByPhone.map((o:any)=>o._id);
-   const possible=recentByPhone.filter((o:any)=>Number(o.amountEtb)===parsed.amount);
+   // ETB checkout amounts are rounded UP to whole Birr. Normalize both the order and the bank SMS the same way so a displayed 16 ETB payment matches a stored 15.50 ETB pre-rounded order as 16 ETB.
+    const smsEtb=normalizeEtbAmount(parsed.amount);
+    const possible=recentByPhone.filter((o:any)=>normalizeEtbAmount(o.amountEtb)===smsEtb);
    const named=possible.filter((o:any)=>String(o.payerName||"").trim()&&payerName&&nameKey(String(o.payerName))===nameKey(payerName));
    const fuzzy=possible.filter((o:any)=>String(o.payerName||"").trim()&&payerName&&nameSimilarity(String(o.payerName),payerName)>=0.8);
    const unnamed=possible.filter((o:any)=>!String(o.payerName||"").trim());
@@ -81,7 +84,7 @@ export async function POST(req:Request){
      try{await session.withTransaction(async()=>{
       const claims=await collection<any>("paymentSmsClaims");
       await claims.insertOne({_id:crypto.createHash("sha256").update(provider+"|"+safeReference).digest("hex"),provider,method:String(order.method),transactionReference:safeReference,providerTransactionId:transferReference||null,orderId:String(order.orderId),createdAt:new Date()},{session});
-      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_transfer_id_dedup_payer_phone_exact_amount_name_priority_receiver_sim_and_idempotent_wallet_transaction"}},{session,returnDocument:"before"});
+      const claimed=await payments.findOneAndUpdate({_id:order._id,credited:{$ne:true},status:{$in:["awaiting_proof","pending_review"]}},{$set:{status:"paid",credited:true,smsMatched:true,smsMatchedAt:new Date(),smsAmount:parsed.amount,smsPayerPhone:parsed.payerPhone,smsPayerName:payerName,transactionReference:safeReference,bankTransactionReference:null,smsOrigin:String(body.senderPhone||""),smsRaw:raw,paidAt:new Date(),updatedAt:new Date(),verificationMethod:"incoming_sms_transfer_id_dedup_payer_phone_ceil_etb_amount_name_priority_receiver_sim_and_idempotent_wallet_transaction"}},{session,returnDocument:"before"});
       if(!claimed)throw new Error("PAYMENT_ORDER_ALREADY_CLAIMED");
       const users=await collection<any>("users"),user=await users.findOneAndUpdate({_id:String(order.userId)},{$inc:{coins:Number(order.coins)}},{session,returnDocument:"after"});
       if(!user)throw new Error("Payment user not found");
