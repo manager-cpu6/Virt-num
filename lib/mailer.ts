@@ -38,7 +38,7 @@ function smtpConfig(sender:SenderKey="info"):SmtpConfig{
  const port=Number(process.env[prefix+"_PORT"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_PORT:"")||process.env.SPACEMAIL_SMTP_PORT||DEFAULT_PORT);
  const user=(process.env[prefix+"_USER"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_USER:"")||process.env.SPACEMAIL_SMTP_USER||"info@numelixa.com").trim();
  const pass=process.env[prefix+"_PASSWORD"]||(sender==="receipts"?process.env.SPACEMAIL_PAYMENT_PASSWORD:"")||process.env.SPACEMAIL_SMTP_PASSWORD||"";
- const from=(process.env[prefix+"_FROM"]||SENDER_ADDRESS[sender]).trim();
+ const from=(sender==="receipts"?SENDER_ADDRESS.receipts:(process.env[prefix+"_FROM"]||SENDER_ADDRESS[sender])).trim();
  if(!user)throw new Error("Spacemail SMTP username is missing for "+sender+".");
  if(!pass)throw new Error("Spacemail SMTP password is missing for "+sender+".");
  if(!Number.isFinite(port)||port<=0||port>65535)throw new Error("Invalid Spacemail SMTP port.");
