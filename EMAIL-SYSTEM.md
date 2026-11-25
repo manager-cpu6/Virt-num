@@ -9,7 +9,8 @@ The transactional email implementation lives in `lib/email-system.ts` and uses t
 | OTP, email verification, number ready, received SMS, new-device login | `noreplay@numelixa.com` | Numelixa |
 | Welcome | `welcome@numelixa.com` | Numelixa Welcome |
 | Password reset and reset confirmation | `forgot@numelixa.com` | Numelixa Account Security |
-| Payment receipt, wallet deposit, payment failure | `payment@numelixa.com` | Numelixa Payments |
+| Payment receipts, wallet deposits, voucher receipts, withdrawal receipts | `receipts@numelixa.com` | Numelixa Receipts |
+| Payment failure notifications | `payment@numelixa.com` | Numelixa Payments |
 | Withdrawal request, approval, rejection | `request@numelixa.com` | Numelixa Withdrawals |
 
 All transactional templates use the actual `public/numelixa-app-icon.webp` logo and show `support@numelixa.com` plus the support-center link in the footer. Reply-To is `support@numelixa.com`.
