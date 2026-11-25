@@ -115,7 +115,7 @@ export default function AdminPanel(){
  return <div className="admin-shell">
   <header className="admin-header"><div><span className="eyebrow">NUMELIXA ADMIN</span><h1>Control center</h1><small className="admin-live">Live management dashboard</small></div><div className="admin-head-actions"><Link href="/admin/email" className="primary-btn">✉ Email center</Link><button className="secondary-btn" onClick={refresh}>{refreshing?"Refreshing…":"↻ Refresh"}</button><Link href="/" className="secondary-btn">Open app</Link></div></header>
   {error&&<div className="error-box">{error}<button onClick={()=>setError("")}>×</button></div>}{saved&&<div className="success-box">{saved}</div>}
-  <div className="admin-tabs">{["overview","statistics","global view","traffic sources","users","user lookup","active otp","orders","pricing","providers","services","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","vouchers","service & country manager","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
+  <div className="admin-tabs">{["overview","statistics","global view","traffic sources","users","user lookup","active otp","orders","pricing","providers","service & country manager","payments","mastercard control","local payments","ebirr","notifications","authentication","app updates","maintenance","app control","app countries","app devices","security","support","referrals","vouchers","merchants"].map(x=><button key={x} className={tab===x?"tab active":"tab"} onClick={()=>setTab(x)}>{x==="payments"?"Payment orders":x==="mastercard control"?"💳 Mastercard Control":x==="app updates"?"📱 App Updates":x}</button>)}</div>
   {tab==="overview"&&<Overview stats={stats} waiting={waiting.length}/>}
   {tab==="statistics"&&<Statistics stats={stats} waiting={waiting.length}/>}
   {tab==="global view"&&<AdminTrafficAnalytics/>}
@@ -127,8 +127,7 @@ export default function AdminPanel(){
   {tab==="active otp"&&<OrdersTable orders={waiting} coinsPerUsd={stats?.settings.coinsPerUsd} title={"OTP currently waiting ("+waiting.length+")"} active onCancel={cancelWaitingOrder}/>}
   {tab==="orders"&&<OrdersTable orders={orders} coinsPerUsd={stats?.settings.coinsPerUsd} title={"All orders ("+orders.length+")"} onCancel={cancelWaitingOrder}/>}
   {tab==="providers"&&<Providers stats={stats}/>}
-  {tab==="services"&&<AdminServiceCatalog/>}
-  {tab==="service & country manager"&&<AdminServiceCatalog/>}
+    {tab==="service & country manager"&&<AdminServiceCatalog/>}
   {tab==="vouchers"&&<AdminVouchers/>}
   {tab==="payments"&&<AdminPayments/>}
   {tab==="mastercard control"&&<AdminMastercardControl/>}
