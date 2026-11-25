@@ -10,6 +10,7 @@ import "./numelixa-redesign.css";
 import "./numelixa-native-app.css";
 import "./admin-support.css";
 import "./numelixa-liquid-glass.css";
+import "./numelixa-wallet-referral-refresh.css";
 import "./support/support.css";
 import "./numelixa-public-pages.css";
 import "./numelixa-platform.css";

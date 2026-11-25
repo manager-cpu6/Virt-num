@@ -18,7 +18,7 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
   <div className="nx-receipt-top"><div className="nx-receipt-brand"><img className="nx-receipt-brandmark" src="/numelixa-app-icon.webp" alt="" width="40" height="40"/><span><b>NUMELIXA</b><small>GLOBAL DIGITAL SERVICES</small></span></div><div className="nx-receipt-status"><i/> VERIFIED PAYMENT</div></div>
   <div className="nx-receipt-title"><span>OFFICIAL PAYMENT RECEIPT</span><h2>Payment received.</h2><p>Your wallet top-up has been verified and credited successfully.</p></div>
   <div className="nx-receipt-amount"><small>AMOUNT PAID</small><strong>{usd(receipt.amountUsd)}</strong><span>{receipt.amountEtb>0?etb(receipt.amountEtb)+" ETB":"Payment confirmed in USD"}</span></div>
-  <div className="nx-receipt-stamp" aria-label="Numelixa verified official stamp"><div className="nx-stamp-ring"><span>NUMELIXA</span><b>✓</b><small>PAYMENT VERIFIED</small></div></div>
+  <div className="nx-receipt-official-art" aria-label="Official Numelixa seal and signature"><img src="/brand/numelixa-official-branding.jpg" alt="Numelixa official seal and signature"/></div>
   <div className="nx-receipt-grid">
    <div><small>RECEIPT NUMBER</small><b>{receipt.receiptId}</b></div><div><small>PAYMENT METHOD</small><b>{receipt.service}</b></div>
    <div><small>PAYER NAME</small><b>{receipt.payerName||"Not provided"}</b></div><div><small>SENDER NUMBER</small><b>{receipt.payerPhone||"Not provided"}</b></div><div><small>RECEIVING NUMBER</small><b>{receipt.receiverPhone||"—"}</b></div>
