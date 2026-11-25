@@ -2,7 +2,8 @@
 import {useCallback,useEffect,useState} from "react";
 
 type Source={source:string;pageViews:number;clicks:number;uniqueVisitors:number;lastActivity:string|null};
-type Data={pageViews:number;clicks:number;uniqueVisitors:number;periodDays:number;sources:Source[];pages:{path:string;views:number}[]};
+type Place={country:string;countryCode:string;city?:string;uniqueVisitors:number;visits:number;lastSeen:string|null};
+type Data={pageViews:number;clicks:number;uniqueVisitors:number;periodDays:number;sources:Source[];pages:{path:string;views:number}[];countries:Place[];cities:Place[]};
 export default function AdminTrafficAnalytics(){
  const[data,setData]=useState<Data|null>(null),[error,setError]=useState(""),[busy,setBusy]=useState(false);
  const load=useCallback(async()=>{
@@ -21,6 +22,21 @@ export default function AdminTrafficAnalytics(){
   {error&&<div className="error-box">{error}</div>}
   <div className="admin-grid admin-grid-wide">{metric("Page views",data?.pageViews)}{metric("Button clicks",data?.clicks)}{metric("Unique visitors",data?.uniqueVisitors)}</div>
   <div className="admin-card">
+   <h2>Global View · Visitors by country</h2>
+   <p className="admin-help">Each visitor is counted once per country in the selected 30-day period, even if they open many pages. Country and city are inferred from hosting-network location headers; unavailable locations are shown as Unknown.</p>
+   {!data?.countries?.length?<div className="country-loading">No country data yet. New page visits will appear after this tracking update is deployed.</div>:<div className="admin-stat-list">
+    <div className="admin-row" style={{fontWeight:800,opacity:.72}}><span>Country</span><span style={{display:"flex",gap:24}}><small>Unique users</small><small>Views</small></span></div>
+    {data.countries.map(item=><div className="admin-row" key={item.countryCode+"-"+item.country}><span><b>{item.country}</b><small>{item.countryCode||"Location unavailable"}</small></span><strong style={{display:"flex",gap:24,fontVariantNumeric:"tabular-nums"}}><span>{item.uniqueVisitors.toLocaleString()}</span><span>{item.visits.toLocaleString()}</span></strong></div>)}
+   </div>}
+  </div>
+  <div className="admin-card">
+   <h2>Most visited cities</h2>
+   {!data?.cities?.length?<div className="country-loading">No city data yet. City names depend on the visitor location data supplied by the hosting network.</div>:<div className="admin-stat-list">
+    <div className="admin-row" style={{fontWeight:800,opacity:.72}}><span>City / country</span><span style={{display:"flex",gap:24}}><small>Unique users</small><small>Views</small></span></div>
+    {data.cities.map(item=><div className="admin-row" key={item.countryCode+"-"+item.city+"-"+item.country}><span><b>{item.city||"Unknown"}</b><small>{item.country}</small></span><strong style={{display:"flex",gap:24,fontVariantNumeric:"tabular-nums"}}><span>{item.uniqueVisitors.toLocaleString()}</span><span>{item.visits.toLocaleString()}</span></strong></div>)}
+   </div>}
+  </div>
+  <div className="admin-card">
    <h2>Top traffic sources</h2>
    <p className="admin-help">Examples include chatgpt.com, gemini.google.com, Google, social networks, referral websites and Direct. Clicks are tracked separately from page views.</p>
    {!data?.sources?.length?<div className="country-loading">No source data has been collected yet. New visits will appear here.</div>:<div className="admin-stat-list">
@@ -32,6 +48,6 @@ export default function AdminTrafficAnalytics(){
    <h2>Most visited pages</h2>
    {!data?.pages?.length?<div className="country-loading">No page-view data yet.</div>:<div className="admin-stat-list">{data.pages.map(page=><div className="admin-row" key={page.path}><span><b>{page.path}</b></span><strong>{page.views.toLocaleString()}</strong></div>)}</div>}
   </div>
-  <p className="admin-help">Traffic reporting is anonymous and begins from this tracking release; it does not reconstruct visits from before tracking was enabled. Source attribution uses the first referrer or UTM source seen in each browser session.</p>
+  <p className="admin-help">Traffic reporting is anonymous and begins from this tracking release; it does not reconstruct visits from before tracking was enabled. A visitor is deduplicated by the anonymous browser visitor ID within each country or city. Source attribution uses the first referrer or UTM source seen in each browser session.</p>
  </div>;
 }
