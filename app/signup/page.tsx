@@ -4,6 +4,7 @@ import Link from "next/link";
 import {useRouter} from "next/navigation";
 import PhoneAuth from "@/components/PhoneAuth";
 import GoogleSignIn from "@/components/GoogleSignIn";
+import TavortAttribution from "@/components/TavortAttribution";
 
 function playSuccessTone(){
  try{
@@ -43,6 +44,7 @@ export default function Signup(){
    <GoogleSignIn onSuccess={()=>finishSignup("Google verification successful.","/dashboard")}/>
   </div>
   <p className="auth-switch">Already have an account? <Link href="/login">Sign in</Link></p>
+  <TavortAttribution mode="from"/>
   {success&&<div role="status" aria-live="polite" style={{position:"fixed",zIndex:9999,left:"50%",bottom:"calc(26px + env(safe-area-inset-bottom))",transform:"translateX(-50%)",width:"min(92vw,380px)",padding:"15px 18px",borderRadius:18,display:"flex",alignItems:"center",gap:12,background:"#102b24",border:"1px solid rgba(65,220,160,.42)",color:"#eafff4",boxShadow:"0 14px 40px rgba(0,0,0,.28)"}}><span style={{width:34,height:34,borderRadius:"50%",background:"#20b981",color:"#05251a",display:"grid",placeItems:"center",fontSize:22,fontWeight:900}}>✓</span><span style={{fontWeight:650,fontSize:14}}>{success}</span></div>}
  </div>;
 }
