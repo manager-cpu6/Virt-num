@@ -18,7 +18,7 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
   <div className="nx-receipt-top"><div className="nx-receipt-brand"><img className="nx-receipt-brandmark" src="/numelixa-app-icon.webp" alt="" width="40" height="40"/><span><b>NUMELIXA</b><small>GLOBAL DIGITAL SERVICES</small></span></div><div className="nx-receipt-status"><i/> VERIFIED PAYMENT</div></div>
   <div className="nx-receipt-title"><span>OFFICIAL PAYMENT RECEIPT</span><h2>Payment received.</h2><p>Your wallet top-up has been verified and credited successfully.</p></div>
   <div className="nx-receipt-amount"><small>AMOUNT PAID</small><strong>{usd(receipt.amountUsd)}</strong><span>{receipt.amountEtb>0?etb(receipt.amountEtb)+" ETB":"Payment confirmed in USD"}</span></div>
-  <div className="nx-receipt-stamp" aria-label="Numelixa verified official stamp"><div className="nx-stamp-ring"><span>NUMELIXA</span><b>✓</b><small>PAYMENT VERIFIED</small></div></div>
+  <div className="nx-receipt-stamp" aria-label="Numelixa official seal"><img src="/numelixa-official-seal.svg" alt="Numelixa official seal" width="150" height="150"/></div>
   <div className="nx-receipt-grid">
    <div><small>RECEIPT NUMBER</small><b>{receipt.receiptId}</b></div><div><small>PAYMENT METHOD</small><b>{receipt.service}</b></div>
    <div><small>PAYER NAME</small><b>{receipt.payerName||"Not provided"}</b></div><div><small>SENDER NUMBER</small><b>{receipt.payerPhone||"Not provided"}</b></div><div><small>RECEIVING NUMBER</small><b>{receipt.receiverPhone||"—"}</b></div>
@@ -28,6 +28,7 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
   </div>
   <div className="nx-receipt-barcode"><Barcode value={receipt.receiptId}/><b>{receipt.receiptId}</b><small>Scan the barcode, then verify this code at</small><a href={"/receipt/verify?code="+encodeURIComponent(receipt.receiptId)}>numelixa.com/receipt/verify</a></div>
   <div className="nx-receipt-proof"><b>Verification record</b><p>{receipt.verification}</p><span>Receipt issued from the Numelixa payment ledger after successful server-side credit.</span></div>
+  <div className="nx-receipt-signature"><span>AUTHORIZED SIGNATURE</span><img src="/numelixa-signature.svg" alt="Numelixa authorized signature" width="240" height="82"/></div>
   <div className="nx-receipt-actions"><button type="button" onClick={()=>window.print()}>Print / Save PDF</button><button type="button" onClick={share}>Share receipt</button><button type="button" disabled={emailBusy} onClick={emailReceipt}>{emailBusy?"Sending…":"Email receipt"}</button></div>
   {message&&<p className="nx-receipt-message" role="status">{message}</p>}
   <button className="nx-receipt-continue" type="button" onClick={onContinue}>Continue to wallet <span>→</span></button>
