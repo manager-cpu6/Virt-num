@@ -27,7 +27,7 @@ export async function POST(req:Request){
     const country=countries.find((x:any)=>String(x.id??x.code??x.iso??"")===countryId);
     const service=services.find((x:any)=>String(x.id??x.code??"")===serviceId);
     if(!country||!service)return NextResponse.json({ok:false,error:"The selected country or service is not in the live provider catalog."},{status:404});
-    const settings=await collection<any>("settings"),catalog=await settings.findOne({_id:"serviceCatalog"),rows=Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[];
+    const settings=await collection<any>("settings"),catalog=await settings.findOne({_id:"serviceCatalog"}),rows=Array.isArray(catalog?.hiddenCountryServices)?catalog.hiddenCountryServices:[];
     const key=(v:any)=>String(v??"").trim().toLowerCase().replace(/[^a-z0-9]/g,"");
     const matches=(x:any)=>key(x.countryId)===key(countryId)&&key(x.serviceId)===key(serviceId);
     const next=action==="hide"?[...rows.filter((x:any)=>!matches(x)),{countryId, countryName:String(country.name??country.country??countryId),serviceId,serviceName:String(service.name??serviceId),updatedAt:new Date()}]:rows.filter((x:any)=>!matches(x));
