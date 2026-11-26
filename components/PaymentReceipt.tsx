@@ -49,9 +49,12 @@ export default function PaymentReceipt({receipt,onContinue}:{receipt:ReceiptData
    <small style={{display:"block",fontFamily:"Arial,Helvetica,sans-serif",fontSize:9,color:"#64748b",marginTop:5}}>Verify at numelixa.com/receipt/verify</small>
    <a style={{fontFamily:"Arial,Helvetica,sans-serif",fontSize:10,color:"#1d4ed8"}} href={"/receipt/verify?code="+encodeURIComponent(receipt.receiptId)}>Open verification record</a>
   </div>
-  <div style={{textAlign:"center",padding:"12px 0 5px"}}>
-   <img src="/brand/numelixa-official-branding.jpg" alt="Official Numelixa seal and signature" style={{display:"block",width:190,maxWidth:"90%",height:"auto",margin:"0 auto"}}/>
-   <div style={{fontFamily:"Arial,Helvetica,sans-serif",fontSize:10,color:"#475569",lineHeight:1.6}}>{receipt.verification}<br/>Official Numelixa receipt · Keep for your records</div>
+  <div style={{padding:"18px 0 8px",borderTop:"1px solid #e2e8f0"}}>
+   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,alignItems:"end"}}>
+    <div style={{textAlign:"center",minWidth:0}}><small style={{display:"block",fontFamily:"Arial,Helvetica,sans-serif",fontSize:8,fontWeight:900,letterSpacing:1.2,color:"#475569",marginBottom:8}}>OFFICIAL COMPANY SEAL</small><img src="/brand/numelixa-official-seal.png" alt="Official Numelixa company seal" style={{display:"block",width:112,height:104,objectFit:"contain",margin:"0 auto"}}/></div>
+    <div style={{textAlign:"center",minWidth:0}}><small style={{display:"block",fontFamily:"Arial,Helvetica,sans-serif",fontSize:8,fontWeight:900,letterSpacing:1.2,color:"#475569",marginBottom:8}}>AUTHORIZED SIGNATURE</small><img src="/brand/numelixa-official-signature.png" alt="Official Numelixa signature" style={{display:"block",width:"100%",maxWidth:142,height:68,objectFit:"contain",margin:"0 auto"}}/><div style={{fontFamily:"Arial,Helvetica,sans-serif",fontSize:8,color:"#334155",fontWeight:800}}>NUMELIXA</div></div>
+   </div>
+   <div style={{fontFamily:"Arial,Helvetica,sans-serif",fontSize:10,color:"#334155",lineHeight:1.65,textAlign:"center",marginTop:12}}>{receipt.verification}<br/><b style={{color:"#102a56"}}>Official Numelixa receipt</b> · Keep for your records</div>
   </div>
   <div className="nx-receipt-actions" style={{display:"flex",flexWrap:"wrap",gap:8,justifyContent:"center",paddingTop:12}}>
    <button type="button" onClick={()=>window.print()} style={{border:"1px solid #cbd5e1",background:"#f8fafc",color:"#0f172a",padding:"10px 12px",fontWeight:800}}>Print / Save PDF</button>
