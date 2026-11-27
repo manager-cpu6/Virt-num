@@ -52,10 +52,10 @@ export default function ContactPage() {
         </div>
       </section>
       <PublicFooter />
-      <style jsx>{`
+      <style>{`
         .nx-contact-parent { margin-top: 34px; }
         .nx-contact-parent p { max-width: 650px; }
-        .nx-contact-parent :global(a) { display: inline-block; margin-top: 10px; color: #2689bd; font-size: 13px; font-weight: 750; }
+        .nx-contact-parent a { display: inline-block; margin-top: 10px; color: #2689bd; font-size: 13px; font-weight: 750; }
       `}</style>
     </main>
   );
