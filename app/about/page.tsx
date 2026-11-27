@@ -50,7 +50,7 @@ export default function AboutPage() {
             experience.
           </p>
           <div className="nx-about-actions">
-            <Link href="/numbers" className="nx-guide-primary">Explore numbers <span aria-hidden="true">→</span></Link>
+            <Link href="/services" className="nx-guide-primary">Explore numbers <span aria-hidden="true">→</span></Link>
             <Link href="/support" className="nx-about-secondary">Visit support</Link>
           </div>
         </div>
