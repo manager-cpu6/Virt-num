@@ -129,16 +129,16 @@ export default function AboutPage() {
 
       <PublicFooter />
 
-      <style jsx>{`
+      <style>{`
         .nx-about-page { overflow: hidden; }
         .nx-about-hero { position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0,1.05fr) minmax(280px,.95fr); align-items: center; gap: 28px; min-height: 430px; padding: clamp(28px,5vw,58px); margin: 18px auto 0; border: 1px solid rgba(120,150,220,.22); border-radius: 30px; color: #f7f9ff; background: radial-gradient(ellipse at 76% 42%,rgba(34,116,255,.25),transparent 40%), linear-gradient(125deg,#071126,#0b1731 58%,#101d42); box-shadow: 0 28px 80px rgba(4,13,35,.18); }
         .nx-about-hero-copy { position: relative; z-index: 2; max-width: 620px; }
-        .nx-about-hero :global(.nx-guide-kicker) { color: #65d9f3; }
+        .nx-about-hero .nx-guide-kicker { color: #65d9f3; }
         .nx-about-hero h1 { margin: 16px 0; font-size: clamp(42px,6.4vw,72px); line-height: .98; letter-spacing: -.065em; }
         .nx-about-hero h1 span { color: #66d7f0; }
         .nx-about-hero p { max-width: 570px; color: #c2cce0; font-size: 15px; line-height: 1.75; }
         .nx-about-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 25px; }
-        .nx-about-actions :global(.nx-guide-primary), .nx-about-cta :global(.nx-guide-primary) { display: inline-flex; align-items: center; gap: 12px; }
+        .nx-about-actions .nx-guide-primary, .nx-about-cta .nx-guide-primary { display: inline-flex; align-items: center; gap: 12px; }
         .nx-about-secondary { padding: 13px 17px; border: 1px solid rgba(204,222,255,.32); border-radius: 999px; color: #e5edff; font-size: 13px; font-weight: 700; }
         .nx-about-orbit { position: relative; width: min(100%,390px); aspect-ratio: 1; justify-self: center; display: grid; place-items: center; }
         .nx-about-globe { position: relative; z-index: 1; width: 48%; aspect-ratio: 1; display: grid; place-items: center; border: 1px solid rgba(133,221,255,.8); border-radius: 50%; color: #fff; font-size: clamp(50px,8vw,88px); font-weight: 900; background: radial-gradient(circle at 35% 28%,#5be5ff 0,#2476e9 25%,#112d70 65%,#07132e 100%); box-shadow: 0 0 55px rgba(42,164,255,.38), inset -18px -22px 40px rgba(0,0,0,.4), inset 8px 8px 25px rgba(255,255,255,.25); }
